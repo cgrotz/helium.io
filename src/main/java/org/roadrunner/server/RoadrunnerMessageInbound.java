@@ -128,7 +128,25 @@ public class RoadrunnerMessageInbound extends MessageInbound implements EventLis
       }
       else if ("set".equalsIgnoreCase(messageType))
       {
-
+    	  Object payload = message.get("payload");
+          Node node;
+          if(session.getRootNode().hasNode(path))
+          {
+        	  node = session.getRootNode().getNode(path);
+          }
+          else
+          {
+        	  node = addNode(session.getRootNode(),path);
+          }
+          if(payload instanceof JSONObject)
+          {
+        	  updateNode((JSONObject)payload, node);
+          }
+          else
+          {
+        	  node.setProperty("value", ""+payload);
+          }
+          session.save();
       }
       else if ("on".equalsIgnoreCase(messageType))
       {

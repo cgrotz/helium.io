@@ -66,6 +66,10 @@ function Roadrunner(roadrunner_url)
     endpoint.send(JSON.stringify(message));
   };
   
+  this.child = function(childname){
+	  return new Roadrunner(path+"/"+childname);
+  }
+  
   this.on = function(event_type, callback)
   {
     events[event_type] = callback;
