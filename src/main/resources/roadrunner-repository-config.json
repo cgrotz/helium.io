@@ -1,5 +1,4 @@
 {
-    "name" : "Roadrunner",
     "jndiName": null,
     "workspaces" : {
         "predefined" : ["otherWorkspace"],

@@ -31,19 +31,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet
     {
       return new RoadrunnerMessageInbound(contextPath + servletPath, collectionPath);
     }
-    catch (ParsingException e)
-    {
-      throw new RuntimeException(e);
-    }
-    catch (ConfigurationException e)
-    {
-      throw new RuntimeException(e);
-    }
-    catch (LoginException e)
-    {
-      throw new RuntimeException(e);
-    }
-    catch (RepositoryException e)
+    catch (Exception e)
     {
       throw new RuntimeException(e);
     }
