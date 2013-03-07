@@ -168,9 +168,8 @@ public class DataService implements EventListener {
 		return prevChildName;
 	}
 
-	public void sync() {
-		// TODO Auto-generated method stub
-
+	public void sync() throws RepositoryException, JSONException, IOException {
+        sendNode(rootNode);
 	}
 
 	private void sendNode(Node node) throws RepositoryException, JSONException,

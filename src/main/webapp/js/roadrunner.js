@@ -1,7 +1,6 @@
-var endpoint;
+var roadrunner_endpoint;
 
 function Snapshot(message) {
-	var self = this;
 	var payload = message.payload;
 	var name = message.name;
 	var priority = message.priority;
@@ -11,6 +10,12 @@ function Snapshot(message) {
 	};
 	this.name = function() {
 		return name;
+	};
+	this.ref = function(){
+		return new Roadrunner(path);
+	};
+	this.getPriority = function(){
+		return priority;
 	};
 	this.child = function(childPath){
 		
@@ -24,32 +29,30 @@ function Snapshot(message) {
 	this.numChildren = function(){
 		
 	};
-	this.ref = function(){
-		return new Roadrunner(path);
-	};
-	this.getPriority = function(){
-		return priority;
-	};
 }
 
-function Roadrunner(roadrunner_url) {
-	var events = {};
-	var path = roadrunner_url;
+function RoadrunnerConnection(url)
+{
 	var self = this;
-	if (endpoint == null) {
+	var messages = [];
+	if (this.endpoint == null) {
 		if (!window.WebSocket) {
 			window.WebSocket = window.MozWebSocket;
 		}
 		if (window.WebSocket) {
-			endpoint = new WebSocket(roadrunner_url);
-			endpoint.onopen = function(event) {
+			roadrunner_endpoint = new WebSocket(url);
+			roadrunner_endpoint.onopen = function(event) {
+				for(var i=0;i<messages.length;i++)
+				{
+					roadrunner_endpoint.send(JSON.stringify(messages[i]));
+				}
 			};
-			endpoint.onclose = function(event) {
+			roadrunner_endpoint.onclose = function(event) {
 			};
 		}
 	}
 
-	endpoint.onmessage = function(event) {
+	roadrunner_endpoint.onmessage = function(event) {
 		var message = JSON.parse(event.data);
 		if (Object.prototype.toString.call(message) === '[object Array]') {
 			for ( var i = 0; i < message.length; i++) {
@@ -60,23 +63,34 @@ function Roadrunner(roadrunner_url) {
 		}
 	};
 
-	this.handleMessage = function(message) {
-		var snapshot = new Snapshot(message);
-		var callback = events[message.type];
-		if (callback != null) {
-			callback(snapshot);
-		}
-	};
-
 	this.sendMessage = function(type, path, payload) {
 		var message = {
 			type : type,
 			path : path,
 			payload : payload
 		};
-		endpoint.send(JSON.stringify(message));
+		if(roadrunner_endpoint.readyState == window.WebSocket.OPEN)
+		{
+			roadrunner_endpoint.send(JSON.stringify(message));
+		}
+		else
+		{
+			messages.push(message);
+		}
 	};
+}
 
+function Roadrunner(path) {
+	var events = {};
+	var roadrunner_connection = new RoadrunnerConnection(path); 
+	roadrunner_connection.handleMessage = function(message) {
+		var snapshot = new Snapshot(message);
+		var callback = events[message.type];
+		if (callback != null) {
+			callback(snapshot);
+		}
+	};
+	
 	this.child = function(childname) {
 		return new Roadrunner(path + "/" + childname);
 	};
@@ -86,11 +100,11 @@ function Roadrunner(roadrunner_url) {
 	};
 
 	this.push = function(data) {
-		this.sendMessage('push', path, data);
+		roadrunner_connection.sendMessage('push', path, data);
 	};
 
 	this.set = function(data) {
-		this.sendMessage('set', path, data);
+		roadrunner_connection.sendMessage('set', path, data);
 	};
 
 	this.auth = function( authToken, onComplete, onCancel) {

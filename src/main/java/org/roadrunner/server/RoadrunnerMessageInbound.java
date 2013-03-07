@@ -168,6 +168,17 @@ public class RoadrunnerMessageInbound extends MessageInbound implements DataList
 	@Override
 	protected void onOpen(WsOutbound outbound) {
 		super.onOpen(outbound);
-		dataService.sync();
+		try {
+			dataService.sync();
+		} catch (RepositoryException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
