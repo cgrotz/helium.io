@@ -9,6 +9,12 @@
         "anonymous" : {
             "roles" : ["readonly","readwrite","admin"],
             "useOnFailedLogin" : false
-        }
+        },
+	    "providers" : [
+	        {
+	            "name" : "Rule Based Security Provider",
+	            "classname" : "org.roadrunner.security.RuleBasedAuthenticationProvider"
+	        }
+	    ]
     }
 }

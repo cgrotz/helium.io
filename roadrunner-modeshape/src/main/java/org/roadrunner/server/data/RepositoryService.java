@@ -40,7 +40,7 @@ public class RepositoryService
     return instance;
   }
 
-  private Repository getRepository(String repositoryName) throws ParsingException, ConfigurationException, RepositoryException, FileNotFoundException
+  public Repository getRepository(String repositoryName) throws ParsingException, ConfigurationException, RepositoryException, FileNotFoundException
   {
     if (repositories.containsKey(repositoryName))
     {
@@ -50,7 +50,7 @@ public class RepositoryService
     Repository repository = null;
     if (!engine.getRepositoryNames().contains(repositoryName))
     {
-      RepositoryConfiguration config = RepositoryConfiguration.read("{'name' : '"+repositoryName+"','jndiName': null,'workspaces' : {'predefined' : ['otherWorkspace'],'default' : 'default','allowCreation' : true},'security' : {'anonymous' : {'roles' : ['readonly','readwrite','admin'],'useOnFailedLogin' : false}}}");
+      RepositoryConfiguration config = RepositoryConfiguration.read("{'name' : '"+repositoryName+"','jndiName': null,'workspaces' : {'predefined' : ['otherWorkspace'],'default' : 'default','allowCreation' : true},'security' : {'anonymous' : {'roles' : ['readonly','readwrite','admin'],'useOnFailedLogin' : false},'providers' : [{'name' : 'Rule Based Authorization Provider','classname' : 'org.roadrunner.security.RuleBasedAuthorizationProvider'}]}}");
       // We could change the name of the repository programmatically ...
       config = config.withName(repositoryName);
 
