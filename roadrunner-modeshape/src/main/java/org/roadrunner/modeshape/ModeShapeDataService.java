@@ -28,6 +28,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.roadrunner.core.DataListener;
 import org.roadrunner.core.DataService;
+import org.roadrunner.core.dtos.InitMessage;
+import org.roadrunner.core.dtos.PushedMessage;
 
 import com.google.common.base.Strings;
 
@@ -59,14 +61,25 @@ public class ModeShapeDataService implements DataService, EventListener {
 			PathNotFoundException, VersionException,
 			ConstraintViolationException, LockException, RepositoryException {
 		if (path2.indexOf("/") > -1) {
-			Node newNode = node2
-					.addNode(path2.substring(0, path2.indexOf("/")));
+			String subpath = path2.substring(0, path2.indexOf("/"));
+			Node newNode;
+			if (node2.hasNode(subpath)) {
+				newNode = node2.getNode(subpath);
+			} else {
+				newNode = node2.addNode(subpath);
+			}
 			dataRepo.save();
 			return addNode(newNode, path2.substring(path2.indexOf("/") + 1));
 		} else {
-			Node childNode = node2.addNode(path2);
+			Node newNode;
+			if (node2.hasNode(path2)) {
+				newNode = node2.getNode(path2);
+			} else {
+				newNode = node2.addNode(path2);
+			}
+			
 			dataRepo.save();
-			return childNode;
+			return newNode;
 		}
 	}
 
@@ -80,12 +93,14 @@ public class ModeShapeDataService implements DataService, EventListener {
 							.getIdentifier());
 					listener.child_added(node.getName(), node.getPath(), node
 							.getParent().getName(), transformToJSON(node),
-							getPrevChildName(node));
+							getPrevChildName(node), node.hasNodes(), node
+									.getNodes().getSize());
 				} else if (event.getType() == Event.NODE_MOVED) {
 					Node node = dataRepo.getNodeByIdentifier(event
 							.getIdentifier());
 					JSONObject childSnapshot = transformToJSON(node);
-					listener.child_moved(childSnapshot, getPrevChildName(node));
+					listener.child_moved(childSnapshot, getPrevChildName(node),
+							node.hasNodes(), node.getNodes().getSize());
 				} else if (event.getType() == Event.NODE_REMOVED) {
 					Node node = dataRepo.getNodeByIdentifier(event
 							.getIdentifier());
@@ -94,18 +109,24 @@ public class ModeShapeDataService implements DataService, EventListener {
 				} else if (event.getType() == Event.PROPERTY_ADDED) {
 					Node node = dataRepo.getNodeByIdentifier(event
 							.getIdentifier());
-					JSONObject childSnapshot = transformToJSON(node);
-					listener.child_moved(childSnapshot, getPrevChildName(node));
+					listener.child_changed(node.getName(), node.getPath(), node
+							.getParent().getName(), transformToJSON(node),
+							getPrevChildName(node), node.hasNodes(), node
+									.getNodes().getSize());
 				} else if (event.getType() == Event.PROPERTY_CHANGED) {
 					Node node = dataRepo.getNodeByIdentifier(event
 							.getIdentifier());
-					JSONObject childSnapshot = transformToJSON(node);
-					listener.child_moved(childSnapshot, getPrevChildName(node));
+					listener.child_changed(node.getName(), node.getPath(), node
+							.getParent().getName(), transformToJSON(node),
+							getPrevChildName(node), node.hasNodes(), node
+									.getNodes().getSize());
 				} else if (event.getType() == Event.PROPERTY_REMOVED) {
 					Node node = dataRepo.getNodeByIdentifier(event
 							.getIdentifier());
-					JSONObject childSnapshot = transformToJSON(node);
-					listener.child_moved(childSnapshot, getPrevChildName(node));
+					listener.child_changed(node.getName(), node.getPath(), node
+							.getParent().getName(), transformToJSON(node),
+							getPrevChildName(node), node.hasNodes(), node
+									.getNodes().getSize());
 				}
 			}
 		} catch (Exception e) {
@@ -183,7 +204,8 @@ public class ModeShapeDataService implements DataService, EventListener {
 			if (!childNode.getName().equals("jcr:system")) {
 				listener.child_added(childNode.getName(), childNode.getPath(),
 						childNode.getParent().getName(),
-						transformToJSON(childNode), null);
+						transformToJSON(childNode), null, childNode.hasNodes(),
+						childNode.getNodes().getSize());
 			}
 		}
 	}
@@ -194,20 +216,26 @@ public class ModeShapeDataService implements DataService, EventListener {
 		commonRepo.logout();
 	}
 
-	public void update(String path, JSONObject payload) {
+	public PushedMessage update(String path, JSONObject payload) {
+		if (path.startsWith("/")) {
+			path = path.substring(1);
+		}
 		try {
 			Node node;
 			if (!Strings.isNullOrEmpty(path)) {
 				if (rootNode.hasNode(path)) {
 					node = rootNode.getNode(path);
 				} else {
-					node = rootNode.addNode(path);
+					node = addNode(rootNode, path);
 				}
 			} else {
 				node = rootNode;
 			}
 			updateNode(payload, node);
 			dataRepo.save();
+			return new PushedMessage(node.getParent().getName(),
+					getPrevChildName(node), transformToJSON(node),
+					node.hasNodes(), node.getNodes().getSize());
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
 		}
@@ -215,5 +243,29 @@ public class ModeShapeDataService implements DataService, EventListener {
 
 	public void setListener(DataListener listener) {
 		this.listener = listener;
+	}
+
+	@Override
+	public InitMessage init(String path) {
+		if (path.startsWith("/")) {
+			path = path.substring(1);
+		}
+		try {
+			Node node;
+			if (!Strings.isNullOrEmpty(path)) {
+				if (rootNode.hasNode(path)) {
+					node = rootNode.getNode(path);
+				} else {
+					node = addNode(rootNode, path);
+				}
+			} else {
+				node = rootNode;
+			}
+			dataRepo.save();
+			return new InitMessage(node.getName(), rootNode.getPath(), node
+					.getParent().getPath());
+		} catch (Exception exp) {
+			throw new RuntimeException(exp);
+		}
 	}
 }

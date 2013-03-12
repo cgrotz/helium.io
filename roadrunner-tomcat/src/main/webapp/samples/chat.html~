@@ -7,7 +7,7 @@
     <div id='messagesDiv'></div>
     <script>
       var myDataRef = new Roadrunner('ws://localhost:8080/roadrunner-tomcat/rr/roadrunner/todos');
-      myDataRef.on('child_changed', function(snapshot) {
+      myDataRef.on('child_added', function(snapshot) {
         var message = snapshot.val();
 	console.log(message);
         displayChatMessage(message.title, message.done);

@@ -21,6 +21,8 @@ import org.roadrunner.core.DataListener;
 import org.roadrunner.core.DataService;
 import org.roadrunner.core.DataServiceCreationException;
 import org.roadrunner.core.DataServiceFactory;
+import org.roadrunner.core.dtos.InitMessage;
+import org.roadrunner.core.dtos.PushedMessage;
 
 import com.google.common.base.Strings;
 
@@ -28,9 +30,9 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		DataListener {
 	private static Set<RoadrunnerMessageInbound> connections = new HashSet<RoadrunnerMessageInbound>();
 
-	private String repositoryName;
-
 	private String servletPath;
+
+	private String repositoryName;
 
 	private DataService dataService;
 
@@ -63,17 +65,57 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 							.indexOf(servletPath))
 							+ servletPath.length()
 							+ repositoryName.length() + 1);
-			if ("push".equalsIgnoreCase(messageType)) {
-				JSONObject payload = (JSONObject) message.get("payload");
-				String nodeName = UUID.randomUUID().toString()
-						.replaceAll("-", "");
-				if (Strings.isNullOrEmpty(path)) {
-					dataService.update(nodeName, payload);
+			if ("init".equalsIgnoreCase(messageType)) {
+				
+				InitMessage init = dataService.init(path);
+				
+				JSONObject broadcast = new JSONObject();
+				broadcast.put("type", "init");
+				broadcast.put("name", init.getName());
+				broadcast.put("parentPath", init.getParentPath());
+				broadcast.put("rootPath", init.getRootPath());
+				getWsOutbound().writeTextMessage(
+						CharBuffer.wrap(broadcast.toString()));
+			}
+			else if ("push".equalsIgnoreCase(messageType)) {
+				JSONObject payload;
+				if (message.has("payload")) {
+					payload = (JSONObject) message.get("payload");
 				} else {
-					dataService.update(path + "/" + nodeName, payload);
+					payload = new JSONObject();
+				}
+				String nodeName;
+				if (message.has("name")) {
+					nodeName = message.getString("name");
+				} else {
+					nodeName = UUID.randomUUID().toString().replaceAll("-", "");
+				}
+				PushedMessage pushed;
+				if (Strings.isNullOrEmpty(path)) {
+					pushed = dataService.update(nodeName, payload);
+				} else {
+					pushed = dataService.update(path + "/" + nodeName, payload);
+				}
+				{
+					JSONObject broadcast = new JSONObject();
+					broadcast.put("type", "pushed");
+					broadcast.put("name", nodeName);
+					broadcast.put("path", path+"/"+nodeName);
+					broadcast.put("parent", pushed.getParent());
+					broadcast.put("payload", pushed.getPayload());
+					broadcast.put("prevChildName", pushed.getPrevChildName());
+					broadcast.put("hasChildren", pushed.getHasChildren());
+					broadcast.put("numChildren", pushed.getNumChildren());
+					getWsOutbound().writeTextMessage(
+							CharBuffer.wrap(broadcast.toString()));
 				}
 			} else if ("set".equalsIgnoreCase(messageType)) {
-				Object payload = message.get("payload");
+				JSONObject payload;
+				if (message.has("payload")) {
+					payload = (JSONObject) message.get("payload");
+				} else {
+					payload = new JSONObject();
+				}
 				if (payload instanceof JSONObject) {
 					if (Strings.isNullOrEmpty(path)) {
 						dataService.update(null, (JSONObject) payload);
@@ -103,7 +145,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	}
 
 	public void child_added(String name, String path, String parent,
-			JSONObject node, String prevChildName) {
+			JSONObject node, String prevChildName, boolean hasChildren, long numChildren) {
 		try {
 			JSONObject broadcast = new JSONObject();
 			broadcast.put("type", "child_added");
@@ -112,6 +154,9 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 			broadcast.put("parent", parent);
 			broadcast.put("payload", node);
 			broadcast.put("prevChildName", prevChildName);
+			broadcast.put("hasChildren", hasChildren);
+			broadcast.put("numChildren", numChildren);
+
 			getWsOutbound().writeTextMessage(
 					CharBuffer.wrap(broadcast.toString()));
 		} catch (Exception exp) {
@@ -131,12 +176,17 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		}
 	}
 
-	public void child_changed(JSONObject childSnapshot, String prevChildName) {
+	public void child_changed(String name, String path, String parent, JSONObject node, String prevChildName, boolean hasChildren, long numChildren) {
 		try {
 			JSONObject broadcast = new JSONObject();
 			broadcast.put("type", "child_changed");
-			broadcast.put("payload", childSnapshot);
+			broadcast.put("name", name);
+			broadcast.put("path", path);
+			broadcast.put("parent", parent);
+			broadcast.put("payload", node);
 			broadcast.put("prevChildName", prevChildName);
+			broadcast.put("hasChildren", hasChildren);
+			broadcast.put("numChildren", numChildren);
 			getWsOutbound().writeTextMessage(
 					CharBuffer.wrap(broadcast.toString()));
 		} catch (Exception exp) {
@@ -144,12 +194,14 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		}
 	}
 
-	public void child_moved(JSONObject childSnapshot, String prevChildName) {
+	public void child_moved(JSONObject childSnapshot, String prevChildName, boolean hasChildren, long numChildren) {
 		try {
 			JSONObject broadcast = new JSONObject();
 			broadcast.put("type", "child_moved");
 			broadcast.put("payload", childSnapshot);
 			broadcast.put("prevChildName", prevChildName);
+			broadcast.put("hasChildren", hasChildren);
+			broadcast.put("numChildren", numChildren);
 			getWsOutbound().writeTextMessage(
 					CharBuffer.wrap(broadcast.toString()));
 		} catch (Exception exp) {
