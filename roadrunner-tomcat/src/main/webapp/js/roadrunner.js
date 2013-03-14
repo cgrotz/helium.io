@@ -501,11 +501,11 @@ function Roadrunner(path) {
 				callback(snapshot);
 			}
 			
-//			var callback = events_once[message.type];
-//			if (callback != null) {
-//				callback(snapshot);
-//				events_once[message.type] = null;
-//			}
+			var callback = events_once[message.type];
+			if (callback != null) {
+				callback(snapshot);
+				events_once[message.type] = null;
+			}
 		}
 	};
 
@@ -517,11 +517,19 @@ function Roadrunner(path) {
 	this.on = function(event_type, callback) {
 		//console.log("Roadrunner set on handler",event_type);
 		events[event_type] = callback;
+		roadrunner_connection.sendMessage("attached_listener", path,{"type":event_type});
 	};
 
 	this.once = function(event_type, callback) {
 		//console.log("Roadrunner set once handler",event_type);
 		events_once[event_type] = callback;
+	};
+
+	this.off = function(event_type, callback) {
+		//console.log("Roadrunner set off",event_type);
+		events[event_type] = null;
+		events_once[event_type] = null;
+		roadrunner_connection.sendMessage("detached_listener", path,{"type":event_type});
 	};
 
 	this.push = function(data) {
@@ -534,7 +542,14 @@ function Roadrunner(path) {
 	this.set = function(data) {
 		//console.log("Roadrunner set data",data);
 		roadrunner_connection.sendMessage('set', path, data);
-		return new Roadrunner(path);
+		if(data != null)
+		{
+			return new Roadrunner(path);
+		}
+		else
+		{
+			return null;
+		}
 	};
 
 	this.auth = function(authToken, onComplete, onCancel) {

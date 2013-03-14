@@ -208,6 +208,7 @@ Backbone.Roadrunner.Collection = Backbone.Collection.extend({
   },
 
   remove: function(models, options) {
+    console.log("remove",models);
     var parsed = this._parseModels(models);
     for (var i = 0; i < parsed.length; i++) {
       var model = parsed[i];

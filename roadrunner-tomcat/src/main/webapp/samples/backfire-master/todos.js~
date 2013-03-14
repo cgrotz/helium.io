@@ -22,7 +22,7 @@ $(function(){
     // Ensure that each todo created has `title`.
     initialize: function() {
       if (!this.get("title")) {
-        this.set({"title": this.defaults().title});
+        this.set({"title": this.defaults().title, "done": false});
       }
     },
 
@@ -43,7 +43,7 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in a Roadrunner.
-    Roadrunner: "ws://localhost:8080/roadrunner/rr/roadrunner/todos",
+    Roadrunner: "ws://localhost:8080/roadrunner-tomcat/rr/roadrunner/todos",
 
     // Filter down the list of all todo items that are finished.
     done: function() {

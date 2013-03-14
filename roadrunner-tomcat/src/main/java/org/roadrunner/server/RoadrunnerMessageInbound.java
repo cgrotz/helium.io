@@ -77,6 +77,13 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 				getWsOutbound().writeTextMessage(
 						CharBuffer.wrap(broadcast.toString()));
 			}
+			else if ("attached_listener".equalsIgnoreCase(messageType)) {
+
+				dataService.sync(path);
+			}
+			else if ("detached_listener".equalsIgnoreCase(messageType)) {
+				
+			}
 			else if ("push".equalsIgnoreCase(messageType)) {
 				JSONObject payload;
 				if (message.has("payload")) {
@@ -116,21 +123,28 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 					if(obj instanceof JSONObject)
 					{
 						payload = (JSONObject) obj;
+						if (payload instanceof JSONObject) {
+							if (Strings.isNullOrEmpty(path)) {
+								dataService.update(null, (JSONObject) payload);
+							} else {
+								dataService.update(path, (JSONObject) payload);
+							}
+						}
 					}
 					else
-					{
-						payload = new JSONObject();
-					}
-				} else {
-					payload = new JSONObject();
-				}
-				if (payload instanceof JSONObject) {
-					if (Strings.isNullOrEmpty(path)) {
-						dataService.update(null, (JSONObject) payload);
-					} else {
-						dataService.update(path, (JSONObject) payload);
+					{	
+						if (!Strings.isNullOrEmpty(path)) {
+							dataService.remove(path);
+						}
 					}
 				}
+				else 
+				{
+					if (!Strings.isNullOrEmpty(path)) {
+						dataService.remove(path);
+					}
+				}
+				
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -153,7 +167,8 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	}
 
 	public void child_added(String name, String path, String parent,
-			JSONObject node, String prevChildName, boolean hasChildren, long numChildren) {
+			JSONObject node, String prevChildName, boolean hasChildren,
+			long numChildren) {
 		try {
 			JSONObject broadcast = new JSONObject();
 			broadcast.put("type", "child_added");
@@ -172,11 +187,12 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		}
 	}
 
-	public void child_removed(JSONObject oldChildSnapshot) {
+	public void child_removed(String path, JSONObject payload) {
 		try {
 			JSONObject broadcast = new JSONObject();
 			broadcast.put("type", "child_removed");
-			broadcast.put("payload", oldChildSnapshot);
+			broadcast.put("path", path);
+			broadcast.put("payload", payload);
 			getWsOutbound().writeTextMessage(
 					CharBuffer.wrap(broadcast.toString()));
 		} catch (Exception exp) {
@@ -184,7 +200,9 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		}
 	}
 
-	public void child_changed(String name, String path, String parent, JSONObject node, String prevChildName, boolean hasChildren, long numChildren) {
+	public void child_changed(String name, String path, String parent,
+			JSONObject node, String prevChildName, boolean hasChildren,
+			long numChildren) {
 		try {
 			JSONObject broadcast = new JSONObject();
 			broadcast.put("type", "child_changed");
@@ -202,7 +220,8 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		}
 	}
 
-	public void child_moved(JSONObject childSnapshot, String prevChildName, boolean hasChildren, long numChildren) {
+	public void child_moved(JSONObject childSnapshot, String prevChildName,
+			boolean hasChildren, long numChildren) {
 		try {
 			JSONObject broadcast = new JSONObject();
 			broadcast.put("type", "child_moved");
@@ -226,14 +245,9 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 			throw new RuntimeException(exp);
 		}
 	}
-
+ 
 	@Override
 	protected void onOpen(WsOutbound outbound) {
 		super.onOpen(outbound);
-		try {
-			dataService.sync();
-		} catch (Exception exp) {
-			throw new RuntimeException(exp);
-		}
 	}
 }

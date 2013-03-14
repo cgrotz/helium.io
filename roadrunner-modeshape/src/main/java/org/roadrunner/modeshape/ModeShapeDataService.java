@@ -3,6 +3,7 @@ package org.roadrunner.modeshape;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
@@ -32,6 +33,7 @@ import org.roadrunner.core.dtos.InitMessage;
 import org.roadrunner.core.dtos.PushedMessage;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 
 public class ModeShapeDataService implements DataService, EventListener {
 
@@ -40,6 +42,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 	private Node rootNode;
 
 	private DataListener listener;
+	private static Map<String, JSONObject> removedNodes = Maps.newHashMap();
 
 	public ModeShapeDataService(Session commonRepo, Session dataRepo)
 			throws UnsupportedRepositoryOperationException, RepositoryException {
@@ -77,7 +80,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 			} else {
 				newNode = node2.addNode(path2);
 			}
-			
+
 			dataRepo.save();
 			return newNode;
 		}
@@ -102,10 +105,8 @@ public class ModeShapeDataService implements DataService, EventListener {
 					listener.child_moved(childSnapshot, getPrevChildName(node),
 							node.hasNodes(), node.getNodes().getSize());
 				} else if (event.getType() == Event.NODE_REMOVED) {
-					Node node = dataRepo.getNodeByIdentifier(event
-							.getIdentifier());
-					JSONObject childSnapshot = transformToJSON(node);
-					listener.child_removed(childSnapshot);
+					listener.child_removed(event.getPath(),
+							getFromRemovedNodes(event.getPath()));
 				} else if (event.getType() == Event.PROPERTY_ADDED) {
 					Node node = dataRepo.getNodeByIdentifier(event
 							.getIdentifier());
@@ -130,8 +131,13 @@ public class ModeShapeDataService implements DataService, EventListener {
 				}
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
+	}
+
+	private JSONObject getFromRemovedNodes(String path) {
+		return removedNodes.get(path);
 	}
 
 	private JSONObject transformToJSON(Node node) throws ValueFormatException,
@@ -172,24 +178,16 @@ public class ModeShapeDataService implements DataService, EventListener {
 		while (itr.hasNext()) {
 			String key = (String) itr.next();
 			Object value = object.get(key);
-			if(value instanceof Boolean)
-			{
+			if (value instanceof Boolean) {
 				node.setProperty(key, object.getBoolean(key));
-			}
-			else if(value instanceof Long)
-			{
+			} else if (value instanceof Long) {
 				node.setProperty(key, object.getLong(key));
-			}
-			else if(value instanceof Integer)
-			{
+			} else if (value instanceof Integer) {
 				node.setProperty(key, object.getInt(key));
-			}
-			else if(value instanceof Double)
-			{
+			} else if (value instanceof Double) {
 				node.setProperty(key, object.getDouble(key));
-			}
-			else{
-				node.setProperty(key, ""+value);
+			} else {
+				node.setProperty(key, "" + value);
 			}
 		}
 	}
@@ -204,14 +202,6 @@ public class ModeShapeDataService implements DataService, EventListener {
 					.getNode("*[" + (node.getIndex() - 1) + "]").getName();
 		}
 		return prevChildName;
-	}
-
-	public void sync() {
-		try {
-			sendNode(rootNode);
-		} catch (Exception e) {
-
-		}
 	}
 
 	private void sendNode(Node node) throws RepositoryException, JSONException,
@@ -284,6 +274,31 @@ public class ModeShapeDataService implements DataService, EventListener {
 					.getParent().getPath());
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
+		}
+	}
+
+	@Override
+	public void remove(String path) {
+		try {
+			Node node = rootNode.getNode(path.startsWith("/") ? path
+					.substring(1) : path);
+			removedNodes.put(node.getPath(), transformToJSON(node));
+			node.remove();
+			dataRepo.save();
+		} catch (Exception exp) {
+			throw new RuntimeException(exp);
+		}
+
+	}
+
+	@Override
+	public void sync(String path) {
+
+		try {
+			sendNode(rootNode.getNode(path.startsWith("/") ? path.substring(1)
+					: path));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }

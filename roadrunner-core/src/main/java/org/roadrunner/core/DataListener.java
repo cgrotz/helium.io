@@ -8,7 +8,7 @@ public interface DataListener {
 
 	void child_added(String name, String path, String parent, JSONObject node, String prevChildName, boolean hasChildren, long numChildren);
 
-	void child_removed(JSONObject childSnapshot);
+	void child_removed(String path, JSONObject jsonObject);
 
 	public void child_changed(String name, String path, String parent, JSONObject node, String prevChildName, boolean hasChildren, long numChildren);
 }

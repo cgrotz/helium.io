@@ -12,7 +12,9 @@ public interface DataService {
 
 	void shutdown();
 
-	void sync();
-
 	InitMessage init(String path);
+
+	void remove(String path);
+
+	void sync(String path);
 }
