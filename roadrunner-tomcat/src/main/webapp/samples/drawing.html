@@ -1,6 +1,6 @@
 <html>
 <head>
-    <script src='http://localhost:8080/roadrunner/js/roadrunner.js'></script>
+    <script src='http://localhost:8080/roadrunner-tomcat/js/roadrunner.js'></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://www.firebase.com/css/example.css">
 </head>
@@ -15,7 +15,7 @@
     var pixSize = 8, lastPoint = null, currentColor = "000", mouseDown = 0;
 
     //Create a reference to the pixel data for our drawing.
-    var pixelDataRef = new Roadrunner('ws://localhost:8080/roadrunner/rr/roadrunner');
+    var pixelDataRef = new Roadrunner('ws://localhost:8080/roadrunner-tomcat/rr/roadrunner/drawing');
 
     // Set up our canvas
     var myCanvas = document.getElementById('drawing-canvas');

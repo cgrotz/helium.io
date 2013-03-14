@@ -112,7 +112,15 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 			} else if ("set".equalsIgnoreCase(messageType)) {
 				JSONObject payload;
 				if (message.has("payload")) {
-					payload = (JSONObject) message.get("payload");
+					Object obj = message.get("payload");
+					if(obj instanceof JSONObject)
+					{
+						payload = (JSONObject) obj;
+					}
+					else
+					{
+						payload = new JSONObject();
+					}
 				} else {
 					payload = new JSONObject();
 				}

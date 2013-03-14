@@ -270,6 +270,7 @@ Backbone.Roadrunner.Collection = Backbone.Collection.extend({
 
   _childChanged: function(snap) {
     var model = snap.val();
+    console.log(model);
     var item = _.find(this.models, function(child) {
       return child.id == model.id
     });

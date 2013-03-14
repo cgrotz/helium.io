@@ -172,7 +172,25 @@ public class ModeShapeDataService implements DataService, EventListener {
 		while (itr.hasNext()) {
 			String key = (String) itr.next();
 			Object value = object.get(key);
-			node.setProperty(key, "" + value);
+			if(value instanceof Boolean)
+			{
+				node.setProperty(key, object.getBoolean(key));
+			}
+			else if(value instanceof Long)
+			{
+				node.setProperty(key, object.getLong(key));
+			}
+			else if(value instanceof Integer)
+			{
+				node.setProperty(key, object.getInt(key));
+			}
+			else if(value instanceof Double)
+			{
+				node.setProperty(key, object.getDouble(key));
+			}
+			else{
+				node.setProperty(key, ""+value);
+			}
 		}
 	}
 

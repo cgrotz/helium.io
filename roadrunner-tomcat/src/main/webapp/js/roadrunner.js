@@ -384,38 +384,38 @@ function Snapshot(message) {
 	var hasChildren = message.hasChildren;
 	var numChildren = message.numChildren;
 	this.val = function() {
-		console.log("Snapshot return val",payload);
+		//console.log("Snapshot return val",payload);
 		return payload;
 	};
 	this.name = function() {
-		console.log("Snapshot return name",name);
+		//console.log("Snapshot return name",name);
 		return name;
 	};
 	this.path = function() {
-		console.log("Snapshot return path",path);
+		//console.log("Snapshot return path",path);
 		return path;
 	};
 	this.ref = function() {
-		console.log("Snapshot return ref");
+		//console.log("Snapshot return ref");
 		return new Roadrunner(path);
 	};
 	this.getPriority = function() {
-		console.log("Snapshot return priority",priority);
+		//console.log("Snapshot return priority",priority);
 		return priority;
 	};
 	this.child = function(childPath) {
-		console.log("Snapshot return child",childPath);
+		//console.log("Snapshot return child",childPath);
 		new Roadrunner(path + "/" + childPath);
 	};
 	this.forEach = function(childAction) {
-		Console.log("forEach");
+		//console.log("forEach");
 	};
 	this.hasChildren = function() {
-		console.log("Snapshot return hasChildren",hasChildren);
+		//console.log("Snapshot return hasChildren",hasChildren);
 		return hasChildren;
 	};
 	this.numChildren = function() {
-		console.log("Snapshot return numChildren",numChildren);
+		//console.log("Snapshot return numChildren",numChildren);
 		return numChildren;
 	};
 }
@@ -437,11 +437,18 @@ function RoadrunnerConnection(url,callback) {
 			roadrunner_endpoint.onclose = function(event) {
 			};
 		}
+	
+		roadrunner_endpoint.eventhandlers = [];
+		roadrunner_endpoint.onmessage = function(event) {
+			for ( var i = 0; i < roadrunner_endpoint.eventhandlers.length; i++) {
+				var handler = roadrunner_endpoint.eventhandlers[i];
+				handler(event);
+			}
+		};
 	}
-
-	roadrunner_endpoint.onmessage = function(event) {
+	roadrunner_endpoint.eventhandlers.push(function(event) {
 		var message = JSON.parse(event.data);
-		console.log("received websocket message",message);
+		//console.log("received websocket message",message);
 		if (message.type == "init") {
 			callback(message);
 		} else {
@@ -453,7 +460,7 @@ function RoadrunnerConnection(url,callback) {
 				self.handleMessage(message);
 			}
 		}
-	};
+	});
 
 	this.sendMessage = function(type, path, payload, name) {
 		var message = {
@@ -462,7 +469,7 @@ function RoadrunnerConnection(url,callback) {
 			path : path,
 			payload : payload
 		};
-		console.log(message);
+		//console.log(message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
 			roadrunner_endpoint.send(JSON.stringify(message));
 		} else {
@@ -480,51 +487,52 @@ function Roadrunner(path) {
 	var parentPath;
 	var roadrunner_connection = new RoadrunnerConnection(path,
 			function(message) {
-				console.log("Roadrunner received init",message);
+				//console.log("Roadrunner received init",message);
 				self.rootPath = message.rootPath;
 				self.parentPath = message.parentPath;
 			});
 	roadrunner_connection.handleMessage = function(message) {
 		var snapshot = new Snapshot(message);
-		if(snapshot.path().indexOf(path.substr(path.lastIndexOf("/"),path.length)) == 0)
+		var workpath = path+"/";
+		if(snapshot.path().indexOf(workpath.substr(path.lastIndexOf("/"),workpath.length)) == 0)
 		{
 			var callback = events[message.type];
 			if (callback != null) {
 				callback(snapshot);
 			}
 			
-			var callback = events_once[message.type];
-			if (callback != null) {
-				callback(snapshot);
-				events_once[message.type] = null;
-			}
+//			var callback = events_once[message.type];
+//			if (callback != null) {
+//				callback(snapshot);
+//				events_once[message.type] = null;
+//			}
 		}
 	};
 
 	this.child = function(childname) {
-		console.log("Roadrunner return ref data",childname);
+		//console.log("Roadrunner return ref data",childname);
 		return new Roadrunner(path + "/"+childname);
 	};
 
 	this.on = function(event_type, callback) {
-		console.log("Roadrunner set on handler",event_type);
+		//console.log("Roadrunner set on handler",event_type);
 		events[event_type] = callback;
 	};
 
 	this.once = function(event_type, callback) {
-		console.log("Roadrunner set once handler",event_type);
+		//console.log("Roadrunner set once handler",event_type);
 		events_once[event_type] = callback;
 	};
 
 	this.push = function(data) {
-		console.log("Roadrunner push data",data);
+		//console.log("Roadrunner push data",data);
 		var name = UUID.generate();
 		roadrunner_connection.sendMessage('push', path, data, name);
 		return new Roadrunner(path + "/" + name);
 	};
 
 	this.set = function(data) {
-		console.log("Roadrunner set data",data);
+		//console.log("Roadrunner set data",data);
 		roadrunner_connection.sendMessage('set', path, data);
 		return new Roadrunner(path);
 	};
@@ -536,27 +544,27 @@ function Roadrunner(path) {
 	};
 
 	this.parent = function() {
-		console.log("Roadrunner return parent",parentPath);
+		//console.log("Roadrunner return parent",parentPath);
 		new Roadrunner(parentPath);
 	};
 
 	this.root = function() {
-		console.log("Roadrunner return root",rootPath);
+		//console.log("Roadrunner return root",rootPath);
 		new Roadrunner(rootPath);
 	};
 
 	this.toString = function() {
-		console.log("toString");
+		//console.log("toString");
 	};
 
 	this.name = function() {
 		var name = path.substring(path.lastIndexOf('/')+1,path.length);
-		console.log("Roadrunner return name",name);
+		//console.log("Roadrunner return name",name);
 		return name;
 	};
 
 	this.update = function(content) {
-		console.log("Roadrunner execute update",content);
+		//console.log("Roadrunner execute update",content);
 		roadrunner_connection.sendMessage('set', path, content);
 	};
 };
