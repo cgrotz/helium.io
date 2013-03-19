@@ -14,15 +14,18 @@ import org.modeshape.jcr.RepositoryConfiguration;
 import org.roadrunner.core.DataService;
 import org.roadrunner.core.DataServiceCreationException;
 import org.roadrunner.core.DataServiceFactory;
+import org.roadrunner.core.authorization.AuthenticationServiceFactory;
+import org.roadrunner.core.authorization.AuthorizationService;
 
 import com.google.common.collect.Maps;
 
-public class ModeShapeDataServiceFactory implements DataServiceFactory {
+public class ModeShapeServiceFactory implements DataServiceFactory,
+		AuthenticationServiceFactory {
 
 	private ModeShapeEngine engine;
 	private Map<String, Repository> repositories = Maps.newHashMap();
 
-	public ModeShapeDataServiceFactory() {
+	public ModeShapeServiceFactory() {
 		engine = new ModeShapeEngine();
 		engine.start();
 	}
@@ -58,15 +61,24 @@ public class ModeShapeDataServiceFactory implements DataServiceFactory {
 		return repository;
 	}
 
-	public DataService getDataService(String repositoryName)
+	public DataService getDataService(AuthorizationService authorizationService, String repositoryName)
 			throws DataServiceCreationException {
 		try {
-			Repository commonRepo = getRepository("common");
 			Repository dataRepo = getRepository(repositoryName);
-			return new ModeShapeDataService(commonRepo.login(),
-					dataRepo.login());
+			return new ModeShapeDataService(authorizationService, dataRepo.login());
 		} catch (Exception exp) {
 			throw new DataServiceCreationException(exp);
+		}
+	}
+
+	@Override
+	public AuthorizationService getAuthorizationService(String repositoryName) {
+		try {
+			Repository commonRepo = getRepository("common");
+			return new ModeShapeAuthorizationService(commonRepo.login(),
+					repositoryName);
+		} catch (Exception exp) {
+			throw new RuntimeException(exp);
 		}
 	}
 }

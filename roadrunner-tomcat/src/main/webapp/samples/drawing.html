@@ -58,7 +58,8 @@
       var sx = (x0 < x1) ? 1 : -1, sy = (y0 < y1) ? 1 : -1, err = dx - dy;
       while (true) {
         //write the pixel into Firebase, or if we are drawing white, remove the pixel
-        pixelDataRef.push({"x":x0, y:y0,"color": (currentColor == "fff" ? null : currentColor)});
+        //pixelDataRef.push({"x":x0, y:y0,"color": (currentColor == "fff" ? null : currentColor)});
+	pixelDataRef.child(x0 + "_" + y0).set({"color": (currentColor == "fff" ? null : currentColor)});
 
         if (x0 == x1 && y0 == y1) break;
         var e2 = 2 * err;
@@ -78,12 +79,16 @@
 
     // Add callbacks that are fired any time the pixel data changes and adjusts the canvas appropriately.
     // Note that child_added events will be fired for initial pixel data as well.
+    // Add callbacks that are fired any time the pixel data changes and adjusts the canvas appropriately.
+    // Note that child_added events will be fired for initial pixel data as well.
     var drawPixel = function(snapshot) {
+      var coords = snapshot.name().split("_");
       myContext.fillStyle = "#" + snapshot.val().color;
-      myContext.fillRect(parseInt(snapshot.val().x) * pixSize, parseInt(snapshot.val().y) * pixSize, pixSize, pixSize);
+      myContext.fillRect(parseInt(coords[0]) * pixSize, parseInt(coords[1]) * pixSize, pixSize, pixSize);
     }
     var clearPixel = function(snapshot) {
-      myContext.clearRect(parseInt(snapshot.val().x) * pixSize, parseInt(snapshot.val().y) * pixSize, pixSize, pixSize);
+      var coords = snapshot.name().split("_");
+      myContext.clearRect(parseInt(coords[0]) * pixSize, parseInt(coords[1]) * pixSize, pixSize, pixSize);
     }
     pixelDataRef.on('child_added', drawPixel);
     pixelDataRef.on('child_changed', drawPixel);

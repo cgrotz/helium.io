@@ -21,10 +21,14 @@ import org.roadrunner.core.DataListener;
 import org.roadrunner.core.DataService;
 import org.roadrunner.core.DataServiceCreationException;
 import org.roadrunner.core.DataServiceFactory;
+import org.roadrunner.core.authorization.AuthenticationServiceFactory;
+import org.roadrunner.core.authorization.AuthorizationService;
+import org.roadrunner.core.authorization.RoadrunnerOperation;
 import org.roadrunner.core.dtos.InitMessage;
 import org.roadrunner.core.dtos.PushedMessage;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 
 public class RoadrunnerMessageInbound extends MessageInbound implements
 		DataListener {
@@ -36,8 +40,12 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 
 	private DataService dataService;
 
+	private AuthorizationService authorizationService;
+
+	private Set<String> attached_listeners = Sets.newHashSet();
+
 	public RoadrunnerMessageInbound(String servletPath, String path,
-			DataServiceFactory dataServiceFactory) throws ParsingException,
+			DataServiceFactory dataServiceFactory,AuthenticationServiceFactory authenticationServiceFactory) throws ParsingException,
 			ConfigurationException, LoginException, RepositoryException,
 			FileNotFoundException, DataServiceCreationException {
 		this.servletPath = servletPath;
@@ -48,6 +56,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		connections.add(this);
 		dataService = dataServiceFactory.getDataService(repositoryName);
 		dataService.setListener(this);
+		authorizationService = authenticationServiceFactory.getAuthorizationService(repositoryName);
 	}
 
 	@Override
@@ -60,11 +69,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		try {
 			JSONObject message = new JSONObject(msg.toString());
 			String messageType = (String) message.get("type");
-			String path = ((String) message.get("path"))
-					.substring((((String) message.get("path"))
-							.indexOf(servletPath))
-							+ servletPath.length()
-							+ repositoryName.length() + 1);
+			String path = extractPath(message);
 			if ("init".equalsIgnoreCase(messageType)) {
 				
 				InitMessage init = dataService.init(path);
@@ -78,11 +83,11 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 						CharBuffer.wrap(broadcast.toString()));
 			}
 			else if ("attached_listener".equalsIgnoreCase(messageType)) {
-
+				attached_listeners.add(path);
 				dataService.sync(path);
 			}
 			else if ("detached_listener".equalsIgnoreCase(messageType)) {
-				
+				attached_listeners.remove(path);
 			}
 			else if ("push".equalsIgnoreCase(messageType)) {
 				JSONObject payload;
@@ -131,10 +136,16 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 							}
 						}
 					}
-					else
+					else if(obj == null)
 					{	
 						if (!Strings.isNullOrEmpty(path)) {
 							dataService.remove(path);
+						}
+					}
+					else
+					{
+						if (!Strings.isNullOrEmpty(path)) {
+							dataService.updateSimpleValue(path, obj);
 						}
 					}
 				}
@@ -147,7 +158,23 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 				
 			}
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException(msg.toString(), e);
+		}
+	}
+
+	private String extractPath(JSONObject message) throws JSONException {
+		int servletPathLength = servletPath.length();
+		int repositoryNameLength = repositoryName.length();
+		String path = (String) message.get("path");
+		int indexOfServletPath = path.indexOf(servletPath);
+		if(indexOfServletPath > -1)
+		{
+			int substringIndex = indexOfServletPath + servletPathLength + repositoryNameLength + 1;
+			return path.substring(substringIndex);
+		}
+		else
+		{
+			return path;
 		}
 	}
 
@@ -160,6 +187,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 
 	public void value(JSONObject dataSnapshot) throws JSONException,
 			IOException {
+		
 		JSONObject broadcast = new JSONObject();
 		broadcast.put("type", "value");
 		broadcast.put("payload", dataSnapshot);
@@ -179,9 +207,10 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 			broadcast.put("prevChildName", prevChildName);
 			broadcast.put("hasChildren", hasChildren);
 			broadcast.put("numChildren", numChildren);
-
-			getWsOutbound().writeTextMessage(
-					CharBuffer.wrap(broadcast.toString()));
+			if(listenerAttached(path))
+			{
+				getWsOutbound().writeTextMessage(CharBuffer.wrap(broadcast.toString()));
+			}
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
 		}
@@ -249,5 +278,16 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	@Override
 	protected void onOpen(WsOutbound outbound) {
 		super.onOpen(outbound);
+	}
+
+	private boolean listenerAttached(String path) {
+		for(String listenerPath : attached_listeners)
+		{
+			if(path.startsWith(listenerPath))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }

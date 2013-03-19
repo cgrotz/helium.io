@@ -22,7 +22,7 @@ body {
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
-<script src='http://localhost:8080/roadrunner/js/roadrunner.js'></script>
+<script src='http://localhost:8080/roadrunner-tomcat/js/roadrunner.js'></script>
 <script type="text/javascript" src="js/jquery/jquery.js"></script>
 <script type="text/javascript" src="js/jquery/jquery.cookie.js"></script>
 <script type="text/javascript" src="js/jquery/jquery.hotkeys.js"></script>
@@ -40,38 +40,27 @@ body {
         "theme" : "classic"
       }
     });
-    var myDataRef = new Roadrunner('ws://localhost:8080/roadrunner/rr/roadrunner');
-    myDataRef.on('child_added', function(snapshot)
-    {
-      var parent = "#Roadrunner";
-      if(snapshot.parent() == null)
-      {
-        parent = snapshot.parent();
-      }
-      
-      $("#rrTree").jstree("create", parent, "first",
-      {
-        attr :
+    var myDataRef = new Roadrunner('ws://localhost:8080/roadrunner-tomcat/rr/roadrunner');
+    var addElement = function(snapshot) {
+    	console.log(snapshot);
+        var parent = "#Roadrunner";
+        if(snapshot.parent() != null && snapshot.parent() != '')
         {
-          id : snapshot.name()
-        },
-        data : snapshot.name()
-      }, function(){}, true);
-      for(var k in snapshot.val())
-      {
-        console.log(JSON.stringify(snapshot.val()));
-        var name = k+": "+snapshot.val()[k];
-        $("#rrTree").jstree("create", "#"+snapshot.name(), "first",
+          parent = "#"+(snapshot.parent());
+        }
+        
+        $("#rrTree").jstree("create", parent, "first",
         {
           attr :
           {
-            id : name
+            id : snapshot.name()
           },
-          data : name
+          data : snapshot.name()
         }, function(){}, true);
-      }
-    });
-
+        
+        snapshot.ref().on('child_added', addElement);
+    }
+    myDataRef.on('child_added', addElement);
   });
 </script>
 

@@ -376,11 +376,12 @@ UUID = (function(overwrittenUUID) {
 // Roadrunner
 var roadrunner_endpoint;
 
-function Snapshot(message) {
+function Snapshot(message,roadrunner_connection) {
 	var payload = message.payload;
 	var name = message.name;
 	var priority = message.priority;
 	var path = message.path;
+	var parent = message.parent;
 	var hasChildren = message.hasChildren;
 	var numChildren = message.numChildren;
 	this.val = function() {
@@ -391,12 +392,16 @@ function Snapshot(message) {
 		//console.log("Snapshot return name",name);
 		return name;
 	};
+	this.parent = function() {
+		//console.log("Snapshot return path",path);
+		return parent;
+	};
 	this.path = function() {
 		//console.log("Snapshot return path",path);
 		return path;
 	};
 	this.ref = function() {
-		//console.log("Snapshot return ref");
+		console.log("Snapshot return ref",path);
 		return new Roadrunner(path);
 	};
 	this.getPriority = function() {
@@ -408,7 +413,8 @@ function Snapshot(message) {
 		new Roadrunner(path + "/" + childPath);
 	};
 	this.forEach = function(childAction) {
-		//console.log("forEach");
+		var dataRef = new Roadrunner(path);
+		dataRef.on("child_added", childAction);
 	};
 	this.hasChildren = function() {
 		//console.log("Snapshot return hasChildren",hasChildren);
@@ -492,9 +498,14 @@ function Roadrunner(path) {
 				self.parentPath = message.parentPath;
 			});
 	roadrunner_connection.handleMessage = function(message) {
-		var snapshot = new Snapshot(message);
-		var workpath = path+"/";
-		if(snapshot.path().indexOf(workpath.substr(path.lastIndexOf("/"),workpath.length)) == 0)
+		var snapshot = new Snapshot(message, roadrunner_connection);
+		var workpath = path;
+		workpath = workpath.substr(workpath.lastIndexOf("/"),workpath.length);
+		if(workpath.indexOf("/roadrunner") > -1)
+		{
+			workpath = workpath.substr("/roadrunner".length);
+		}
+		if(snapshot.path().indexOf(workpath) == 0 && !(snapshot.path() == workpath))
 		{
 			var callback = events[message.type];
 			if (callback != null) {

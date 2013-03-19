@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.catalina.websocket.StreamInbound;
 import org.apache.catalina.websocket.WebSocketServlet;
-import org.roadrunner.modeshape.ModeShapeDataServiceFactory;
+import org.roadrunner.modeshape.ModeShapeServiceFactory;
 
 /**
  * Servlet implementation class ChatServlet
@@ -17,7 +17,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet
 {
   private static final long serialVersionUID = 1L;
   
-  private ModeShapeDataServiceFactory dataServiceFactory = new ModeShapeDataServiceFactory();
+  private ModeShapeServiceFactory dataServiceFactory = new ModeShapeServiceFactory();
 
   @Override
   protected StreamInbound createWebSocketInbound(String subProtocol, HttpServletRequest request)
@@ -28,7 +28,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet
     String collectionPath = requestURI.substring((contextPath + servletPath).length() + 1);
     try
     {
-      return new RoadrunnerMessageInbound(contextPath + servletPath, collectionPath, dataServiceFactory);
+      return new RoadrunnerMessageInbound(contextPath + servletPath, collectionPath, dataServiceFactory,dataServiceFactory);
     }
     catch (Exception e)
     {

@@ -6,8 +6,6 @@ import org.roadrunner.core.dtos.PushedMessage;
 
 public interface DataService {
 
-	void setListener(DataListener dataListener);
-
 	PushedMessage update(String nodeName, JSONObject payload);
 
 	void shutdown();
@@ -17,4 +15,8 @@ public interface DataService {
 	void remove(String path);
 
 	void sync(String path);
+
+	public void updateSimpleValue(String path, Object obj);
+	
+	void setListener(DataListener dataListener);
 }
