@@ -4,10 +4,9 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
-import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
@@ -23,9 +22,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
 
 import org.json.JSONArray;
@@ -35,20 +31,20 @@ import org.roadrunner.core.DataListener;
 import org.roadrunner.core.DataService;
 import org.roadrunner.core.authorization.AuthorizationService;
 import org.roadrunner.core.authorization.RoadrunnerOperation;
-import org.roadrunner.core.dtos.InitMessage;
 import org.roadrunner.core.dtos.PushedMessage;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class ModeShapeDataService implements DataService, EventListener {
 
 	private Session dataRepo;
 	private Node rootNode;
 
-	private DataListener listener;
 	private AuthorizationService authorizationService;
 	private JSONObject auth = new JSONObject();
+	private Set<DataListener> listeners = Sets.newHashSet();
 	private static Map<String, JSONObject> removedNodes = Maps.newHashMap();
 
 	public ModeShapeDataService(AuthorizationService authorizationService,
@@ -56,6 +52,9 @@ public class ModeShapeDataService implements DataService, EventListener {
 			RepositoryException {
 		this.dataRepo = dataRepo;
 		this.authorizationService = authorizationService;
+
+		rootNode = dataRepo.getRootNode();
+
 		int EVENT_MASK = Event.NODE_ADDED | Event.NODE_MOVED
 				| Event.NODE_REMOVED | Event.PROPERTY_ADDED
 				| Event.PROPERTY_REMOVED | Event.PROPERTY_CHANGED;
@@ -63,11 +62,9 @@ public class ModeShapeDataService implements DataService, EventListener {
 				.getObservationManager()
 				.addEventListener(this, EVENT_MASK, null, true, null, null,
 						false);
-
-		rootNode = dataRepo.getRootNode();
 	}
 
-	public Node addNode(Node node2, String path2) throws ItemExistsException,
+	private Node addNode(Node node2, String path2) throws ItemExistsException,
 			PathNotFoundException, VersionException,
 			ConstraintViolationException, LockException, RepositoryException {
 		if (path2.indexOf("/") > -1) {
@@ -107,7 +104,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 					} catch (Exception e) {
 						parentName = null;
 					}
-					listener.child_added(node.getName(), node.getPath(),
+					fireChildAdded(node.getName(), node.getPath(),
 							parentName, transformToJSON(node),
 							getPrevChildName(node), node.hasNodes(), node
 									.getNodes().getSize());
@@ -115,10 +112,10 @@ public class ModeShapeDataService implements DataService, EventListener {
 					Node node = dataRepo.getNodeByIdentifier(event
 							.getIdentifier());
 					JSONObject childSnapshot = transformToJSON(node);
-					listener.child_moved(childSnapshot, getPrevChildName(node),
+					fireChildMoved(childSnapshot, getPrevChildName(node),
 							node.hasNodes(), node.getNodes().getSize());
 				} else if (event.getType() == Event.NODE_REMOVED) {
-					listener.child_removed(event.getPath(),
+					fireChildRemoved(event.getPath(),
 							getFromRemovedNodes(event.getPath()));
 				} else if (event.getType() == Event.PROPERTY_ADDED) {
 					Node node = dataRepo.getNodeByIdentifier(event
@@ -129,7 +126,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 					} catch (Exception e) {
 						parentName = null;
 					}
-					listener.child_changed(node.getName(), node.getPath(),
+					fireChildChanged(node.getName(), node.getPath(),
 							parentName, transformToJSON(node),
 							getPrevChildName(node), node.hasNodes(), node
 									.getNodes().getSize());
@@ -142,7 +139,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 					} catch (Exception e) {
 						parentName = null;
 					}
-					listener.child_changed(node.getName(), node.getPath(),
+					fireChildChanged(node.getName(), node.getPath(),
 							parentName, transformToJSON(node),
 							getPrevChildName(node), node.hasNodes(), node
 									.getNodes().getSize());
@@ -155,7 +152,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 					} catch (Exception e) {
 						parentName = null;
 					}
-					listener.child_changed(node.getName(), node.getPath(),
+					fireChildChanged(node.getName(), node.getPath(),
 							parentName, transformToJSON(node),
 							getPrevChildName(node), node.hasNodes(), node
 									.getNodes().getSize());
@@ -260,7 +257,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 							.getPath(), new ModeshapeRulesDataSnapshot(
 							childNode))) {
 				if (!childNode.getName().equals("jcr:system")) {
-					listener.child_added(childNode.getName(), childNode
+					fireChildAdded(childNode.getName(), childNode
 							.getPath(), childNode.getParent().getName(),
 							transformToJSON(childNode), null, childNode
 									.hasNodes(), childNode.getNodes().getSize());
@@ -271,6 +268,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 
 	@Override
 	public void shutdown() {
+		listeners.clear();
 		dataRepo.logout();
 	}
 
@@ -294,40 +292,6 @@ public class ModeShapeDataService implements DataService, EventListener {
 			return new PushedMessage(node.getParent().getName(),
 					getPrevChildName(node), transformToJSON(node),
 					node.hasNodes(), node.getNodes().getSize());
-		} catch (Exception exp) {
-			throw new RuntimeException(exp);
-		}
-	}
-
-	public void setListener(DataListener listener) {
-		this.listener = listener;
-	}
-
-	@Override
-	public InitMessage init(String path) {
-		if (path.startsWith("/")) {
-			path = path.substring(1);
-		}
-		try {
-			Node node;
-			if (!Strings.isNullOrEmpty(path)) {
-				if (rootNode.hasNode(path)) {
-					node = rootNode.getNode(path);
-				} else {
-					node = addNode(rootNode, path);
-				}
-			} else {
-				node = rootNode;
-			}
-			dataRepo.save();
-			String parentPath;
-			try {
-				parentPath = node.getParent().getPath();
-			} catch (Exception e) {
-				parentPath = null;
-			}
-			return new InitMessage(node.getName(), rootNode.getPath(),
-					parentPath);
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
 		}
@@ -358,7 +322,6 @@ public class ModeShapeDataService implements DataService, EventListener {
 			String relPath = path.startsWith("/") ? path.substring(1) : path;
 			if (!Strings.isNullOrEmpty(relPath)) {
 				Node node = rootNode.getNode(relPath);
-
 				sendNode(node);
 			} else {
 				sendNode(rootNode);
@@ -400,6 +363,48 @@ public class ModeShapeDataService implements DataService, EventListener {
 			dataRepo.save();
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
+		}
+	}
+
+	public void addListener(DataListener listener) {
+		this.listeners.add(listener);
+	}
+
+	@Override
+	public void removeListener(DataListener dataListener) {
+		this.listeners .remove(dataListener);
+	}
+
+	private void fireChildChanged(String name, String path, String parentName,
+			JSONObject transformToJSON, String prevChildName, boolean hasNodes,
+			long size) {
+		for(DataListener listener : listeners)
+		{
+			listener.child_changed(name, path, parentName, transformToJSON, prevChildName, hasNodes, size);
+		}
+	}
+
+	private void fireChildRemoved(String path, JSONObject fromRemovedNodes) {
+		for(DataListener listener : listeners)
+		{
+			listener.child_removed(path, fromRemovedNodes);
+		}
+	}
+
+	private void fireChildMoved(JSONObject childSnapshot, String prevChildName,
+			boolean hasNodes, long size) {
+		for(DataListener listener : listeners)
+		{
+			listener.child_moved(childSnapshot, prevChildName, hasNodes, size);
+		}
+	}
+
+	private void fireChildAdded(String name, String path, String parentName,
+			JSONObject transformToJSON, String prevChildName, boolean hasNodes,
+			long size) {
+		for(DataListener listener : listeners)
+		{
+			listener.child_added(name, path, parentName, transformToJSON, prevChildName, hasNodes, size);
 		}
 	}
 }

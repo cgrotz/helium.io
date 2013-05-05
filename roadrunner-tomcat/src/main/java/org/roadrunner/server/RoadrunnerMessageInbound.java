@@ -23,8 +23,6 @@ import org.roadrunner.core.DataServiceCreationException;
 import org.roadrunner.core.DataServiceFactory;
 import org.roadrunner.core.authorization.AuthenticationServiceFactory;
 import org.roadrunner.core.authorization.AuthorizationService;
-import org.roadrunner.core.authorization.RoadrunnerOperation;
-import org.roadrunner.core.dtos.InitMessage;
 import org.roadrunner.core.dtos.PushedMessage;
 
 import com.google.common.base.Strings;
@@ -54,9 +52,9 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 				path.indexOf("/")) : path;
 
 		connections.add(this);
-		dataService = dataServiceFactory.getDataService(repositoryName);
-		dataService.setListener(this);
 		authorizationService = authenticationServiceFactory.getAuthorizationService(repositoryName);
+		dataService = dataServiceFactory.getDataService(authorizationService, repositoryName);
+		dataService.addListener(this);
 	}
 
 	@Override
@@ -70,19 +68,8 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 			JSONObject message = new JSONObject(msg.toString());
 			String messageType = (String) message.get("type");
 			String path = extractPath(message);
-			if ("init".equalsIgnoreCase(messageType)) {
-				
-				InitMessage init = dataService.init(path);
-				
-				JSONObject broadcast = new JSONObject();
-				broadcast.put("type", "init");
-				broadcast.put("name", init.getName());
-				broadcast.put("parentPath", init.getParentPath());
-				broadcast.put("rootPath", init.getRootPath());
-				getWsOutbound().writeTextMessage(
-						CharBuffer.wrap(broadcast.toString()));
-			}
-			else if ("attached_listener".equalsIgnoreCase(messageType)) {
+			
+			if ("attached_listener".equalsIgnoreCase(messageType)) {
 				attached_listeners.add(path);
 				dataService.sync(path);
 			}
@@ -185,15 +172,6 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		}
 	}
 
-	public void value(JSONObject dataSnapshot) throws JSONException,
-			IOException {
-		
-		JSONObject broadcast = new JSONObject();
-		broadcast.put("type", "value");
-		broadcast.put("payload", dataSnapshot);
-		getWsOutbound().writeTextMessage(CharBuffer.wrap(broadcast.toString()));
-	}
-
 	public void child_added(String name, String path, String parent,
 			JSONObject node, String prevChildName, boolean hasChildren,
 			long numChildren) {
@@ -273,11 +251,6 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
 		}
-	}
- 
-	@Override
-	protected void onOpen(WsOutbound outbound) {
-		super.onOpen(outbound);
 	}
 
 	private boolean listenerAttached(String path) {

@@ -46,18 +46,6 @@
 			<version>7.0.35</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- This module is **explicitly** using a number of other modules, so 
-			we have to include them in the "dependencies" section. However, since we 
-			imported the ModeShape BOM in the "dependencyManagement" section, we don't 
-			have to include "scope" or "version". -->
-		<dependency>
-			<groupId>javax.jcr</groupId>
-			<artifactId>jcr</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.modeshape</groupId>
-			<artifactId>modeshape-jcr</artifactId>
-		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
