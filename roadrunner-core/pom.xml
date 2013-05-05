@@ -2,23 +2,18 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-        <groupId>org.roadrunner</groupId>
-	<artifactId>roadrunner</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
-    </parent>
-<artifactId>roadrunner-core</artifactId>
+		<groupId>org.roadrunner</groupId>
+		<artifactId>roadrunner</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>roadrunner-core</artifactId>
 	<packaging>jar</packaging>
 	<name>Roadrunner Core</name>
 
-	
 	<dependencies>
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.javascript</groupId>
-			<artifactId>closure-compiler</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>commons-httpclient</groupId>
@@ -28,29 +23,5 @@
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-catalina</artifactId>
-			<version>7.0.35</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-api</artifactId>
-			<version>7.0.35</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-coyote</artifactId>
-			<version>7.0.35</version>
-			<scope>provided</scope>
-		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>JBoss-Releases</id>
-			<url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
-		</repository>
-	</repositories>
 </project>
