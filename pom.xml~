@@ -12,7 +12,6 @@
 	<modules>
 		<module>roadrunner-core</module>
 		<module>roadrunner-modeshape</module>
-		<module>roadrunner-infinispan</module>
 		<module>roadrunner-tomcat</module>
 	</modules>
 	<properties>

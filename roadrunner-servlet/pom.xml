@@ -6,9 +6,9 @@
 		<artifactId>roadrunner</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>roadrunner-tomcat</artifactId>
+	<artifactId>roadrunner-servlet</artifactId>
 	<packaging>jar</packaging>
-	<name>Roadrunner Tomcat</name>
+	<name>Roadrunner Servlet</name>
 
 	<dependencies>
 		<dependency>
