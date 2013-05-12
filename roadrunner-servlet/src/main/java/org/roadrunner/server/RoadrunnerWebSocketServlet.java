@@ -22,7 +22,8 @@ import com.google.common.io.Resources;
 public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	private static final long serialVersionUID = 1L;
 
-	private ModeShapeServiceFactory dataServiceFactory = new ModeShapeServiceFactory();
+	private ModeShapeServiceFactory dataServiceFactory = ModeShapeServiceFactory
+			.getInstance();
 
 	@Override
 	protected StreamInbound createWebSocketInbound(String subProtocol,

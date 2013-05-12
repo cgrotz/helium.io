@@ -47,6 +47,42 @@ public class ModeShapeDataService implements DataService, EventListener {
 	private Set<DataListener> listeners = Sets.newHashSet();
 	private static Map<String, JSONObject> removedNodes = Maps.newHashMap();
 
+	public static JSONObject transformToJSON(Node node)
+			throws ValueFormatException, RepositoryException, JSONException {
+		JSONObject object = new JSONObject();
+		PropertyIterator itr = node.getProperties();
+		while (itr.hasNext()) {
+			Property property = itr.nextProperty();
+			try {
+				if (property.getValue().getType() == PropertyType.BINARY) {
+					// object.put(property, property.getBinary().);
+				} else if (property.getValue().getType() == PropertyType.BOOLEAN) {
+					object.put(property.getName(), property.getBoolean());
+				} else if (property.getValue().getType() == PropertyType.DATE) {
+					object.put(property.getName(), new Date(property.getDate()
+							.getTimeInMillis()));
+				} else if (property.getValue().getType() == PropertyType.DECIMAL) {
+					object.put(property.getName(), property.getDecimal());
+				} else if (property.getValue().getType() == PropertyType.DOUBLE) {
+					object.put(property.getName(), property.getDouble());
+				} else if (property.getValue().getType() == PropertyType.LONG) {
+					object.put(property.getName(), property.getLong());
+				} else if (property.getValue().getType() == PropertyType.NAME) {
+				} else if (property.getValue().getType() == PropertyType.PATH) {
+				} else if (property.getValue().getType() == PropertyType.REFERENCE) {
+				} else if (property.getValue().getType() == PropertyType.STRING) {
+					object.put(property.getName(), property.getString());
+				} else if (property.getValue().getType() == PropertyType.UNDEFINED) {
+				} else if (property.getValue().getType() == PropertyType.URI) {
+				} else if (property.getValue().getType() == PropertyType.WEAKREFERENCE) {
+				}
+			} catch (Exception e) {
+				// e.printStackTrace();
+			}
+		}
+		return object;
+	}
+
 	public ModeShapeDataService(AuthorizationService authorizationService,
 			Session dataRepo) throws UnsupportedRepositoryOperationException,
 			RepositoryException {
@@ -62,6 +98,11 @@ public class ModeShapeDataService implements DataService, EventListener {
 				.getObservationManager()
 				.addEventListener(this, EVENT_MASK, null, true, null, null,
 						false);
+	}
+
+	@Override
+	public void addListener(DataListener listener) {
+		this.listeners.add(listener);
 	}
 
 	private Node addNode(Node node2, String path2) throws ItemExistsException,
@@ -90,6 +131,97 @@ public class ModeShapeDataService implements DataService, EventListener {
 		}
 	}
 
+	private void fireChildAdded(String name, String path, String parentName,
+			JSONObject transformToJSON, String prevChildName, boolean hasNodes,
+			long size) {
+		for (DataListener listener : listeners) {
+			listener.child_added(name, path, parentName, transformToJSON,
+					prevChildName, hasNodes, size);
+		}
+	}
+
+	private void fireChildChanged(String name, String path, String parentName,
+			JSONObject transformToJSON, String prevChildName, boolean hasNodes,
+			long size) {
+		for (DataListener listener : listeners) {
+			listener.child_changed(name, path, parentName, transformToJSON,
+					prevChildName, hasNodes, size);
+		}
+	}
+
+	private void fireChildMoved(JSONObject childSnapshot, String prevChildName,
+			boolean hasNodes, long size) {
+		for (DataListener listener : listeners) {
+			listener.child_moved(childSnapshot, prevChildName, hasNodes, size);
+		}
+	}
+
+	private void fireChildRemoved(String path, JSONObject fromRemovedNodes) {
+		for (DataListener listener : listeners) {
+			listener.child_removed(path, fromRemovedNodes);
+		}
+	}
+
+	@Override
+	public JSONObject get(String path) {
+		try {
+			return transformToJSON(dataRepo.getNode(path));
+		} catch (ValueFormatException e) {
+			throw new RuntimeException(e);
+		} catch (PathNotFoundException e) {
+			throw new RuntimeException(e);
+		} catch (RepositoryException e) {
+			throw new RuntimeException(e);
+		} catch (JSONException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private JSONObject getFromRemovedNodes(String path) {
+		return removedNodes.get(path);
+	}
+
+	@Override
+	public String getName(String path) {
+		try {
+			return dataRepo.getNode(path).getName();
+		} catch (ValueFormatException e) {
+			throw new RuntimeException(e);
+		} catch (PathNotFoundException e) {
+			throw new RuntimeException(e);
+		} catch (RepositoryException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public String getParent(String path) {
+		try {
+			return dataRepo.getNode(path).getParent().getPath();
+		} catch (ValueFormatException e) {
+			throw new RuntimeException(e);
+		} catch (PathNotFoundException e) {
+			return null;
+		} catch (RepositoryException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private String getPrevChildName(Node node) {
+		try {
+			String prevChildName;
+			if (node.getIndex() == 1) {
+				prevChildName = null;
+			} else {
+				prevChildName = node.getParent()
+						.getNode("*[" + (node.getIndex() - 1) + "]").getName();
+			}
+			return prevChildName;
+		} catch (Exception exp) {
+			return null;
+		}
+	}
+
 	@Override
 	public void onEvent(EventIterator eventIterator) {
 		try {
@@ -104,10 +236,9 @@ public class ModeShapeDataService implements DataService, EventListener {
 					} catch (Exception e) {
 						parentName = null;
 					}
-					fireChildAdded(node.getName(), node.getPath(),
-							parentName, transformToJSON(node),
-							getPrevChildName(node), node.hasNodes(), node
-									.getNodes().getSize());
+					fireChildAdded(node.getName(), node.getPath(), parentName,
+							transformToJSON(node), getPrevChildName(node),
+							node.hasNodes(), node.getNodes().getSize());
 				} else if (event.getType() == Event.NODE_MOVED) {
 					Node node = dataRepo.getNodeByIdentifier(event
 							.getIdentifier());
@@ -162,44 +293,95 @@ public class ModeShapeDataService implements DataService, EventListener {
 		}
 	}
 
-	private JSONObject getFromRemovedNodes(String path) {
-		return removedNodes.get(path);
+	@Override
+	public void remove(String path) {
+		try {
+			Node node = rootNode.getNode(path.startsWith("/") ? path
+					.substring(1) : path);
+			removedNodes.put(node.getPath(), transformToJSON(node));
+			if (authorizationService.authorize(RoadrunnerOperation.REMOVE,
+					auth, new ModeshapeRulesDataSnapshot(rootNode),
+					node.getPath(), new ModeshapeRulesDataSnapshot(node))) {
+				node.remove();
+				dataRepo.save();
+			}
+		} catch (Exception exp) {
+			throw new RuntimeException(exp);
+		}
+
 	}
 
-	public static JSONObject transformToJSON(Node node)
-			throws ValueFormatException, RepositoryException, JSONException {
-		JSONObject object = new JSONObject();
-		PropertyIterator itr = node.getProperties();
+	@Override
+	public void removeListener(DataListener dataListener) {
+		this.listeners.remove(dataListener);
+	}
+
+	private void sendNode(Node node) throws RepositoryException, JSONException,
+			IOException {
+		NodeIterator itr = node.getNodes();
 		while (itr.hasNext()) {
-			Property property = itr.nextProperty();
-			try {
-				if (property.getValue().getType() == PropertyType.BINARY) {
-					// object.put(property, property.getBinary().);
-				} else if (property.getValue().getType() == PropertyType.BOOLEAN) {
-					object.put(property.getName(), property.getBoolean());
-				} else if (property.getValue().getType() == PropertyType.DATE) {
-					object.put(property.getName(), new Date(property.getDate()
-							.getTimeInMillis()));
-				} else if (property.getValue().getType() == PropertyType.DECIMAL) {
-					object.put(property.getName(), property.getDecimal());
-				} else if (property.getValue().getType() == PropertyType.DOUBLE) {
-					object.put(property.getName(), property.getDouble());
-				} else if (property.getValue().getType() == PropertyType.LONG) {
-					object.put(property.getName(), property.getLong());
-				} else if (property.getValue().getType() == PropertyType.NAME) {
-				} else if (property.getValue().getType() == PropertyType.PATH) {
-				} else if (property.getValue().getType() == PropertyType.REFERENCE) {
-				} else if (property.getValue().getType() == PropertyType.STRING) {
-					object.put(property.getName(), property.getString());
-				} else if (property.getValue().getType() == PropertyType.UNDEFINED) {
-				} else if (property.getValue().getType() == PropertyType.URI) {
-				} else if (property.getValue().getType() == PropertyType.WEAKREFERENCE) {
+			Node childNode = itr.nextNode();
+			if (authorizationService.authorize(RoadrunnerOperation.REMOVE,
+					auth, new ModeshapeRulesDataSnapshot(rootNode), childNode
+							.getPath(), new ModeshapeRulesDataSnapshot(
+							childNode))) {
+				if (!childNode.getName().equals("jcr:system")) {
+					fireChildAdded(childNode.getName(), childNode.getPath(),
+							childNode.getParent().getName(),
+							transformToJSON(childNode), null,
+							childNode.hasNodes(), childNode.getNodes()
+									.getSize());
 				}
-			} catch (Exception e) {
-				// e.printStackTrace();
 			}
 		}
-		return object;
+	}
+
+	@Override
+	public void shutdown() {
+		listeners.clear();
+		dataRepo.logout();
+	}
+
+	@Override
+	public void sync(String path) {
+
+		try {
+			String relPath = path.startsWith("/") ? path.substring(1) : path;
+			if (!Strings.isNullOrEmpty(relPath)) {
+				Node node = rootNode.getNode(relPath);
+				sendNode(node);
+			} else {
+				sendNode(rootNode);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public PushedMessage update(String path, JSONObject payload) {
+		if (path.startsWith("/")) {
+			path = path.substring(1);
+		}
+		try {
+			Node node;
+			if (!Strings.isNullOrEmpty(path)) {
+				if (rootNode.hasNode(path)) {
+					node = rootNode.getNode(path);
+				} else {
+					node = addNode(rootNode, path);
+				}
+			} else {
+				node = rootNode;
+			}
+			updateNode(payload, node);
+			dataRepo.save();
+			return new PushedMessage(node.getParent().getName(),
+					getPrevChildName(node), transformToJSON(node),
+					node.hasNodes(), node.getNodes().getSize());
+		} catch (Exception exp) {
+			throw new RuntimeException(exp);
+		}
 	}
 
 	private void updateNode(JSONObject object, Node node)
@@ -229,105 +411,6 @@ public class ModeShapeDataService implements DataService, EventListener {
 					node.setProperty(key, "" + value);
 				}
 			}
-		}
-	}
-
-	private String getPrevChildName(Node node) {
-		try {
-			String prevChildName;
-			if (node.getIndex() == 1) {
-				prevChildName = null;
-			} else {
-				prevChildName = node.getParent()
-						.getNode("*[" + (node.getIndex() - 1) + "]").getName();
-			}
-			return prevChildName;
-		} catch (Exception exp) {
-			return null;
-		}
-	}
-
-	private void sendNode(Node node) throws RepositoryException, JSONException,
-			IOException {
-		NodeIterator itr = node.getNodes();
-		while (itr.hasNext()) {
-			Node childNode = itr.nextNode();
-			if (authorizationService.authorize(RoadrunnerOperation.REMOVE,
-					auth, new ModeshapeRulesDataSnapshot(rootNode), childNode
-							.getPath(), new ModeshapeRulesDataSnapshot(
-							childNode))) {
-				if (!childNode.getName().equals("jcr:system")) {
-					fireChildAdded(childNode.getName(), childNode
-							.getPath(), childNode.getParent().getName(),
-							transformToJSON(childNode), null, childNode
-									.hasNodes(), childNode.getNodes().getSize());
-				}
-			}
-		}
-	}
-
-	@Override
-	public void shutdown() {
-		listeners.clear();
-		dataRepo.logout();
-	}
-
-	public PushedMessage update(String path, JSONObject payload) {
-		if (path.startsWith("/")) {
-			path = path.substring(1);
-		}
-		try {
-			Node node;
-			if (!Strings.isNullOrEmpty(path)) {
-				if (rootNode.hasNode(path)) {
-					node = rootNode.getNode(path);
-				} else {
-					node = addNode(rootNode, path);
-				}
-			} else {
-				node = rootNode;
-			}
-			updateNode(payload, node);
-			dataRepo.save();
-			return new PushedMessage(node.getParent().getName(),
-					getPrevChildName(node), transformToJSON(node),
-					node.hasNodes(), node.getNodes().getSize());
-		} catch (Exception exp) {
-			throw new RuntimeException(exp);
-		}
-	}
-
-	@Override
-	public void remove(String path) {
-		try {
-			Node node = rootNode.getNode(path.startsWith("/") ? path
-					.substring(1) : path);
-			removedNodes.put(node.getPath(), transformToJSON(node));
-			if (authorizationService.authorize(RoadrunnerOperation.REMOVE,
-					auth, new ModeshapeRulesDataSnapshot(rootNode),
-					node.getPath(), new ModeshapeRulesDataSnapshot(node))) {
-				node.remove();
-				dataRepo.save();
-			}
-		} catch (Exception exp) {
-			throw new RuntimeException(exp);
-		}
-
-	}
-
-	@Override
-	public void sync(String path) {
-
-		try {
-			String relPath = path.startsWith("/") ? path.substring(1) : path;
-			if (!Strings.isNullOrEmpty(relPath)) {
-				Node node = rootNode.getNode(relPath);
-				sendNode(node);
-			} else {
-				sendNode(rootNode);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -363,48 +446,6 @@ public class ModeShapeDataService implements DataService, EventListener {
 			dataRepo.save();
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
-		}
-	}
-
-	public void addListener(DataListener listener) {
-		this.listeners.add(listener);
-	}
-
-	@Override
-	public void removeListener(DataListener dataListener) {
-		this.listeners .remove(dataListener);
-	}
-
-	private void fireChildChanged(String name, String path, String parentName,
-			JSONObject transformToJSON, String prevChildName, boolean hasNodes,
-			long size) {
-		for(DataListener listener : listeners)
-		{
-			listener.child_changed(name, path, parentName, transformToJSON, prevChildName, hasNodes, size);
-		}
-	}
-
-	private void fireChildRemoved(String path, JSONObject fromRemovedNodes) {
-		for(DataListener listener : listeners)
-		{
-			listener.child_removed(path, fromRemovedNodes);
-		}
-	}
-
-	private void fireChildMoved(JSONObject childSnapshot, String prevChildName,
-			boolean hasNodes, long size) {
-		for(DataListener listener : listeners)
-		{
-			listener.child_moved(childSnapshot, prevChildName, hasNodes, size);
-		}
-	}
-
-	private void fireChildAdded(String name, String path, String parentName,
-			JSONObject transformToJSON, String prevChildName, boolean hasNodes,
-			long size) {
-		for(DataListener listener : listeners)
-		{
-			listener.child_added(name, path, parentName, transformToJSON, prevChildName, hasNodes, size);
 		}
 	}
 }

@@ -1,0 +1,63 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.roadrunner</groupId>
+		<artifactId>roadrunner</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>roadrunner-coyote</artifactId>
+	<packaging>jar</packaging>
+	<name>Roadrunner Coyote</name>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.roadrunner</groupId>
+			<artifactId>roadrunner-modeshape</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.roadrunner</groupId>
+			<artifactId>roadrunner-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.skiptag</groupId>
+			<artifactId>coyote-api</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-catalina</artifactId>
+			<version>7.0.35</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-api</artifactId>
+			<version>7.0.35</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-coyote</artifactId>
+			<version>7.0.35</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+
+							<CoyoteModule>roadrunner</CoyoteModule>
+							<CoyoteActivator>org.roadrunner.coyote.RoadrunnerActivator</CoyoteActivator>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

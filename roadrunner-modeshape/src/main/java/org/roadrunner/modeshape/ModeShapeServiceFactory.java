@@ -25,9 +25,42 @@ public class ModeShapeServiceFactory implements DataServiceFactory,
 	private ModeShapeEngine engine;
 	private Map<String, Repository> repositories = Maps.newHashMap();
 
-	public ModeShapeServiceFactory() {
-		engine = new ModeShapeEngine();
-		engine.start();
+	private static final ModeShapeServiceFactory instance = new ModeShapeServiceFactory();
+
+	public static ModeShapeServiceFactory getInstance() {
+		instance.start();
+		return instance;
+	}
+
+	private ModeShapeServiceFactory() {
+	}
+
+	public void destroy() {
+		engine.shutdown();
+	}
+
+	@Override
+	public AuthorizationService getAuthorizationService(String repositoryName) {
+		try {
+			Repository commonRepo = getRepository("common");
+			return new ModeShapeAuthorizationService(commonRepo.login(),
+					repositoryName);
+		} catch (Exception exp) {
+			throw new RuntimeException(exp);
+		}
+	}
+
+	@Override
+	public DataService getDataService(
+			AuthorizationService authorizationService, String repositoryName)
+			throws DataServiceCreationException {
+		try {
+			Repository dataRepo = getRepository(repositoryName);
+			return new ModeShapeDataService(authorizationService,
+					dataRepo.login());
+		} catch (Exception exp) {
+			throw new DataServiceCreationException(exp);
+		}
 	}
 
 	private Repository getRepository(String repositoryName)
@@ -61,24 +94,8 @@ public class ModeShapeServiceFactory implements DataServiceFactory,
 		return repository;
 	}
 
-	public DataService getDataService(AuthorizationService authorizationService, String repositoryName)
-			throws DataServiceCreationException {
-		try {
-			Repository dataRepo = getRepository(repositoryName);
-			return new ModeShapeDataService(authorizationService, dataRepo.login());
-		} catch (Exception exp) {
-			throw new DataServiceCreationException(exp);
-		}
-	}
-
-	@Override
-	public AuthorizationService getAuthorizationService(String repositoryName) {
-		try {
-			Repository commonRepo = getRepository("common");
-			return new ModeShapeAuthorizationService(commonRepo.login(),
-					repositoryName);
-		} catch (Exception exp) {
-			throw new RuntimeException(exp);
-		}
+	private void start() {
+		engine = new ModeShapeEngine();
+		engine.start();
 	}
 }
