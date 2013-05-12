@@ -227,69 +227,125 @@ public class ModeShapeDataService implements DataService, EventListener {
 		try {
 			while (eventIterator.hasNext()) {
 				Event event = eventIterator.nextEvent();
-				if (event.getType() == Event.NODE_ADDED) {
-					Node node = dataRepo.getNodeByIdentifier(event
-							.getIdentifier());
-					String parentName;
-					try {
-						parentName = node.getParent().getName();
-					} catch (Exception e) {
-						parentName = null;
+				if (!event.getPath().startsWith("/queries")) {
+					if (event.getType() == Event.NODE_ADDED) {
+						Node node = dataRepo.getNodeByIdentifier(event
+								.getIdentifier());
+						String parentName;
+						try {
+							parentName = node.getParent().getName();
+						} catch (Exception e) {
+							parentName = null;
+						}
+						fireChildAdded(node.getName(), node.getPath(),
+								parentName, transformToJSON(node),
+								getPrevChildName(node), node.hasNodes(), node
+										.getNodes().getSize());
+					} else if (event.getType() == Event.NODE_MOVED) {
+						Node node = dataRepo.getNodeByIdentifier(event
+								.getIdentifier());
+						JSONObject childSnapshot = transformToJSON(node);
+						fireChildMoved(childSnapshot, getPrevChildName(node),
+								node.hasNodes(), node.getNodes().getSize());
+					} else if (event.getType() == Event.NODE_REMOVED) {
+						fireChildRemoved(event.getPath(),
+								getFromRemovedNodes(event.getPath()));
+					} else if (event.getType() == Event.PROPERTY_ADDED) {
+						Node node = dataRepo.getNodeByIdentifier(event
+								.getIdentifier());
+						String parentName;
+						try {
+							parentName = node.getParent().getName();
+						} catch (Exception e) {
+							parentName = null;
+						}
+						fireChildChanged(node.getName(), node.getPath(),
+								parentName, transformToJSON(node),
+								getPrevChildName(node), node.hasNodes(), node
+										.getNodes().getSize());
+					} else if (event.getType() == Event.PROPERTY_CHANGED) {
+						Node node = dataRepo.getNodeByIdentifier(event
+								.getIdentifier());
+						String parentName;
+						try {
+							parentName = node.getParent().getName();
+						} catch (Exception e) {
+							parentName = null;
+						}
+						fireChildChanged(node.getName(), node.getPath(),
+								parentName, transformToJSON(node),
+								getPrevChildName(node), node.hasNodes(), node
+										.getNodes().getSize());
+					} else if (event.getType() == Event.PROPERTY_REMOVED) {
+						Node node = dataRepo.getNodeByIdentifier(event
+								.getIdentifier());
+						String parentName;
+						try {
+							parentName = node.getParent().getName();
+						} catch (Exception e) {
+							parentName = null;
+						}
+						fireChildChanged(node.getName(), node.getPath(),
+								parentName, transformToJSON(node),
+								getPrevChildName(node), node.hasNodes(), node
+										.getNodes().getSize());
 					}
-					fireChildAdded(node.getName(), node.getPath(), parentName,
-							transformToJSON(node), getPrevChildName(node),
-							node.hasNodes(), node.getNodes().getSize());
-				} else if (event.getType() == Event.NODE_MOVED) {
-					Node node = dataRepo.getNodeByIdentifier(event
-							.getIdentifier());
-					JSONObject childSnapshot = transformToJSON(node);
-					fireChildMoved(childSnapshot, getPrevChildName(node),
-							node.hasNodes(), node.getNodes().getSize());
-				} else if (event.getType() == Event.NODE_REMOVED) {
-					fireChildRemoved(event.getPath(),
-							getFromRemovedNodes(event.getPath()));
-				} else if (event.getType() == Event.PROPERTY_ADDED) {
-					Node node = dataRepo.getNodeByIdentifier(event
-							.getIdentifier());
-					String parentName;
-					try {
-						parentName = node.getParent().getName();
-					} catch (Exception e) {
-						parentName = null;
-					}
-					fireChildChanged(node.getName(), node.getPath(),
-							parentName, transformToJSON(node),
-							getPrevChildName(node), node.hasNodes(), node
-									.getNodes().getSize());
-				} else if (event.getType() == Event.PROPERTY_CHANGED) {
-					Node node = dataRepo.getNodeByIdentifier(event
-							.getIdentifier());
-					String parentName;
-					try {
-						parentName = node.getParent().getName();
-					} catch (Exception e) {
-						parentName = null;
-					}
-					fireChildChanged(node.getName(), node.getPath(),
-							parentName, transformToJSON(node),
-							getPrevChildName(node), node.hasNodes(), node
-									.getNodes().getSize());
-				} else if (event.getType() == Event.PROPERTY_REMOVED) {
-					Node node = dataRepo.getNodeByIdentifier(event
-							.getIdentifier());
-					String parentName;
-					try {
-						parentName = node.getParent().getName();
-					} catch (Exception e) {
-						parentName = null;
-					}
-					fireChildChanged(node.getName(), node.getPath(),
-							parentName, transformToJSON(node),
-							getPrevChildName(node), node.hasNodes(), node
-									.getNodes().getSize());
 				}
 			}
 		} catch (Exception e) {
+		}
+	}
+
+	@Override
+	public void query(String expression, final QueryCallback queryCallback) {
+		try {
+			// Obtain the query manager for the session via the workspace ...
+			javax.jcr.query.QueryManager queryManager = dataRepo.getWorkspace()
+					.getQueryManager();
+
+			javax.jcr.query.Query query = queryManager.createQuery(expression,
+					"JCR-SQL2");
+
+			if (!dataRepo.getRootNode().hasNode("queries")) {
+				dataRepo.getRootNode().addNode("queries");
+			}
+
+			NodeIterator nodeIterator = query.execute().getNodes();
+			while (nodeIterator.hasNext()) {
+				Node node = nodeIterator.nextNode();
+				try {
+					queryCallback.change(transformToJSON(node));
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+
+			// Node queryNode = query.storeAsNode("/queries/"
+			// + UUID.randomUUID().toString().replaceAll("-", ""));
+			// dataRepo.save();
+			// int EVENT_MASK = Event.NODE_ADDED | Event.NODE_MOVED
+			// | Event.NODE_REMOVED | Event.PROPERTY_ADDED
+			// | Event.PROPERTY_REMOVED | Event.PROPERTY_CHANGED;
+			//
+			// dataRepo.getWorkspace().getObservationManager()
+			// .addEventListener(new EventListener() {
+			//
+			// @Override
+			// public void onEvent(EventIterator eventIterator) {
+			// try {
+			// while (eventIterator.hasNext()) {
+			// Event event = eventIterator.nextEvent();
+			// Node dataNode = dataRepo.getNodeByIdentifier(event
+			// .getIdentifier());
+			//
+			// queryCallback.change(transformToJSON(dataNode));
+			// }
+			// } catch (Exception e) {
+			// }
+			// }
+			// }, EVENT_MASK, null, true, null, null, false);
+		} catch (RepositoryException e) {
+			throw new RuntimeException(e);
 		}
 	}
 

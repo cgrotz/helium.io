@@ -5,6 +5,10 @@ import org.roadrunner.core.dtos.PushedMessage;
 
 public interface DataService {
 
+	public interface QueryCallback {
+		public void change(JSONObject payload);
+	}
+
 	void addListener(DataListener dataListener);
 
 	JSONObject get(String path);
@@ -12,6 +16,8 @@ public interface DataService {
 	String getName(String path);
 
 	String getParent(String path);
+
+	void query(String expression, QueryCallback queryCallback);
 
 	void remove(String path);
 

@@ -9,6 +9,7 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeObject;
 import org.roadrunner.core.DataListener;
 import org.roadrunner.core.DataService;
+import org.roadrunner.core.DataService.QueryCallback;
 import org.roadrunner.core.authorization.AuthorizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -198,6 +199,18 @@ public class RoadrunnerService implements DataListener {
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
 		}
+	}
+
+	public void query(String expression, final Function function) {
+		dataService.query(expression, new QueryCallback() {
+
+			@Override
+			public void change(JSONObject payload) {
+				Coyote.get().evalFunction(function,
+						new Object[] { Coyote.parse(payload.toString()) });
+			}
+
+		});
 	}
 
 	public RoadrunnerService root() {

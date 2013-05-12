@@ -223,7 +223,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 								dataService.update(path, payload);
 							}
 						}
-					} else if (obj == null) {
+					} else if (obj == null || obj == JSONObject.NULL) {
 						if (!Strings.isNullOrEmpty(path)) {
 							dataService.remove(path);
 						}
