@@ -366,7 +366,10 @@ public class ModeShapeDataService implements DataService, EventListener {
 					auth, new ModeshapeRulesDataSnapshot(rootNode), childNode
 							.getPath(), new ModeshapeRulesDataSnapshot(
 							childNode))) {
-				if (!childNode.getName().equals("jcr:system")) {
+				if (!node.getName().equals("jcr:system")
+						&& !node.getName().equals("mode:repository")
+						&& !"mode:root".equals(node.getPrimaryNodeType()
+								.getName())) {
 					fireChildAdded(childNode.getName(), childNode.getPath(),
 							childNode.getParent().getName(),
 							transformToJSON(childNode), null,
