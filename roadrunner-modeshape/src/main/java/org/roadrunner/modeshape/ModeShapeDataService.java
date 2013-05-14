@@ -313,37 +313,22 @@ public class ModeShapeDataService implements DataService, EventListener {
 			NodeIterator nodeIterator = query.execute().getNodes();
 			while (nodeIterator.hasNext()) {
 				Node node = nodeIterator.nextNode();
-				try {
-					queryCallback.change(transformToJSON(node));
-				} catch (JSONException e) {
-					e.printStackTrace();
+				if (!node.getName().equals("jcr:system")
+						&& !node.getName().equals("mode:repository")
+						&& !"mode:root".equals(node.getPrimaryNodeType()
+								.getName())) {
+					try {
+						queryCallback.change(node.getPath(),
+								transformToJSON(node),
+								node.getDepth() != 0 ? node.getParent()
+										.getPath() : null, node.getNodes()
+										.getSize(), node.getName(), node
+										.hasNodes(), node.getIndex());
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
 				}
 			}
-
-			// Node queryNode = query.storeAsNode("/queries/"
-			// + UUID.randomUUID().toString().replaceAll("-", ""));
-			// dataRepo.save();
-			// int EVENT_MASK = Event.NODE_ADDED | Event.NODE_MOVED
-			// | Event.NODE_REMOVED | Event.PROPERTY_ADDED
-			// | Event.PROPERTY_REMOVED | Event.PROPERTY_CHANGED;
-			//
-			// dataRepo.getWorkspace().getObservationManager()
-			// .addEventListener(new EventListener() {
-			//
-			// @Override
-			// public void onEvent(EventIterator eventIterator) {
-			// try {
-			// while (eventIterator.hasNext()) {
-			// Event event = eventIterator.nextEvent();
-			// Node dataNode = dataRepo.getNodeByIdentifier(event
-			// .getIdentifier());
-			//
-			// queryCallback.change(transformToJSON(dataNode));
-			// }
-			// } catch (Exception e) {
-			// }
-			// }
-			// }, EVENT_MASK, null, true, null, null, false);
 		} catch (RepositoryException e) {
 			throw new RuntimeException(e);
 		}

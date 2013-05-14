@@ -203,11 +203,14 @@ public class RoadrunnerService implements DataListener {
 
 	public void query(String expression, final Function function) {
 		dataService.query(expression, new QueryCallback() {
-
 			@Override
-			public void change(JSONObject payload) {
-				Coyote.get().evalFunction(function,
-						new Object[] { Coyote.parse(payload.toString()) });
+			public void change(String path, JSONObject value,
+					String parentPath, long numChildren, String name,
+					boolean hasChildren, int priority) {
+				RoadrunnerSnapshot snap = new RoadrunnerSnapshot(
+						authorizationService, dataService, name, path, value,
+						parentPath, numChildren, name, hasChildren, priority);
+				Coyote.get().evalFunction(function, new Object[] { snap });
 			}
 
 		});

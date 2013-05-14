@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.roadrunner.core.DataListener;
 import org.roadrunner.core.DataService;
+import org.roadrunner.core.DataService.QueryCallback;
 import org.roadrunner.core.DataServiceCreationException;
 import org.roadrunner.core.authorization.AuthorizationService;
 import org.roadrunner.core.dtos.PushedMessage;
@@ -136,6 +137,9 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 	private String extractPath(JSONObject message) throws JSONException {
 		int servletPathLength = servletPath.length();
 		int repositoryNameLength = repositoryName.length();
+		if (!message.has("path")) {
+			return null;
+		}
 		String path = (String) message.get("path");
 		int indexOfServletPath = path.indexOf(servletPath);
 		if (indexOfServletPath > -1) {
@@ -174,7 +178,31 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 			String messageType = (String) message.get("type");
 			String path = extractPath(message);
 
-			if ("attached_listener".equalsIgnoreCase(messageType)) {
+			if ("query".equalsIgnoreCase(messageType)) {
+				String query = message.getString("query");
+				final String queryName = message.getString("name");
+				dataService.query(query, new QueryCallback() {
+
+					@Override
+					public void change(String path, JSONObject value,
+							String parentPath, long numChildren, String name,
+							boolean hasChildren, int priority) {
+						try {
+							JSONObject broadcast = new JSONObject();
+							broadcast.put("type", queryName);
+							broadcast.put("name", name);
+							broadcast.put("path", path + "/" + path);
+							broadcast.put("parent", parentPath);
+							broadcast.put("payload", value.toString());
+							broadcast.put("hasChildren", hasChildren);
+							broadcast.put("numChildren", numChildren);
+							send(broadcast.toString());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			} else if ("attached_listener".equalsIgnoreCase(messageType)) {
 				attached_listeners.add(path);
 				dataService.sync(path);
 			} else if ("detached_listener".equalsIgnoreCase(messageType)) {

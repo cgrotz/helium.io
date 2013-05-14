@@ -477,6 +477,14 @@ function RoadrunnerConnection(url) {
 			messages.push(message);
 		}
 	};
+
+	this.sendSimpleMessage = function(message) {
+		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
+			roadrunner_endpoint.send(JSON.stringify(message));
+		} else {
+			messages.push(message);
+		}
+	};
 }
 
 function Roadrunner(path) {
@@ -542,6 +550,18 @@ function Roadrunner(path) {
 		return new Roadrunner(path + "/" + name);
 	};
 
+	this.query = function(query, callback) {
+		var queryName = UUID.generate();
+		var message = {
+			type : 'query',
+			name : queryName,
+			'query' : query
+		};
+		//roadrunner_connection.queryHandlers[queryName] = callback;
+		roadrunner_connection.sendSimpleMessage(message);
+		events[queryName] = callback;
+	};
+	
 	this.set = function(data) {
 		// console.log("Roadrunner set data",data);
 		roadrunner_connection.sendMessage('set', path, data);

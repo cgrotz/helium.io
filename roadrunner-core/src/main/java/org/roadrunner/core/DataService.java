@@ -6,7 +6,8 @@ import org.roadrunner.core.dtos.PushedMessage;
 public interface DataService {
 
 	public interface QueryCallback {
-		public void change(JSONObject payload);
+		public void change(String path, JSONObject value, String parentPath,
+				long numChildren, String name, boolean hasChildren, int priority);
 	}
 
 	void addListener(DataListener dataListener);
