@@ -3,7 +3,7 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.roadrunner</groupId>
+	<groupId>de.skiptag.roadrunner</groupId>
 	<artifactId>roadrunner</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
@@ -70,12 +70,12 @@
 				<version>14.0-rc1</version>
 			</dependency>
 			<dependency>
-				<groupId>org.roadrunner</groupId>
+				<groupId>de.skiptag.roadrunner</groupId>
 				<artifactId>roadrunner-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.roadrunner</groupId>
+				<groupId>de.skiptag.roadrunner</groupId>
 				<artifactId>roadrunner-modeshape</artifactId>
 				<version>${project.version}</version>
 			</dependency>
