@@ -53,7 +53,7 @@
 						<manifestEntries>
 
 							<CoyoteModule>roadrunner</CoyoteModule>
-							<CoyoteActivator>org.roadrunner.coyote.RoadrunnerActivator</CoyoteActivator>
+							<CoyoteActivator>de.skiptag.roadrunner.coyote.RoadrunnerActivator</CoyoteActivator>
 						</manifestEntries>
 					</archive>
 				</configuration>
