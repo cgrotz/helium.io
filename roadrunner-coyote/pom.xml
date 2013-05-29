@@ -20,7 +20,7 @@
 			<artifactId>roadrunner-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>de.skiptag</groupId>
+			<groupId>de.skiptag.coyote</groupId>
 			<artifactId>coyote-api</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
