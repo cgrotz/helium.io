@@ -1,4 +1,6 @@
 target/
+.externalToolBuilders
 .settings
 .project
 .classpath
+*~
