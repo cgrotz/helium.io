@@ -54,6 +54,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 					.getAuthorizationService(repoName);
 			dataService = ModeShapeServiceFactory.getInstance().getDataService(
 					authorizationService, repoName);
+
 			roadrunnerEventHandler = new RoadrunnerEventHandler(this);
 			dataService.addListener(roadrunnerEventHandler);
 
