@@ -7,6 +7,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
 import org.infinispan.schematic.document.ParsingException;
+import org.json.JSONObject;
 import org.modeshape.common.collection.Problems;
 import org.modeshape.jcr.ConfigurationException;
 import org.modeshape.jcr.ModeShapeEngine;
@@ -14,7 +15,6 @@ import org.modeshape.jcr.RepositoryConfiguration;
 
 import com.google.common.collect.Maps;
 
-import de.skiptag.roadrunner.core.DataService;
 import de.skiptag.roadrunner.core.DataServiceCreationException;
 import de.skiptag.roadrunner.core.DataServiceFactory;
 import de.skiptag.roadrunner.core.authorization.AuthenticationServiceFactory;
@@ -41,18 +41,19 @@ public class ModeShapeServiceFactory implements DataServiceFactory,
 	}
 
 	@Override
-	public AuthorizationService getAuthorizationService(String repositoryName) {
+	public ModeShapeAuthorizationService getAuthorizationService(
+			String repositoryName, JSONObject rule) {
 		try {
 			Repository commonRepo = getRepository("common");
 			return new ModeShapeAuthorizationService(commonRepo.login(),
-					repositoryName);
+					repositoryName, rule);
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
 		}
 	}
 
 	@Override
-	public DataService getDataService(
+	public ModeShapeDataService getDataService(
 			AuthorizationService authorizationService, String repositoryName)
 			throws DataServiceCreationException {
 		try {

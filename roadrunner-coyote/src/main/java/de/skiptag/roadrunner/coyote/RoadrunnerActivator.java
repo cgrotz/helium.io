@@ -9,9 +9,10 @@ import de.skiptag.coyote.api.modules.ModuleActivator;
 public class RoadrunnerActivator implements ModuleActivator {
 
 	@Override
-	public Module start(Coyote coyote, NativeObject nativeObject) {
-		return new RoadrunnerModule(coyote, (String) nativeObject.get("path"),
-				(String) nativeObject.get("repoName"));
+	public Module start(Coyote coyote, NativeObject config) {
+		return new RoadrunnerModule(coyote, (String) config.get("path"),
+				(String) config.get("repoName"),
+				(NativeObject) config.get("rule"));
 	}
 
 }

@@ -501,6 +501,34 @@ function Roadrunner(path) {
 		if (workpath.indexOf("/roadrunner") > -1) {
 			workpath = workpath.substr("/roadrunner".length);
 		}
+		// Direkt Change start (value)
+		{
+			try
+			{
+				if (snapshot.path().indexOf(workpath) == 0
+						&& !(snapshot.path() == workpath)) {
+					var callback = events['value'];
+					if (callback != null) {
+						callback(snapshot);
+					}
+	
+					var callback = events_once['value'];
+					if (callback != null) {
+						callback(snapshot);
+						events_once['value'] = null;
+					}
+				}
+			}
+			catch (e) {
+				
+			}
+		}
+		
+		// Endswith /
+		if(!(workpath.indexOf("/", workpath.length - "/".length) !== -1))
+		{
+			workpath = workpath + "/";
+		}
 		if (snapshot.path().indexOf(workpath) == 0
 				&& !(snapshot.path() == workpath)) {
 			var callback = events[message.type];

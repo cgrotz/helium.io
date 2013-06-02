@@ -48,8 +48,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 	private Set<DataListener> listeners = Sets.newHashSet();
 	private static Map<String, JSONObject> removedNodes = Maps.newHashMap();
 
-	public static JSONObject transformToJSON(Node node)
-			throws ValueFormatException, RepositoryException, JSONException {
+	public static JSONObject transformToJSON(Node node) throws ValueFormatException, RepositoryException, JSONException {
 		JSONObject object = new JSONObject();
 		PropertyIterator itr = node.getProperties();
 		while (itr.hasNext()) {
@@ -60,8 +59,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 				} else if (property.getValue().getType() == PropertyType.BOOLEAN) {
 					object.put(property.getName(), property.getBoolean());
 				} else if (property.getValue().getType() == PropertyType.DATE) {
-					object.put(property.getName(), new Date(property.getDate()
-							.getTimeInMillis()));
+					object.put(property.getName(), new Date(property.getDate().getTimeInMillis()));
 				} else if (property.getValue().getType() == PropertyType.DECIMAL) {
 					object.put(property.getName(), property.getDecimal());
 				} else if (property.getValue().getType() == PropertyType.DOUBLE) {
@@ -84,21 +82,17 @@ public class ModeShapeDataService implements DataService, EventListener {
 		return object;
 	}
 
-	public ModeShapeDataService(AuthorizationService authorizationService,
-			Session dataRepo) throws UnsupportedRepositoryOperationException,
-			RepositoryException {
+	public ModeShapeDataService(AuthorizationService authorizationService, Session dataRepo)
+			throws UnsupportedRepositoryOperationException, RepositoryException {
 		this.dataRepo = dataRepo;
 		this.authorizationService = authorizationService;
 
 		rootNode = dataRepo.getRootNode();
 
-		int EVENT_MASK = Event.NODE_ADDED | Event.NODE_MOVED
-				| Event.NODE_REMOVED | Event.PROPERTY_ADDED
+		int EVENT_MASK = Event.NODE_ADDED | Event.NODE_MOVED | Event.NODE_REMOVED | Event.PROPERTY_ADDED
 				| Event.PROPERTY_REMOVED | Event.PROPERTY_CHANGED;
-		dataRepo.getWorkspace()
-				.getObservationManager()
-				.addEventListener(this, EVENT_MASK, null, true, null, null,
-						false);
+		dataRepo.getWorkspace().getObservationManager()
+				.addEventListener(this, EVENT_MASK, null, true, null, null, false);
 	}
 
 	@Override
@@ -106,8 +100,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 		this.listeners.add(listener);
 	}
 
-	private Node addNode(Node node2, String path2) throws ItemExistsException,
-			PathNotFoundException, VersionException,
+	private Node addNode(Node node2, String path2) throws ItemExistsException, PathNotFoundException, VersionException,
 			ConstraintViolationException, LockException, RepositoryException {
 		if (path2.indexOf("/") > -1) {
 			String subpath = path2.substring(0, path2.indexOf("/"));
@@ -132,26 +125,21 @@ public class ModeShapeDataService implements DataService, EventListener {
 		}
 	}
 
-	private void fireChildAdded(String name, String path, String parentName,
-			JSONObject transformToJSON, String prevChildName, boolean hasNodes,
-			long size) {
+	private void fireChildAdded(String name, String path, String parentName, JSONObject transformToJSON,
+			String prevChildName, boolean hasNodes, long size) {
 		for (DataListener listener : listeners) {
-			listener.child_added(name, path, parentName, transformToJSON,
-					prevChildName, hasNodes, size);
+			listener.child_added(name, path, parentName, transformToJSON, prevChildName, hasNodes, size);
 		}
 	}
 
-	private void fireChildChanged(String name, String path, String parentName,
-			JSONObject transformToJSON, String prevChildName, boolean hasNodes,
-			long size) {
+	private void fireChildChanged(String name, String path, String parentName, JSONObject transformToJSON,
+			String prevChildName, boolean hasNodes, long size) {
 		for (DataListener listener : listeners) {
-			listener.child_changed(name, path, parentName, transformToJSON,
-					prevChildName, hasNodes, size);
+			listener.child_changed(name, path, parentName, transformToJSON, prevChildName, hasNodes, size);
 		}
 	}
 
-	private void fireChildMoved(JSONObject childSnapshot, String prevChildName,
-			boolean hasNodes, long size) {
+	private void fireChildMoved(JSONObject childSnapshot, String prevChildName, boolean hasNodes, long size) {
 		for (DataListener listener : listeners) {
 			listener.child_moved(childSnapshot, prevChildName, hasNodes, size);
 		}
@@ -214,8 +202,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 			if (node.getIndex() == 1) {
 				prevChildName = null;
 			} else {
-				prevChildName = node.getParent()
-						.getNode("*[" + (node.getIndex() - 1) + "]").getName();
+				prevChildName = node.getParent().getNode("*[" + (node.getIndex() - 1) + "]").getName();
 			}
 			return prevChildName;
 		} catch (Exception exp) {
@@ -230,66 +217,52 @@ public class ModeShapeDataService implements DataService, EventListener {
 				Event event = eventIterator.nextEvent();
 				if (!event.getPath().startsWith("/queries")) {
 					if (event.getType() == Event.NODE_ADDED) {
-						Node node = dataRepo.getNodeByIdentifier(event
-								.getIdentifier());
+						Node node = dataRepo.getNodeByIdentifier(event.getIdentifier());
 						String parentName;
 						try {
 							parentName = node.getParent().getName();
 						} catch (Exception e) {
 							parentName = null;
 						}
-						fireChildAdded(node.getName(), node.getPath(),
-								parentName, transformToJSON(node),
-								getPrevChildName(node), node.hasNodes(), node
-										.getNodes().getSize());
+						fireChildAdded(node.getName(), node.getPath(), parentName, transformToJSON(node),
+								getPrevChildName(node), node.hasNodes(), node.getNodes().getSize());
 					} else if (event.getType() == Event.NODE_MOVED) {
-						Node node = dataRepo.getNodeByIdentifier(event
-								.getIdentifier());
+						Node node = dataRepo.getNodeByIdentifier(event.getIdentifier());
 						JSONObject childSnapshot = transformToJSON(node);
-						fireChildMoved(childSnapshot, getPrevChildName(node),
-								node.hasNodes(), node.getNodes().getSize());
+						fireChildMoved(childSnapshot, getPrevChildName(node), node.hasNodes(), node.getNodes()
+								.getSize());
 					} else if (event.getType() == Event.NODE_REMOVED) {
-						fireChildRemoved(event.getPath(),
-								getFromRemovedNodes(event.getPath()));
+						fireChildRemoved(event.getPath(), getFromRemovedNodes(event.getPath()));
 					} else if (event.getType() == Event.PROPERTY_ADDED) {
-						Node node = dataRepo.getNodeByIdentifier(event
-								.getIdentifier());
+						Node node = dataRepo.getNodeByIdentifier(event.getIdentifier());
 						String parentName;
 						try {
 							parentName = node.getParent().getName();
 						} catch (Exception e) {
 							parentName = null;
 						}
-						fireChildChanged(node.getName(), node.getPath(),
-								parentName, transformToJSON(node),
-								getPrevChildName(node), node.hasNodes(), node
-										.getNodes().getSize());
+						fireChildChanged(node.getName(), node.getPath(), parentName, transformToJSON(node),
+								getPrevChildName(node), node.hasNodes(), node.getNodes().getSize());
 					} else if (event.getType() == Event.PROPERTY_CHANGED) {
-						Node node = dataRepo.getNodeByIdentifier(event
-								.getIdentifier());
+						Node node = dataRepo.getNodeByIdentifier(event.getIdentifier());
 						String parentName;
 						try {
 							parentName = node.getParent().getName();
 						} catch (Exception e) {
 							parentName = null;
 						}
-						fireChildChanged(node.getName(), node.getPath(),
-								parentName, transformToJSON(node),
-								getPrevChildName(node), node.hasNodes(), node
-										.getNodes().getSize());
+						fireChildChanged(node.getName(), node.getPath(), parentName, transformToJSON(node),
+								getPrevChildName(node), node.hasNodes(), node.getNodes().getSize());
 					} else if (event.getType() == Event.PROPERTY_REMOVED) {
-						Node node = dataRepo.getNodeByIdentifier(event
-								.getIdentifier());
+						Node node = dataRepo.getNodeByIdentifier(event.getIdentifier());
 						String parentName;
 						try {
 							parentName = node.getParent().getName();
 						} catch (Exception e) {
 							parentName = null;
 						}
-						fireChildChanged(node.getName(), node.getPath(),
-								parentName, transformToJSON(node),
-								getPrevChildName(node), node.hasNodes(), node
-										.getNodes().getSize());
+						fireChildChanged(node.getName(), node.getPath(), parentName, transformToJSON(node),
+								getPrevChildName(node), node.hasNodes(), node.getNodes().getSize());
 					}
 				}
 			}
@@ -301,11 +274,9 @@ public class ModeShapeDataService implements DataService, EventListener {
 	public void query(String expression, final QueryCallback queryCallback) {
 		try {
 			// Obtain the query manager for the session via the workspace ...
-			javax.jcr.query.QueryManager queryManager = dataRepo.getWorkspace()
-					.getQueryManager();
+			javax.jcr.query.QueryManager queryManager = dataRepo.getWorkspace().getQueryManager();
 
-			javax.jcr.query.Query query = queryManager.createQuery(expression,
-					"JCR-SQL2");
+			javax.jcr.query.Query query = queryManager.createQuery(expression, "JCR-SQL2");
 
 			if (!dataRepo.getRootNode().hasNode("queries")) {
 				dataRepo.getRootNode().addNode("queries");
@@ -314,17 +285,12 @@ public class ModeShapeDataService implements DataService, EventListener {
 			NodeIterator nodeIterator = query.execute().getNodes();
 			while (nodeIterator.hasNext()) {
 				Node node = nodeIterator.nextNode();
-				if (!node.getName().equals("jcr:system")
-						&& !node.getName().equals("mode:repository")
-						&& !"mode:root".equals(node.getPrimaryNodeType()
-								.getName())) {
+				if (!node.getName().equals("jcr:system") && !node.getName().equals("mode:repository")
+						&& !"mode:root".equals(node.getPrimaryNodeType().getName())) {
 					try {
-						queryCallback.change(node.getPath(),
-								transformToJSON(node),
-								node.getDepth() != 0 ? node.getParent()
-										.getPath() : null, node.getNodes()
-										.getSize(), node.getName(), node
-										.hasNodes(), node.getIndex());
+						queryCallback.change(node.getPath(), transformToJSON(node), node.getDepth() != 0 ? node
+								.getParent().getPath() : null, node.getNodes().getSize(), node.getName(), node
+								.hasNodes(), node.getIndex());
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
@@ -338,15 +304,13 @@ public class ModeShapeDataService implements DataService, EventListener {
 	@Override
 	public void remove(String path) {
 		try {
-			Node node = rootNode.getNode(path.startsWith("/") ? path
-					.substring(1) : path);
+			Node node = rootNode.getNode(path.startsWith("/") ? path.substring(1) : path);
 			removedNodes.put(node.getPath(), transformToJSON(node));
-			if (authorizationService.authorize(RoadrunnerOperation.REMOVE,
-					auth, new ModeshapeRulesDataSnapshot(rootNode),
-					node.getPath(), new ModeshapeRulesDataSnapshot(node))) {
-				node.remove();
-				dataRepo.save();
-			}
+			authorizationService.authorize(RoadrunnerOperation.REMOVE, auth, new ModeshapeRulesDataSnapshot(rootNode),
+					node.getPath(), new ModeshapeRulesDataSnapshot(node));
+			node.remove();
+			dataRepo.save();
+
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
 		}
@@ -358,24 +322,16 @@ public class ModeShapeDataService implements DataService, EventListener {
 		this.listeners.remove(dataListener);
 	}
 
-	private void sendNode(Node node) throws RepositoryException, JSONException,
-			IOException {
+	private void sendNode(Node node) throws RepositoryException, JSONException, IOException {
 		NodeIterator itr = node.getNodes();
 		while (itr.hasNext()) {
 			Node childNode = itr.nextNode();
-			if (authorizationService.authorize(RoadrunnerOperation.REMOVE,
-					auth, new ModeshapeRulesDataSnapshot(rootNode), childNode
-							.getPath(), new ModeshapeRulesDataSnapshot(
-							childNode))) {
-				if (!childNode.getName().equals("jcr:system")
-						&& !childNode.getName().equals("mode:repository")
-						&& !"mode:root".equals(childNode.getPrimaryNodeType()
-								.getName())) {
-					fireChildAdded(childNode.getName(), childNode.getPath(),
-							childNode.getParent().getName(),
-							transformToJSON(childNode), null,
-							childNode.hasNodes(), childNode.getNodes()
-									.getSize());
+			if (authorizationService.isAuthorized(RoadrunnerOperation.READ, auth, new ModeshapeRulesDataSnapshot(
+					rootNode), childNode.getPath(), new ModeshapeRulesDataSnapshot(childNode))) {
+				if (!childNode.getName().equals("jcr:system") && !childNode.getName().equals("mode:repository")
+						&& !"mode:root".equals(childNode.getPrimaryNodeType().getName())) {
+					fireChildAdded(childNode.getName(), childNode.getPath(), childNode.getParent().getName(),
+							transformToJSON(childNode), null, childNode.hasNodes(), childNode.getNodes().getSize());
 				}
 			}
 		}
@@ -392,12 +348,8 @@ public class ModeShapeDataService implements DataService, EventListener {
 
 		try {
 			String relPath = path.startsWith("/") ? path.substring(1) : path;
-			if (!Strings.isNullOrEmpty(relPath)) {
-				Node node = rootNode.getNode(relPath);
-				sendNode(node);
-			} else {
-				sendNode(rootNode);
-			}
+			Node node = retrieveNodeForPath(relPath);
+			sendNode(node);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -409,52 +361,55 @@ public class ModeShapeDataService implements DataService, EventListener {
 			path = path.substring(1);
 		}
 		try {
-			Node node;
-			if (!Strings.isNullOrEmpty(path)) {
-				if (rootNode.hasNode(path)) {
-					node = rootNode.getNode(path);
-				} else {
-					node = addNode(rootNode, path);
-				}
-			} else {
-				node = rootNode;
-			}
+			Node node = retrieveNodeForPath(path);
 			updateNode(payload, node);
 			dataRepo.save();
-			return new PushedMessage(node.getParent().getName(),
-					getPrevChildName(node), transformToJSON(node),
+			return new PushedMessage(node.getParent().getName(), getPrevChildName(node), transformToJSON(node),
 					node.hasNodes(), node.getNodes().getSize());
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
 		}
 	}
 
-	private void updateNode(JSONObject object, Node node)
-			throws ValueFormatException, RepositoryException, JSONException {
-		if (authorizationService.authorize(RoadrunnerOperation.WRITE, auth,
-				new ModeshapeRulesDataSnapshot(rootNode), node.getPath(),
-				new ModeshapeRulesDataSnapshot(node))) {
+	private Node retrieveNodeForPath(String path) throws RepositoryException, PathNotFoundException,
+			ItemExistsException, VersionException, ConstraintViolationException, LockException {
+		Node node;
+		if (!Strings.isNullOrEmpty(path)) {
+			if (rootNode.hasNode(path)) {
+				node = rootNode.getNode(path);
+			} else {
+				node = addNode(rootNode, path);
+			}
+		} else {
+			node = rootNode;
+		}
+		return node;
+	}
 
-			Iterator<?> itr = object.keys();
-			while (itr.hasNext()) {
-				String key = (String) itr.next();
-				Object value = object.get(key);
-				if (value instanceof JSONArray) {
-					// TODO: not yet handleable
-				} else if (value instanceof JSONObject) {
-					Node childNode = node.addNode("key");
-					updateNode((JSONObject) value, childNode);
-				} else if (value instanceof Boolean) {
-					node.setProperty(key, object.getBoolean(key));
-				} else if (value instanceof Long) {
-					node.setProperty(key, object.getLong(key));
-				} else if (value instanceof Integer) {
-					node.setProperty(key, object.getInt(key));
-				} else if (value instanceof Double) {
-					node.setProperty(key, object.getDouble(key));
-				} else {
-					node.setProperty(key, "" + value);
-				}
+	private void updateNode(JSONObject object, Node node) throws ValueFormatException, RepositoryException,
+			JSONException {
+		authorizationService.authorize(RoadrunnerOperation.WRITE, auth, new ModeshapeRulesDataSnapshot(rootNode),
+				node.getPath(), new ModeshapeRulesDataSnapshot(node));
+
+		Iterator<?> itr = object.keys();
+		while (itr.hasNext()) {
+			String key = (String) itr.next();
+			Object value = object.get(key);
+			if (value instanceof JSONArray) {
+				// TODO: not yet handleable
+			} else if (value instanceof JSONObject) {
+				Node childNode = node.addNode("key");
+				updateNode((JSONObject) value, childNode);
+			} else if (value instanceof Boolean) {
+				node.setProperty(key, object.getBoolean(key));
+			} else if (value instanceof Long) {
+				node.setProperty(key, object.getLong(key));
+			} else if (value instanceof Integer) {
+				node.setProperty(key, object.getInt(key));
+			} else if (value instanceof Double) {
+				node.setProperty(key, object.getDouble(key));
+			} else {
+				node.setProperty(key, "" + value);
 			}
 		}
 	}
@@ -468,15 +423,7 @@ public class ModeShapeDataService implements DataService, EventListener {
 		path = path.substring(0, path.lastIndexOf("/"));
 		try {
 			Node node;
-			if (!Strings.isNullOrEmpty(path)) {
-				if (rootNode.hasNode(path)) {
-					node = rootNode.getNode(path);
-				} else {
-					node = addNode(rootNode, path);
-				}
-			} else {
-				node = rootNode;
-			}
+			node = retrieveNodeForPath(path);
 			if (value instanceof Boolean) {
 				node.setProperty(key, (Boolean) value);
 			} else if (value instanceof Long) {
@@ -492,5 +439,9 @@ public class ModeShapeDataService implements DataService, EventListener {
 		} catch (Exception exp) {
 			throw new RuntimeException(exp);
 		}
+	}
+
+	public void setAuth(JSONObject auth) {
+		this.auth = auth;
 	}
 }

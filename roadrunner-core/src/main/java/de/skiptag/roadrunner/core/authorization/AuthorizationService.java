@@ -6,6 +6,11 @@ public interface AuthorizationService {
 
 	void shutdown();
 
-	boolean authorize(RoadrunnerOperation operation, JSONObject auth,
-			RulesDataSnapshot root, String path, RulesDataSnapshot newData);
+	void authorize(RoadrunnerOperation remove, JSONObject auth,
+			RulesDataSnapshot root, String path, RulesDataSnapshot data)
+			throws RoadrunnerNotAuthorizedException;
+
+	boolean isAuthorized(RoadrunnerOperation read, JSONObject auth,
+			RulesDataSnapshot modeshapeRulesDataSnapshot, String path,
+			RulesDataSnapshot modeshapeRulesDataSnapshot2);
 }

@@ -4,32 +4,33 @@ import java.io.IOException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.javascript.NativeObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.skiptag.coyote.api.Coyote;
 import de.skiptag.coyote.api.http.common.HttpServerRequest;
-import de.skiptag.coyote.api.modules.Module.ServletModule;
-import de.skiptag.coyote.api.modules.Module.WebsocketModule;
-import de.skiptag.roadrunner.core.DataService;
+import de.skiptag.coyote.api.modules.ServletModule;
+import de.skiptag.coyote.api.modules.WebsocketModule;
 import de.skiptag.roadrunner.core.DataServiceCreationException;
-import de.skiptag.roadrunner.core.authorization.AuthorizationService;
 import de.skiptag.roadrunner.coyote.actions.PushAction;
 import de.skiptag.roadrunner.coyote.actions.QueryAction;
 import de.skiptag.roadrunner.coyote.actions.SetAction;
+import de.skiptag.roadrunner.modeshape.ModeShapeAuthorizationService;
+import de.skiptag.roadrunner.modeshape.ModeShapeDataService;
 import de.skiptag.roadrunner.modeshape.ModeShapeServiceFactory;
 
 public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 
 	private String repositoryName = "";
 
-	private DataService dataService;
+	private ModeShapeDataService dataService;
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory
 			.getLogger(RoadrunnerModule.class);
 
-	private AuthorizationService authorizationService;
+	private ModeShapeAuthorizationService authorizationService;
 
 	public String getRepositoryName() {
 		return repositoryName;
@@ -45,13 +46,15 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 
 	private RoadrunnerEventHandler roadrunnerEventHandler;
 
-	public RoadrunnerModule(Coyote coyote, String path, String repoName) {
+	public RoadrunnerModule(Coyote coyote, String path, String repoName,
+			NativeObject rule) {
 		super(path, coyote);
 		this.path = path;
 		this.repositoryName = repoName;
 		try {
 			authorizationService = ModeShapeServiceFactory.getInstance()
-					.getAuthorizationService(repoName);
+					.getAuthorizationService(repoName,
+							RoadrunnerService.toJSONObject(rule));
 			dataService = ModeShapeServiceFactory.getInstance().getDataService(
 					authorizationService, repoName);
 
@@ -64,6 +67,12 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public void setAuthentication(String token) throws JSONException {
+		JSONObject auth = new JSONObject();
+		auth.put("id", token);
+		dataService.setAuth(auth);
 	}
 
 	@Override
