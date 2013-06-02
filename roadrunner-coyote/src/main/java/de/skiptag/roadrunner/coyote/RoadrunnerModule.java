@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.skiptag.coyote.api.Coyote;
-import de.skiptag.coyote.api.http.HttpServerRequest;
+import de.skiptag.coyote.api.http.common.HttpServerRequest;
 import de.skiptag.coyote.api.modules.Module.ServletModule;
 import de.skiptag.coyote.api.modules.Module.WebsocketModule;
 import de.skiptag.roadrunner.core.DataService;

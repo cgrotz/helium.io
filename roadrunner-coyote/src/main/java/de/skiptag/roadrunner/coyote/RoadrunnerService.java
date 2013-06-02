@@ -1,18 +1,16 @@
 package de.skiptag.roadrunner.coyote;
 
-import java.util.Map;
 import java.util.UUID;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 
-import de.skiptag.coyote.api.Coyote;
 import de.skiptag.roadrunner.core.DataListener;
 import de.skiptag.roadrunner.core.DataService;
 import de.skiptag.roadrunner.core.DataService.QueryCallback;
@@ -20,16 +18,22 @@ import de.skiptag.roadrunner.core.authorization.AuthorizationService;
 
 public class RoadrunnerService implements DataListener {
 
+	public interface SnapshotHandler {
+
+		void handle(RoadrunnerSnapshot roadrunnerSnapshot);
+
+	}
+
 	private static final Logger logger = LoggerFactory
 			.getLogger(RoadrunnerService.class);
 	private AuthorizationService authorizationService;
 	private DataService dataService;
 
 	private String path;
-	private Map<String, Function> once = Maps.newHashMap();
-	private Map<String, Function> on = Maps.newHashMap();
+	private Multimap<String, SnapshotHandler> once = LinkedListMultimap
+			.create();
+	private Multimap<String, SnapshotHandler> on = LinkedListMultimap.create();
 	private String contextName;
-	private Map<Function, Coyote> coyoteHolder = Maps.newHashMap();
 
 	public RoadrunnerService(AuthorizationService authorizationService,
 			DataService dataService, String contextName, String path) {
@@ -53,25 +57,18 @@ public class RoadrunnerService implements DataListener {
 			JSONObject node, String prevChildName, boolean hasChildren,
 			long numChildren) {
 		try {
-			if (on.containsKey("child_added")) {
-				Function func = on.get("child_added");
-				coyoteHolder.get(func).evalFunction(
-						func,
-						new Object[] { new RoadrunnerSnapshot(
-								authorizationService, dataService, contextName,
-								path, node, parent, numChildren, prevChildName,
-								hasChildren, 0) });
+			RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
+					authorizationService, dataService, contextName, path, node,
+					parent, numChildren, prevChildName, hasChildren, 0);
 
+			if (on.containsKey("child_added")) {
+				for (SnapshotHandler handler : on.get("child_added"))
+					handler.handle(roadrunnerSnapshot);
 			}
 			if (once.containsKey("child_added")) {
-				Function func = on.get("child_added");
-				coyoteHolder.get(func).evalFunction(
-						func,
-						new Object[] { new RoadrunnerSnapshot(
-								authorizationService, dataService, contextName,
-								path, node, parent, numChildren, prevChildName,
-								hasChildren, 0) });
-				once.remove("child_added");
+				for (SnapshotHandler handler : once.get("child_added"))
+					handler.handle(roadrunnerSnapshot);
+				once.removeAll("child_added");
 			}
 		} catch (Exception exp) {
 			logger.error("", exp);
@@ -83,25 +80,17 @@ public class RoadrunnerService implements DataListener {
 			JSONObject node, String prevChildName, boolean hasChildren,
 			long numChildren) {
 		try {
+			RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
+					authorizationService, dataService, contextName, path, node,
+					parent, numChildren, prevChildName, hasChildren, 0);
 			if (on.containsKey("child_changed")) {
-				Function func = on.get("child_changed");
-				coyoteHolder.get(func).evalFunction(
-						func,
-						new Object[] { new RoadrunnerSnapshot(
-								authorizationService, dataService, contextName,
-								path, node, parent, numChildren, prevChildName,
-								hasChildren, 0) });
-
+				for (SnapshotHandler handler : on.get("child_changed"))
+					handler.handle(roadrunnerSnapshot);
 			}
 			if (once.containsKey("child_changed")) {
-				Function func = on.get("child_changed");
-				coyoteHolder.get(func).evalFunction(
-						func,
-						new Object[] { new RoadrunnerSnapshot(
-								authorizationService, dataService, contextName,
-								path, node, parent, numChildren, prevChildName,
-								hasChildren, 0) });
-				once.remove("child_changed");
+				for (SnapshotHandler handler : once.get("child_changed"))
+					handler.handle(roadrunnerSnapshot);
+				once.removeAll("child_changed");
 			}
 		} catch (Exception exp) {
 			logger.error("", exp);
@@ -112,25 +101,18 @@ public class RoadrunnerService implements DataListener {
 	public void child_moved(JSONObject childSnapshot, String prevChildName,
 			boolean hasChildren, long numChildren) {
 		try {
+			RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
+					authorizationService, dataService, contextName, path,
+					childSnapshot, null, numChildren, prevChildName,
+					hasChildren, 0);
 			if (on.containsKey("child_moved")) {
-				Function func = on.get("child_moved");
-				coyoteHolder.get(func).evalFunction(
-						func,
-						new Object[] { new RoadrunnerSnapshot(
-								authorizationService, dataService, contextName,
-								path, childSnapshot, null, numChildren,
-								prevChildName, hasChildren, 0) });
-
+				for (SnapshotHandler handler : on.get("child_moved"))
+					handler.handle(roadrunnerSnapshot);
 			}
 			if (once.containsKey("child_moved")) {
-				Function func = on.get("child_moved");
-				coyoteHolder.get(func).evalFunction(
-						func,
-						new Object[] { new RoadrunnerSnapshot(
-								authorizationService, dataService, contextName,
-								path, childSnapshot, null, numChildren,
-								prevChildName, hasChildren, 0) });
-				once.remove("child_moved");
+				for (SnapshotHandler handler : once.get("child_moved"))
+					handler.handle(roadrunnerSnapshot);
+				once.removeAll("child_moved");
 			}
 		} catch (Exception exp) {
 			logger.error("", exp);
@@ -140,23 +122,17 @@ public class RoadrunnerService implements DataListener {
 	@Override
 	public void child_removed(String path, JSONObject payload) {
 		try {
+			RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
+					authorizationService, dataService, contextName, path,
+					payload, null, 0, null, false, 0);
 			if (on.containsKey("child_removed")) {
-				Function func = on.get("child_removed");
-				coyoteHolder.get(func).evalFunction(
-						func,
-						new Object[] { new RoadrunnerSnapshot(
-								authorizationService, dataService, contextName,
-								path, payload, null, 0, null, false, 0) });
-
+				for (SnapshotHandler handler : on.get("child_removed"))
+					handler.handle(roadrunnerSnapshot);
 			}
 			if (once.containsKey("child_removed")) {
-				Function func = on.get("child_removed");
-				coyoteHolder.get(func).evalFunction(
-						func,
-						new Object[] { new RoadrunnerSnapshot(
-								authorizationService, dataService, contextName,
-								path, payload, null, 0, null, false, 0) });
-				once.remove("child_removed");
+				for (SnapshotHandler handler : once.get("child_removed"))
+					handler.handle(roadrunnerSnapshot);
+				once.removeAll("child_removed");
 			}
 		} catch (Exception exp) {
 			logger.error("", exp);
@@ -167,19 +143,17 @@ public class RoadrunnerService implements DataListener {
 		return dataService.getName(path);
 	}
 
-	public void off(String eventType, Function function) {
-		on.remove(eventType);
-		once.remove(eventType);
+	public void off(String eventType, SnapshotHandler handler) {
+		on.remove(handler, handler);
+		once.remove(handler, handler);
 	}
 
-	public void on(String eventType, Function function) {
-		on.put(eventType, function);
-		coyoteHolder.put(function, Coyote.get());
+	public void on(String eventType, SnapshotHandler handler) {
+		on.put(eventType, handler);
 	}
 
-	public void once(String eventType, Function function) {
-		once.put(eventType, function);
-		coyoteHolder.put(function, Coyote.get());
+	public void once(String eventType, SnapshotHandler handler) {
+		once.put(eventType, handler);
 	}
 
 	public RoadrunnerService parent() {
@@ -201,7 +175,7 @@ public class RoadrunnerService implements DataListener {
 		}
 	}
 
-	public void query(String expression, final Function function) {
+	public void query(String expression, final SnapshotHandler handler) {
 		dataService.query(expression, new QueryCallback() {
 			@Override
 			public void change(String path, JSONObject value,
@@ -210,7 +184,7 @@ public class RoadrunnerService implements DataListener {
 				RoadrunnerSnapshot snap = new RoadrunnerSnapshot(
 						authorizationService, dataService, name, path, value,
 						parentPath, numChildren, name, hasChildren, priority);
-				Coyote.get().evalFunction(function, new Object[] { snap });
+				handler.handle(snap);
 			}
 
 		});

@@ -3,6 +3,8 @@ package de.skiptag.roadrunner.coyote;
 import org.json.JSONObject;
 import org.mozilla.javascript.Function;
 
+import com.google.common.base.Objects;
+
 import de.skiptag.coyote.api.Coyote;
 import de.skiptag.roadrunner.core.DataService;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
@@ -82,4 +84,21 @@ public class RoadrunnerSnapshot {
 	public Object val() {
 		return Coyote.parse(value.toString());
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		} else if (obj instanceof RoadrunnerSnapshot) {
+			return Objects.equal(path, ((RoadrunnerSnapshot) obj).path);
+		} else {
+			return super.equals(obj);
+		}
+	}
+
+	@Override
+	public String toString() {
+		return Objects.toStringHelper(this).add("path", path).toString();
+	}
+
 }
