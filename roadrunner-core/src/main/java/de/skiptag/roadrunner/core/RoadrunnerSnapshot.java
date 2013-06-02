@@ -1,13 +1,10 @@
-package de.skiptag.roadrunner.coyote;
+package de.skiptag.roadrunner.core;
 
 import org.json.JSONObject;
-import org.mozilla.javascript.Function;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
-import de.skiptag.coyote.api.Coyote;
-import de.skiptag.roadrunner.core.DataService;
-import de.skiptag.roadrunner.core.RoadrunnerService;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
 
 public class RoadrunnerSnapshot {
@@ -82,8 +79,8 @@ public class RoadrunnerSnapshot {
 				contextName, path);
 	}
 
-	public Object val() {
-		return Coyote.parse(value.toString());
+	public JSONObject val() {
+		return value;
 	}
 
 	@Override
