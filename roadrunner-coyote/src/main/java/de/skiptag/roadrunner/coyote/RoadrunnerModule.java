@@ -27,8 +27,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 	private ModeShapeDataService dataService;
 
 	@SuppressWarnings("unused")
-	private static final Logger logger = LoggerFactory
-			.getLogger(RoadrunnerModule.class);
+	private static final Logger logger = LoggerFactory.getLogger(RoadrunnerModule.class);
 
 	private ModeShapeAuthorizationService authorizationService;
 
@@ -46,17 +45,14 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 
 	private RoadrunnerEventHandler roadrunnerEventHandler;
 
-	public RoadrunnerModule(Coyote coyote, String path, String repoName,
-			NativeObject rule) {
+	public RoadrunnerModule(Coyote coyote, String path, String repoName, NativeObject rule) {
 		super(path, coyote);
 		this.path = path;
 		this.repositoryName = repoName;
 		try {
-			authorizationService = ModeShapeServiceFactory.getInstance()
-					.getAuthorizationService(repoName,
-							RoadrunnerService.toJSONObject(rule));
-			dataService = ModeShapeServiceFactory.getInstance().getDataService(
-					authorizationService, repoName);
+			authorizationService = ModeShapeServiceFactory.getInstance().getAuthorizationService(repoName,
+					RoadrunnerService.toJSONObject(rule));
+			dataService = ModeShapeServiceFactory.getInstance().getDataService(authorizationService, repoName);
 
 			roadrunnerEventHandler = new RoadrunnerEventHandler(this);
 			dataService.addListener(roadrunnerEventHandler);
@@ -108,15 +104,25 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 	@Override
 	public void handle(HttpServerRequest req) {
 		try {
-			req.response.sendFile("roadrunner.js");
+			if("roadrunner.html".equals(req.uri))
+			{
+				req.response.sendFile("roadrunner.html");
+			}
+			else if("roadrunner.js".equals(req.uri))
+			{
+				req.response.sendFile("roadrunner.js");
+			}
+			else
+			{
+				req.response.setStatusCode(404);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public RoadrunnerService load() throws DataServiceCreationException {
-		return new RoadrunnerService(authorizationService, dataService, null,
-				"/");
+		return new RoadrunnerService(authorizationService, dataService, null, "/");
 	}
 
 	@Override
@@ -126,7 +132,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 
 	@Override
 	public String getServletPath() {
-		return "roadrunner.js";
+		return "roadrunner(.)*";
 	}
 
 	@Override
@@ -144,10 +150,8 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 		String requestPath = (String) message.get("path");
 		int indexOfPath = requestPath.indexOf(path);
 		if (indexOfPath > -1) {
-			int substringIndex = indexOfPath + pathLength
-					+ repositoryNameLength + 1;
-			return requestPath.substring(substringIndex).replaceFirst(
-					"roadrunner", "");
+			int substringIndex = indexOfPath + pathLength + repositoryNameLength + 1;
+			return requestPath.substring(substringIndex).replaceFirst("roadrunner", "");
 		} else {
 			return requestPath.replaceFirst("roadrunner", "");
 		}

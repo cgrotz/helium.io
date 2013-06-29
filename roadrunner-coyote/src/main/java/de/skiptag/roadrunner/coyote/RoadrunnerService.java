@@ -55,7 +55,7 @@ public class RoadrunnerService implements DataListener {
 	public void child_added(String name, String path, String parent, JSONObject node, String prevChildName,
 			boolean hasChildren, long numChildren) {
 		try {
-			if (this.path.contains(path)) {
+			if (path.startsWith(this.path)) {
 				RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(authorizationService, dataService,
 						contextName, path, node, parent, numChildren, prevChildName, hasChildren, 0);
 
@@ -78,7 +78,7 @@ public class RoadrunnerService implements DataListener {
 	public void child_changed(String name, String path, String parent, JSONObject node, String prevChildName,
 			boolean hasChildren, long numChildren) {
 		try {
-			if (this.path.contains(path)) {
+			if (path.startsWith(this.path)) {
 				RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(authorizationService, dataService,
 						contextName, path, node, parent, numChildren, prevChildName, hasChildren, 0);
 				if (on.containsKey("child_changed")) {
@@ -118,7 +118,7 @@ public class RoadrunnerService implements DataListener {
 	@Override
 	public void child_removed(String path, JSONObject payload) {
 		try {
-			if (this.path.contains(path)) {
+			if (path.startsWith(this.path)) {
 				RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(authorizationService, dataService,
 						contextName, path, payload, null, 0, null, false, 0);
 				if (on.containsKey("child_removed")) {
