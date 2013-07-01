@@ -14,6 +14,8 @@
 		<module>roadrunner-modeshape</module>
 		<module>roadrunner-servlet</module>
 		<module>roadrunner-coyote</module>
+		<module>roadrunner-disruptor</module>
+		<module>roadrunner-in-memory</module>
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -77,6 +79,16 @@
 			<dependency>
 				<groupId>de.skiptag.roadrunner</groupId>
 				<artifactId>roadrunner-modeshape</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.skiptag.roadrunner</groupId>
+				<artifactId>roadrunner-disruptor</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.skiptag.roadrunner</groupId>
+				<artifactId>roadrunner-in-memory</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>

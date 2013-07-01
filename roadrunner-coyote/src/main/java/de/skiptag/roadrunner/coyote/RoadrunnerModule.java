@@ -1,5 +1,6 @@
 package de.skiptag.roadrunner.coyote;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.json.JSONException;
@@ -12,148 +13,146 @@ import de.skiptag.coyote.api.Coyote;
 import de.skiptag.coyote.api.http.common.HttpServerRequest;
 import de.skiptag.coyote.api.modules.ServletModule;
 import de.skiptag.coyote.api.modules.WebsocketModule;
+import de.skiptag.roadrunner.core.DataService;
 import de.skiptag.roadrunner.core.DataServiceCreationException;
-import de.skiptag.roadrunner.coyote.actions.PushAction;
-import de.skiptag.roadrunner.coyote.actions.QueryAction;
-import de.skiptag.roadrunner.coyote.actions.SetAction;
-import de.skiptag.roadrunner.modeshape.ModeShapeAuthorizationService;
-import de.skiptag.roadrunner.modeshape.ModeShapeDataService;
+import de.skiptag.roadrunner.core.authorization.AuthorizationService;
+import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
+import de.skiptag.roadrunner.disruptor.event.MessageType;
+import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.inmemory.InMemoryServiceFactory;
 import de.skiptag.roadrunner.modeshape.ModeShapeServiceFactory;
 
 public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 
-	private String repositoryName = "";
+    private String repositoryName = "";
 
-	private ModeShapeDataService dataService;
+    @SuppressWarnings("unused")
+    private static final Logger logger = LoggerFactory.getLogger(RoadrunnerModule.class);
 
-	@SuppressWarnings("unused")
-	private static final Logger logger = LoggerFactory.getLogger(RoadrunnerModule.class);
+    private DataService dataService;
 
-	private ModeShapeAuthorizationService authorizationService;
+    private AuthorizationService authorizationService;
 
-	public String getRepositoryName() {
-		return repositoryName;
+    public String getRepositoryName() {
+	return repositoryName;
+    }
+
+    private String path;
+
+    private RoadrunnerEventHandler roadrunnerEventHandler;
+
+    private DisruptorRoadrunnerService disruptor;
+
+    public RoadrunnerModule(Coyote coyote, String path, String repoName,
+	    NativeObject rule) {
+	super(path, coyote);
+	this.path = path;
+	this.repositoryName = repoName;
+
+	try {
+	    authorizationService = ModeShapeServiceFactory.getInstance()
+		    .getAuthorizationService(RoadrunnerService.toJSONObject(rule));
+	    // dataService = ModeShapeServiceFactory.getInstance()
+	    // .getDataService(authorizationService, repoName);
+	    dataService = InMemoryServiceFactory.getInstance()
+		    .getDataService(authorizationService, repoName);
+	    roadrunnerEventHandler = new RoadrunnerEventHandler(this);
+	    dataService.addListener(roadrunnerEventHandler);
+
+	    disruptor = new DisruptorRoadrunnerService(new File(
+		    "/home/balu/tmp/roadrunner"), dataService,
+		    authorizationService, true);
+	} catch (Exception e) {
+	    throw new RuntimeException(e);
 	}
+    }
 
-	private String path;
+    public void setAuthentication(String token) throws JSONException {
+	JSONObject auth = new JSONObject();
+	auth.put("id", token);
+	dataService.setAuth(auth);
+    }
 
-	private QueryAction queryAction;
+    @Override
+    public void init() {
 
-	private PushAction pushAction;
+    }
 
-	private SetAction setAction;
+    @Override
+    public void handle(String msg) {
+	try {
 
-	private RoadrunnerEventHandler roadrunnerEventHandler;
-
-	public RoadrunnerModule(Coyote coyote, String path, String repoName, NativeObject rule) {
-		super(path, coyote);
-		this.path = path;
-		this.repositoryName = repoName;
-		try {
-			authorizationService = ModeShapeServiceFactory.getInstance().getAuthorizationService(repoName,
-					RoadrunnerService.toJSONObject(rule));
-			dataService = ModeShapeServiceFactory.getInstance().getDataService(authorizationService, repoName);
-
-			roadrunnerEventHandler = new RoadrunnerEventHandler(this);
-			dataService.addListener(roadrunnerEventHandler);
-
-			queryAction = new QueryAction(dataService, this);
-			pushAction = new PushAction(dataService);
-			setAction = new SetAction(dataService);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public void setAuthentication(String token) throws JSONException {
-		JSONObject auth = new JSONObject();
-		auth.put("id", token);
-		dataService.setAuth(auth);
-	}
-
-	@Override
-	public void init() {
-
-	}
-
-	@Override
-	public void handle(String msg) {
-		try {
-			JSONObject message = new JSONObject(msg);
-			String messageType = (String) message.get("type");
-			final String path = extractPath(message);
-
-			if ("query".equalsIgnoreCase(messageType)) {
-				String query = message.getString("query");
-				queryAction.handle(query);
-			} else if ("attached_listener".equalsIgnoreCase(messageType)) {
-				roadrunnerEventHandler.addListener(path);
-				dataService.sync(path);
-			} else if ("detached_listener".equalsIgnoreCase(messageType)) {
-				roadrunnerEventHandler.removeListener(path);
-			} else if ("push".equalsIgnoreCase(messageType)) {
-				pushAction.handle(message, path);
-			} else if ("set".equalsIgnoreCase(messageType)) {
-				setAction.handle(message, path);
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(msg.toString(), e);
-		}
-	}
-
-	@Override
-	public void handle(HttpServerRequest req) {
-		try {
-			if("roadrunner.html".equals(req.uri))
-			{
-				req.response.sendFile("roadrunner.html");
-			}
-			else if("roadrunner.js".equals(req.uri))
-			{
-				req.response.sendFile("roadrunner.js");
-			}
-			else
-			{
-				req.response.setStatusCode(404);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public RoadrunnerService load() throws DataServiceCreationException {
-		return new RoadrunnerService(authorizationService, dataService, null, "/");
-	}
-
-	@Override
-	public void destroy() {
-		ModeShapeServiceFactory.getInstance().destroy();
-	}
-
-	@Override
-	public String getServletPath() {
-		return "roadrunner(.)*";
-	}
-
-	@Override
-	public String getWebsocketPath() {
-		return path + "/(.)*";
-	}
-
-	private String extractPath(JSONObject message) throws JSONException {
-		if (!message.has("path")) {
-			return null;
-		}
-		int pathLength = path.length();
-		int repositoryNameLength = repositoryName.length();
-
-		String requestPath = (String) message.get("path");
-		int indexOfPath = requestPath.indexOf(path);
-		if (indexOfPath > -1) {
-			int substringIndex = indexOfPath + pathLength + repositoryNameLength + 1;
-			return requestPath.substring(substringIndex).replaceFirst("roadrunner", "");
+	    RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg, path,
+		    repositoryName);
+	    if (roadrunnerEvent.has("type")) {
+		if (roadrunnerEvent.getType() == MessageType.ATTACHED_LISTENER) {
+		    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
+		    dataService.sync(roadrunnerEvent.extractNodePath());
+		} else if (roadrunnerEvent.getType() == MessageType.DETACHED_LISTENER) {
+		    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
+		} else if (roadrunnerEvent.getType() == MessageType.QUERY) {
+		    String query = roadrunnerEvent.getString("query");
+		    // queryAction.handle(query);
 		} else {
-			return requestPath.replaceFirst("roadrunner", "");
+		    disruptor.handleEvent(roadrunnerEvent);
 		}
+	    }
+	} catch (Exception e) {
+	    throw new RuntimeException(msg.toString(), e);
 	}
+    }
+
+    @Override
+    public void handle(HttpServerRequest req) {
+	try {
+	    if ("roadrunner.html".equals(req.uri)) {
+		req.response.sendFile("roadrunner.html");
+	    } else if ("roadrunner.js".equals(req.uri)) {
+		req.response.sendFile("roadrunner.js");
+	    } else {
+		req.response.setStatusCode(404);
+	    }
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+    }
+
+    public RoadrunnerService load() throws DataServiceCreationException {
+	return new RoadrunnerService(authorizationService, dataService, null,
+		"/");
+    }
+
+    @Override
+    public void destroy() {
+	ModeShapeServiceFactory.getInstance().destroy();
+    }
+
+    @Override
+    public String getServletPath() {
+	return "roadrunner(.)*";
+    }
+
+    @Override
+    public String getWebsocketPath() {
+	return path + "/(.)*";
+    }
+
+    private String extractPath(JSONObject message) throws JSONException {
+	if (!message.has("path")) {
+	    return null;
+	}
+	int pathLength = path.length();
+	int repositoryNameLength = repositoryName.length();
+
+	String requestPath = (String) message.get("path");
+	int indexOfPath = requestPath.indexOf(path);
+	if (indexOfPath > -1) {
+	    int substringIndex = indexOfPath + pathLength
+		    + repositoryNameLength + 1;
+	    return requestPath.substring(substringIndex)
+		    .replaceFirst("roadrunner", "");
+	} else {
+	    return requestPath.replaceFirst("roadrunner", "");
+	}
+    }
 }

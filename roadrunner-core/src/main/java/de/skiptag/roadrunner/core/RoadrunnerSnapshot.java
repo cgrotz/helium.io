@@ -19,9 +19,10 @@ public class RoadrunnerSnapshot {
 	private int priority;
 	private String contextName;
 
-	public RoadrunnerSnapshot(AuthorizationService authorizationService, DataService dataService, String contextName,
-			String path, JSONObject value, String parentPath, long numChildren, String name, boolean hasChildren,
-			int priority) {
+	public RoadrunnerSnapshot(AuthorizationService authorizationService,
+			DataService dataService, String contextName, String path,
+			JSONObject value, String parentPath, long numChildren, String name,
+			boolean hasChildren, int priority) {
 		super();
 		this.authorizationService = authorizationService;
 		this.dataService = dataService;
@@ -36,9 +37,9 @@ public class RoadrunnerSnapshot {
 	}
 
 	public RoadrunnerService child(String childPath) {
-		return new RoadrunnerService(authorizationService, dataService, contextName, (path.endsWith("/") ? path : path
-				+ "/")
-				+ childPath);
+		return new RoadrunnerService(authorizationService, dataService,
+				contextName, (path.endsWith("/") ? path : path + "/")
+						+ childPath);
 	}
 
 	public void forEach(Function childAction) {
@@ -63,7 +64,8 @@ public class RoadrunnerSnapshot {
 
 	public RoadrunnerService parent() {
 		if (parentPath != null) {
-			return new RoadrunnerService(authorizationService, dataService, contextName, parentPath);
+			return new RoadrunnerService(authorizationService, dataService,
+					contextName, parentPath);
 		} else {
 			return null;
 		}
@@ -74,7 +76,8 @@ public class RoadrunnerSnapshot {
 	}
 
 	public RoadrunnerService ref() {
-		return new RoadrunnerService(authorizationService, dataService, contextName, path);
+		return new RoadrunnerService(authorizationService, dataService,
+				contextName, path);
 	}
 
 	public JSONObject val() {

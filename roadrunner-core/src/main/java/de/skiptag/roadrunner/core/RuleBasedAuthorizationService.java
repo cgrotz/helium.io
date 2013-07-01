@@ -1,6 +1,5 @@
-package de.skiptag.roadrunner.modeshape;
+package de.skiptag.roadrunner.core;
 
-import javax.jcr.Session;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -13,7 +12,7 @@ import de.skiptag.roadrunner.core.authorization.RoadrunnerNotAuthorizedException
 import de.skiptag.roadrunner.core.authorization.RoadrunnerOperation;
 import de.skiptag.roadrunner.core.authorization.RulesDataSnapshot;
 
-public class ModeShapeAuthorizationService implements AuthorizationService {
+public class RuleBasedAuthorizationService implements AuthorizationService {
 
 	public class AuthenticationWrapper {
 		public AuthenticationWrapper(JSONObject auth) throws JSONException {
@@ -24,22 +23,16 @@ public class ModeShapeAuthorizationService implements AuthorizationService {
 
 	}
 
-	private String repositoryName;
-	private Session commonRepo;
 	private RuleBasedAuthorizator rule;
 	ScriptEngineManager mgr = new ScriptEngineManager();
 	ScriptEngine engine = mgr.getEngineByName("JavaScript");
 
-	public ModeShapeAuthorizationService(Session commonRepo,
-			String repositoryName, JSONObject rule) throws JSONException {
-		this.commonRepo = commonRepo;
-		this.repositoryName = repositoryName;
+	public RuleBasedAuthorizationService(JSONObject rule) throws JSONException {
 		this.rule = new RuleBasedAuthorizator(rule);
 	}
 
 	@Override
 	public void shutdown() {
-		commonRepo.logout();
 	}
 
 	@Override

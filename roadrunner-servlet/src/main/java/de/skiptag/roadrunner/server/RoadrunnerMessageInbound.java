@@ -55,7 +55,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 
 		connections.add(this);
 		authorizationService = authenticationServiceFactory
-				.getAuthorizationService(repositoryName, new JSONObject());
+				.getAuthorizationService(new JSONObject());
 		dataService = dataServiceFactory.getDataService(authorizationService,
 				repositoryName);
 		dataService.addListener(this);

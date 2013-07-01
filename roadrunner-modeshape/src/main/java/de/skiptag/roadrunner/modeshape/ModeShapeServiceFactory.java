@@ -17,6 +17,7 @@ import com.google.common.collect.Maps;
 
 import de.skiptag.roadrunner.core.DataServiceCreationException;
 import de.skiptag.roadrunner.core.DataServiceFactory;
+import de.skiptag.roadrunner.core.RuleBasedAuthorizationService;
 import de.skiptag.roadrunner.core.authorization.AuthenticationServiceFactory;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
 
@@ -41,15 +42,16 @@ public class ModeShapeServiceFactory implements DataServiceFactory,
 	}
 
 	@Override
-	public ModeShapeAuthorizationService getAuthorizationService(
-			String repositoryName, JSONObject rule) {
-		try {
-			Repository commonRepo = getRepository("common");
-			return new ModeShapeAuthorizationService(commonRepo.login(),
-					repositoryName, rule);
-		} catch (Exception exp) {
-			throw new RuntimeException(exp);
+	public RuleBasedAuthorizationService getAuthorizationService( JSONObject rule) {
+		try
+		{
+			return new RuleBasedAuthorizationService( rule);
 		}
+		catch(Exception exp)
+		{
+			exp.printStackTrace();
+		}
+		return null;
 	}
 
 	@Override

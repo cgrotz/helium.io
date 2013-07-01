@@ -20,6 +20,14 @@
 			<artifactId>roadrunner-core</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>de.skiptag.roadrunner</groupId>
+			<artifactId>roadrunner-disruptor</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.skiptag.roadrunner</groupId>
+			<artifactId>roadrunner-in-memory</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>de.skiptag.coyote</groupId>
 			<artifactId>coyote-api</artifactId>
 			<version>1.0.0-SNAPSHOT</version>

@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.modeshape;
+package de.skiptag.roadrunner.core;
 
 import java.util.Iterator;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.coyote.actions;
+package de.skiptag.roadrunner.disruptor.processor.storage.actions;
 
 import java.util.UUID;
 
@@ -9,6 +9,7 @@ import com.google.common.base.Strings;
 
 import de.skiptag.roadrunner.core.DataService;
 import de.skiptag.roadrunner.core.dtos.PushedMessage;
+import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 
 public class PushAction {
 
@@ -18,7 +19,8 @@ public class PushAction {
 	this.dataService = dataService;
     }
 
-    public void handle(JSONObject message, String path) throws JSONException {
+    public void handle(RoadrunnerEvent message) throws JSONException {
+	String path = message.extractNodePath();
 	JSONObject payload;
 	if (message.has("payload")) {
 	    payload = (JSONObject) message.get("payload");
