@@ -9,29 +9,29 @@ import de.skiptag.roadrunner.disruptor.processor.storage.actions.SetAction;
 
 public class StorageProcessor implements EventHandler<RoadrunnerEvent> {
 
-    private PushAction pushAction;
+	private PushAction pushAction;
 
-    private SetAction setAction;
+	private SetAction setAction;
 
-    public StorageProcessor(DataService dataService) {
-	pushAction = new PushAction(dataService);
-	setAction = new SetAction(dataService);
-    }
-
-    @Override
-    public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
-	    throws Exception {
-	try {
-	    switch (event.getType()) {
-	    case PUSH:
-		pushAction.handle(event);
-		break;
-	    case SET:
-		setAction.handle(event);
-		break;
-	    }
-	} catch (Exception e) {
-	    throw new RuntimeException(event.toString(), e);
+	public StorageProcessor(DataService dataService) {
+		pushAction = new PushAction(dataService);
+		setAction = new SetAction(dataService);
 	}
-    }
+
+	@Override
+	public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
+			throws Exception {
+		try {
+			switch (event.getType()) {
+			case PUSH:
+				pushAction.handle(event);
+				break;
+			case SET:
+				setAction.handle(event);
+				break;
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(event.toString(), e);
+		}
+	}
 }

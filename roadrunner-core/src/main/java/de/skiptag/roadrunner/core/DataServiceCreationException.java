@@ -7,11 +7,6 @@ public class DataServiceCreationException extends Exception {
 		super();
 	}
 
-	public DataServiceCreationException(String message, Throwable cause,
-			boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
-
 	public DataServiceCreationException(String message, Throwable cause) {
 		super(message, cause);
 	}

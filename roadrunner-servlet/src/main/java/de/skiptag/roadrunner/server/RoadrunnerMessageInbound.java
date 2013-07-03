@@ -240,6 +240,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 						}
 					} else if (obj == null) {
 						if (!Strings.isNullOrEmpty(path)) {
+							message.put("oldValue", dataService.get(path));
 							dataService.remove(path);
 						}
 					} else {
@@ -249,6 +250,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 					}
 				} else {
 					if (!Strings.isNullOrEmpty(path)) {
+						message.put("oldValue", dataService.get(path));
 						dataService.remove(path);
 					}
 				}

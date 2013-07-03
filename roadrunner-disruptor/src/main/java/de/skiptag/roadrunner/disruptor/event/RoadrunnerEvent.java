@@ -114,4 +114,7 @@ public class RoadrunnerEvent extends JSONObject {
 		}
 	}
 
+	public JSONObject getOldValue() throws JSONException {
+		return (JSONObject) get("oldValue");
+	}
 }

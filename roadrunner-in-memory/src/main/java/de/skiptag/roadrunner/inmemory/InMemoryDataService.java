@@ -58,6 +58,8 @@ public class InMemoryDataService implements DataService {
 	Path nodePath = new Path(path);
 	String nodeName = nodePath.getLastElement();
 	Path parentPath = nodePath.getParent();
+	
+	
 	try {
 	    model.getNodeForPath(parentPath).remove(nodeName);
 	} catch (JSONException e) {
@@ -87,7 +89,6 @@ public class InMemoryDataService implements DataService {
 
     @Override
     public PushedMessage update(String nodeName, JSONObject payload) {
-	System.out.println(model.toString());
 	Path nodePath = new Path(nodeName);
 	try {
 	    Node node = model.getNodeForPath(nodePath);

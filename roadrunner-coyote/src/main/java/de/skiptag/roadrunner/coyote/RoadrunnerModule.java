@@ -60,7 +60,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 	    dataService.addListener(roadrunnerEventHandler);
 
 	    disruptor = new DisruptorRoadrunnerService(new File(
-		    "/home/balu/tmp/roadrunner"), dataService,
+		    "d:\\tmp\\roadrunner"), dataService,
 		    authorizationService, true);
 	} catch (Exception e) {
 	    throw new RuntimeException(e);

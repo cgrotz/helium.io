@@ -31,6 +31,7 @@ public class Node extends JSONObject {
     }
 
     public void populate(JSONObject payload) throws JSONException {
+    	
 	populate(payload.toString());
     }
 
@@ -60,7 +61,7 @@ public class Node extends JSONObject {
 	    if (c != ':') {
 		throw x.syntaxError("Expected a ':' after a key");
 	    }
-	    this.putOnce(key, x.nextValue());
+	    this.put(key, x.nextValue());
 
 	    // Pairs are separated by ','.
 
