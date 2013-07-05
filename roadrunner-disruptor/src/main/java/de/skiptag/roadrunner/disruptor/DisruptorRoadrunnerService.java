@@ -19,39 +19,44 @@ import de.skiptag.roadrunner.disruptor.processor.eventsourcing.EventSourceProces
 import de.skiptag.roadrunner.disruptor.processor.storage.StorageProcessor;
 
 public class DisruptorRoadrunnerService {
-    private static final int RING_SIZE = 256;
-    private EventSourceProcessor eventSourceProcessor;
-    private StorageProcessor storageProcessor;
-    private DistributionProcessor distributionProcessor;
-    private Disruptor<RoadrunnerEvent> disruptor;
-    private AuthorizationProcessor authorizationProcessor;
+	private static final int RING_SIZE = 256;
+	private EventSourceProcessor eventSourceProcessor;
+	private StorageProcessor storageProcessor;
+	private DistributionProcessor distributionProcessor;
+	private Disruptor<RoadrunnerEvent> disruptor;
+	private AuthorizationProcessor authorizationProcessor;
 
-    @SuppressWarnings("unchecked")
-    public DisruptorRoadrunnerService(File journalDirectory,
-	    DataService dataService, AuthorizationService authorizationService,
-	    boolean withDistribution) throws IOException, JSONException {
-	ExecutorService executor = Executors.newCachedThreadPool();
-	disruptor = new Disruptor<RoadrunnerEvent>(
-		RoadrunnerEvent.EVENT_FACTORY, RING_SIZE, executor);
+	@SuppressWarnings("unchecked")
+	public DisruptorRoadrunnerService(File journalDirectory,
+			DataService dataService, AuthorizationService authorizationService,
+			boolean withDistribution) throws IOException, JSONException {
+		ExecutorService executor = Executors.newCachedThreadPool();
+		disruptor = new Disruptor<RoadrunnerEvent>(
+				RoadrunnerEvent.EVENT_FACTORY, RING_SIZE, executor);
 
-	authorizationProcessor = new AuthorizationProcessor(
-		authorizationService);
-	eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
-	storageProcessor = new StorageProcessor(dataService);
-	distributionProcessor = new DistributionProcessor(dataService);
+		authorizationProcessor = new AuthorizationProcessor(
+				authorizationService);
+		eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
+		storageProcessor = new StorageProcessor(dataService);
+		distributionProcessor = new DistributionProcessor(dataService);
 
-	EventHandlerGroup<RoadrunnerEvent> ehg = disruptor.handleEventsWith(authorizationProcessor)
-		.then(eventSourceProcessor)
-		.then(storageProcessor);
-	if (withDistribution) {
-	    ehg.then(distributionProcessor);
+		EventHandlerGroup<RoadrunnerEvent> ehg = disruptor
+				.handleEventsWith(authorizationProcessor)
+				.then(eventSourceProcessor).then(storageProcessor);
+		if (withDistribution) {
+			ehg.then(distributionProcessor);
+		}
+		disruptor.start();
+
+		eventSourceProcessor.restore();
+
 	}
-	disruptor.start();
 
-	// eventSourceProcessor.restore();
-    }
+	public void handleEvent(final RoadrunnerEvent roadrunnerEvent) {
+		disruptor.publishEvent(new RoadrunnerEventTranslator(roadrunnerEvent));
+	}
 
-    public void handleEvent(final RoadrunnerEvent roadrunnerEvent) {
-	disruptor.publishEvent(new RoadrunnerEventTranslator(roadrunnerEvent));
-    }
+	public void shutdown() {
+		disruptor.shutdown();
+	}
 }

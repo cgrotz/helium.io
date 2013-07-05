@@ -23,8 +23,8 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 		Path path = new Path(event.extractNodePath());
 		MessageType type = event.getType();
 		JSONObject node = dataService.get(path.toString());
+		
 		if (type == MessageType.PUSH) {
-
 			dataService.fireChildAdded((String) event.get("name"),
 					path.toString() + "/" + event.get("name"), path.getParent()
 							.getLastElement(), node, null, false, 0);
@@ -34,7 +34,8 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 						path.toString(), path.getParent().getLastElement(),
 						node, null, false, 0);
 			} else {
-				dataService.fireChildRemoved(path.toString(), event.getOldValue());
+				dataService.fireChildRemoved(path.toString(),
+						event.getOldValue());
 			}
 		}
 	}

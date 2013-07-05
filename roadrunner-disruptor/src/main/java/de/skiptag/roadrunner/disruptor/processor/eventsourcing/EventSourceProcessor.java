@@ -19,27 +19,29 @@ import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 
 public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
 
-    private Journal journal = new Journal();
+	private Journal journal = new Journal();
+	private DisruptorRoadrunnerService disruptorRoadrunnerService;
 
-    public EventSourceProcessor(File journal_dir,
-	    DisruptorRoadrunnerService disruptorRoadrunnerService)
-	    throws IOException {
-	journal.setDirectory(journal_dir);
-	journal.open();
-    }
-
-    @Override
-    public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
-	    throws Exception {
-	journal.write(event.toString().getBytes(), WriteType.SYNC);
-    }
-
-    public void restore() throws ClosedJournalException,
-	    CompactedDataFileException, IOException, JSONException {
-	for (Location location : journal.redo()) {
-	    final byte[] record = journal.read(location, ReadType.SYNC);
-	    // disruptorRoadrunnerService
+	public EventSourceProcessor(File journal_dir,
+			DisruptorRoadrunnerService disruptorRoadrunnerService)
+			throws IOException {
+		journal.setDirectory(journal_dir);
+		journal.open();
+		this.disruptorRoadrunnerService = disruptorRoadrunnerService;
 	}
-    }
+
+	@Override
+	public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
+			throws Exception {
+		journal.write(event.toString().getBytes(), WriteType.SYNC);
+	}
+
+	public void restore() throws ClosedJournalException,
+			CompactedDataFileException, IOException, JSONException {
+		for (Location location : journal.redo()) {
+			byte[] record = journal.read(location, ReadType.SYNC);
+			disruptorRoadrunnerService.handleEvent(new RoadrunnerEvent(new String(record)));
+		}
+	}
 
 }

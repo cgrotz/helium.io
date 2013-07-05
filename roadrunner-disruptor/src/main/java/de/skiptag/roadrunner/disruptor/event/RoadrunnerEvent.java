@@ -16,32 +16,26 @@ public class RoadrunnerEvent extends JSONObject {
 		}
 	};
 
-	private String repositoryName;
-	private String basePath;
-
+	
 	public RoadrunnerEvent() {
 	}
 
 	public RoadrunnerEvent(String string, String basePath, String repositoryName) throws JSONException {
 		super(string);
-		this.basePath = basePath;
-		this.repositoryName = repositoryName;
+		put("basePath",basePath);
+		put("repositoryName",repositoryName);
 	}
 
-	public String getRepositoryName() {
-		return repositoryName;
+	public RoadrunnerEvent(String string) throws JSONException {
+		super(string);
 	}
 
-	public void setRepositoryName(String repositoryName) {
-		this.repositoryName = repositoryName;
+	public String getRepositoryName() throws JSONException {
+		return getString("repositoryName");
 	}
 
-	public String getBasePath() {
-		return basePath;
-	}
-
-	public void setBasePath(String basePath) {
-		this.basePath = basePath;
+	public String getBasePath() throws JSONException {
+		return getString("basePath");
 	}
 
 	public void populate(String obj) throws JSONException {
@@ -70,7 +64,7 @@ public class RoadrunnerEvent extends JSONObject {
 			if (c != ':') {
 				throw x.syntaxError("Expected a ':' after a key");
 			}
-			this.putOnce(key, x.nextValue());
+			this.put(key, x.nextValue());
 
 			// Pairs are separated by ','.
 
@@ -101,11 +95,11 @@ public class RoadrunnerEvent extends JSONObject {
 		if (!has("path")) {
 			return null;
 		}
-		int pathLength = basePath.length();
-		int repositoryNameLength = repositoryName.length();
+		int pathLength = getBasePath().length();
+		int repositoryNameLength = getRepositoryName().length();
 
 		String requestPath = (String) get("path");
-		int indexOfPath = requestPath.indexOf(basePath);
+		int indexOfPath = requestPath.indexOf(getBasePath());
 		if (indexOfPath > -1) {
 			int substringIndex = indexOfPath + pathLength + repositoryNameLength + 1;
 			return requestPath.substring(substringIndex).replaceFirst("roadrunner", "");
@@ -116,5 +110,13 @@ public class RoadrunnerEvent extends JSONObject {
 
 	public JSONObject getOldValue() throws JSONException {
 		return (JSONObject) get("oldValue");
+	}
+
+	public void setBasePath(String basePath) throws JSONException {
+		put("basePath", basePath);
+	}
+
+	public void setRepositoryName(String repositoryName) throws JSONException {
+		put("repositoryName", repositoryName);
 	}
 }
