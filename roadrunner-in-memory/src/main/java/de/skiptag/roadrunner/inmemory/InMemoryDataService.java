@@ -75,10 +75,7 @@ public class InMemoryDataService implements DataService {
 	    while (itr.hasNext()) {
 		Object childNodeKey = itr.next();
 		Object object = node.get(childNodeKey.toString());
-		// if (object instanceof Node)
 		{
-		    // Node childNode = (Node) object;
-
 		    fireChildAdded((String) childNodeKey, path + "/"
 			    + childNodeKey, nodePath.toString(), object, null, (object instanceof Node) ? ((Node) object).hasChildren()
 			    : false, (object instanceof Node) ? ((Node) object).length()
