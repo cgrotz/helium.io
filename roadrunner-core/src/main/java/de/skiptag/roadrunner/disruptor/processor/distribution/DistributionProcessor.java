@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 
 import com.lmax.disruptor.EventHandler;
 
-import de.skiptag.roadrunner.core.dataService.DataService;
-import de.skiptag.roadrunner.core.helper.Path;
+import de.skiptag.roadrunner.dataService.DataService;
+import de.skiptag.roadrunner.helper.Path;
 import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 

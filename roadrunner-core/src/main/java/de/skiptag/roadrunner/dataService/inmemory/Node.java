@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.core.dataService.inmemory;
+package de.skiptag.roadrunner.dataService.inmemory;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -9,7 +9,7 @@ import org.json.JSONObject;
 
 import com.google.common.collect.Sets;
 
-import de.skiptag.roadrunner.core.helper.Path;
+import de.skiptag.roadrunner.helper.Path;
 
 public class Node extends JSONObject {
     private boolean fromHistory;

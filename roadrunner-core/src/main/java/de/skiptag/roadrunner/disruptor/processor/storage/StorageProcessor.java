@@ -2,7 +2,7 @@ package de.skiptag.roadrunner.disruptor.processor.storage;
 
 import com.lmax.disruptor.EventHandler;
 
-import de.skiptag.roadrunner.core.dataService.DataService;
+import de.skiptag.roadrunner.dataService.DataService;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.processor.storage.actions.PushAction;
 import de.skiptag.roadrunner.disruptor.processor.storage.actions.SetAction;

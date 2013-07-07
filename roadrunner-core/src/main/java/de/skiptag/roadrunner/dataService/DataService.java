@@ -1,9 +1,9 @@
-package de.skiptag.roadrunner.core.dataService;
+package de.skiptag.roadrunner.dataService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.skiptag.roadrunner.core.messaging.DataListener;
+import de.skiptag.roadrunner.messaging.DataListener;
 
 public interface DataService {
 

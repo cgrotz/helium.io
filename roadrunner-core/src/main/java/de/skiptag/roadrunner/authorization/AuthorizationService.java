@@ -1,9 +1,8 @@
-package de.skiptag.roadrunner.core.authorization;
+package de.skiptag.roadrunner.authorization;
 
 import org.json.JSONObject;
 
-import de.skiptag.roadrunner.core.authorization.impl.RoadrunnerNotAuthorizedException;
-import de.skiptag.roadrunner.core.authorization.rulebased.RulesDataSnapshot;
+import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 
 public interface AuthorizationService {
 

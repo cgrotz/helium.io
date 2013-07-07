@@ -21,8 +21,8 @@ import com.google.common.base.Preconditions;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.EventHandlerGroup;
 
-import de.skiptag.roadrunner.core.authorization.AuthorizationService;
-import de.skiptag.roadrunner.core.dataService.DataService;
+import de.skiptag.roadrunner.authorization.AuthorizationService;
+import de.skiptag.roadrunner.dataService.DataService;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.processor.authorization.AuthorizationProcessor;
 import de.skiptag.roadrunner.disruptor.processor.distribution.DistributionProcessor;

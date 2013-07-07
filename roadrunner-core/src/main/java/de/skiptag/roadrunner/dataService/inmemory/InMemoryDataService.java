@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.core.dataService.inmemory;
+package de.skiptag.roadrunner.dataService.inmemory;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
-import de.skiptag.roadrunner.core.authorization.AuthorizationService;
-import de.skiptag.roadrunner.core.dataService.DataService;
-import de.skiptag.roadrunner.core.helper.Path;
-import de.skiptag.roadrunner.core.messaging.DataListener;
+import de.skiptag.roadrunner.authorization.AuthorizationService;
+import de.skiptag.roadrunner.dataService.DataService;
+import de.skiptag.roadrunner.helper.Path;
+import de.skiptag.roadrunner.messaging.DataListener;
 
 public class InMemoryDataService implements DataService {
 

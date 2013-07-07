@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.core.dataService;
+package de.skiptag.roadrunner.dataService;
 
 public class DataServiceCreationException extends Exception {
 	private static final long serialVersionUID = 1L;

@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.core.helper;
+package de.skiptag.roadrunner.helper;
 
 public class Path {
 

@@ -11,11 +11,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
-import de.skiptag.roadrunner.core.authorization.AuthorizationService;
-import de.skiptag.roadrunner.core.dataService.DataService;
-import de.skiptag.roadrunner.core.dataService.DataService.QueryCallback;
-import de.skiptag.roadrunner.core.direct.RoadrunnerSnapshot;
-import de.skiptag.roadrunner.core.messaging.DataListener;
+import de.skiptag.roadrunner.authorization.AuthorizationService;
+import de.skiptag.roadrunner.dataService.DataService;
+import de.skiptag.roadrunner.dataService.DataService.QueryCallback;
+import de.skiptag.roadrunner.direct.RoadrunnerSnapshot;
+import de.skiptag.roadrunner.messaging.DataListener;
 
 public class RoadrunnerService implements DataListener {
 

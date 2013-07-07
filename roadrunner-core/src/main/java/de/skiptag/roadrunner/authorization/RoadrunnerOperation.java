@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.core.authorization;
+package de.skiptag.roadrunner.authorization;
 
 public enum RoadrunnerOperation {
 	READ(".read"), WRITE(".write"), REMOVE(".remove");

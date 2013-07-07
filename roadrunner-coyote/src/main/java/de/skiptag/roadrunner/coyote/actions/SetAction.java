@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 import com.google.common.base.Strings;
 
-import de.skiptag.roadrunner.core.dataService.DataService;
+import de.skiptag.roadrunner.dataService.DataService;
 
 public class SetAction {
 

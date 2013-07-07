@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.core.messaging;
+package de.skiptag.roadrunner.messaging;
 
 public interface RoadrunnerSender {
 

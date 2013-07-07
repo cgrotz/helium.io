@@ -2,8 +2,8 @@ package de.skiptag.roadrunner.coyote.actions;
 
 import org.json.JSONObject;
 
-import de.skiptag.roadrunner.core.dataService.DataService;
-import de.skiptag.roadrunner.core.dataService.DataService.QueryCallback;
+import de.skiptag.roadrunner.dataService.DataService;
+import de.skiptag.roadrunner.dataService.DataService.QueryCallback;
 import de.skiptag.roadrunner.coyote.RoadrunnerModule;
 
 public class QueryAction implements QueryCallback {
