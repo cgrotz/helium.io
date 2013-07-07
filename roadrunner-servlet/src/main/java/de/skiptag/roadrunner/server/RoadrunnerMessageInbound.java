@@ -14,11 +14,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
-import de.skiptag.roadrunner.core.authorization.AuthenticationServiceFactory;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
+import de.skiptag.roadrunner.core.authorization.rulebased.RuleBasedAuthorizationService;
 import de.skiptag.roadrunner.core.dataService.DataService;
 import de.skiptag.roadrunner.core.dataService.DataServiceCreationException;
-import de.skiptag.roadrunner.core.dataService.DataServiceFactory;
+import de.skiptag.roadrunner.core.dataService.inmemory.InMemoryDataService;
 import de.skiptag.roadrunner.core.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.core.messaging.RoadrunnerSender;
 import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
@@ -39,9 +39,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 
     private DataService dataService;
 
-    public RoadrunnerMessageInbound(String servletPath, String path,
-	    DataServiceFactory dataServiceFactory,
-	    AuthenticationServiceFactory authenticationServiceFactory)
+    public RoadrunnerMessageInbound(String servletPath, String path)
 	    throws DataServiceCreationException, IOException, JSONException {
 	this.path = path;
 	this.repositoryName = path.indexOf("/") > -1 ? path.substring(0, path.indexOf("/"))
@@ -49,8 +47,9 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 
 	roadrunnerEventHandler = new RoadrunnerEventHandler(this,
 		repositoryName);
-	AuthorizationService authorizationService = authenticationServiceFactory.getAuthorizationService(new JSONObject());
-	this.dataService = dataServiceFactory.getDataService(authorizationService, repositoryName);
+	AuthorizationService authorizationService = new RuleBasedAuthorizationService(
+		new JSONObject());
+	this.dataService = new InMemoryDataService(authorizationService);
 
 	Optional<File> snapshotDirectory = Optional.absent();
 	disruptor = new DisruptorRoadrunnerService(new File(""),

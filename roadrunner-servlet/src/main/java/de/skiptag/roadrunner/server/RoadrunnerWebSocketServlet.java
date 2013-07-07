@@ -15,15 +15,11 @@ import org.apache.catalina.websocket.WebSocketServlet;
 
 import com.google.common.io.Resources;
 
-import de.skiptag.roadrunner.inmemory.InMemoryServiceFactory;
-
 /**
  * Servlet implementation class ChatServlet
  */
 public class RoadrunnerWebSocketServlet extends WebSocketServlet {
     private static final long serialVersionUID = 1L;
-
-    private InMemoryServiceFactory dataServiceFactory = InMemoryServiceFactory.getInstance();
 
     @Override
     protected StreamInbound createWebSocketInbound(String subProtocol,
@@ -34,7 +30,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	String collectionPath = requestURI.substring((contextPath + servletPath).length() + 1);
 	try {
 	    return new RoadrunnerMessageInbound(contextPath + servletPath,
-		    collectionPath, dataServiceFactory, dataServiceFactory);
+		    collectionPath);
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
 	}

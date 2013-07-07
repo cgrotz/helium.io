@@ -1,4 +1,6 @@
-package de.skiptag.roadrunner.core.authorization;
+package de.skiptag.roadrunner.core.authorization.impl;
+
+import de.skiptag.roadrunner.core.authorization.RoadrunnerOperation;
 
 public class RoadrunnerNotAuthorizedException extends RuntimeException {
 

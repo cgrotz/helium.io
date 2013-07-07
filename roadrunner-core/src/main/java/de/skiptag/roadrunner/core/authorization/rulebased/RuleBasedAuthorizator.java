@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.core.authorization;
+package de.skiptag.roadrunner.core.authorization.rulebased;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -8,6 +8,8 @@ import org.json.JSONObject;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+
+import de.skiptag.roadrunner.core.authorization.RoadrunnerOperation;
 
 public class RuleBasedAuthorizator {
 

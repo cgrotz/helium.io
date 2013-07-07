@@ -17,15 +17,15 @@ import de.skiptag.coyote.api.http.common.HttpServerRequest;
 import de.skiptag.coyote.api.modules.ServletModule;
 import de.skiptag.coyote.api.modules.WebsocketModule;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
-import de.skiptag.roadrunner.core.authorization.RuleBasedAuthorizationService;
+import de.skiptag.roadrunner.core.authorization.rulebased.RuleBasedAuthorizationService;
 import de.skiptag.roadrunner.core.dataService.DataService;
 import de.skiptag.roadrunner.core.dataService.DataServiceCreationException;
+import de.skiptag.roadrunner.core.dataService.inmemory.InMemoryDataService;
 import de.skiptag.roadrunner.core.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.core.messaging.RoadrunnerSender;
 import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
 import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
-import de.skiptag.roadrunner.inmemory.InMemoryServiceFactory;
 
 public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 	RoadrunnerSender {
@@ -58,8 +58,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 	try {
 	    authorizationService = new RuleBasedAuthorizationService(
 		    RoadrunnerService.toJSONObject(rule));
-	    dataService = InMemoryServiceFactory.getInstance()
-		    .getDataService(authorizationService, repoName);
+	    dataService = new InMemoryDataService(authorizationService);
 	    roadrunnerEventHandler = new RoadrunnerEventHandler(this, repoName);
 	    dataService.addListener(roadrunnerEventHandler);
 

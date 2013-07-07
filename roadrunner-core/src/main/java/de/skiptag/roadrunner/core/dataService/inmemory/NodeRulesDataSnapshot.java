@@ -1,8 +1,8 @@
-package de.skiptag.roadrunner.inmemory;
+package de.skiptag.roadrunner.core.dataService.inmemory;
 
 import org.json.JSONException;
 
-import de.skiptag.roadrunner.core.authorization.RulesDataSnapshot;
+import de.skiptag.roadrunner.core.authorization.rulebased.RulesDataSnapshot;
 
 public class NodeRulesDataSnapshot implements RulesDataSnapshot {
 

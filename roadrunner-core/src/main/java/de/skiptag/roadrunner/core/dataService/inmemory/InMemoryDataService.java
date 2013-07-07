@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.inmemory;
+package de.skiptag.roadrunner.core.dataService.inmemory;
 
 import java.util.Iterator;
 import java.util.Set;

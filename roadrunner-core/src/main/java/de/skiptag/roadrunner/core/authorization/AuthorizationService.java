@@ -2,6 +2,9 @@ package de.skiptag.roadrunner.core.authorization;
 
 import org.json.JSONObject;
 
+import de.skiptag.roadrunner.core.authorization.impl.RoadrunnerNotAuthorizedException;
+import de.skiptag.roadrunner.core.authorization.rulebased.RulesDataSnapshot;
+
 public interface AuthorizationService {
 
     void shutdown();

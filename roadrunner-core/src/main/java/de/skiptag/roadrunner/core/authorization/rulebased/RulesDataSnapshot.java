@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.core.authorization;
+package de.skiptag.roadrunner.core.authorization.rulebased;
 
 /**
  * <p>A RulesDataSnapshot contains data from a Firebase location. It is akin to a
