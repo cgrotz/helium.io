@@ -18,6 +18,8 @@ import de.skiptag.coyote.api.modules.ServletModule;
 import de.skiptag.coyote.api.modules.WebsocketModule;
 import de.skiptag.roadrunner.core.DataService;
 import de.skiptag.roadrunner.core.DataServiceCreationException;
+import de.skiptag.roadrunner.core.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.core.RoadrunnerSender;
 import de.skiptag.roadrunner.core.RuleBasedAuthorizationService;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
 import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
@@ -25,7 +27,8 @@ import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.inmemory.InMemoryServiceFactory;
 
-public class RoadrunnerModule extends WebsocketModule implements ServletModule {
+public class RoadrunnerModule extends WebsocketModule implements ServletModule,
+	RoadrunnerSender {
 
     private String repositoryName = "";
 
@@ -59,7 +62,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 	    // .getDataService(authorizationService, repoName);
 	    dataService = InMemoryServiceFactory.getInstance()
 		    .getDataService(authorizationService, repoName);
-	    roadrunnerEventHandler = new RoadrunnerEventHandler(this);
+	    roadrunnerEventHandler = new RoadrunnerEventHandler(this, repoName);
 	    dataService.addListener(roadrunnerEventHandler);
 
 	    Optional<File> absent = Optional.absent();

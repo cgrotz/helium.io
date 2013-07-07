@@ -1,156 +1,61 @@
 package de.skiptag.roadrunner.server;
 
-import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 import org.apache.catalina.websocket.MessageInbound;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
-import de.skiptag.roadrunner.core.DataListener;
 import de.skiptag.roadrunner.core.DataService;
 import de.skiptag.roadrunner.core.DataServiceCreationException;
 import de.skiptag.roadrunner.core.DataServiceFactory;
+import de.skiptag.roadrunner.core.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.core.RoadrunnerSender;
 import de.skiptag.roadrunner.core.authorization.AuthenticationServiceFactory;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
-import de.skiptag.roadrunner.core.dtos.PushedMessage;
+import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
+import de.skiptag.roadrunner.disruptor.event.MessageType;
+import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 
 public class RoadrunnerMessageInbound extends MessageInbound implements
-	DataListener {
-    private static Set<RoadrunnerMessageInbound> connections = new HashSet<RoadrunnerMessageInbound>();
+	RoadrunnerSender {
+    private static final Logger logger = LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
 
-    private String servletPath;
+    private DisruptorRoadrunnerService disruptor;
+
+    private String path;
 
     private String repositoryName;
 
+    private RoadrunnerEventHandler roadrunnerEventHandler;
+
     private DataService dataService;
-
-    private AuthorizationService authorizationService;
-
-    private Set<String> attached_listeners = Sets.newHashSet();
 
     public RoadrunnerMessageInbound(String servletPath, String path,
 	    DataServiceFactory dataServiceFactory,
 	    AuthenticationServiceFactory authenticationServiceFactory)
-	    throws FileNotFoundException, DataServiceCreationException {
-	this.servletPath = servletPath;
-
+	    throws DataServiceCreationException, IOException, JSONException {
+	this.path = path;
 	this.repositoryName = path.indexOf("/") > -1 ? path.substring(0, path.indexOf("/"))
 		: path;
 
-	connections.add(this);
-	authorizationService = authenticationServiceFactory.getAuthorizationService(new JSONObject());
-	dataService = dataServiceFactory.getDataService(authorizationService, repositoryName);
-	dataService.addListener(this);
-    }
+	roadrunnerEventHandler = new RoadrunnerEventHandler(this,
+		repositoryName);
+	AuthorizationService authorizationService = authenticationServiceFactory.getAuthorizationService(new JSONObject());
+	this.dataService = dataServiceFactory.getDataService(authorizationService, repositoryName);
 
-    private void broadcast(String message) throws IOException {
-	for (RoadrunnerMessageInbound connection : connections) {
-	    CharBuffer buffer = CharBuffer.wrap(message);
-	    connection.getWsOutbound().writeTextMessage(buffer);
-	}
-    }
+	Optional<File> snapshotDirectory = Optional.absent();
+	disruptor = new DisruptorRoadrunnerService(new File(""),
+		snapshotDirectory, dataService, authorizationService, true);
 
-    @Override
-    public void child_added(String name, String path, String parent,
-	    Object node, String prevChildName, boolean hasChildren,
-	    long numChildren) {
-	try {
-	    JSONObject broadcast = new JSONObject();
-	    broadcast.put("type", "child_added");
-	    broadcast.put("name", name);
-	    broadcast.put("path", path);
-	    broadcast.put("parent", parent);
-	    broadcast.put("payload", node);
-	    broadcast.put("prevChildName", prevChildName);
-	    broadcast.put("hasChildren", hasChildren);
-	    broadcast.put("numChildren", numChildren);
-	    if (listenerAttached(path)) {
-		getWsOutbound().writeTextMessage(CharBuffer.wrap(broadcast.toString()));
-	    }
-	} catch (Exception exp) {
-	    throw new RuntimeException(exp);
-	}
-    }
-
-    @Override
-    public void child_changed(String name, String path, String parent,
-	    Object node, String prevChildName, boolean hasChildren,
-	    long numChildren) {
-	try {
-	    JSONObject broadcast = new JSONObject();
-	    broadcast.put("type", "child_changed");
-	    broadcast.put("name", name);
-	    broadcast.put("path", path);
-	    broadcast.put("parent", parent);
-	    broadcast.put("payload", node);
-	    broadcast.put("prevChildName", prevChildName);
-	    broadcast.put("hasChildren", hasChildren);
-	    broadcast.put("numChildren", numChildren);
-	    getWsOutbound().writeTextMessage(CharBuffer.wrap(broadcast.toString()));
-	} catch (Exception exp) {
-	    throw new RuntimeException(exp);
-	}
-    }
-
-    @Override
-    public void child_moved(JSONObject childSnapshot, String prevChildName,
-	    boolean hasChildren, long numChildren) {
-	try {
-	    JSONObject broadcast = new JSONObject();
-	    broadcast.put("type", "child_moved");
-	    broadcast.put("payload", childSnapshot);
-	    broadcast.put("prevChildName", prevChildName);
-	    broadcast.put("hasChildren", hasChildren);
-	    broadcast.put("numChildren", numChildren);
-	    getWsOutbound().writeTextMessage(CharBuffer.wrap(broadcast.toString()));
-	} catch (Exception exp) {
-	    throw new RuntimeException(exp);
-	}
-    }
-
-    @Override
-    public void child_removed(String path, Object payload) {
-	try {
-	    JSONObject broadcast = new JSONObject();
-	    broadcast.put("type", "child_removed");
-	    broadcast.put("path", path);
-	    broadcast.put("payload", payload);
-	    getWsOutbound().writeTextMessage(CharBuffer.wrap(broadcast.toString()));
-	} catch (Exception exp) {
-	    throw new RuntimeException(exp);
-	}
-    }
-
-    private String extractPath(JSONObject message) throws JSONException {
-	int servletPathLength = servletPath.length();
-	int repositoryNameLength = repositoryName.length();
-	String path = (String) message.get("path");
-	int indexOfServletPath = path.indexOf(servletPath);
-	if (indexOfServletPath > -1) {
-	    int substringIndex = indexOfServletPath + servletPathLength
-		    + repositoryNameLength + 1;
-	    return path.substring(substringIndex);
-	} else {
-	    return path;
-	}
-    }
-
-    private boolean listenerAttached(String path) {
-	for (String listenerPath : attached_listeners) {
-	    if (path.startsWith(listenerPath)) {
-		return true;
-	    }
-	}
-	return false;
     }
 
     @Override
@@ -162,88 +67,54 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
     protected void onClose(int status) {
 	super.onClose(status);
 	try {
-	    dataService.shutdown();
+	    disruptor.shutdown();
 	} catch (Exception exp) {
 	    throw new RuntimeException(exp);
 	}
     }
 
     @Override()
-    protected void onTextMessage(CharBuffer msg) throws IOException {
+    protected void onTextMessage(CharBuffer message) throws IOException {
+	String msg = message.toString();
 	try {
-	    JSONObject message = new JSONObject(msg.toString());
-	    String messageType = (String) message.get("type");
-	    String path = extractPath(message);
+	    RoadrunnerEvent roadrunnerEvent;
 
-	    if ("attached_listener".equalsIgnoreCase(messageType)) {
-		attached_listeners.add(path);
-		dataService.sync(path);
-	    } else if ("detached_listener".equalsIgnoreCase(messageType)) {
-		attached_listeners.remove(path);
-	    } else if ("push".equalsIgnoreCase(messageType)) {
-		JSONObject payload;
-		if (message.has("payload")) {
-		    payload = (JSONObject) message.get("payload");
-		} else {
-		    payload = new JSONObject();
-		}
-		String nodeName;
-		if (message.has("name")) {
-		    nodeName = message.getString("name");
-		} else {
-		    nodeName = UUID.randomUUID().toString().replaceAll("-", "");
-		}
-		PushedMessage pushed;
-		if (Strings.isNullOrEmpty(path)) {
-		    pushed = dataService.update(nodeName, payload);
-		} else {
-		    pushed = dataService.update(path + "/" + nodeName, payload);
-		}
-		{
-		    JSONObject broadcast = new JSONObject();
-		    broadcast.put("type", "pushed");
-		    broadcast.put("name", nodeName);
-		    broadcast.put("path", path + "/" + nodeName);
-		    broadcast.put("parent", pushed.getParent());
-		    broadcast.put("payload", pushed.getPayload());
-		    broadcast.put("prevChildName", pushed.getPrevChildName());
-		    broadcast.put("hasChildren", pushed.getHasChildren());
-		    broadcast.put("numChildren", pushed.getNumChildren());
-		    getWsOutbound().writeTextMessage(CharBuffer.wrap(broadcast.toString()));
-		}
-	    } else if ("set".equalsIgnoreCase(messageType)) {
-		JSONObject payload;
-		if (message.has("payload")) {
-		    Object obj = message.get("payload");
-		    if (obj instanceof JSONObject) {
-			payload = (JSONObject) obj;
-			if (payload instanceof JSONObject) {
-			    if (Strings.isNullOrEmpty(path)) {
-				dataService.update(null, payload);
-			    } else {
-				dataService.update(path, payload);
-			    }
-			}
-		    } else if (obj == null) {
-			if (!Strings.isNullOrEmpty(path)) {
-			    message.put("oldValue", dataService.get(path));
-			    dataService.remove(path);
-			}
-		    } else {
-			if (!Strings.isNullOrEmpty(path)) {
-			    dataService.updateSimpleValue(path, obj);
-			}
-		    }
-		} else {
-		    if (!Strings.isNullOrEmpty(path)) {
-			message.put("oldValue", dataService.get(path));
-			dataService.remove(path);
-		    }
-		}
+	    try {
+		roadrunnerEvent = new RoadrunnerEvent(msg, path, repositoryName);
+		Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
+		Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
+		Preconditions.checkArgument(roadrunnerEvent.has("repositoryName"), "No repositoryName defined in Event");
+	    } catch (Exception exp) {
+		logger.warn("Error in message (" + exp.getMessage() + "): "
+			+ msg);
+		roadrunnerEvent = null;
 
+	    }
+
+	    if (roadrunnerEvent.has("type")) {
+		if (roadrunnerEvent.getType() == MessageType.ATTACHED_LISTENER) {
+		    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
+		    dataService.sync(roadrunnerEvent.extractNodePath());
+		} else if (roadrunnerEvent.getType() == MessageType.DETACHED_LISTENER) {
+		    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
+		} else if (roadrunnerEvent.getType() == MessageType.QUERY) {
+		    String query = roadrunnerEvent.getString("query");
+		    // queryAction.handle(query);
+		} else {
+		    disruptor.handleEvent(roadrunnerEvent);
+		}
 	    }
 	} catch (Exception e) {
 	    throw new RuntimeException(msg.toString(), e);
+	}
+    }
+
+    @Override
+    public void send(String string) {
+	try {
+	    getWsOutbound().writeTextMessage(CharBuffer.wrap(string));
+	} catch (IOException e) {
+	    logger.error("Error sending message", e);
 	}
     }
 }

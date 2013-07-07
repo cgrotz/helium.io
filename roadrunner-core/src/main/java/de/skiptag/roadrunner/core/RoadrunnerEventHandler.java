@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.coyote;
+package de.skiptag.roadrunner.core;
 
 import java.util.Set;
 
@@ -6,16 +6,18 @@ import org.json.JSONObject;
 
 import com.google.common.collect.Sets;
 
-import de.skiptag.roadrunner.core.DataListener;
-
 public class RoadrunnerEventHandler implements DataListener {
 
-    private RoadrunnerModule roadrunnerModule;
+    private RoadrunnerSender roadrunnerSender;
 
     private Set<String> attached_listeners = Sets.newHashSet();
 
-    public RoadrunnerEventHandler(RoadrunnerModule roadrunnerModule) {
-	this.roadrunnerModule = roadrunnerModule;
+    private String repoName;
+
+    public RoadrunnerEventHandler(RoadrunnerSender roadrunnerSender,
+	    String repoName) {
+	this.roadrunnerSender = roadrunnerSender;
+	this.repoName = repoName;
     }
 
     @Override
@@ -23,7 +25,6 @@ public class RoadrunnerEventHandler implements DataListener {
 	    Object node, String prevChildName, boolean hasChildren,
 	    long numChildren) {
 	try {
-	    String repoName = roadrunnerModule.getRepositoryName();
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put("type", "child_added");
 	    broadcast.put("name", name);
@@ -34,7 +35,7 @@ public class RoadrunnerEventHandler implements DataListener {
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
 	    if (listenerAttached(path)) {
-		roadrunnerModule.send(broadcast.toString());
+		roadrunnerSender.send(broadcast.toString());
 	    }
 	} catch (Exception exp) {
 	    throw new RuntimeException(exp);
@@ -46,7 +47,6 @@ public class RoadrunnerEventHandler implements DataListener {
 	    Object node, String prevChildName, boolean hasChildren,
 	    long numChildren) {
 	try {
-	    String repoName = roadrunnerModule.getRepositoryName();
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put("type", "child_changed");
 	    broadcast.put("name", name);
@@ -56,7 +56,7 @@ public class RoadrunnerEventHandler implements DataListener {
 	    broadcast.put("prevChildName", prevChildName);
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
-	    roadrunnerModule.send(broadcast.toString());
+	    roadrunnerSender.send(broadcast.toString());
 	} catch (Exception exp) {
 	    throw new RuntimeException(exp);
 	}
@@ -72,7 +72,7 @@ public class RoadrunnerEventHandler implements DataListener {
 	    broadcast.put("prevChildName", prevChildName);
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
-	    roadrunnerModule.send(broadcast.toString());
+	    roadrunnerSender.send(broadcast.toString());
 	} catch (Exception exp) {
 	    throw new RuntimeException(exp);
 	}
@@ -81,12 +81,11 @@ public class RoadrunnerEventHandler implements DataListener {
     @Override
     public void child_removed(String path, Object payload) {
 	try {
-	    String repoName = roadrunnerModule.getRepositoryName();
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put("type", "child_removed");
 	    broadcast.put("path", getPath(path, repoName));
 	    broadcast.put("payload", payload);
-	    roadrunnerModule.send(broadcast.toString());
+	    roadrunnerSender.send(broadcast.toString());
 	} catch (Exception exp) {
 	    throw new RuntimeException(exp);
 	}
