@@ -39,14 +39,6 @@
 		</dependency>
 		<dependency>
 			<groupId>de.skiptag.roadrunner</groupId>
-			<artifactId>roadrunner-in-memory</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.skiptag.roadrunner</groupId>
-			<artifactId>roadrunner-disruptor</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.skiptag.roadrunner</groupId>
 			<artifactId>roadrunner-core</artifactId>
 		</dependency>
 	</dependencies>
