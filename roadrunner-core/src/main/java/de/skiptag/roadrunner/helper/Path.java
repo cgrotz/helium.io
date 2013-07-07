@@ -2,11 +2,9 @@ package de.skiptag.roadrunner.helper;
 
 public class Path {
 
-    private String path;
     private String[] elements;
 
     public Path(String path) {
-	this.path = path;
 	this.elements = getPathElements(path);
     }
 

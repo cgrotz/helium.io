@@ -1,16 +1,15 @@
-package de.skiptag.roadrunner.disruptor;
+package de.skiptag.roadrunner.disruptor.event;
 
 import org.json.JSONException;
 
 import com.google.common.base.Preconditions;
 import com.lmax.disruptor.EventTranslator;
 
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
-
-class RoadrunnerEventTranslator implements EventTranslator<RoadrunnerEvent> {
+public class RoadrunnerEventTranslator implements
+	EventTranslator<RoadrunnerEvent> {
     private RoadrunnerEvent roadrunnerEvent;
 
-    RoadrunnerEventTranslator(RoadrunnerEvent roadrunnerEvent) {
+    public RoadrunnerEventTranslator(RoadrunnerEvent roadrunnerEvent) {
 	this.roadrunnerEvent = roadrunnerEvent;
     }
 

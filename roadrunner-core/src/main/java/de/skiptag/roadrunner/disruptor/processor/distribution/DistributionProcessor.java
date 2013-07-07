@@ -30,6 +30,7 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 	MessageType type = event.getType();
 	Object node = persistence.get(path.toString());
 	logger.trace("distributing event: " + event);
+
 	if (type == MessageType.PUSH) {
 	    handler.child_added((String) event.get("name"), path.toString()
 		    + "/" + event.get("name"), path.getParent()

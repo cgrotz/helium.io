@@ -23,6 +23,7 @@ import com.lmax.disruptor.dsl.EventHandlerGroup;
 
 import de.skiptag.roadrunner.authorization.AuthorizationService;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventTranslator;
 import de.skiptag.roadrunner.disruptor.processor.authorization.AuthorizationProcessor;
 import de.skiptag.roadrunner.disruptor.processor.distribution.DistributionProcessor;
 import de.skiptag.roadrunner.disruptor.processor.eventsourcing.EventSourceProcessor;
@@ -30,8 +31,8 @@ import de.skiptag.roadrunner.disruptor.processor.storage.StorageProcessor;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.persistence.Persistence;
 
-public class DisruptorRoadrunnerService {
-    private static final Logger logger = LoggerFactory.getLogger(DisruptorRoadrunnerService.class);
+public class Roadrunner {
+    private static final Logger logger = LoggerFactory.getLogger(Roadrunner.class);
     private static final int RING_SIZE = 256;
     private EventSourceProcessor eventSourceProcessor;
     private StorageProcessor storageProcessor;
@@ -43,9 +44,8 @@ public class DisruptorRoadrunnerService {
     private Optional<Journal> snapshotJournal = Optional.absent();
 
     @SuppressWarnings("unchecked")
-    public DisruptorRoadrunnerService(File journalDirectory,
-	    Optional<File> snapshotDirectory, Persistence persistence,
-	    AuthorizationService authorizationService,
+    public Roadrunner(File journalDirectory, Optional<File> snapshotDirectory,
+	    Persistence persistence, AuthorizationService authorizationService,
 	    RoadrunnerEventHandler roadrunnerEventHandler,
 	    boolean withDistribution) throws IOException, JSONException {
 

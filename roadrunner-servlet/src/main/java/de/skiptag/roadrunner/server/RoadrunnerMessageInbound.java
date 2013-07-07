@@ -16,7 +16,7 @@ import com.google.common.base.Preconditions;
 
 import de.skiptag.roadrunner.authorization.AuthorizationService;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorizationService;
-import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
+import de.skiptag.roadrunner.disruptor.Roadrunner;
 import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
@@ -29,7 +29,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	RoadrunnerSender {
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
 
-    private DisruptorRoadrunnerService disruptor;
+    private Roadrunner disruptor;
 
     private String path;
 
@@ -52,7 +52,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	this.persistence = new InMemoryPersistence(authorizationService);
 
 	Optional<File> snapshotDirectory = Optional.absent();
-	disruptor = new DisruptorRoadrunnerService(new File(""),
+	disruptor = new Roadrunner(new File(""),
 		snapshotDirectory, persistence, authorizationService,
 		roadrunnerEventHandler, true);
 

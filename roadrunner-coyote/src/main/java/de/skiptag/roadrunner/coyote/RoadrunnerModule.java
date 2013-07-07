@@ -18,7 +18,7 @@ import de.skiptag.coyote.api.modules.ServletModule;
 import de.skiptag.coyote.api.modules.WebsocketModule;
 import de.skiptag.roadrunner.authorization.AuthorizationService;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorizationService;
-import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
+import de.skiptag.roadrunner.disruptor.Roadrunner;
 import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
@@ -47,7 +47,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 
     private RoadrunnerEventHandler roadrunnerEventHandler;
 
-    private DisruptorRoadrunnerService disruptor;
+    private Roadrunner disruptor;
 
     public RoadrunnerModule(Coyote coyote, String path, String repoName,
 	    NativeObject rule) {
@@ -62,7 +62,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 	    roadrunnerEventHandler = new RoadrunnerEventHandler(this, repoName);
 
 	    Optional<File> absent = Optional.absent();
-	    disruptor = new DisruptorRoadrunnerService(new File(
+	    disruptor = new Roadrunner(new File(
 		    "/home/balu/tmp/roadrunner"), absent, persistence,
 		    authorizationService, roadrunnerEventHandler, true);
 	} catch (Exception e) {

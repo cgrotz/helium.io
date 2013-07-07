@@ -18,23 +18,23 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.lmax.disruptor.EventHandler;
 
-import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
+import de.skiptag.roadrunner.disruptor.Roadrunner;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 
 public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
     private static final Logger logger = LoggerFactory.getLogger(EventSourceProcessor.class);
 
     private Journal journal = new Journal();
-    private DisruptorRoadrunnerService disruptorRoadrunnerService;
+    private Roadrunner roadrunner;
 
     private Optional<Location> currentLocation = Optional.absent();
 
     public EventSourceProcessor(File journal_dir,
-	    DisruptorRoadrunnerService disruptorRoadrunnerService)
+	    Roadrunner roadrunner)
 	    throws IOException {
 	journal.setDirectory(journal_dir);
 	journal.open();
-	this.disruptorRoadrunnerService = disruptorRoadrunnerService;
+	this.roadrunner = roadrunner;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
 		roadrunnerEvent = null;
 
 	    }
-	    disruptorRoadrunnerService.handleEvent(roadrunnerEvent);
+	    roadrunner.handleEvent(roadrunnerEvent);
 	}
     }
 
