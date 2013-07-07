@@ -4,7 +4,7 @@ import org.json.JSONObject;
 
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 
-public interface AuthorizationService {
+public interface Authorization {
 
     void shutdown();
 

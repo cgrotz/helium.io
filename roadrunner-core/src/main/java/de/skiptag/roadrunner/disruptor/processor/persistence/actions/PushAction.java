@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.coyote.actions;
+package de.skiptag.roadrunner.disruptor.processor.persistence.actions;
 
 import java.util.UUID;
 
@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import com.google.common.base.Strings;
 
+import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.persistence.Persistence;
 
 public class PushAction {
@@ -17,13 +18,15 @@ public class PushAction {
 	this.persistence = persistence;
     }
 
-    public void handle(JSONObject message, String path) throws JSONException {
-	JSONObject payload;
+    public void handle(RoadrunnerEvent message) throws JSONException {
+	String path = message.extractNodePath();
+	Object payload;
 	if (message.has("payload")) {
-	    payload = (JSONObject) message.get("payload");
+	    payload = message.get("payload");
 	} else {
 	    payload = new JSONObject();
 	}
+
 	String nodeName;
 	if (message.has("name")) {
 	    nodeName = message.getString("name");

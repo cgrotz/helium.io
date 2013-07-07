@@ -4,12 +4,12 @@ import org.json.JSONException;
 
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 
-public class NodeRulesDataSnapshot implements RulesDataSnapshot {
+public class DataSnapshot implements RulesDataSnapshot {
 
     Object val;
     private Node node;
 
-    public NodeRulesDataSnapshot(Object value) {
+    public DataSnapshot(Object value) {
 	val = value;
 	if (value instanceof Node) {
 	    this.node = (Node) value;
@@ -24,7 +24,7 @@ public class NodeRulesDataSnapshot implements RulesDataSnapshot {
     @Override
     public RulesDataSnapshot child(String childPath) {
 	try {
-	    return new NodeRulesDataSnapshot(node.get(childPath));
+	    return new DataSnapshot(node.get(childPath));
 	} catch (JSONException e) {
 	    return null;
 	}

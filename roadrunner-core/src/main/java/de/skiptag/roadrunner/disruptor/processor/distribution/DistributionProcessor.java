@@ -5,10 +5,10 @@ import org.slf4j.LoggerFactory;
 
 import com.lmax.disruptor.EventHandler;
 
-import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
-import de.skiptag.roadrunner.helper.Path;
+import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 
 public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
@@ -27,15 +27,15 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
     public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
 	    throws Exception {
 	Path path = new Path(event.extractNodePath());
-	MessageType type = event.getType();
+	RoadrunnerEventType type = event.getType();
 	Object node = persistence.get(path.toString());
 	logger.trace("distributing event: " + event);
 
-	if (type == MessageType.PUSH) {
+	if (type == RoadrunnerEventType.PUSH) {
 	    handler.child_added((String) event.get("name"), path.toString()
 		    + "/" + event.get("name"), path.getParent()
 		    .getLastElement(), node, null, false, 0);
-	} else if (type == MessageType.SET) {
+	} else if (type == RoadrunnerEventType.SET) {
 	    if (event.has("payload") && !event.isNull("payload")) {
 		handler.child_changed(path.getLastElement(), path.toString(), path.getParent()
 			.getLastElement(), node, null, false, 0);

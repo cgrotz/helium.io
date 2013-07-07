@@ -1,13 +1,13 @@
-package de.skiptag.roadrunner.direct;
+package de.skiptag.roadrunner.api;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
-import de.skiptag.roadrunner.authorization.AuthorizationService;
+import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.persistence.Persistence;
 
 public class RoadrunnerSnapshot {
-    private AuthorizationService authorizationService;
+    private Authorization authorization;
     private Persistence persistence;
     private String path;
     private Object value;
@@ -18,12 +18,12 @@ public class RoadrunnerSnapshot {
     private int priority;
     private String contextName;
 
-    public RoadrunnerSnapshot(AuthorizationService authorizationService,
+    public RoadrunnerSnapshot(Authorization authorization,
 	    Persistence persistence, String contextName, String path,
 	    Object value, String parentPath, long numChildren, String name,
 	    boolean hasChildren, int priority) {
 	super();
-	this.authorizationService = authorizationService;
+	this.authorization = authorization;
 	this.persistence = persistence;
 	this.path = path;
 	this.contextName = contextName;
@@ -36,7 +36,7 @@ public class RoadrunnerSnapshot {
     }
 
     public RoadrunnerService child(String childPath) {
-	return new RoadrunnerService(authorizationService, persistence,
+	return new RoadrunnerService(authorization, persistence,
 		contextName, (path.endsWith("/") ? path : path + "/")
 			+ childPath);
     }
@@ -63,7 +63,7 @@ public class RoadrunnerSnapshot {
 
     public RoadrunnerService parent() {
 	if (parentPath != null) {
-	    return new RoadrunnerService(authorizationService, persistence,
+	    return new RoadrunnerService(authorization, persistence,
 		    contextName, parentPath);
 	} else {
 	    return null;
@@ -75,7 +75,7 @@ public class RoadrunnerSnapshot {
     }
 
     public RoadrunnerService ref() {
-	return new RoadrunnerService(authorizationService, persistence,
+	return new RoadrunnerService(authorization, persistence,
 		contextName, path);
     }
 

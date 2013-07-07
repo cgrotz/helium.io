@@ -7,11 +7,11 @@ import javax.script.ScriptException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.skiptag.roadrunner.authorization.AuthorizationService;
+import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.RoadrunnerNotAuthorizedException;
 import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
 
-public class RuleBasedAuthorizationService implements AuthorizationService {
+public class RuleBasedAuthorization implements Authorization {
 
 	public class AuthenticationWrapper {
 		public AuthenticationWrapper(JSONObject auth) throws JSONException {
@@ -26,7 +26,7 @@ public class RuleBasedAuthorizationService implements AuthorizationService {
 	ScriptEngineManager mgr = new ScriptEngineManager();
 	ScriptEngine engine = mgr.getEngineByName("JavaScript");
 
-	public RuleBasedAuthorizationService(JSONObject rule) throws JSONException {
+	public RuleBasedAuthorization(JSONObject rule) throws JSONException {
 		this.rule = new RuleBasedAuthorizator(rule);
 	}
 

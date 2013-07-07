@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.disruptor.processor.storage.actions;
+package de.skiptag.roadrunner.disruptor.processor.persistence.actions;
 
 import org.json.JSONException;
 import org.json.JSONObject;

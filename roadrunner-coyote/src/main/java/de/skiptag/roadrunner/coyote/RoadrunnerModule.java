@@ -16,15 +16,14 @@ import de.skiptag.coyote.api.Coyote;
 import de.skiptag.coyote.api.http.common.HttpServerRequest;
 import de.skiptag.coyote.api.modules.ServletModule;
 import de.skiptag.coyote.api.modules.WebsocketModule;
-import de.skiptag.roadrunner.authorization.AuthorizationService;
-import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorizationService;
+import de.skiptag.roadrunner.authorization.Authorization;
+import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
 import de.skiptag.roadrunner.disruptor.Roadrunner;
-import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.messaging.RoadrunnerSender;
 import de.skiptag.roadrunner.persistence.Persistence;
-import de.skiptag.roadrunner.persistence.PersistenceCreationException;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
 public class RoadrunnerModule extends WebsocketModule implements ServletModule,
@@ -37,7 +36,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 
     private Persistence persistence;
 
-    private AuthorizationService authorizationService;
+    private Authorization authorization;
 
     public String getRepositoryName() {
 	return repositoryName;
@@ -56,15 +55,15 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 	this.repositoryName = repoName;
 
 	try {
-	    authorizationService = new RuleBasedAuthorizationService(
+	    authorization = new RuleBasedAuthorization(
 		    RoadrunnerService.toJSONObject(rule));
-	    persistence = new InMemoryPersistence(authorizationService);
+	    persistence = new InMemoryPersistence(authorization);
 	    roadrunnerEventHandler = new RoadrunnerEventHandler(this, repoName);
 
 	    Optional<File> absent = Optional.absent();
-	    disruptor = new Roadrunner(new File(
-		    "/home/balu/tmp/roadrunner"), absent, persistence,
-		    authorizationService, roadrunnerEventHandler, true);
+	    disruptor = new Roadrunner(new File("/home/balu/tmp/roadrunner"),
+		    absent, persistence, authorization,
+		    roadrunnerEventHandler, true);
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
 	}
@@ -100,12 +99,12 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 	    }
 
 	    if (roadrunnerEvent.has("type")) {
-		if (roadrunnerEvent.getType() == MessageType.ATTACHED_LISTENER) {
+		if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACHED_LISTENER) {
 		    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
 		    persistence.sync(roadrunnerEvent.extractNodePath(), roadrunnerEventHandler);
-		} else if (roadrunnerEvent.getType() == MessageType.DETACHED_LISTENER) {
+		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACHED_LISTENER) {
 		    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
-		} else if (roadrunnerEvent.getType() == MessageType.QUERY) {
+		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.QUERY) {
 		    String query = roadrunnerEvent.getString("query");
 		    // queryAction.handle(query);
 		} else {
@@ -132,8 +131,8 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 	}
     }
 
-    public RoadrunnerService load() throws PersistenceCreationException {
-	return new RoadrunnerService(authorizationService, persistence, null,
+    public RoadrunnerService load() {
+	return new RoadrunnerService(authorization, persistence, null,
 		"/");
     }
 

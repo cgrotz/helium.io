@@ -87,8 +87,8 @@ public class RoadrunnerEvent extends JSONObject {
 	}
     }
 
-    public MessageType getType() throws JSONException {
-	return MessageType.valueOf(((String) get("type")).toUpperCase());
+    public RoadrunnerEventType getType() throws JSONException {
+	return RoadrunnerEventType.valueOf(((String) get("type")).toUpperCase());
     }
 
     public String extractNodePath() throws JSONException {

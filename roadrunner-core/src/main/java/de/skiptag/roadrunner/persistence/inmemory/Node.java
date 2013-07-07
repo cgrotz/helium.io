@@ -9,11 +9,9 @@ import org.json.JSONObject;
 
 import com.google.common.collect.Sets;
 
-import de.skiptag.roadrunner.helper.Path;
+import de.skiptag.roadrunner.persistence.Path;
 
 public class Node extends JSONObject {
-    private boolean fromHistory;
-
     public Object getObjectForPath(Path path) {
 	try {
 	    Object node;

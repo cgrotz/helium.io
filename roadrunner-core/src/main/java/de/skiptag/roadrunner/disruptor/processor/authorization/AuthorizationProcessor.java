@@ -2,14 +2,14 @@ package de.skiptag.roadrunner.disruptor.processor.authorization;
 
 import com.lmax.disruptor.EventHandler;
 
-import de.skiptag.roadrunner.authorization.AuthorizationService;
+import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 
 public class AuthorizationProcessor implements EventHandler<RoadrunnerEvent> {
 
-    private AuthorizationService service;
+    private Authorization service;
 
-    public AuthorizationProcessor(AuthorizationService service) {
+    public AuthorizationProcessor(Authorization service) {
 	this.service = service;
     }
 

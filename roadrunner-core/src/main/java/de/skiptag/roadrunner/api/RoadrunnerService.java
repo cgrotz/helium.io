@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.direct;
+package de.skiptag.roadrunner.api;
 
 import java.util.UUID;
 
@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
-import de.skiptag.roadrunner.authorization.AuthorizationService;
+import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.messaging.DataListener;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.Persistence.QueryCallback;
@@ -23,7 +23,7 @@ public class RoadrunnerService implements DataListener {
 
     }
 
-    private AuthorizationService authorizationService;
+    private Authorization authorization;
     private Persistence persistence;
 
     private String path;
@@ -31,9 +31,9 @@ public class RoadrunnerService implements DataListener {
     private Multimap<String, SnapshotHandler> on = LinkedListMultimap.create();
     private String contextName;
 
-    public RoadrunnerService(AuthorizationService authorizationService,
+    public RoadrunnerService(Authorization authorization,
 	    Persistence persistence, String contextName, String path) {
-	this.authorizationService = authorizationService;
+	this.authorization = authorization;
 	this.persistence = persistence;
 	this.contextName = contextName;
 	this.path = path.replaceFirst("^[^#]*?://.*?(/.*)$", "");
@@ -43,7 +43,7 @@ public class RoadrunnerService implements DataListener {
     }
 
     public RoadrunnerService child(String childname) {
-	return new RoadrunnerService(authorizationService, persistence,
+	return new RoadrunnerService(authorization, persistence,
 		contextName, path + "/" + childname);
     }
 
@@ -53,7 +53,7 @@ public class RoadrunnerService implements DataListener {
 	    long numChildren) {
 	try {
 	    RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
-		    authorizationService, persistence, contextName, path, node,
+		    authorization, persistence, contextName, path, node,
 		    parent, numChildren, prevChildName, hasChildren, 0);
 
 	    if (on.containsKey("child_added")) {
@@ -76,7 +76,7 @@ public class RoadrunnerService implements DataListener {
 	    long numChildren) {
 	try {
 	    RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
-		    authorizationService, persistence, contextName, path, node,
+		    authorization, persistence, contextName, path, node,
 		    parent, numChildren, prevChildName, hasChildren, 0);
 	    if (on.containsKey("child_changed")) {
 		for (SnapshotHandler handler : on.get("child_changed"))
@@ -97,7 +97,7 @@ public class RoadrunnerService implements DataListener {
 	    boolean hasChildren, long numChildren) {
 	try {
 	    RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
-		    authorizationService, persistence, contextName, path,
+		    authorization, persistence, contextName, path,
 		    childSnapshot, null, numChildren, prevChildName,
 		    hasChildren, 0);
 	    if (on.containsKey("child_moved")) {
@@ -118,7 +118,7 @@ public class RoadrunnerService implements DataListener {
     public void child_removed(String path, Object payload) {
 	try {
 	    RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
-		    authorizationService, persistence, contextName, path,
+		    authorization, persistence, contextName, path,
 		    payload, null, 0, null, false, 0);
 	    if (on.containsKey("child_removed")) {
 		for (SnapshotHandler handler : on.get("child_removed"))
@@ -152,7 +152,7 @@ public class RoadrunnerService implements DataListener {
     }
 
     public RoadrunnerService parent() {
-	return new RoadrunnerService(authorizationService, persistence,
+	return new RoadrunnerService(authorization, persistence,
 		contextName, persistence.getParent(path));
     }
 
@@ -161,7 +161,7 @@ public class RoadrunnerService implements DataListener {
 	    String name = UUID.randomUUID().toString().replaceAll("-", "");
 	    persistence.update((path.endsWith("/") ? path : path + "/") + name, data);
 
-	    return new RoadrunnerService(authorizationService, persistence,
+	    return new RoadrunnerService(authorization, persistence,
 		    contextName, (path.endsWith("/") ? path : path + "/")
 			    + name);
 	} catch (Exception exp) {
@@ -176,7 +176,7 @@ public class RoadrunnerService implements DataListener {
 		    String parentPath, long numChildren, String name,
 		    boolean hasChildren, int priority) {
 		RoadrunnerSnapshot snap = new RoadrunnerSnapshot(
-			authorizationService, persistence, name, path, value,
+			authorization, persistence, name, path, value,
 			parentPath, numChildren, name, hasChildren, priority);
 		handler.handle(snap);
 	    }
@@ -185,7 +185,7 @@ public class RoadrunnerService implements DataListener {
     }
 
     public RoadrunnerService root() {
-	return new RoadrunnerService(authorizationService, persistence,
+	return new RoadrunnerService(authorization, persistence,
 		contextName, "/");
 
     }

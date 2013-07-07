@@ -21,13 +21,13 @@ import com.google.common.base.Preconditions;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.EventHandlerGroup;
 
-import de.skiptag.roadrunner.authorization.AuthorizationService;
+import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventTranslator;
 import de.skiptag.roadrunner.disruptor.processor.authorization.AuthorizationProcessor;
 import de.skiptag.roadrunner.disruptor.processor.distribution.DistributionProcessor;
 import de.skiptag.roadrunner.disruptor.processor.eventsourcing.EventSourceProcessor;
-import de.skiptag.roadrunner.disruptor.processor.storage.StorageProcessor;
+import de.skiptag.roadrunner.disruptor.processor.persistence.PersistenceProcessor;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.persistence.Persistence;
 
@@ -35,7 +35,7 @@ public class Roadrunner {
     private static final Logger logger = LoggerFactory.getLogger(Roadrunner.class);
     private static final int RING_SIZE = 256;
     private EventSourceProcessor eventSourceProcessor;
-    private StorageProcessor storageProcessor;
+    private PersistenceProcessor persistenceProcessor;
     private DistributionProcessor distributionProcessor;
     private Disruptor<RoadrunnerEvent> disruptor;
     private AuthorizationProcessor authorizationProcessor;
@@ -45,7 +45,7 @@ public class Roadrunner {
 
     @SuppressWarnings("unchecked")
     public Roadrunner(File journalDirectory, Optional<File> snapshotDirectory,
-	    Persistence persistence, AuthorizationService authorizationService,
+	    Persistence persistence, Authorization authorization,
 	    RoadrunnerEventHandler roadrunnerEventHandler,
 	    boolean withDistribution) throws IOException, JSONException {
 
@@ -54,15 +54,15 @@ public class Roadrunner {
 		RoadrunnerEvent.EVENT_FACTORY, RING_SIZE, executor);
 
 	authorizationProcessor = new AuthorizationProcessor(
-		authorizationService);
+		authorization);
 	eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
-	storageProcessor = new StorageProcessor(persistence);
+	persistenceProcessor = new PersistenceProcessor(persistence);
 	distributionProcessor = new DistributionProcessor(persistence,
 		roadrunnerEventHandler);
 
 	EventHandlerGroup<RoadrunnerEvent> ehg = disruptor.handleEventsWith(authorizationProcessor)
 		.then(eventSourceProcessor)
-		.then(storageProcessor);
+		.then(persistenceProcessor);
 	if (withDistribution) {
 	    ehg.then(distributionProcessor);
 	}

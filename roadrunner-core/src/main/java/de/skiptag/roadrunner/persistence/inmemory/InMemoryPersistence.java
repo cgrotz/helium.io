@@ -7,23 +7,23 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.skiptag.roadrunner.authorization.AuthorizationService;
-import de.skiptag.roadrunner.helper.Path;
+import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 
 public class InMemoryPersistence implements Persistence {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemoryPersistence.class);
 
-    private AuthorizationService authorizationService;
+    private Authorization authorization;
 
     private Node model = new Node();
 
     private JSONObject auth;
 
-    public InMemoryPersistence(AuthorizationService authorizationService) {
-	this.authorizationService = authorizationService;
+    public InMemoryPersistence(Authorization authorization) {
+	this.authorization = authorization;
     }
 
     @Override
