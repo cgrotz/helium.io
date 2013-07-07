@@ -1,5 +1,6 @@
 package de.skiptag.roadrunner.core;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.skiptag.roadrunner.core.dtos.PushedMessage;
@@ -11,7 +12,7 @@ public interface DataService {
 		long numChildren, String name, boolean hasChildren, int priority);
     }
 
-    JSONObject get(String path);
+    Object get(String path);
 
     String getName(String path);
 
@@ -29,7 +30,7 @@ public interface DataService {
 
     void sync(String path);
 
-    PushedMessage update(String nodeName, JSONObject payload);
+    PushedMessage update(String nodeName, Object payload);
 
     void updateSimpleValue(String path, Object obj);
 
@@ -41,10 +42,13 @@ public interface DataService {
 	    boolean hasNodes, long size);
 
     public void fireChildChanged(String name, String path, String parentName,
-	    JSONObject transformToJSON, String prevChildName, boolean hasNodes,
-	    long size);
+	    Object payload, String prevChildName, boolean hasNodes, long size);
 
     public void fireChildAdded(String name, String path, String parentName,
-	    JSONObject transformToJSON, String prevChildName, boolean hasNodes,
-	    long size);
+	    Object payload, String prevChildName, boolean hasNodes, long size);
+
+    JSONObject dumpSnapshot();
+
+    void restoreSnapshot(JSONObject payload) throws JSONException;
+
 }

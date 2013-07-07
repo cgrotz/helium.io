@@ -20,7 +20,7 @@ public class RoadrunnerEventHandler implements DataListener {
 
     @Override
     public void child_added(String name, String path, String parent,
-	    JSONObject node, String prevChildName, boolean hasChildren,
+	    Object node, String prevChildName, boolean hasChildren,
 	    long numChildren) {
 	try {
 	    String repoName = roadrunnerModule.getRepositoryName();
@@ -43,7 +43,7 @@ public class RoadrunnerEventHandler implements DataListener {
 
     @Override
     public void child_changed(String name, String path, String parent,
-	    JSONObject node, String prevChildName, boolean hasChildren,
+	    Object node, String prevChildName, boolean hasChildren,
 	    long numChildren) {
 	try {
 	    String repoName = roadrunnerModule.getRepositoryName();
@@ -79,7 +79,7 @@ public class RoadrunnerEventHandler implements DataListener {
     }
 
     @Override
-    public void child_removed(String path, JSONObject payload) {
+    public void child_removed(String path, Object payload) {
 	try {
 	    String repoName = roadrunnerModule.getRepositoryName();
 	    JSONObject broadcast = new JSONObject();

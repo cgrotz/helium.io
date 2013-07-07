@@ -428,6 +428,7 @@ function Snapshot(message, roadrunner_connection) {
 
 function RoadrunnerConnection(url) {
 	var self = this;
+	self.url = url;
 	var messages = [];
 	if (roadrunner_endpoint == null) {
 		if (!window.WebSocket) {
@@ -491,22 +492,21 @@ function Roadrunner(path) {
 	var events = {};
 	var events_once = {};
 	var self = this;
+	self.path = path;
 	var rootPath;
 	var parentPath;
 	var roadrunner_connection = new RoadrunnerConnection(path);
 	roadrunner_connection.handleMessage = function(message) {
 		var snapshot = new Snapshot(message, roadrunner_connection);
-		var workpath = path;
-		workpath = workpath.substr(workpath.lastIndexOf("/"), workpath.length);
+		var workpath = self.path;
 		if (workpath.indexOf("/roadrunner") > -1) {
-			workpath = workpath.substr("/roadrunner".length);
+			workpath = workpath.substr(workpath.lastIndexOf("/roadrunner")+11, workpath.length);
 		}
 		// Direkt Change start (value)
 		{
 			try
 			{
-				if (snapshot.path().indexOf(workpath) == 0
-						&& !(snapshot.path() == workpath)) {
+				if (snapshot.path().indexOf(workpath) == 0) {
 					var callback = events['value'];
 					if (callback != null) {
 						callback(snapshot);
@@ -529,8 +529,7 @@ function Roadrunner(path) {
 		{
 			workpath = workpath + "/";
 		}
-		if (snapshot.path().indexOf(workpath) == 0
-				&& !(snapshot.path() == workpath)) {
+		if (snapshot.path().indexOf(workpath) == 0) {
 			var callback = events[message.type];
 			if (callback != null) {
 				callback(snapshot);

@@ -21,12 +21,13 @@ public class PushAction {
 
     public void handle(RoadrunnerEvent message) throws JSONException {
 	String path = message.extractNodePath();
-	JSONObject payload;
+	Object payload;
 	if (message.has("payload")) {
-	    payload = (JSONObject) message.get("payload");
+	    payload = message.get("payload");
 	} else {
 	    payload = new JSONObject();
 	}
+
 	String nodeName;
 	if (message.has("name")) {
 	    nodeName = message.getString("name");

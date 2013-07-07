@@ -13,11 +13,37 @@ import com.google.common.collect.Sets;
 import de.skiptag.roadrunner.core.Path;
 
 public class Node extends JSONObject {
+    private boolean fromHistory;
+
+    public Object getObjectForPath(Path path) {
+	try {
+	    Object node;
+	    if (has(path.getFirstElement())) {
+		Object object = get(path.getFirstElement());
+		node = object;
+	    } else {
+		node = new Node();
+		put(path.getFirstElement(), node);
+	    }
+
+	    if (path.isSimple()) {
+		return node;
+	    } else {
+		if (node instanceof Node) {
+		    return ((Node) node).getObjectForPath(path.getSubpath(1));
+		}
+	    }
+	} catch (JSONException exp) {
+
+	}
+	return null;
+    }
 
     public Node getNodeForPath(Path path) throws JSONException {
 	Node node;
 	if (has(path.getFirstElement())) {
-	    node = (Node) get(path.getFirstElement());
+	    Object object = get(path.getFirstElement());
+	    node = (Node) object;
 	} else {
 	    node = new Node();
 	    put(path.getFirstElement(), node);
@@ -31,7 +57,7 @@ public class Node extends JSONObject {
     }
 
     public void populate(JSONObject payload) throws JSONException {
-    	
+
 	populate(payload.toString());
     }
 
