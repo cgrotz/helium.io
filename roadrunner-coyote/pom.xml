@@ -13,10 +13,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>de.skiptag.roadrunner</groupId>
-			<artifactId>roadrunner-modeshape</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.skiptag.roadrunner</groupId>
 			<artifactId>roadrunner-core</artifactId>
 		</dependency>
 		<dependency>

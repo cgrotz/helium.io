@@ -11,7 +11,6 @@
 
 	<modules>
 		<module>roadrunner-core</module>
-		<module>roadrunner-modeshape</module>
 		<module>roadrunner-servlet</module>
 		<module>roadrunner-coyote</module>
 		<module>roadrunner-disruptor</module>
@@ -40,17 +39,6 @@
 	</build>
 	<dependencyManagement>
 		<dependencies>
-			<!-- Import the ModeShape BOM for embedded usage. This adds to the "dependenciesManagement" 
-				section defaults for all of the modules we might need, but we still have 
-				to include in the "dependencies" section the modules we DO need. The benefit 
-				is that we don't have to specify the versions of any of those modules. -->
-			<dependency>
-				<groupId>org.modeshape.bom</groupId>
-				<artifactId>modeshape-bom-embedded</artifactId>
-				<version>${modeshape.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
 			<dependency>
 				<groupId>org.json</groupId>
 				<artifactId>json</artifactId>
@@ -74,11 +62,6 @@
 			<dependency>
 				<groupId>de.skiptag.roadrunner</groupId>
 				<artifactId>roadrunner-core</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>de.skiptag.roadrunner</groupId>
-				<artifactId>roadrunner-modeshape</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

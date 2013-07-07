@@ -7,7 +7,7 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>roadrunner-servlet</artifactId>
-	<packaging>jar</packaging>
+	<packaging>war</packaging>
 	<name>Roadrunner Servlet</name>
 
 	<dependencies>
@@ -37,14 +37,9 @@
 			<version>7.0.35</version>
 			<scope>provided</scope>
 		</dependency>
-		
-		<dependency>
-			<groupId>org.modeshape</groupId>
-			<artifactId>modeshape-jcr</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>de.skiptag.roadrunner</groupId>
-			<artifactId>roadrunner-modeshape</artifactId>
+			<artifactId>roadrunner-in-memory</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.skiptag.roadrunner</groupId>

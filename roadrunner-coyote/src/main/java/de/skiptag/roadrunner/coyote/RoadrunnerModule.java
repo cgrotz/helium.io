@@ -18,12 +18,12 @@ import de.skiptag.coyote.api.modules.ServletModule;
 import de.skiptag.coyote.api.modules.WebsocketModule;
 import de.skiptag.roadrunner.core.DataService;
 import de.skiptag.roadrunner.core.DataServiceCreationException;
+import de.skiptag.roadrunner.core.RuleBasedAuthorizationService;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
 import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
 import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.inmemory.InMemoryServiceFactory;
-import de.skiptag.roadrunner.modeshape.ModeShapeServiceFactory;
 
 public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 
@@ -53,8 +53,8 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 	this.repositoryName = repoName;
 
 	try {
-	    authorizationService = ModeShapeServiceFactory.getInstance()
-		    .getAuthorizationService(RoadrunnerService.toJSONObject(rule));
+	    authorizationService = new RuleBasedAuthorizationService(
+		    RoadrunnerService.toJSONObject(rule));
 	    // dataService = ModeShapeServiceFactory.getInstance()
 	    // .getDataService(authorizationService, repoName);
 	    dataService = InMemoryServiceFactory.getInstance()
@@ -140,7 +140,6 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule {
 
     @Override
     public void destroy() {
-	ModeShapeServiceFactory.getInstance().destroy();
 	disruptor.shutdown();
     }
 

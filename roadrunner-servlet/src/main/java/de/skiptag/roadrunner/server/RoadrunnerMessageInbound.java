@@ -8,14 +8,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.jcr.LoginException;
-import javax.jcr.RepositoryException;
-
 import org.apache.catalina.websocket.MessageInbound;
-import org.infinispan.schematic.document.ParsingException;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.modeshape.jcr.ConfigurationException;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
@@ -45,9 +40,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
     public RoadrunnerMessageInbound(String servletPath, String path,
 	    DataServiceFactory dataServiceFactory,
 	    AuthenticationServiceFactory authenticationServiceFactory)
-	    throws ParsingException, ConfigurationException, LoginException,
-	    RepositoryException, FileNotFoundException,
-	    DataServiceCreationException {
+	    throws FileNotFoundException, DataServiceCreationException {
 	this.servletPath = servletPath;
 
 	this.repositoryName = path.indexOf("/") > -1 ? path.substring(0, path.indexOf("/"))
