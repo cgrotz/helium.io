@@ -4,11 +4,11 @@ import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
 import de.skiptag.roadrunner.authorization.AuthorizationService;
-import de.skiptag.roadrunner.dataService.DataService;
+import de.skiptag.roadrunner.persistence.Persistence;
 
 public class RoadrunnerSnapshot {
     private AuthorizationService authorizationService;
-    private DataService dataService;
+    private Persistence persistence;
     private String path;
     private Object value;
     private String parentPath;
@@ -19,12 +19,12 @@ public class RoadrunnerSnapshot {
     private String contextName;
 
     public RoadrunnerSnapshot(AuthorizationService authorizationService,
-	    DataService dataService, String contextName, String path,
+	    Persistence persistence, String contextName, String path,
 	    Object value, String parentPath, long numChildren, String name,
 	    boolean hasChildren, int priority) {
 	super();
 	this.authorizationService = authorizationService;
-	this.dataService = dataService;
+	this.persistence = persistence;
 	this.path = path;
 	this.contextName = contextName;
 	this.value = value;
@@ -36,7 +36,7 @@ public class RoadrunnerSnapshot {
     }
 
     public RoadrunnerService child(String childPath) {
-	return new RoadrunnerService(authorizationService, dataService,
+	return new RoadrunnerService(authorizationService, persistence,
 		contextName, (path.endsWith("/") ? path : path + "/")
 			+ childPath);
     }
@@ -63,7 +63,7 @@ public class RoadrunnerSnapshot {
 
     public RoadrunnerService parent() {
 	if (parentPath != null) {
-	    return new RoadrunnerService(authorizationService, dataService,
+	    return new RoadrunnerService(authorizationService, persistence,
 		    contextName, parentPath);
 	} else {
 	    return null;
@@ -75,7 +75,7 @@ public class RoadrunnerSnapshot {
     }
 
     public RoadrunnerService ref() {
-	return new RoadrunnerService(authorizationService, dataService,
+	return new RoadrunnerService(authorizationService, persistence,
 		contextName, path);
     }
 

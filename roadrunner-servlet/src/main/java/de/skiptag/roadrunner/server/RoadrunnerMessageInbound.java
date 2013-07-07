@@ -16,14 +16,14 @@ import com.google.common.base.Preconditions;
 
 import de.skiptag.roadrunner.authorization.AuthorizationService;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorizationService;
-import de.skiptag.roadrunner.dataService.DataService;
-import de.skiptag.roadrunner.dataService.DataServiceCreationException;
-import de.skiptag.roadrunner.dataService.inmemory.InMemoryDataService;
-import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
-import de.skiptag.roadrunner.messaging.RoadrunnerSender;
 import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
 import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.messaging.RoadrunnerSender;
+import de.skiptag.roadrunner.persistence.Persistence;
+import de.skiptag.roadrunner.persistence.PersistenceCreationException;
+import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
 public class RoadrunnerMessageInbound extends MessageInbound implements
 	RoadrunnerSender {
@@ -37,10 +37,10 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 
     private RoadrunnerEventHandler roadrunnerEventHandler;
 
-    private DataService dataService;
+    private Persistence persistence;
 
     public RoadrunnerMessageInbound(String servletPath, String path)
-	    throws DataServiceCreationException, IOException, JSONException {
+	    throws PersistenceCreationException, IOException, JSONException {
 	this.path = path;
 	this.repositoryName = path.indexOf("/") > -1 ? path.substring(0, path.indexOf("/"))
 		: path;
@@ -49,11 +49,12 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 		repositoryName);
 	AuthorizationService authorizationService = new RuleBasedAuthorizationService(
 		new JSONObject());
-	this.dataService = new InMemoryDataService(authorizationService);
+	this.persistence = new InMemoryPersistence(authorizationService);
 
 	Optional<File> snapshotDirectory = Optional.absent();
 	disruptor = new DisruptorRoadrunnerService(new File(""),
-		snapshotDirectory, dataService, authorizationService, true);
+		snapshotDirectory, persistence, authorizationService,
+		roadrunnerEventHandler, true);
 
     }
 
@@ -93,7 +94,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	    if (roadrunnerEvent.has("type")) {
 		if (roadrunnerEvent.getType() == MessageType.ATTACHED_LISTENER) {
 		    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
-		    dataService.sync(roadrunnerEvent.extractNodePath());
+		    persistence.sync(roadrunnerEvent.extractNodePath(), roadrunnerEventHandler);
 		} else if (roadrunnerEvent.getType() == MessageType.DETACHED_LISTENER) {
 		    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
 		} else if (roadrunnerEvent.getType() == MessageType.QUERY) {

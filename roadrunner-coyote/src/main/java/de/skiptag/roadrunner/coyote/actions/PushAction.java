@@ -7,14 +7,14 @@ import org.json.JSONObject;
 
 import com.google.common.base.Strings;
 
-import de.skiptag.roadrunner.dataService.DataService;
+import de.skiptag.roadrunner.persistence.Persistence;
 
 public class PushAction {
 
-    private DataService dataService;
+    private Persistence persistence;
 
-    public PushAction(DataService dataService) {
-	this.dataService = dataService;
+    public PushAction(Persistence persistence) {
+	this.persistence = persistence;
     }
 
     public void handle(JSONObject message, String path) throws JSONException {
@@ -31,9 +31,9 @@ public class PushAction {
 	    nodeName = UUID.randomUUID().toString().replaceAll("-", "");
 	}
 	if (Strings.isNullOrEmpty(path)) {
-	    dataService.update(nodeName, payload);
+	    persistence.update(nodeName, payload);
 	} else {
-	    dataService.update(path + "/" + nodeName, payload);
+	    persistence.update(path + "/" + nodeName, payload);
 	}
     }
 

@@ -22,12 +22,13 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.EventHandlerGroup;
 
 import de.skiptag.roadrunner.authorization.AuthorizationService;
-import de.skiptag.roadrunner.dataService.DataService;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.processor.authorization.AuthorizationProcessor;
 import de.skiptag.roadrunner.disruptor.processor.distribution.DistributionProcessor;
 import de.skiptag.roadrunner.disruptor.processor.eventsourcing.EventSourceProcessor;
 import de.skiptag.roadrunner.disruptor.processor.storage.StorageProcessor;
+import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.persistence.Persistence;
 
 public class DisruptorRoadrunnerService {
     private static final Logger logger = LoggerFactory.getLogger(DisruptorRoadrunnerService.class);
@@ -37,15 +38,16 @@ public class DisruptorRoadrunnerService {
     private DistributionProcessor distributionProcessor;
     private Disruptor<RoadrunnerEvent> disruptor;
     private AuthorizationProcessor authorizationProcessor;
-    private DataService dataService;
+    private Persistence persistence;
 
     private Optional<Journal> snapshotJournal = Optional.absent();
 
     @SuppressWarnings("unchecked")
     public DisruptorRoadrunnerService(File journalDirectory,
-	    Optional<File> snapshotDirectory, DataService dataService,
-	    AuthorizationService authorizationService, boolean withDistribution)
-	    throws IOException, JSONException {
+	    Optional<File> snapshotDirectory, Persistence persistence,
+	    AuthorizationService authorizationService,
+	    RoadrunnerEventHandler roadrunnerEventHandler,
+	    boolean withDistribution) throws IOException, JSONException {
 
 	ExecutorService executor = Executors.newCachedThreadPool();
 	disruptor = new Disruptor<RoadrunnerEvent>(
@@ -54,8 +56,9 @@ public class DisruptorRoadrunnerService {
 	authorizationProcessor = new AuthorizationProcessor(
 		authorizationService);
 	eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
-	storageProcessor = new StorageProcessor(dataService);
-	distributionProcessor = new DistributionProcessor(dataService);
+	storageProcessor = new StorageProcessor(persistence);
+	distributionProcessor = new DistributionProcessor(persistence,
+		roadrunnerEventHandler);
 
 	EventHandlerGroup<RoadrunnerEvent> ehg = disruptor.handleEventsWith(authorizationProcessor)
 		.then(eventSourceProcessor)
@@ -78,7 +81,7 @@ public class DisruptorRoadrunnerService {
 		int pointer = snapshot.getInt("currentEventLogPointer");
 		int dataFileId = snapshot.getInt("currentEventLogDataFileId");
 		JSONObject payload = snapshot.getJSONObject("payload");
-		dataService.restoreSnapshot(payload);
+		persistence.restoreSnapshot(payload);
 		eventSourceProcessor.setCurrentLocation(new Location(
 			dataFileId, pointer));
 	    }
@@ -86,7 +89,7 @@ public class DisruptorRoadrunnerService {
 
 	eventSourceProcessor.restore();
 
-	this.dataService = dataService;
+	this.persistence = persistence;
 
     }
 
@@ -112,7 +115,7 @@ public class DisruptorRoadrunnerService {
 	Optional<Location> currentLocation = eventSourceProcessor.getCurrentLocation();
 	if (snapshotJournal.isPresent() || currentLocation.isPresent()) {
 	    Location location = currentLocation.get();
-	    JSONObject payload = dataService.dumpSnapshot();
+	    JSONObject payload = persistence.dumpSnapshot();
 	    JSONObject snapshot = new JSONObject();
 	    snapshot.put("currentEventLogPointer", location.getPointer());
 	    snapshot.put("currentEventLogDataFileId", location.getDataFileId());

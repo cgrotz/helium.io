@@ -2,19 +2,19 @@ package de.skiptag.roadrunner.coyote.actions;
 
 import org.json.JSONObject;
 
-import de.skiptag.roadrunner.dataService.DataService;
-import de.skiptag.roadrunner.dataService.DataService.QueryCallback;
+import de.skiptag.roadrunner.persistence.Persistence;
+import de.skiptag.roadrunner.persistence.Persistence.QueryCallback;
 import de.skiptag.roadrunner.coyote.RoadrunnerModule;
 
 public class QueryAction implements QueryCallback {
 
     private RoadrunnerModule roadrunnerModule;
-    private DataService dataService;
+    private Persistence persistence;
 
-    public QueryAction(DataService dataService,
+    public QueryAction(Persistence persistence,
 	    RoadrunnerModule roadrunnerModule) {
 	this.roadrunnerModule = roadrunnerModule;
-	this.dataService = dataService;
+	this.persistence = persistence;
     }
 
     @Override
@@ -34,6 +34,6 @@ public class QueryAction implements QueryCallback {
     }
 
     public void handle(String query) {
-	dataService.query(query, this);
+	persistence.query(query, this);
     }
 }

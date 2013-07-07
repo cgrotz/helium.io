@@ -2,10 +2,10 @@ package de.skiptag.roadrunner.disruptor.processor.storage;
 
 import com.lmax.disruptor.EventHandler;
 
-import de.skiptag.roadrunner.dataService.DataService;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.processor.storage.actions.PushAction;
 import de.skiptag.roadrunner.disruptor.processor.storage.actions.SetAction;
+import de.skiptag.roadrunner.persistence.Persistence;
 
 public class StorageProcessor implements EventHandler<RoadrunnerEvent> {
 
@@ -13,9 +13,9 @@ public class StorageProcessor implements EventHandler<RoadrunnerEvent> {
 
 	private SetAction setAction;
 
-	public StorageProcessor(DataService dataService) {
-		pushAction = new PushAction(dataService);
-		setAction = new SetAction(dataService);
+	public StorageProcessor(Persistence persistence) {
+		pushAction = new PushAction(persistence);
+		setAction = new SetAction(persistence);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.dataService.inmemory;
+package de.skiptag.roadrunner.persistence.inmemory;
 
 import org.json.JSONException;
 

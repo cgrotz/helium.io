@@ -1,30 +1,28 @@
-package de.skiptag.roadrunner.dataService.inmemory;
+package de.skiptag.roadrunner.persistence.inmemory;
 
 import java.util.Iterator;
-import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
-
 import de.skiptag.roadrunner.authorization.AuthorizationService;
-import de.skiptag.roadrunner.dataService.DataService;
 import de.skiptag.roadrunner.helper.Path;
-import de.skiptag.roadrunner.messaging.DataListener;
+import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.persistence.Persistence;
 
-public class InMemoryDataService implements DataService {
+public class InMemoryPersistence implements Persistence {
 
-    private static final Logger logger = LoggerFactory.getLogger(InMemoryDataService.class);
+    private static final Logger logger = LoggerFactory.getLogger(InMemoryPersistence.class);
 
     private AuthorizationService authorizationService;
 
     private Node model = new Node();
-    private Set<DataListener> listeners = Sets.newHashSet();
 
-    public InMemoryDataService(AuthorizationService authorizationService) {
+    private JSONObject auth;
+
+    public InMemoryPersistence(AuthorizationService authorizationService) {
 	this.authorizationService = authorizationService;
     }
 
@@ -62,7 +60,7 @@ public class InMemoryDataService implements DataService {
     }
 
     @Override
-    public void sync(String path) {
+    public void sync(String path, RoadrunnerEventHandler handler) {
 	try {
 	    Path nodePath = new Path(path);
 	    Node node = model.getNodeForPath(nodePath);
@@ -73,7 +71,7 @@ public class InMemoryDataService implements DataService {
 		Object object = node.get(childNodeKey.toString());
 
 		{
-		    fireChildAdded((String) childNodeKey, path + "/"
+		    handler.child_added((String) childNodeKey, path + "/"
 			    + childNodeKey, nodePath.toString(), object, null, (object instanceof Node) ? ((Node) object).hasChildren()
 			    : false, (object instanceof Node) ? ((Node) object).length()
 			    : 0);
@@ -105,55 +103,13 @@ public class InMemoryDataService implements DataService {
     }
 
     @Override
-    public void addListener(DataListener dataListener) {
-	this.listeners.add(dataListener);
-    }
-
-    @Override
-    public void removeListener(DataListener dataListener) {
-	this.listeners.remove(dataListener);
-    }
-
-    @Override
     public void shutdown() {
 
     }
 
     @Override
     public void setAuth(JSONObject auth) {
-	// TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void fireChildAdded(String name, String path, String parentName,
-	    Object payload, String prevChildName, boolean hasNodes, long size) {
-	for (DataListener listener : Sets.newHashSet(listeners)) {
-	    listener.child_added(name, path, parentName, payload, prevChildName, hasNodes, size);
-	}
-    }
-
-    @Override
-    public void fireChildChanged(String name, String path, String parentName,
-	    Object payload, String prevChildName, boolean hasNodes, long size) {
-	for (DataListener listener : Sets.newHashSet(listeners)) {
-	    listener.child_changed(name, path, parentName, payload, prevChildName, hasNodes, size);
-	}
-    }
-
-    @Override
-    public void fireChildMoved(JSONObject childSnapshot, String prevChildName,
-	    boolean hasNodes, long size) {
-	for (DataListener listener : Sets.newHashSet(listeners)) {
-	    listener.child_moved(childSnapshot, prevChildName, hasNodes, size);
-	}
-    }
-
-    @Override
-    public void fireChildRemoved(String path, JSONObject fromRemovedNodes) {
-	for (DataListener listener : Sets.newHashSet(listeners)) {
-	    listener.child_removed(path, fromRemovedNodes);
-	}
+	this.auth = auth;
     }
 
     @Override
