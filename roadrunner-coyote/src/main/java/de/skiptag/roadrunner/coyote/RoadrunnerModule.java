@@ -23,6 +23,7 @@ import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.messaging.RoadrunnerSender;
+import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
@@ -62,8 +63,8 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 
 	    Optional<File> absent = Optional.absent();
 	    disruptor = new Roadrunner(new File("/home/balu/tmp/roadrunner"),
-		    absent, persistence, authorization,
-		    roadrunnerEventHandler, true);
+		    absent, persistence, authorization, roadrunnerEventHandler,
+		    true);
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
 	}
@@ -101,7 +102,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 	    if (roadrunnerEvent.has("type")) {
 		if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACHED_LISTENER) {
 		    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
-		    persistence.sync(roadrunnerEvent.extractNodePath(), roadrunnerEventHandler);
+		    persistence.sync(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
 		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACHED_LISTENER) {
 		    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
 		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.QUERY) {
@@ -132,8 +133,7 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
     }
 
     public RoadrunnerService load() {
-	return new RoadrunnerService(authorization, persistence, null,
-		"/");
+	return new RoadrunnerService(authorization, persistence, null, "/");
     }
 
     @Override

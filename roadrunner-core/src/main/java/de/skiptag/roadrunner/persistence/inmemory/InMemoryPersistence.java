@@ -27,18 +27,18 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public Object get(String path) {
-	return model.getObjectForPath(new Path(path));
+    public Object get(Path path) {
+	return model.getObjectForPath(path);
     }
 
     @Override
-    public String getName(String path) {
-	return new Path(path).getLastElement();
+    public String getName(Path path) {
+	return path.getLastElement();
     }
 
     @Override
-    public String getParent(String path) {
-	return new Path(path).getParent().toString();
+    public String getParent(Path path) {
+	return path.getParent().toString();
     }
 
     @Override
@@ -47,10 +47,9 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void remove(String path) {
-	Path nodePath = new Path(path);
-	String nodeName = nodePath.getLastElement();
-	Path parentPath = nodePath.getParent();
+    public void remove(Path path) {
+	String nodeName = path.getLastElement();
+	Path parentPath = path.getParent();
 
 	try {
 	    model.getNodeForPath(parentPath).remove(nodeName);
@@ -60,10 +59,10 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void sync(String path, RoadrunnerEventHandler handler) {
+    public void sync(Path path, RoadrunnerEventHandler handler) {
 	try {
-	    Path nodePath = new Path(path);
-	    Node node = model.getNodeForPath(nodePath);
+	    ;
+	    Node node = model.getNodeForPath(path);
 
 	    Iterator<?> itr = node.sortedKeys();
 	    while (itr.hasNext()) {
@@ -71,8 +70,8 @@ public class InMemoryPersistence implements Persistence {
 		Object object = node.get(childNodeKey.toString());
 
 		{
-		    handler.child_added((String) childNodeKey, path + "/"
-			    + childNodeKey, nodePath.toString(), object, null, (object instanceof Node) ? ((Node) object).hasChildren()
+		    handler.child_added((String) childNodeKey, new Path(path
+			    + "/" + childNodeKey), path.toString(), object, null, (object instanceof Node) ? ((Node) object).hasChildren()
 			    : false, (object instanceof Node) ? ((Node) object).length()
 			    : 0);
 		}
@@ -84,16 +83,15 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void update(String nodeName, Object payload) {
-	Path nodePath = new Path(nodeName);
+    public void update(Path path, Object payload) {
 	try {
 	    Node node;
 	    if (payload instanceof JSONObject) {
-		node = model.getNodeForPath(nodePath);
+		node = model.getNodeForPath(path);
 		node.populate((JSONObject) payload);
 	    } else {
-		node = model.getNodeForPath(nodePath.getParent());
-		node.put(nodePath.getLastElement(), payload);
+		node = model.getNodeForPath(path.getParent());
+		node.put(path.getLastElement(), payload);
 	    }
 	    logger.trace("Model changed: " + model);
 	} catch (JSONException e) {

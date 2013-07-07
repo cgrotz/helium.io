@@ -5,9 +5,8 @@ import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.common.base.Strings;
-
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 
 public class PushAction {
@@ -19,7 +18,7 @@ public class PushAction {
     }
 
     public void handle(RoadrunnerEvent message) throws JSONException {
-	String path = message.extractNodePath();
+	Path path = new Path(message.extractNodePath());
 	Object payload;
 	if (message.has("payload")) {
 	    payload = message.get("payload");
@@ -33,10 +32,10 @@ public class PushAction {
 	} else {
 	    nodeName = UUID.randomUUID().toString().replaceAll("-", "");
 	}
-	if (Strings.isNullOrEmpty(path)) {
-	    persistence.update(nodeName, payload);
+	if (path.isEmtpy()) {
+	    persistence.update(new Path(nodeName), payload);
 	} else {
-	    persistence.update(path + "/" + nodeName, payload);
+	    persistence.update(path.append(nodeName), payload);
 	}
     }
 

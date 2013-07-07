@@ -28,19 +28,18 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 	    throws Exception {
 	Path path = new Path(event.extractNodePath());
 	RoadrunnerEventType type = event.getType();
-	Object node = persistence.get(path.toString());
+	Object node = persistence.get(path);
 	logger.trace("distributing event: " + event);
 
 	if (type == RoadrunnerEventType.PUSH) {
-	    handler.child_added((String) event.get("name"), path.toString()
-		    + "/" + event.get("name"), path.getParent()
+	    handler.child_added((String) event.get("name"), path.append(event.getString("name")), path.getParent()
 		    .getLastElement(), node, null, false, 0);
 	} else if (type == RoadrunnerEventType.SET) {
 	    if (event.has("payload") && !event.isNull("payload")) {
-		handler.child_changed(path.getLastElement(), path.toString(), path.getParent()
+		handler.child_changed(path.getLastElement(), path, path.getParent()
 			.getLastElement(), node, null, false, 0);
 	    } else {
-		handler.child_removed(path.toString(), event.getOldValue());
+		handler.child_removed(path, event.getOldValue());
 	    }
 	}
     }

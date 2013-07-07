@@ -8,25 +8,25 @@ import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 public interface Persistence {
 
     public interface QueryCallback {
-	public void change(String path, JSONObject value, String parentPath,
+	public void change(Path path, JSONObject value, Path parentPath,
 		long numChildren, String name, boolean hasChildren, int priority);
     }
 
-    Object get(String path);
+    Object get(Path path);
 
-    String getName(String path);
+    String getName(Path path);
 
-    String getParent(String path);
+    String getParent(Path path);
 
     void query(String expression, QueryCallback queryCallback);
 
-    void remove(String path);
+    void remove(Path path);
 
     void shutdown();
 
-    void sync(String path, RoadrunnerEventHandler handler);
+    void sync(Path path, RoadrunnerEventHandler handler);
 
-    void update(String nodeName, Object payload);
+    void update(Path path, Object payload);
 
     void setAuth(JSONObject auth);
 

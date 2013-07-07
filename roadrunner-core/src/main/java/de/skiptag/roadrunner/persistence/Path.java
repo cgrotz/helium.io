@@ -1,11 +1,18 @@
 package de.skiptag.roadrunner.persistence;
 
-public class Path {
+import com.google.common.base.Strings;
+
+public final class Path {
 
     private String[] elements;
+    private boolean empty;
 
     public Path(String path) {
-	this.elements = getPathElements(path);
+	if (Strings.isNullOrEmpty(path)) {
+	    this.empty = true;
+	} else {
+	    this.elements = getPathElements(path);
+	}
     }
 
     private String[] getPathElements(String path) {
@@ -48,6 +55,14 @@ public class Path {
 	    output += "/" + elements[i];
 	}
 	return new Path(output);
+    }
+
+    public Path append(String nodeName) {
+	return new Path(toString() + "/" + nodeName);
+    }
+
+    public boolean isEmtpy() {
+	return empty;
     }
 
 }

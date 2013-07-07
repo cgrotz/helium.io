@@ -25,10 +25,10 @@ public class RoadrunnerSnapshot {
 	super();
 	this.authorization = authorization;
 	this.persistence = persistence;
-	this.path = path;
+	this.path = path.toString();
 	this.contextName = contextName;
 	this.value = value;
-	this.parentPath = parentPath;
+	this.parentPath = parentPath.toString();
 	this.numChildren = numChildren;
 	this.name = name;
 	this.hasChildren = hasChildren;
@@ -36,9 +36,8 @@ public class RoadrunnerSnapshot {
     }
 
     public RoadrunnerService child(String childPath) {
-	return new RoadrunnerService(authorization, persistence,
-		contextName, (path.endsWith("/") ? path : path + "/")
-			+ childPath);
+	return new RoadrunnerService(authorization, persistence, contextName,
+		(path.endsWith("/") ? path : path + "/") + childPath);
     }
 
     public void forEach(Function childAction) {
@@ -75,8 +74,8 @@ public class RoadrunnerSnapshot {
     }
 
     public RoadrunnerService ref() {
-	return new RoadrunnerService(authorization, persistence,
-		contextName, path);
+	return new RoadrunnerService(authorization, persistence, contextName,
+		path);
     }
 
     public Object val() {

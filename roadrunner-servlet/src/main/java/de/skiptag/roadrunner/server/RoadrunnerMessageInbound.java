@@ -21,6 +21,7 @@ import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.messaging.RoadrunnerSender;
+import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
@@ -92,7 +93,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	    if (roadrunnerEvent.has("type")) {
 		if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACHED_LISTENER) {
 		    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
-		    persistence.sync(roadrunnerEvent.extractNodePath(), roadrunnerEventHandler);
+		    persistence.sync(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
 		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACHED_LISTENER) {
 		    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
 		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.QUERY) {
