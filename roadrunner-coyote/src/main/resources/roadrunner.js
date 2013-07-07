@@ -471,7 +471,7 @@ function RoadrunnerConnection(url) {
 			path : path,
 			payload : payload
 		};
-		// console.log(message);
+		console.log('Sending Message to Server: ',message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
 			roadrunner_endpoint.send(JSON.stringify(message));
 		} else {
@@ -480,6 +480,7 @@ function RoadrunnerConnection(url) {
 	};
 
 	this.sendSimpleMessage = function(message) {
+		console.log('Sending Message to Server: ',message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
 			roadrunner_endpoint.send(JSON.stringify(message));
 		} else {

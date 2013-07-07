@@ -1,9 +1,10 @@
-package de.skiptag.roadrunner.core;
+package de.skiptag.roadrunner.core.direct;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
+import de.skiptag.roadrunner.core.dataService.DataService;
 
 public class RoadrunnerSnapshot {
     private AuthorizationService authorizationService;

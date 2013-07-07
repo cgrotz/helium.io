@@ -7,8 +7,7 @@ import org.json.JSONObject;
 
 import com.google.common.base.Strings;
 
-import de.skiptag.roadrunner.core.DataService;
-import de.skiptag.roadrunner.core.dtos.PushedMessage;
+import de.skiptag.roadrunner.core.dataService.DataService;
 
 public class PushAction {
 
@@ -31,23 +30,10 @@ public class PushAction {
 	} else {
 	    nodeName = UUID.randomUUID().toString().replaceAll("-", "");
 	}
-	PushedMessage pushed;
 	if (Strings.isNullOrEmpty(path)) {
-	    pushed = dataService.update(nodeName, payload);
+	    dataService.update(nodeName, payload);
 	} else {
-	    pushed = dataService.update(path + "/" + nodeName, payload);
-	}
-	{
-	    JSONObject broadcast = new JSONObject();
-	    broadcast.put("type", "pushed");
-	    broadcast.put("name", nodeName);
-	    broadcast.put("path", path + "/" + nodeName);
-	    broadcast.put("parent", pushed.getParent());
-	    broadcast.put("payload", pushed.getPayload());
-	    broadcast.put("prevChildName", pushed.getPrevChildName());
-	    broadcast.put("hasChildren", pushed.getHasChildren());
-	    broadcast.put("numChildren", pushed.getNumChildren());
-	    // send(broadcast.toString());
+	    dataService.update(path + "/" + nodeName, payload);
 	}
     }
 

@@ -6,11 +6,10 @@ import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 
 import com.google.common.collect.Sets;
 
-import de.skiptag.roadrunner.core.Path;
+import de.skiptag.roadrunner.core.helper.Path;
 
 public class Node extends JSONObject {
     private boolean fromHistory;
@@ -57,54 +56,15 @@ public class Node extends JSONObject {
     }
 
     public void populate(JSONObject payload) throws JSONException {
-
-	populate(payload.toString());
+	Iterator<?> itr = payload.sortedKeys();
+	while (itr.hasNext()) {
+	    Object key = (Object) itr.next();
+	    put((String) key, payload.get((String) key));
+	}
     }
 
     public void populate(String obj) throws JSONException {
-	JSONTokener x = new JSONTokener(obj);
-	char c;
-	String key;
-
-	if (x.nextClean() != '{') {
-	    throw x.syntaxError("A JSONObject text must begin with '{'");
-	}
-	for (;;) {
-	    c = x.nextClean();
-	    switch (c) {
-	    case 0:
-		throw x.syntaxError("A JSONObject text must end with '}'");
-	    case '}':
-		return;
-	    default:
-		x.back();
-		key = x.nextValue().toString();
-	    }
-
-	    // The key is followed by ':'.
-
-	    c = x.nextClean();
-	    if (c != ':') {
-		throw x.syntaxError("Expected a ':' after a key");
-	    }
-	    this.put(key, x.nextValue());
-
-	    // Pairs are separated by ','.
-
-	    switch (x.nextClean()) {
-	    case ';':
-	    case ',':
-		if (x.nextClean() == '}') {
-		    return;
-		}
-		x.back();
-		break;
-	    case '}':
-		return;
-	    default:
-		throw x.syntaxError("Expected a ',' or '}'");
-	    }
-	}
+	populate(new JSONObject(obj));
     }
 
     public Collection<Node> getChildren() throws JSONException {

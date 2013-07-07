@@ -10,26 +10,22 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
-import de.skiptag.roadrunner.core.DataListener;
-import de.skiptag.roadrunner.core.DataService;
-import de.skiptag.roadrunner.core.Path;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
-import de.skiptag.roadrunner.core.dtos.PushedMessage;
+import de.skiptag.roadrunner.core.dataService.DataService;
+import de.skiptag.roadrunner.core.helper.Path;
+import de.skiptag.roadrunner.core.messaging.DataListener;
 
 public class InMemoryDataService implements DataService {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemoryDataService.class);
 
-    private String repositoryName;
     private AuthorizationService authorizationService;
 
     private Node model = new Node();
     private Set<DataListener> listeners = Sets.newHashSet();
 
-    public InMemoryDataService(AuthorizationService authorizationService,
-	    String repositoryName) {
+    public InMemoryDataService(AuthorizationService authorizationService) {
 	this.authorizationService = authorizationService;
-	this.repositoryName = repositoryName;
     }
 
     @Override
@@ -75,6 +71,7 @@ public class InMemoryDataService implements DataService {
 	    while (itr.hasNext()) {
 		Object childNodeKey = itr.next();
 		Object object = node.get(childNodeKey.toString());
+
 		{
 		    fireChildAdded((String) childNodeKey, path + "/"
 			    + childNodeKey, nodePath.toString(), object, null, (object instanceof Node) ? ((Node) object).hasChildren()
@@ -89,7 +86,7 @@ public class InMemoryDataService implements DataService {
     }
 
     @Override
-    public PushedMessage update(String nodeName, Object payload) {
+    public void update(String nodeName, Object payload) {
 	Path nodePath = new Path(nodeName);
 	try {
 	    Node node;
@@ -101,23 +98,9 @@ public class InMemoryDataService implements DataService {
 		node.put(nodePath.getLastElement(), payload);
 	    }
 	    logger.trace("Model changed: " + model);
-	    return new PushedMessage(nodePath.getParent().toString(), null,
-		    node, node.hasChildren(), node.getChildren().size());
 	} catch (JSONException e) {
 
 	    logger.error("", e);
-	}
-	return null;
-    }
-
-    @Override
-    public void updateSimpleValue(String path, Object obj) {
-	Path nodePath = new Path(path);
-	try {
-	    model.getNodeForPath(nodePath.getParent())
-		    .put(nodePath.getLastElement(), obj);
-	} catch (JSONException e) {
-	    e.printStackTrace();
 	}
     }
 
@@ -145,7 +128,7 @@ public class InMemoryDataService implements DataService {
     @Override
     public void fireChildAdded(String name, String path, String parentName,
 	    Object payload, String prevChildName, boolean hasNodes, long size) {
-	for (DataListener listener : listeners) {
+	for (DataListener listener : Sets.newHashSet(listeners)) {
 	    listener.child_added(name, path, parentName, payload, prevChildName, hasNodes, size);
 	}
     }
@@ -153,7 +136,7 @@ public class InMemoryDataService implements DataService {
     @Override
     public void fireChildChanged(String name, String path, String parentName,
 	    Object payload, String prevChildName, boolean hasNodes, long size) {
-	for (DataListener listener : listeners) {
+	for (DataListener listener : Sets.newHashSet(listeners)) {
 	    listener.child_changed(name, path, parentName, payload, prevChildName, hasNodes, size);
 	}
     }
@@ -161,14 +144,14 @@ public class InMemoryDataService implements DataService {
     @Override
     public void fireChildMoved(JSONObject childSnapshot, String prevChildName,
 	    boolean hasNodes, long size) {
-	for (DataListener listener : listeners) {
+	for (DataListener listener : Sets.newHashSet(listeners)) {
 	    listener.child_moved(childSnapshot, prevChildName, hasNodes, size);
 	}
     }
 
     @Override
     public void fireChildRemoved(String path, JSONObject fromRemovedNodes) {
-	for (DataListener listener : listeners) {
+	for (DataListener listener : Sets.newHashSet(listeners)) {
 	    listener.child_removed(path, fromRemovedNodes);
 	}
     }

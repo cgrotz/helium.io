@@ -16,12 +16,12 @@ import de.skiptag.coyote.api.Coyote;
 import de.skiptag.coyote.api.http.common.HttpServerRequest;
 import de.skiptag.coyote.api.modules.ServletModule;
 import de.skiptag.coyote.api.modules.WebsocketModule;
-import de.skiptag.roadrunner.core.DataService;
-import de.skiptag.roadrunner.core.DataServiceCreationException;
-import de.skiptag.roadrunner.core.RoadrunnerEventHandler;
-import de.skiptag.roadrunner.core.RoadrunnerSender;
-import de.skiptag.roadrunner.core.RuleBasedAuthorizationService;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
+import de.skiptag.roadrunner.core.authorization.RuleBasedAuthorizationService;
+import de.skiptag.roadrunner.core.dataService.DataService;
+import de.skiptag.roadrunner.core.dataService.DataServiceCreationException;
+import de.skiptag.roadrunner.core.messaging.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.core.messaging.RoadrunnerSender;
 import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
 import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
@@ -58,8 +58,6 @@ public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 	try {
 	    authorizationService = new RuleBasedAuthorizationService(
 		    RoadrunnerService.toJSONObject(rule));
-	    // dataService = ModeShapeServiceFactory.getInstance()
-	    // .getDataService(authorizationService, repoName);
 	    dataService = InMemoryServiceFactory.getInstance()
 		    .getDataService(authorizationService, repoName);
 	    roadrunnerEventHandler = new RoadrunnerEventHandler(this, repoName);

@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.core;
+package de.skiptag.roadrunner.core.direct;
 
 import java.util.UUID;
 
@@ -8,8 +8,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
-import de.skiptag.roadrunner.core.DataService.QueryCallback;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
+import de.skiptag.roadrunner.core.dataService.DataService;
+import de.skiptag.roadrunner.core.dataService.DataService.QueryCallback;
+import de.skiptag.roadrunner.core.messaging.DataListener;
 
 public class RoadrunnerService implements DataListener {
 

@@ -1,9 +1,9 @@
-package de.skiptag.roadrunner.core;
+package de.skiptag.roadrunner.core.dataService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.skiptag.roadrunner.core.dtos.PushedMessage;
+import de.skiptag.roadrunner.core.messaging.DataListener;
 
 public interface DataService {
 
@@ -30,9 +30,7 @@ public interface DataService {
 
     void sync(String path);
 
-    PushedMessage update(String nodeName, Object payload);
-
-    void updateSimpleValue(String path, Object obj);
+    void update(String nodeName, Object payload);
 
     void setAuth(JSONObject auth);
 

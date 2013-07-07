@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.core;
+package de.skiptag.roadrunner.core.authorization;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -6,11 +6,6 @@ import javax.script.ScriptException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import de.skiptag.roadrunner.core.authorization.AuthorizationService;
-import de.skiptag.roadrunner.core.authorization.RoadrunnerNotAuthorizedException;
-import de.skiptag.roadrunner.core.authorization.RoadrunnerOperation;
-import de.skiptag.roadrunner.core.authorization.RulesDataSnapshot;
 
 public class RuleBasedAuthorizationService implements AuthorizationService {
 

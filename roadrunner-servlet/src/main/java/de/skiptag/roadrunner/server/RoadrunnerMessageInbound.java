@@ -14,13 +14,13 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
-import de.skiptag.roadrunner.core.DataService;
-import de.skiptag.roadrunner.core.DataServiceCreationException;
-import de.skiptag.roadrunner.core.DataServiceFactory;
-import de.skiptag.roadrunner.core.RoadrunnerEventHandler;
-import de.skiptag.roadrunner.core.RoadrunnerSender;
 import de.skiptag.roadrunner.core.authorization.AuthenticationServiceFactory;
 import de.skiptag.roadrunner.core.authorization.AuthorizationService;
+import de.skiptag.roadrunner.core.dataService.DataService;
+import de.skiptag.roadrunner.core.dataService.DataServiceCreationException;
+import de.skiptag.roadrunner.core.dataService.DataServiceFactory;
+import de.skiptag.roadrunner.core.messaging.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.core.messaging.RoadrunnerSender;
 import de.skiptag.roadrunner.disruptor.DisruptorRoadrunnerService;
 import de.skiptag.roadrunner.disruptor.event.MessageType;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
