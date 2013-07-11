@@ -13,6 +13,7 @@
 		<module>roadrunner-core</module>
 		<module>roadrunner-servlet</module>
 		<module>roadrunner-coyote</module>
+		<module>roadrunner-netty</module>
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

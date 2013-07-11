@@ -26,17 +26,22 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
     @Override
     public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
 	    throws Exception {
-	Path path = new Path(event.extractNodePath());
+	String path = event.getString("path");
+	if (!path.startsWith("ws://localhost:8080")) {
+	    path = "ws://localhost:8080" + path;
+	}
+
+	Path nodePath = new Path(event.extractNodePath());
 	RoadrunnerEventType type = event.getType();
-	Object node = persistence.get(path);
+	Object node = persistence.get(nodePath);
 	logger.trace("distributing event: " + event);
 
 	if (type == RoadrunnerEventType.PUSH) {
-	    handler.child_added((String) event.get("name"), path.append(event.getString("name")), path.getParent()
+	    handler.child_added((String) event.get("name"), path, nodePath.getParent()
 		    .getLastElement(), node, null, false, 0);
 	} else if (type == RoadrunnerEventType.SET) {
 	    if (event.has("payload") && !event.isNull("payload")) {
-		handler.child_changed(path.getLastElement(), path, path.getParent()
+		handler.child_changed(nodePath.getLastElement(), path, nodePath.getParent()
 			.getLastElement(), node, null, false, 0);
 	    } else {
 		handler.child_removed(path, event.getOldValue());

@@ -21,6 +21,9 @@ public final class Path {
     }
 
     public String getFirstElement() {
+	if (elements == null || elements.length == 0) {
+	    return null;
+	}
 	return elements[0];
     }
 

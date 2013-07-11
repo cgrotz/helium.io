@@ -103,8 +103,12 @@ public class RoadrunnerEvent extends JSONObject {
 	if (indexOfPath > -1) {
 	    int substringIndex = indexOfPath + pathLength
 		    + repositoryNameLength + 1;
-	    return requestPath.substring(substringIndex)
-		    .replaceFirst("roadrunner", "");
+	    if (requestPath.length() < substringIndex) {
+		return requestPath;
+	    } else {
+		return requestPath.substring(substringIndex)
+			.replaceFirst("roadrunner", "");
+	    }
 	} else {
 	    return requestPath.replaceFirst("roadrunner", "");
 	}

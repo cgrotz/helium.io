@@ -61,7 +61,6 @@ public class InMemoryPersistence implements Persistence {
     @Override
     public void sync(Path path, RoadrunnerEventHandler handler) {
 	try {
-	    ;
 	    Node node = model.getNodeForPath(path);
 
 	    Iterator<?> itr = node.sortedKeys();
@@ -70,8 +69,8 @@ public class InMemoryPersistence implements Persistence {
 		Object object = node.get(childNodeKey.toString());
 
 		{
-		    handler.child_added((String) childNodeKey, new Path(path
-			    + "/" + childNodeKey), path.toString(), object, null, (object instanceof Node) ? ((Node) object).hasChildren()
+		    handler.child_added((String) childNodeKey, path + "/"
+			    + childNodeKey, path.toString(), object, null, (object instanceof Node) ? ((Node) object).hasChildren()
 			    : false, (object instanceof Node) ? ((Node) object).length()
 			    : 0);
 		}
