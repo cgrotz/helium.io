@@ -21,6 +21,15 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 /**
  * A HTTP server which serves Web Socket requests at:
  * 
@@ -43,8 +52,20 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  */
 public class RoadrunnerServer {
 
+    private static Options options = new Options();
     private final int port;
     private String journalDir;
+
+    static {
+	@SuppressWarnings("static-access")
+	Option directoryOption = OptionBuilder.withArgName("directory")
+		.hasArg()
+		.withDescription("Journal directory")
+		.isRequired()
+		.create("d");
+	options.addOption(directoryOption);
+	options.addOption("p", true, "Port for the webserver");
+    }
 
     public RoadrunnerServer(int port, String journalDir) {
 	this.port = port;
@@ -58,7 +79,7 @@ public class RoadrunnerServer {
 	    ServerBootstrap b = new ServerBootstrap();
 	    b.group(bossGroup, workerGroup)
 		    .channel(NioServerSocketChannel.class)
-		    .childHandler(new WebSocketServerInitializer());
+		    .childHandler(new WebSocketServerInitializer(journalDir));
 
 	    Channel ch = b.bind(port).sync().channel();
 
@@ -69,13 +90,24 @@ public class RoadrunnerServer {
 	}
     }
 
-    public static void main(String[] args) throws Exception {
-	int port;
-	if (args.length > 0) {
-	    port = Integer.parseInt(args[0]);
-	} else {
-	    port = 8080;
+    public static void main(String[] args) {
+
+	CommandLineParser parser = new BasicParser();
+	try {
+	    CommandLine cmd = parser.parse(options, args);
+
+	    try {
+		String directory = cmd.getOptionValue("d");
+		int port = Integer.parseInt(cmd.getOptionValue("p", "8080"));
+
+		new RoadrunnerServer(port, directory).run();
+	    } catch (Exception exp) {
+		exp.printStackTrace();
+	    }
+	} catch (ParseException e) {
+	    System.out.println(e.getLocalizedMessage());
+	    HelpFormatter formatter = new HelpFormatter();
+	    formatter.printHelp("roadrunner", options);
 	}
-	new RoadrunnerServer(port, "").run();
     }
 }

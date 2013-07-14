@@ -25,11 +25,18 @@ import io.netty.handler.codec.http.HttpServerCodec;
  */
 public class WebSocketServerInitializer extends
 	ChannelInitializer<SocketChannel> {
+    private String journalDirectory;
+
+    public WebSocketServerInitializer(String journalDirectory) {
+	super();
+	this.journalDirectory = journalDirectory;
+    }
+
     @Override
     public void initChannel(SocketChannel ch) throws Exception {
 	ChannelPipeline pipeline = ch.pipeline();
 	pipeline.addLast("codec-http", new HttpServerCodec());
 	pipeline.addLast("aggregator", new HttpObjectAggregator(65536));
-	pipeline.addLast("handler", new WebSocketServerHandler());
+	pipeline.addLast("handler", new WebSocketServerHandler(journalDirectory));
     }
 }

@@ -88,8 +88,10 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
     private String repositoryName;
 
-    public WebSocketServerHandler() {
+    private String journalDirectory;
 
+    public WebSocketServerHandler(String journalDirectory) {
+	this.journalDirectory = journalDirectory;
     }
 
     @Override
@@ -149,8 +151,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 		this.persistence = new InMemoryPersistence(authorization);
 
 		Optional<File> snapshotDirectory = Optional.absent();
-		disruptor = new Roadrunner(
-			new File("/home/balu/tmp/roadrunner"),
+		disruptor = new Roadrunner(new File(journalDirectory),
 			snapshotDirectory, persistence, authorization,
 			roadrunnerEventHandler, true);
 	    } catch (Exception exp) {
