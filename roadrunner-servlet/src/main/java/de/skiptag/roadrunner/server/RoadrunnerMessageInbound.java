@@ -8,15 +8,15 @@ import org.apache.catalina.websocket.MessageInbound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.skiptag.roadrunner.RoadrunnerStandalone;
+import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.messaging.RoadrunnerSender;
 
 public class RoadrunnerMessageInbound extends MessageInbound implements
 	RoadrunnerSender {
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
-    private RoadrunnerStandalone roadrunner;
+    private Roadrunner roadrunner;
 
-    public RoadrunnerMessageInbound(RoadrunnerStandalone roadrunner) {
+    public RoadrunnerMessageInbound(Roadrunner roadrunner) {
 	this.roadrunner = roadrunner;
     }
 

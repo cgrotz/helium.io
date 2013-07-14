@@ -20,16 +20,16 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import de.skiptag.roadrunner.RoadrunnerStandalone;
+import de.skiptag.roadrunner.Roadrunner;
 
 /**
  */
 public class WebSocketServerInitializer extends
 	ChannelInitializer<SocketChannel> {
 
-    private RoadrunnerStandalone roadrunner;
+    private Roadrunner roadrunner;
 
-    public WebSocketServerInitializer(RoadrunnerStandalone roadrunner) {
+    public WebSocketServerInitializer(Roadrunner roadrunner) {
 	super();
 	this.roadrunner = roadrunner;
     }

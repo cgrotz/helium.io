@@ -31,8 +31,8 @@ import de.skiptag.roadrunner.disruptor.processor.persistence.PersistenceProcesso
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.persistence.Persistence;
 
-public class Roadrunner {
-    private static final Logger logger = LoggerFactory.getLogger(Roadrunner.class);
+public class RoadrunnerDisruptor {
+    private static final Logger logger = LoggerFactory.getLogger(RoadrunnerDisruptor.class);
     private static final int RING_SIZE = 256;
     private EventSourceProcessor eventSourceProcessor;
     private PersistenceProcessor persistenceProcessor;
@@ -44,7 +44,7 @@ public class Roadrunner {
     private Optional<Journal> snapshotJournal = Optional.absent();
 
     @SuppressWarnings("unchecked")
-    public Roadrunner(File journalDirectory, Optional<File> snapshotDirectory,
+    public RoadrunnerDisruptor(File journalDirectory, Optional<File> snapshotDirectory,
 	    Persistence persistence, Authorization authorization,
 	    RoadrunnerEventHandler roadrunnerEventHandler,
 	    boolean withDistribution) throws IOException, JSONException {

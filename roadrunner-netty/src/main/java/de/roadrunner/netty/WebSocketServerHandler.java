@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
-import de.skiptag.roadrunner.RoadrunnerStandalone;
+import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.messaging.RoadrunnerSender;
@@ -72,9 +72,9 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
     private Set<Channel> channels = Sets.newHashSet();
 
-    private RoadrunnerStandalone roadrunner;
+    private Roadrunner roadrunner;
 
-    public WebSocketServerHandler(RoadrunnerStandalone roadrunner) {
+    public WebSocketServerHandler(Roadrunner roadrunner) {
 	this.roadrunner = roadrunner;
 	roadrunner.addSender(this);
     }

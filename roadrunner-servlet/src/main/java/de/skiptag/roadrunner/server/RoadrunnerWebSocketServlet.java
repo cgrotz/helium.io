@@ -20,7 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 
-import de.skiptag.roadrunner.RoadrunnerStandalone;
+import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.persistence.Path;
@@ -30,7 +30,7 @@ import de.skiptag.roadrunner.persistence.Path;
  */
 public class RoadrunnerWebSocketServlet extends WebSocketServlet {
     private static final long serialVersionUID = 1L;
-    private RoadrunnerStandalone roadrunner;
+    private Roadrunner roadrunner;
 
     @Override
     protected StreamInbound createWebSocketInbound(String subProtocol,
@@ -61,7 +61,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
     public void init(ServletConfig config) throws ServletException {
 	super.init(config);
 	String journalDirectory = Preconditions.checkNotNull(config.getInitParameter("journalDirectory"), "JournalDirectory must be configured in web.xml");
-	this.roadrunner = new RoadrunnerStandalone(journalDirectory);
+	this.roadrunner = new Roadrunner(journalDirectory);
     }
 
     @Override

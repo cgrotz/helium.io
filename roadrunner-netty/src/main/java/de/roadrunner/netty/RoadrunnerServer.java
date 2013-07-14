@@ -30,7 +30,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import de.skiptag.roadrunner.RoadrunnerStandalone;
+import de.skiptag.roadrunner.Roadrunner;
 
 /**
  * A HTTP server which serves Web Socket requests at:
@@ -56,7 +56,7 @@ public class RoadrunnerServer {
 
     private static Options options = new Options();
     private final int port;
-    private RoadrunnerStandalone roadrunner;
+    private Roadrunner roadrunner;
 
     static {
 	@SuppressWarnings("static-access")
@@ -71,7 +71,7 @@ public class RoadrunnerServer {
 
     public RoadrunnerServer(int port, String journalDir) {
 	this.port = port;
-	this.roadrunner = new RoadrunnerStandalone(journalDir);
+	this.roadrunner = new Roadrunner(journalDir);
     }
 
     public void run() throws Exception {

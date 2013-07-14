@@ -12,20 +12,20 @@ import de.skiptag.coyote.api.Coyote;
 import de.skiptag.coyote.api.http.common.HttpServerRequest;
 import de.skiptag.coyote.api.modules.ServletModule;
 import de.skiptag.coyote.api.modules.WebsocketModule;
-import de.skiptag.roadrunner.RoadrunnerStandalone;
+import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.messaging.RoadrunnerSender;
 
 public class RoadrunnerModule extends WebsocketModule implements ServletModule,
 	RoadrunnerSender {
 
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerModule.class);
-    private RoadrunnerStandalone roadrunner;
+    private Roadrunner roadrunner;
     private String moduleWebPath;
 
     public RoadrunnerModule(Coyote coyote, String moduleWebPath,
 	    String journalDirectory, NativeObject rule) throws JSONException {
 	this.moduleWebPath = moduleWebPath;
-	roadrunner = new RoadrunnerStandalone(journalDirectory,
+	roadrunner = new Roadrunner(journalDirectory,
 		RoadrunnerService.toJSONObject(rule));
     }
 

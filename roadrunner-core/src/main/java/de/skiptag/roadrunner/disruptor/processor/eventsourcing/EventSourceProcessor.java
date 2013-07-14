@@ -18,19 +18,19 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.lmax.disruptor.EventHandler;
 
-import de.skiptag.roadrunner.disruptor.Roadrunner;
+import de.skiptag.roadrunner.disruptor.RoadrunnerDisruptor;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 
 public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
     private static final Logger logger = LoggerFactory.getLogger(EventSourceProcessor.class);
 
     private Journal journal = new Journal();
-    private Roadrunner roadrunner;
+    private RoadrunnerDisruptor roadrunner;
 
     private Optional<Location> currentLocation = Optional.absent();
 
     public EventSourceProcessor(File journal_dir,
-	    Roadrunner roadrunner)
+	    RoadrunnerDisruptor roadrunner)
 	    throws IOException {
 	journal.setDirectory(journal_dir);
 	journal.open();

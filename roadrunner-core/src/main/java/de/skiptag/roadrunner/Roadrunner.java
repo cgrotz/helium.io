@@ -12,7 +12,7 @@ import com.google.common.collect.Sets;
 
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
-import de.skiptag.roadrunner.disruptor.Roadrunner;
+import de.skiptag.roadrunner.disruptor.RoadrunnerDisruptor;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
@@ -21,27 +21,27 @@ import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
-public class RoadrunnerStandalone implements RoadrunnerSender {
+public class Roadrunner implements RoadrunnerSender {
     private InMemoryPersistence persistence;
 
     private RoadrunnerEventHandler roadrunnerEventHandler;
 
     private String path;
 
-    private Roadrunner disruptor;
+    private RoadrunnerDisruptor disruptor;
 
     private Set<RoadrunnerSender> senders = Sets.newHashSet();
 
     private RuleBasedAuthorization authorization;
 
-    public RoadrunnerStandalone(String journalDirectory, JSONObject rule) {
+    public Roadrunner(String journalDirectory, JSONObject rule) {
 	try {
 	    roadrunnerEventHandler = new RoadrunnerEventHandler(this);
 	    this.authorization = new RuleBasedAuthorization(rule);
 	    this.persistence = new InMemoryPersistence();
 
 	    Optional<File> snapshotDirectory = Optional.absent();
-	    disruptor = new Roadrunner(new File(journalDirectory),
+	    disruptor = new RoadrunnerDisruptor(new File(journalDirectory),
 		    snapshotDirectory, persistence, authorization,
 		    roadrunnerEventHandler, true);
 	} catch (Exception exp) {
@@ -49,7 +49,7 @@ public class RoadrunnerStandalone implements RoadrunnerSender {
 	}
     }
 
-    public RoadrunnerStandalone(String journalDirectory) {
+    public Roadrunner(String journalDirectory) {
 	this(journalDirectory, new JSONObject());
     }
 
