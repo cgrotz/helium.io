@@ -28,8 +28,6 @@ public interface Persistence {
 
     void update(Path path, Object payload);
 
-    void setAuth(JSONObject auth);
-
     JSONObject dumpSnapshot();
 
     void restoreSnapshot(JSONObject payload) throws JSONException;

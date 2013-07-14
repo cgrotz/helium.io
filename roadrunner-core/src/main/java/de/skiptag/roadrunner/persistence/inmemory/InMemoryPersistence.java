@@ -7,7 +7,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
@@ -16,19 +15,18 @@ public class InMemoryPersistence implements Persistence {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemoryPersistence.class);
 
-    private Authorization authorization;
-
     private Node model = new Node();
 
-    private JSONObject auth;
-
-    public InMemoryPersistence(Authorization authorization) {
-	this.authorization = authorization;
+    public InMemoryPersistence() {
     }
 
     @Override
     public Object get(Path path) {
-	return model.getObjectForPath(path);
+	if (model.getObjectForPath(path) == null) {
+	    return model;
+	} else {
+	    return model.getObjectForPath(path);
+	}
     }
 
     @Override
@@ -102,11 +100,6 @@ public class InMemoryPersistence implements Persistence {
     @Override
     public void shutdown() {
 
-    }
-
-    @Override
-    public void setAuth(JSONObject auth) {
-	this.auth = auth;
     }
 
     @Override

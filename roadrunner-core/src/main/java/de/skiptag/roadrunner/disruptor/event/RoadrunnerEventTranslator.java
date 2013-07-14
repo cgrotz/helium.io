@@ -17,9 +17,7 @@ public class RoadrunnerEventTranslator implements
     public void translateTo(RoadrunnerEvent event, long sequence) {
 	try {
 	    Preconditions.checkNotNull(roadrunnerEvent.getBasePath());
-	    Preconditions.checkNotNull(roadrunnerEvent.getRepositoryName());
 	    event.setBasePath(roadrunnerEvent.getBasePath());
-	    event.setRepositoryName(roadrunnerEvent.getRepositoryName());
 	    event.populate(roadrunnerEvent.toString());
 	} catch (JSONException e) {
 	    e.printStackTrace();

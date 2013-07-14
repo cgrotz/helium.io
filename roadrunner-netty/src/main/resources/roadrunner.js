@@ -509,7 +509,7 @@ function Roadrunner(path) {
 		{
 			try
 			{
-				if (snapshot.path().indexOf(workpath) != -1) {
+				if (snapshot.path().indexOf(workpath) < 1) {
 					var callback = events['value'];
 					if (callback != null) {
 						callback(snapshot);
@@ -532,7 +532,7 @@ function Roadrunner(path) {
 		{
 			workpath = workpath + "/";
 		}
-		if (snapshot.path().indexOf(workpath) == 0) {
+		if (snapshot.path().indexOf(workpath) < 1) {
 			var callback = events[message.type];
 			if (callback != null) {
 				callback(snapshot);

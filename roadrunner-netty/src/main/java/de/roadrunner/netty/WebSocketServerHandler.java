@@ -21,7 +21,6 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import io.netty.buffer.Unpooled;
@@ -33,6 +32,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
@@ -42,28 +43,21 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
-import org.json.JSONObject;
+import org.json.JSONException;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
-import de.skiptag.roadrunner.authorization.Authorization;
-import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
-import de.skiptag.roadrunner.disruptor.Roadrunner;
+import de.skiptag.roadrunner.RoadrunnerStandalone;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
-import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.messaging.RoadrunnerSender;
 import de.skiptag.roadrunner.persistence.Path;
-import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
 /**
  * Handles handshakes and messages
@@ -78,20 +72,11 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
     private Set<Channel> channels = Sets.newHashSet();
 
-    private InMemoryPersistence persistence;
+    private RoadrunnerStandalone roadrunner;
 
-    private RoadrunnerEventHandler roadrunnerEventHandler;
-
-    private String path;
-
-    private Roadrunner disruptor;
-
-    private String repositoryName;
-
-    private String journalDirectory;
-
-    public WebSocketServerHandler(String journalDirectory) {
-	this.journalDirectory = journalDirectory;
+    public WebSocketServerHandler(RoadrunnerStandalone roadrunner) {
+	this.roadrunner = roadrunner;
+	roadrunner.addSender(this);
     }
 
     @Override
@@ -106,23 +91,30 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
     private void handleHttpRequest(ChannelHandlerContext ctx,
 	    FullHttpRequest req) throws Exception {
+	roadrunner.setBasePath(getWebSocketLocation(req));
 	// Handle a bad request.
 	if (!req.getDecoderResult().isSuccess()) {
 	    sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1,
 		    BAD_REQUEST));
 	    return;
 	}
-
-	// Allow only GET methods.
-	if (req.getMethod() != GET) {
-	    sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1,
-		    FORBIDDEN));
+	if ("/favicon.ico".equals(req.getUri())) {
+	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1,
+		    HttpResponseStatus.NOT_FOUND);
+	    sendHttpResponse(ctx, req, res);
 	    return;
 	}
 
-	if ("/roadrunner.js".equals(req.getUri())) {
+	if (req.getMethod() == GET && "/roadrunner.js".equals(req.getUri())) {
 	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
 	    sendFile(res, "roadrunner.js");
+	    sendHttpResponse(ctx, req, res);
+	    return;
+	}
+
+	if (!req.headers().contains("Upgrade")) {
+	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
+	    handleRestCall(ctx, req, res);
 	    sendHttpResponse(ctx, req, res);
 	    return;
 	}
@@ -137,27 +129,28 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 	    handshaker.handshake(ctx.channel(), req);
 	}
 	channels.add(ctx.channel());
-	if (disruptor == null) {
-	    try {
-		this.path = getWebSocketLocation(req);
-		this.repositoryName = req.getUri().substring(1);
-		if (repositoryName.indexOf("/") != -1) {
-		    this.repositoryName = repositoryName.substring(0, repositoryName.indexOf("/"));
-		}
-		roadrunnerEventHandler = new RoadrunnerEventHandler(this,
-			repositoryName);
-		Authorization authorization = new RuleBasedAuthorization(
-			new JSONObject());
-		this.persistence = new InMemoryPersistence(authorization);
+    }
 
-		Optional<File> snapshotDirectory = Optional.absent();
-		disruptor = new Roadrunner(new File(journalDirectory),
-			snapshotDirectory, persistence, authorization,
-			roadrunnerEventHandler, true);
-	    } catch (Exception exp) {
-		throw new RuntimeException(exp);
-	    }
+    private void handleRestCall(ChannelHandlerContext ctx, FullHttpRequest req,
+	    FullHttpResponse res) throws JSONException {
+
+	String basePath = getHttpSocketLocation(req);
+	Path nodePath = new Path(
+		RoadrunnerEvent.extractPath(basePath, req.getUri()));
+	if (req.getMethod() == GET) {
+	    res.content().writeBytes(roadrunner.getPersistence()
+		    .get(nodePath)
+		    .toString()
+		    .getBytes());
+	} else if (req.getMethod() == HttpMethod.POST
+		|| req.getMethod() == HttpMethod.PUT) {
+	    String msg = new String(req.content().array());
+	    roadrunner.handleEvent(RoadrunnerEventType.SET, req.getUri(), msg);
+	} else if (req.getMethod() == HttpMethod.DELETE) {
+	    roadrunner.handleEvent(RoadrunnerEventType.SET, req.getUri(), null);
 	}
+	res.headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
+	setContentLength(res, res.content().readableBytes());
     }
 
     private void sendFile(FullHttpResponse res, String fileName)
@@ -192,35 +185,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
 	// Send the uppercase string back.
 	String msg = ((TextWebSocketFrame) frame).text();
-	System.out.println("Received Message: " + msg);
-	try {
-	    RoadrunnerEvent roadrunnerEvent;
+	roadrunner.handle(msg);
 
-	    try {
-		roadrunnerEvent = new RoadrunnerEvent(msg, path, repositoryName);
-		Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
-		Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
-		Preconditions.checkArgument(roadrunnerEvent.has("repositoryName"), "No repositoryName defined in Event");
-	    } catch (Exception exp) {
-		roadrunnerEvent = null;
-	    }
-
-	    if (roadrunnerEvent.has("type")) {
-		if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACHED_LISTENER) {
-		    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
-		    persistence.sync(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
-		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACHED_LISTENER) {
-		    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
-		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.QUERY) {
-		    String query = roadrunnerEvent.getString("query");
-		    // queryAction.handle(query);
-		} else {
-		    disruptor.handleEvent(roadrunnerEvent);
-		}
-	    }
-	} catch (Exception e) {
-	    throw new RuntimeException(msg.toString(), e);
-	}
     }
 
     private static void sendHttpResponse(ChannelHandlerContext ctx,
@@ -250,9 +216,12 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 	return "ws://" + req.headers().get(HOST) + WEBSOCKET_PATH;
     }
 
-    @Override
+    private static String getHttpSocketLocation(FullHttpRequest req) {
+
+	return "http://" + req.headers().get(HOST) + WEBSOCKET_PATH;
+    }
+
     public void send(String msg) {
-	System.out.println("Send Message: " + msg);
 	for (Channel channel : channels) {
 	    channel.write(new TextWebSocketFrame(msg));
 	}

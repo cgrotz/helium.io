@@ -100,7 +100,6 @@ public class Roadrunner {
 	try {
 	    Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
 	    Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
-	    Preconditions.checkArgument(roadrunnerEvent.has("repositoryName"), "No repositoryName defined in Event");
 	    RoadrunnerEventTranslator eventTranslator = new RoadrunnerEventTranslator(
 		    roadrunnerEvent);
 	    disruptor.publishEvent(eventTranslator);

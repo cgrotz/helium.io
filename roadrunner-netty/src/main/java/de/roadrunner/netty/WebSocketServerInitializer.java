@@ -20,16 +20,18 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import de.skiptag.roadrunner.RoadrunnerStandalone;
 
 /**
  */
 public class WebSocketServerInitializer extends
 	ChannelInitializer<SocketChannel> {
-    private String journalDirectory;
 
-    public WebSocketServerInitializer(String journalDirectory) {
+    private RoadrunnerStandalone roadrunner;
+
+    public WebSocketServerInitializer(RoadrunnerStandalone roadrunner) {
 	super();
-	this.journalDirectory = journalDirectory;
+	this.roadrunner = roadrunner;
     }
 
     @Override
@@ -37,6 +39,6 @@ public class WebSocketServerInitializer extends
 	ChannelPipeline pipeline = ch.pipeline();
 	pipeline.addLast("codec-http", new HttpServerCodec());
 	pipeline.addLast("aggregator", new HttpObjectAggregator(65536));
-	pipeline.addLast("handler", new WebSocketServerHandler(journalDirectory));
+	pipeline.addLast("handler", new WebSocketServerHandler(roadrunner));
     }
 }

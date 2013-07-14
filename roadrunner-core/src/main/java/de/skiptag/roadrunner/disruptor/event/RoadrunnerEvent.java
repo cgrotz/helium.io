@@ -21,20 +21,14 @@ public class RoadrunnerEvent extends JSONObject {
     public RoadrunnerEvent() {
     }
 
-    public RoadrunnerEvent(String string, String basePath, String repositoryName)
-	    throws JSONException {
+    public RoadrunnerEvent(String string, String basePath) throws JSONException {
 	super(string);
 	put("basePath", basePath);
-	put("repositoryName", repositoryName);
 	put("creationDate", new Date());
     }
 
     public RoadrunnerEvent(String string) throws JSONException {
 	super(string);
-    }
-
-    public String getRepositoryName() throws JSONException {
-	return getString("repositoryName");
     }
 
     public String getBasePath() throws JSONException {
@@ -95,23 +89,22 @@ public class RoadrunnerEvent extends JSONObject {
 	if (!has("path")) {
 	    return null;
 	}
-	int pathLength = getBasePath().length();
-	int repositoryNameLength = getRepositoryName().length();
-
+	String basePath = getBasePath();
 	String requestPath = (String) get("path");
-	int indexOfPath = requestPath.indexOf(getBasePath());
-	if (indexOfPath > -1) {
-	    int substringIndex = indexOfPath + pathLength
-		    + repositoryNameLength + 1;
-	    if (requestPath.length() < substringIndex) {
-		return requestPath;
-	    } else {
-		return requestPath.substring(substringIndex)
-			.replaceFirst("roadrunner", "");
-	    }
-	} else {
-	    return requestPath.replaceFirst("roadrunner", "");
+
+	return extractPath(basePath, requestPath);
+    }
+
+    public static String extractPath(String basePath, String requestPath) {
+	String result = requestPath;
+	int basePathLength = basePath.length();
+
+	int indexOfBasePath = result.indexOf(basePath);
+	if (indexOfBasePath > -1) {
+	    result = result.substring(indexOfBasePath + basePathLength);
 	}
+
+	return result.startsWith("/") ? result : "/" + result;
     }
 
     public JSONObject getOldValue() throws JSONException {
@@ -120,10 +113,6 @@ public class RoadrunnerEvent extends JSONObject {
 
     public void setBasePath(String basePath) throws JSONException {
 	put("basePath", basePath);
-    }
-
-    public void setRepositoryName(String repositoryName) throws JSONException {
-	put("repositoryName", repositoryName);
     }
 
     public boolean isFromHistory() throws JSONException {

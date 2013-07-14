@@ -37,19 +37,15 @@ public class RoadrunnerService implements DataListener {
     private String contextName;
 
     public RoadrunnerService(Authorization authorization,
-	    Persistence persistence, String contextName, String path) {
+	    Persistence persistence, String path) {
 	this.authorization = authorization;
 	this.persistence = persistence;
-	this.contextName = contextName;
 	this.path = path.replaceFirst("^[^#]*?://.*?(/.*)$", "");
-	if (contextName != null) {
-	    this.path = this.path.substring(contextName.length());
-	}
     }
 
     public RoadrunnerService child(String childname) {
-	return new RoadrunnerService(authorization, persistence, contextName,
-		path + (path.endsWith("/") ? "" : "/") + childname);
+	return new RoadrunnerService(authorization, persistence, path
+		+ (path.endsWith("/") ? "" : "/") + childname);
     }
 
     @Override
@@ -166,7 +162,7 @@ public class RoadrunnerService implements DataListener {
     }
 
     public RoadrunnerService parent() {
-	return new RoadrunnerService(authorization, persistence, contextName,
+	return new RoadrunnerService(authorization, persistence,
 		persistence.getParent(new Path(path)));
     }
 
@@ -177,8 +173,7 @@ public class RoadrunnerService implements DataListener {
 	    persistence.update(new Path(workPath), data);
 
 	    return new RoadrunnerService(authorization, persistence,
-		    contextName, (path.endsWith("/") ? path : path + "/")
-			    + name);
+		    (path.endsWith("/") ? path : path + "/") + name);
 	} catch (Exception exp) {
 	    throw new RuntimeException(exp);
 	}
@@ -201,8 +196,7 @@ public class RoadrunnerService implements DataListener {
     }
 
     public RoadrunnerService root() {
-	return new RoadrunnerService(authorization, persistence, contextName,
-		"/");
+	return new RoadrunnerService(authorization, persistence, "/");
 
     }
 

@@ -12,12 +12,8 @@ public class RoadrunnerEventHandler implements DataListener {
 
     private Set<String> attached_listeners = Sets.newHashSet();
 
-    private String repoName;
-
-    public RoadrunnerEventHandler(RoadrunnerSender roadrunnerSender,
-	    String repoName) {
+    public RoadrunnerEventHandler(RoadrunnerSender roadrunnerSender) {
 	this.roadrunnerSender = roadrunnerSender;
-	this.repoName = repoName;
     }
 
     @Override
@@ -28,7 +24,7 @@ public class RoadrunnerEventHandler implements DataListener {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put("type", "child_added");
 	    broadcast.put("name", name);
-	    broadcast.put("path", getPath(path, repoName));
+	    broadcast.put("path", getPath(path));
 	    broadcast.put("parent", parent);
 	    broadcast.put("payload", node);
 	    broadcast.put("prevChildName", prevChildName);
@@ -50,7 +46,7 @@ public class RoadrunnerEventHandler implements DataListener {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put("type", "child_changed");
 	    broadcast.put("name", name);
-	    broadcast.put("path", getPath(path, repoName));
+	    broadcast.put("path", getPath(path));
 	    broadcast.put("parent", parent);
 	    broadcast.put("payload", node);
 	    broadcast.put("prevChildName", prevChildName);
@@ -83,7 +79,7 @@ public class RoadrunnerEventHandler implements DataListener {
 	try {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put("type", "child_removed");
-	    broadcast.put("path", getPath(path, repoName));
+	    broadcast.put("path", getPath(path));
 	    broadcast.put("payload", payload);
 	    roadrunnerSender.send(broadcast.toString());
 	} catch (Exception exp) {
@@ -110,7 +106,7 @@ public class RoadrunnerEventHandler implements DataListener {
 	return false;
     }
 
-    private String getPath(String path, String repoName) {
+    private String getPath(String path) {
 	String workpath = path;
 	// workpath = workpath.replaceAll("//", "/");
 	// if (workpath.startsWith("/" + repoName)) {

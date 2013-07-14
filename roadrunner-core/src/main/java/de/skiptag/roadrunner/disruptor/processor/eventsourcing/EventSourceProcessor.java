@@ -62,7 +62,6 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
 		roadrunnerEvent.setFromHistory(true);
 		Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
 		Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
-		Preconditions.checkArgument(roadrunnerEvent.has("repositoryName"), "No repositoryName defined in Event");
 	    } catch (Exception exp) {
 		logger.warn("Error in message (" + exp.getMessage() + "): "
 			+ new String(record));

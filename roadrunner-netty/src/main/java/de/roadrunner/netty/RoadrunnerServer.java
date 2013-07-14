@@ -30,6 +30,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import de.skiptag.roadrunner.RoadrunnerStandalone;
+
 /**
  * A HTTP server which serves Web Socket requests at:
  * 
@@ -54,7 +56,7 @@ public class RoadrunnerServer {
 
     private static Options options = new Options();
     private final int port;
-    private String journalDir;
+    private RoadrunnerStandalone roadrunner;
 
     static {
 	@SuppressWarnings("static-access")
@@ -69,7 +71,7 @@ public class RoadrunnerServer {
 
     public RoadrunnerServer(int port, String journalDir) {
 	this.port = port;
-	this.journalDir = journalDir;
+	this.roadrunner = new RoadrunnerStandalone(journalDir);
     }
 
     public void run() throws Exception {
@@ -79,10 +81,9 @@ public class RoadrunnerServer {
 	    ServerBootstrap b = new ServerBootstrap();
 	    b.group(bossGroup, workerGroup)
 		    .channel(NioServerSocketChannel.class)
-		    .childHandler(new WebSocketServerInitializer(journalDir));
+		    .childHandler(new WebSocketServerInitializer(roadrunner));
 
 	    Channel ch = b.bind(port).sync().channel();
-
 	    ch.closeFuture().sync();
 	} finally {
 	    bossGroup.shutdownGracefully();
@@ -91,23 +92,18 @@ public class RoadrunnerServer {
     }
 
     public static void main(String[] args) {
-
 	CommandLineParser parser = new BasicParser();
 	try {
 	    CommandLine cmd = parser.parse(options, args);
-
-	    try {
-		String directory = cmd.getOptionValue("d");
-		int port = Integer.parseInt(cmd.getOptionValue("p", "8080"));
-
-		new RoadrunnerServer(port, directory).run();
-	    } catch (Exception exp) {
-		exp.printStackTrace();
-	    }
+	    String directory = cmd.getOptionValue("d");
+	    int port = Integer.parseInt(cmd.getOptionValue("p", "8080"));
+	    new RoadrunnerServer(port, directory).run();
 	} catch (ParseException e) {
 	    System.out.println(e.getLocalizedMessage());
 	    HelpFormatter formatter = new HelpFormatter();
 	    formatter.printHelp("roadrunner", options);
+	} catch (Exception exp) {
+	    exp.printStackTrace();
 	}
     }
 }
