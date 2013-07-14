@@ -41,12 +41,14 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  * <li>Firefox 11+ (RFC 6455 aka draft-ietf-hybi-thewebsocketprotocol-17)
  * </ul>
  */
-public class WebSocketServer {
+public class RoadrunnerServer {
 
     private final int port;
+    private String journalDir;
 
-    public WebSocketServer(int port) {
+    public RoadrunnerServer(int port, String journalDir) {
 	this.port = port;
+	this.journalDir = journalDir;
     }
 
     public void run() throws Exception {
@@ -74,6 +76,6 @@ public class WebSocketServer {
 	} else {
 	    port = 8080;
 	}
-	new WebSocketServer(port).run();
+	new RoadrunnerServer(port, "").run();
     }
 }

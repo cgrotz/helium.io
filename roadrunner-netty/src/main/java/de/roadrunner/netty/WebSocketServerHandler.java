@@ -22,10 +22,8 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -45,6 +43,8 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Set;
 
 import org.json.JSONObject;
@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
@@ -117,23 +118,9 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 	    return;
 	}
 
-	// Send the demo page and favicon.ico
-	if ("/".equals(req.getUri())
-		&& !"websocket".equals(((io.netty.handler.codec.http.DefaultFullHttpRequest) req).headers()
-			.get("Upgrade"))) {
-	    ByteBuf content = WebSocketServerIndexPage.getContent(getWebSocketLocation(req));
-	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK,
-		    content);
-
-	    res.headers().set(CONTENT_TYPE, "text/html; charset=UTF-8");
-	    setContentLength(res, content.readableBytes());
-
-	    sendHttpResponse(ctx, req, res);
-	    return;
-	}
-	if ("/favicon.ico".equals(req.getUri())) {
-	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1,
-		    NOT_FOUND);
+	if ("/roadrunner.js".equals(req.getUri())) {
+	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
+	    sendFile(res, "roadrunner.js");
 	    sendHttpResponse(ctx, req, res);
 	    return;
 	}
@@ -170,6 +157,17 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 		throw new RuntimeException(exp);
 	    }
 	}
+    }
+
+    private void sendFile(FullHttpResponse res, String fileName)
+	    throws IOException {
+	URL resource = Thread.currentThread()
+		.getContextClassLoader()
+		.getResource(fileName);
+	res.content().writeBytes(Resources.toByteArray(resource));
+	res.headers()
+		.set(CONTENT_TYPE, "application/javascript; charset=UTF-8");
+	setContentLength(res, res.content().readableBytes());
     }
 
     private void handleWebSocketFrame(ChannelHandlerContext ctx,

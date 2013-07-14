@@ -53,8 +53,8 @@ public class Roadrunner {
 	disruptor = new Disruptor<RoadrunnerEvent>(
 		RoadrunnerEvent.EVENT_FACTORY, RING_SIZE, executor);
 
-	authorizationProcessor = new AuthorizationProcessor(
-		authorization);
+	authorizationProcessor = new AuthorizationProcessor(authorization,
+		persistence);
 	eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
 	persistenceProcessor = new PersistenceProcessor(persistence);
 	distributionProcessor = new DistributionProcessor(persistence,

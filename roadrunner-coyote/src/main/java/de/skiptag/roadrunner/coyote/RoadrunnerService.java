@@ -53,8 +53,9 @@ public class RoadrunnerService implements DataListener {
     }
 
     @Override
-    public void child_added(String name, Path path, String parent, Object node,
-	    String prevChildName, boolean hasChildren, long numChildren) {
+    public void child_added(String name, String path, String parent,
+	    Object node, String prevChildName, boolean hasChildren,
+	    long numChildren) {
 	try {
 	    if (path.toString().startsWith(this.path)) {
 		RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
@@ -78,7 +79,7 @@ public class RoadrunnerService implements DataListener {
     }
 
     @Override
-    public void child_changed(String name, Path path, String parent,
+    public void child_changed(String name, String path, String parent,
 	    Object node, String prevChildName, boolean hasChildren,
 	    long numChildren) {
 	try {
@@ -126,7 +127,7 @@ public class RoadrunnerService implements DataListener {
     }
 
     @Override
-    public void child_removed(Path path, Object payload) {
+    public void child_removed(String path, Object payload) {
 	try {
 	    if (path.toString().startsWith(this.path)) {
 		RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
