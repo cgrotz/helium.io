@@ -44,8 +44,9 @@ public class RoadrunnerDisruptor {
     private Optional<Journal> snapshotJournal = Optional.absent();
 
     @SuppressWarnings("unchecked")
-    public RoadrunnerDisruptor(File journalDirectory, Optional<File> snapshotDirectory,
-	    Persistence persistence, Authorization authorization,
+    public RoadrunnerDisruptor(File journalDirectory,
+	    Optional<File> snapshotDirectory, Persistence persistence,
+	    Authorization authorization,
 	    RoadrunnerEventHandler roadrunnerEventHandler,
 	    boolean withDistribution) throws IOException, JSONException {
 
@@ -58,7 +59,7 @@ public class RoadrunnerDisruptor {
 	eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
 	persistenceProcessor = new PersistenceProcessor(persistence);
 	distributionProcessor = new DistributionProcessor(persistence,
-		roadrunnerEventHandler);
+		authorization, roadrunnerEventHandler);
 
 	EventHandlerGroup<RoadrunnerEvent> ehg = disruptor.handleEventsWith(authorizationProcessor)
 		.then(eventSourceProcessor)

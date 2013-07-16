@@ -13,50 +13,47 @@ import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
 
 public class RuleBasedAuthorization implements Authorization {
 
-	public class AuthenticationWrapper {
-		public AuthenticationWrapper(JSONObject auth) throws JSONException {
-			this.id = auth.getString("id");
-		}
-
-		public String id;
-
+    public class AuthenticationWrapper {
+	public AuthenticationWrapper(JSONObject auth) throws JSONException {
+	    if (auth != null && auth.has("id")) {
+		this.id = auth.getString("id");
+	    }
 	}
 
-	private RuleBasedAuthorizator rule;
-	ScriptEngineManager mgr = new ScriptEngineManager();
-	ScriptEngine engine = mgr.getEngineByName("JavaScript");
+	public String id;
+    }
 
-	public RuleBasedAuthorization(JSONObject rule) throws JSONException {
-		this.rule = new RuleBasedAuthorizator(rule);
+    private RuleBasedAuthorizator rule;
+    ScriptEngineManager mgr = new ScriptEngineManager();
+    ScriptEngine engine = mgr.getEngineByName("JavaScript");
+
+    public RuleBasedAuthorization(JSONObject rule) throws JSONException {
+	this.rule = new RuleBasedAuthorizator(rule);
+    }
+
+    @Override
+    public void authorize(RoadrunnerOperation op, JSONObject auth,
+	    RulesDataSnapshot root, String path, Object data)
+	    throws RoadrunnerNotAuthorizedException {
+	if (!isAuthorized(op, auth, root, path, data)) {
+	    throw new RoadrunnerNotAuthorizedException(op, path);
 	}
+    }
 
-	@Override
-	public void shutdown() {
+    @Override
+    public boolean isAuthorized(RoadrunnerOperation op, JSONObject auth,
+	    RulesDataSnapshot root, String path, Object data) {
+	String expression = rule.getExpressionForPathAndOperation(path, op);
+
+	try {
+	    engine.put("auth", new AuthenticationWrapper(auth));
+	    Boolean result = (Boolean) engine.eval(expression);
+	    return result.booleanValue();
+	} catch (ScriptException ex) {
+	    throw new RuntimeException(ex);
+	} catch (JSONException e) {
+	    throw new RuntimeException(e);
 	}
-
-	@Override
-	public void authorize(RoadrunnerOperation op, JSONObject auth,
-			RulesDataSnapshot root, String path, RulesDataSnapshot data)
-			throws RoadrunnerNotAuthorizedException {
-		if (!isAuthorized(op, auth, root, path, data)) {
-			throw new RoadrunnerNotAuthorizedException(op, path);
-		}
-	}
-
-	@Override
-	public boolean isAuthorized(RoadrunnerOperation op, JSONObject auth,
-			RulesDataSnapshot root, String path, RulesDataSnapshot data) {
-		String expression = rule.getExpressionForPathAndOperation(path, op);
-
-		try {
-			engine.put("auth", new AuthenticationWrapper(auth));
-			Boolean result = (Boolean) engine.eval(expression);
-			return result.booleanValue();
-		} catch (ScriptException ex) {
-			throw new RuntimeException(ex);
-		} catch (JSONException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    }
 
 }

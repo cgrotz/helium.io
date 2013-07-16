@@ -1,6 +1,5 @@
 package de.skiptag.roadrunner.api;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
 import de.skiptag.roadrunner.authorization.Authorization;
@@ -38,10 +37,6 @@ public class RoadrunnerSnapshot {
     public RoadrunnerService child(String childPath) {
 	return new RoadrunnerService(authorization, persistence, contextName,
 		(path.endsWith("/") ? path : path + "/") + childPath);
-    }
-
-    public void forEach(Function childAction) {
-
     }
 
     public int getPriority() {

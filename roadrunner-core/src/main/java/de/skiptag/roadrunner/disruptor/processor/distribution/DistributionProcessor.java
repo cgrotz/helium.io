@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.lmax.disruptor.EventHandler;
 
+import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
@@ -18,7 +19,7 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
     private Persistence persistence;
 
     public DistributionProcessor(Persistence persistence,
-	    RoadrunnerEventHandler handler) {
+	    Authorization authorization, RoadrunnerEventHandler handler) {
 	this.handler = handler;
 	this.persistence = persistence;
     }

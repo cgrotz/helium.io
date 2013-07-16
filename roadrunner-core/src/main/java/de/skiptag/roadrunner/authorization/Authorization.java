@@ -6,12 +6,10 @@ import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 
 public interface Authorization {
 
-    void shutdown();
-
-    void authorize(RoadrunnerOperation remove, JSONObject auth,
-	    RulesDataSnapshot root, String path, RulesDataSnapshot objectForPath)
+    void authorize(RoadrunnerOperation op, JSONObject auth,
+	    RulesDataSnapshot root, String path, Object object)
 	    throws RoadrunnerNotAuthorizedException;
 
     boolean isAuthorized(RoadrunnerOperation read, JSONObject auth,
-	    RulesDataSnapshot root, String path, RulesDataSnapshot objectForPath);
+	    RulesDataSnapshot root, String path, Object object);
 }

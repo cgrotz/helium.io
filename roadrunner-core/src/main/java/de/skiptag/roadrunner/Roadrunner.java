@@ -36,21 +36,24 @@ public class Roadrunner implements RoadrunnerSender {
 
     public Roadrunner(String journalDirectory, JSONObject rule) {
 	try {
-	    roadrunnerEventHandler = new RoadrunnerEventHandler(this);
+	    this.roadrunnerEventHandler = new RoadrunnerEventHandler(this);
 	    this.authorization = new RuleBasedAuthorization(rule);
 	    this.persistence = new InMemoryPersistence();
 
 	    Optional<File> snapshotDirectory = Optional.absent();
-	    disruptor = new RoadrunnerDisruptor(new File(journalDirectory),
-		    snapshotDirectory, persistence, authorization,
-		    roadrunnerEventHandler, true);
+	    this.disruptor = new RoadrunnerDisruptor(
+		    new File(journalDirectory), snapshotDirectory, persistence,
+		    authorization, roadrunnerEventHandler, true);
 	} catch (Exception exp) {
 	    throw new RuntimeException(exp);
 	}
     }
 
-    public Roadrunner(String journalDirectory) {
-	this(journalDirectory, new JSONObject());
+    public Roadrunner(String journalDirectory) throws JSONException {
+	this(
+		journalDirectory,
+		new JSONObject(
+			"{\".write\": \"true\",\".read\": \"true\",\".remove\":\"true\"}"));
     }
 
     public void addSender(RoadrunnerSender webSocketServerHandler) {
@@ -74,9 +77,6 @@ public class Roadrunner implements RoadrunnerSender {
 		persistence.sync(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
 	    } else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACHED_LISTENER) {
 		roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
-	    } else if (roadrunnerEvent.getType() == RoadrunnerEventType.QUERY) {
-		// String query = roadrunnerEvent.getString("query");
-		// queryAction.handle(query);
 	    } else {
 		disruptor.handleEvent(roadrunnerEvent);
 	    }

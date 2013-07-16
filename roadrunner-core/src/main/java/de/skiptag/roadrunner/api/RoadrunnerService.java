@@ -12,7 +12,6 @@ import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.messaging.DataListener;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
-import de.skiptag.roadrunner.persistence.Persistence.QueryCallback;
 
 public class RoadrunnerService implements DataListener {
 
@@ -167,22 +166,6 @@ public class RoadrunnerService implements DataListener {
 	} catch (Exception exp) {
 	    throw new RuntimeException(exp);
 	}
-    }
-
-    public void query(String expression, final SnapshotHandler handler) {
-	persistence.query(expression, new QueryCallback() {
-	    @Override
-	    public void change(Path path, JSONObject value, Path parentPath,
-		    long numChildren, String name, boolean hasChildren,
-		    int priority) {
-		RoadrunnerSnapshot snap = new RoadrunnerSnapshot(authorization,
-			persistence, name, path.toString(), value,
-			parentPath.toString(), numChildren, name, hasChildren,
-			priority);
-		handler.handle(snap);
-	    }
-
-	});
     }
 
     public RoadrunnerService root() {

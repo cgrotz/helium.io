@@ -22,7 +22,7 @@ public class InMemoryPersistence implements Persistence {
 
     @Override
     public Object get(Path path) {
-	if (model.getObjectForPath(path) == null) {
+	if (path == null || model.getObjectForPath(path) == null) {
 	    return model;
 	} else {
 	    return model.getObjectForPath(path);
@@ -37,11 +37,6 @@ public class InMemoryPersistence implements Persistence {
     @Override
     public String getParent(Path path) {
 	return path.getParent().toString();
-    }
-
-    @Override
-    public void query(String expression, QueryCallback queryCallback) {
-
     }
 
     @Override

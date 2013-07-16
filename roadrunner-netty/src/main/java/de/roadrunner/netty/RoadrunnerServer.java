@@ -29,6 +29,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.json.JSONException;
 
 import de.skiptag.roadrunner.Roadrunner;
 
@@ -69,7 +70,7 @@ public class RoadrunnerServer {
 	options.addOption("p", true, "Port for the webserver");
     }
 
-    public RoadrunnerServer(int port, String journalDir) {
+    public RoadrunnerServer(int port, String journalDir) throws JSONException {
 	this.port = port;
 	this.roadrunner = new Roadrunner(journalDir);
     }
