@@ -19,9 +19,7 @@ public class RoadrunnerService implements DataListener {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(RoadrunnerService.class);
 
     public interface SnapshotHandler {
-
 	void handle(RoadrunnerSnapshot roadrunnerSnapshot);
-
     }
 
     private Authorization authorization;
