@@ -51,7 +51,6 @@ import org.json.JSONException;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
 
 import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
@@ -158,7 +157,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 	URL resource = Thread.currentThread()
 		.getContextClassLoader()
 		.getResource(fileName);
-	res.content().writeBytes(Resources.toByteArray(resource));
+	res.content()
+		.writeBytes(com.google.common.io.Resources.toByteArray(resource));
 	res.headers()
 		.set(CONTENT_TYPE, "application/javascript; charset=UTF-8");
 	setContentLength(res, res.content().readableBytes());
