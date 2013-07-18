@@ -45,7 +45,7 @@ public class Roadrunner implements RoadrunnerSender {
 	Optional<File> snapshotDirectory = Optional.absent();
 	this.disruptor = new RoadrunnerDisruptor(new File(journalDirectory),
 		snapshotDirectory, persistence, authorization,
-		roadrunnerEventHandler, true);
+		roadrunnerEventHandler);
     }
 
     public Roadrunner(String journalDirectory) throws IOException {

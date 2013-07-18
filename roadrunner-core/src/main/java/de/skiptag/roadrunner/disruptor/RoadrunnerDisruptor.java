@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import journal.io.api.ClosedJournalException;
+import journal.io.api.CompactedDataFileException;
 import journal.io.api.Journal;
 import journal.io.api.Journal.ReadType;
 import journal.io.api.Journal.WriteType;
@@ -18,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.EventHandlerGroup;
 
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
@@ -42,13 +43,51 @@ public class RoadrunnerDisruptor {
 
     private Optional<Journal> snapshotJournal = Optional.absent();
 
-    @SuppressWarnings("unchecked")
     public RoadrunnerDisruptor(File journalDirectory,
 	    Optional<File> snapshotDirectory, Persistence persistence,
 	    Authorization authorization,
-	    RoadrunnerEventHandler roadrunnerEventHandler,
-	    boolean withDistribution) throws IOException {
+	    RoadrunnerEventHandler roadrunnerEventHandler) throws IOException {
 
+	this.persistence = persistence;
+	initDisruptor(journalDirectory, persistence, authorization, roadrunnerEventHandler);
+	if (snapshotDirectory.isPresent()) {
+	    restoreFromSnapshot(snapshotDirectory.get(), persistence);
+	} else {
+	    restoreFromJournal();
+	}
+    }
+
+    private void restoreFromJournal() throws ClosedJournalException,
+	    CompactedDataFileException, IOException {
+	eventSourceProcessor.restore();
+    }
+
+    private void restoreFromSnapshot(File snapshotDirectory,
+	    Persistence persistence) throws IOException,
+	    ClosedJournalException, CompactedDataFileException {
+
+	Journal journal = new Journal();
+	journal.setDirectory(snapshotDirectory);
+	snapshotJournal = Optional.fromNullable(journal);
+	journal.open();
+	Iterator<Location> iterator = journal.undo().iterator();
+	if (iterator.hasNext()) {
+	    Location lastEntryLocation = iterator.next();
+	    byte[] lastEntry = journal.read(lastEntryLocation, ReadType.SYNC);
+	    JSONObject snapshot = new JSONObject(new String(lastEntry));
+	    int pointer = snapshot.getInt("currentEventLogPointer");
+	    int dataFileId = snapshot.getInt("currentEventLogDataFileId");
+	    JSONObject payload = snapshot.getJSONObject("payload");
+	    persistence.restoreSnapshot(payload);
+	    eventSourceProcessor.setCurrentLocation(new Location(dataFileId,
+		    pointer));
+	}
+    }
+
+    @SuppressWarnings("unchecked")
+    private void initDisruptor(File journalDirectory, Persistence persistence,
+	    Authorization authorization,
+	    RoadrunnerEventHandler roadrunnerEventHandler) throws IOException {
 	ExecutorService executor = Executors.newCachedThreadPool();
 	disruptor = new Disruptor<RoadrunnerEvent>(
 		RoadrunnerEvent.EVENT_FACTORY, RING_SIZE, executor);
@@ -60,37 +99,12 @@ public class RoadrunnerDisruptor {
 	distributionProcessor = new DistributionProcessor(persistence,
 		authorization, roadrunnerEventHandler);
 
-	EventHandlerGroup<RoadrunnerEvent> ehg = disruptor.handleEventsWith(authorizationProcessor)
+	disruptor.handleEventsWith(authorizationProcessor)
 		.then(eventSourceProcessor)
-		.then(persistenceProcessor);
-	if (withDistribution) {
-	    ehg.then(distributionProcessor);
-	}
+		.then(persistenceProcessor)
+		.then(distributionProcessor);
+
 	disruptor.start();
-
-	if (snapshotDirectory.isPresent()) {
-	    Journal journal = new Journal();
-	    journal.setDirectory(snapshotDirectory.get());
-	    snapshotJournal = Optional.fromNullable(journal);
-	    journal.open();
-	    Iterator<Location> iterator = journal.undo().iterator();
-	    if (iterator.hasNext()) {
-		Location lastEntryLocation = iterator.next();
-		byte[] lastEntry = journal.read(lastEntryLocation, ReadType.SYNC);
-		JSONObject snapshot = new JSONObject(new String(lastEntry));
-		int pointer = snapshot.getInt("currentEventLogPointer");
-		int dataFileId = snapshot.getInt("currentEventLogDataFileId");
-		JSONObject payload = snapshot.getJSONObject("payload");
-		persistence.restoreSnapshot(payload);
-		eventSourceProcessor.setCurrentLocation(new Location(
-			dataFileId, pointer));
-	    }
-	}
-
-	eventSourceProcessor.restore();
-
-	this.persistence = persistence;
-
     }
 
     public void handleEvent(final RoadrunnerEvent roadrunnerEvent) {
