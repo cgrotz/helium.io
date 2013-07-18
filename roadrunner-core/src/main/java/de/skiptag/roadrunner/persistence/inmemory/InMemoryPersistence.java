@@ -56,7 +56,7 @@ public class InMemoryPersistence implements Persistence {
 	try {
 	    Node node = model.getNodeForPath(path);
 
-	    Iterator<?> itr = node.sortedKeys();
+	    Iterator<?> itr = node.keys();
 	    while (itr.hasNext()) {
 		Object childNodeKey = itr.next();
 		Object object = node.get(childNodeKey.toString());

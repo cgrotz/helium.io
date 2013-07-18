@@ -54,7 +54,7 @@ public class Node extends JSONObject {
     }
 
     public void populate(JSONObject payload) throws JSONException {
-	Iterator<?> itr = payload.sortedKeys();
+	Iterator<?> itr = payload.keys();
 	while (itr.hasNext()) {
 	    Object key = (Object) itr.next();
 	    put((String) key, payload.get((String) key));
