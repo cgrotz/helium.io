@@ -19,7 +19,7 @@ public interface Persistence {
 
     void sync(Path path, RoadrunnerEventHandler handler);
 
-    void update(Path path, Object payload);
+    boolean update(Path path, Object payload);
 
     JSONObject dumpSnapshot();
 

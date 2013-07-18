@@ -42,8 +42,13 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 		    .getLastElement(), node, null, false, 0);
 	} else if (type == RoadrunnerEventType.SET) {
 	    if (event.has("payload") && !event.isNull("payload")) {
-		handler.child_changed(nodePath.getLastElement(), path, nodePath.getParent()
-			.getLastElement(), node, null, false, 0);
+		if (event.created()) {
+		    handler.child_added(nodePath.getLastElement(), path, nodePath.getParent()
+			    .getLastElement(), node, null, false, 0);
+		} else {
+		    handler.child_changed(nodePath.getLastElement(), path, nodePath.getParent()
+			    .getLastElement(), node, null, false, 0);
+		}
 	    } else {
 		handler.child_removed(path, event.getOldValue());
 	    }

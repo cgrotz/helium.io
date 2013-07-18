@@ -176,7 +176,7 @@ public class RoadrunnerService implements DataListener {
 
     public RoadrunnerService set(Object data) {
 	try {
-	    persistence.update(new Path(path), data);
+	    boolean created = persistence.update(new Path(path), data);
 	    return this;
 	} catch (Exception exp) {
 	    throw new RuntimeException(exp);

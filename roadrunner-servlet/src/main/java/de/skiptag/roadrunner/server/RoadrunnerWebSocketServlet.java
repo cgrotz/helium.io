@@ -61,7 +61,11 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
     public void init(ServletConfig config) throws ServletException {
 	super.init(config);
 	String journalDirectory = Preconditions.checkNotNull(config.getInitParameter("journalDirectory"), "JournalDirectory must be configured in web.xml");
-	this.roadrunner = new Roadrunner(journalDirectory);
+	try {
+	    this.roadrunner = new Roadrunner(journalDirectory);
+	} catch (JSONException e) {
+	    throw new RuntimeException(e);
+	}
     }
 
     @Override

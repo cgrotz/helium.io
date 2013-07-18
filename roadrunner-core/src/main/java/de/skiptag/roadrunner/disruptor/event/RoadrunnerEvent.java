@@ -17,6 +17,7 @@ public class RoadrunnerEvent extends JSONObject {
 	    return new RoadrunnerEvent();
 	}
     };
+    private boolean created;
 
     public RoadrunnerEvent() {
     }
@@ -133,5 +134,13 @@ public class RoadrunnerEvent extends JSONObject {
 
     public void setCreationDate(Date creationDate) throws JSONException {
 	put("creationDate", creationDate.getTime());
+    }
+
+    public boolean created() {
+	return created;
+    }
+
+    public void created(boolean created) {
+	this.created = created;
     }
 }

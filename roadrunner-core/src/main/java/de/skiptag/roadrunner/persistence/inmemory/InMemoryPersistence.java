@@ -75,9 +75,13 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void update(Path path, Object payload) {
+    public boolean update(Path path, Object payload) {
 	try {
 	    Node node;
+	    boolean created = false;
+	    if (!model.pathExists(path)) {
+		created = true;
+	    }
 	    if (payload instanceof JSONObject) {
 		node = model.getNodeForPath(path);
 		node.populate((JSONObject) payload);
@@ -86,10 +90,12 @@ public class InMemoryPersistence implements Persistence {
 		node.put(path.getLastElement(), payload);
 	    }
 	    logger.trace("Model changed: " + model);
+	    return created;
 	} catch (JSONException e) {
 
 	    logger.error("", e);
 	}
+	return false;
     }
 
     @Override

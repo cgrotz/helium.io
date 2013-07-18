@@ -23,7 +23,8 @@ public class SetAction {
 	    if (obj instanceof JSONObject) {
 		payload = (JSONObject) obj;
 		if (payload instanceof JSONObject) {
-		    persistence.update(path, payload);
+		    boolean created = persistence.update(path, payload);
+		    message.created(created);
 		}
 	    } else if (obj == null || obj == JSONObject.NULL) {
 		message.put("oldValue", persistence.get(path));

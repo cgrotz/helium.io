@@ -580,7 +580,7 @@ function Roadrunner(path) {
 		return new Roadrunner(path + "/" + name);
 	};
 
-	this.query = function(query, callback) {
+	this.limit = function(limit) {
 		var queryName = UUID.generate();
 		var message = {
 			type : 'query',

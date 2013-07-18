@@ -80,4 +80,20 @@ public class Node extends JSONObject {
     public boolean hasChildren() throws JSONException {
 	return !getChildren().isEmpty();
     }
+
+    public boolean pathExists(Path path) throws JSONException {
+	if (has(path.getFirstElement())) {
+	    Object object = get(path.getFirstElement());
+	    if (object instanceof Node) {
+		Node node = (Node) object;
+		return node.pathExists(path.getSubpath(1));
+	    } else if (path.isSimple()) {
+		return true;
+	    } else {
+		return false;
+	    }
+	} else {
+	    return false;
+	}
+    }
 }
