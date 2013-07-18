@@ -21,6 +21,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+import java.io.IOException;
+
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -29,7 +31,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.json.JSONException;
 
 import de.skiptag.roadrunner.Roadrunner;
 
@@ -70,12 +71,12 @@ public class RoadrunnerServer {
 	options.addOption("p", true, "Port for the webserver");
     }
 
-    public RoadrunnerServer(int port, String journalDir) throws JSONException {
+    public RoadrunnerServer(int port, String journalDir) throws IOException {
 	this.port = port;
 	this.roadrunner = new Roadrunner(journalDir);
     }
 
-    public void run() throws Exception {
+    public void run() throws InterruptedException {
 	EventLoopGroup bossGroup = new NioEventLoopGroup();
 	EventLoopGroup workerGroup = new NioEventLoopGroup();
 	try {

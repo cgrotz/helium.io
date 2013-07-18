@@ -1,28 +1,15 @@
 package de.skiptag.roadrunner.persistence;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 
-public interface Persistence {
+public interface Persistence extends SnapshotProcessor {
 
     Object get(Path path);
 
-    String getName(Path path);
-
-    String getParent(Path path);
-
     void remove(Path path);
 
-    void shutdown();
+    boolean applyNewValue(Path path, Object payload);
 
-    void sync(Path path, RoadrunnerEventHandler handler);
-
-    boolean update(Path path, Object payload);
-
-    JSONObject dumpSnapshot();
-
-    void restoreSnapshot(JSONObject payload) throws JSONException;
+    void syncPath(Path path, RoadrunnerEventHandler handler);
 
 }

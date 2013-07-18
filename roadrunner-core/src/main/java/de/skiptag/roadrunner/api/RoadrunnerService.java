@@ -49,22 +49,18 @@ public class RoadrunnerService implements DataListener {
     public void child_added(String name, String path, String parent,
 	    Object node, String prevChildName, boolean hasChildren,
 	    long numChildren) {
-	try {
-	    RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
-		    authorization, persistence, contextName, path, node,
-		    parent, numChildren, prevChildName, hasChildren, 0);
+	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
+		authorization, persistence, contextName, path, node, parent,
+		numChildren, prevChildName, hasChildren, 0);
 
-	    if (on.containsKey("child_added")) {
-		for (SnapshotHandler handler : on.get("child_added"))
-		    handler.handle(roadrunnerSnapshot);
-	    }
-	    if (once.containsKey("child_added")) {
-		for (SnapshotHandler handler : once.get("child_added"))
-		    handler.handle(roadrunnerSnapshot);
-		once.removeAll("child_added");
-	    }
-	} catch (Exception exp) {
-	    logger.error("", exp);
+	if (on.containsKey("child_added")) {
+	    for (SnapshotHandler handler : on.get("child_added"))
+		handler.handle(roadrunnerSnapshot);
+	}
+	if (once.containsKey("child_added")) {
+	    for (SnapshotHandler handler : once.get("child_added"))
+		handler.handle(roadrunnerSnapshot);
+	    once.removeAll("child_added");
 	}
     }
 
@@ -72,68 +68,57 @@ public class RoadrunnerService implements DataListener {
     public void child_changed(String name, String path, String parent,
 	    Object node, String prevChildName, boolean hasChildren,
 	    long numChildren) {
-	try {
-	    RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
-		    authorization, persistence, contextName, path, node,
-		    parent, numChildren, prevChildName, hasChildren, 0);
-	    if (on.containsKey("child_changed")) {
-		for (SnapshotHandler handler : on.get("child_changed"))
-		    handler.handle(roadrunnerSnapshot);
-	    }
-	    if (once.containsKey("child_changed")) {
-		for (SnapshotHandler handler : once.get("child_changed"))
-		    handler.handle(roadrunnerSnapshot);
-		once.removeAll("child_changed");
-	    }
-	} catch (Exception exp) {
-	    logger.error("", exp);
+	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
+		authorization, persistence, contextName, path, node, parent,
+		numChildren, prevChildName, hasChildren, 0);
+	if (on.containsKey("child_changed")) {
+	    for (SnapshotHandler handler : on.get("child_changed"))
+		handler.handle(roadrunnerSnapshot);
+	}
+	if (once.containsKey("child_changed")) {
+	    for (SnapshotHandler handler : once.get("child_changed"))
+		handler.handle(roadrunnerSnapshot);
+	    once.removeAll("child_changed");
 	}
     }
 
     @Override
     public void child_moved(JSONObject childSnapshot, String prevChildName,
 	    boolean hasChildren, long numChildren) {
-	try {
-	    RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
-		    authorization, persistence, contextName, path,
-		    childSnapshot, null, numChildren, prevChildName,
-		    hasChildren, 0);
-	    if (on.containsKey("child_moved")) {
-		for (SnapshotHandler handler : on.get("child_moved"))
-		    handler.handle(roadrunnerSnapshot);
-	    }
-	    if (once.containsKey("child_moved")) {
-		for (SnapshotHandler handler : once.get("child_moved"))
-		    handler.handle(roadrunnerSnapshot);
-		once.removeAll("child_moved");
-	    }
-	} catch (Exception exp) {
-	    logger.error("", exp);
+
+	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
+		authorization, persistence, contextName, path, childSnapshot,
+		null, numChildren, prevChildName, hasChildren, 0);
+	if (on.containsKey("child_moved")) {
+	    for (SnapshotHandler handler : on.get("child_moved"))
+		handler.handle(roadrunnerSnapshot);
+	}
+	if (once.containsKey("child_moved")) {
+	    for (SnapshotHandler handler : once.get("child_moved"))
+		handler.handle(roadrunnerSnapshot);
+	    once.removeAll("child_moved");
 	}
     }
 
     @Override
     public void child_removed(String path, Object payload) {
-	try {
-	    RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
-		    authorization, persistence, contextName, path, payload,
-		    null, 0, null, false, 0);
-	    if (on.containsKey("child_removed")) {
-		for (SnapshotHandler handler : on.get("child_removed"))
-		    handler.handle(roadrunnerSnapshot);
-	    }
-	    if (once.containsKey("child_removed")) {
-		for (SnapshotHandler handler : once.get("child_removed"))
-		    handler.handle(roadrunnerSnapshot);
-		once.removeAll("child_removed");
-	    }
-	} catch (Exception exp) {
-	    logger.error("", exp);
+
+	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
+		authorization, persistence, contextName, path, payload, null,
+		0, null, false, 0);
+	if (on.containsKey("child_removed")) {
+	    for (SnapshotHandler handler : on.get("child_removed"))
+		handler.handle(roadrunnerSnapshot);
+	}
+	if (once.containsKey("child_removed")) {
+	    for (SnapshotHandler handler : once.get("child_removed"))
+		handler.handle(roadrunnerSnapshot);
+	    once.removeAll("child_removed");
 	}
     }
 
     public String name() {
-	return persistence.getName(new Path(path));
+	return new Path(path).getLastElement();
     }
 
     public void off(String eventType, SnapshotHandler handler) {
@@ -151,21 +136,18 @@ public class RoadrunnerService implements DataListener {
 
     public RoadrunnerService parent() {
 	return new RoadrunnerService(authorization, persistence, contextName,
-		persistence.getParent(new Path(path)));
+		new Path(path).getParent().toString());
     }
 
     public RoadrunnerService push(JSONObject data) {
-	try {
-	    String name = UUID.randomUUID().toString().replaceAll("-", "");
-	    persistence.update(new Path(
-		    (path.endsWith("/") ? path : path + "/") + name), data);
 
-	    return new RoadrunnerService(authorization, persistence,
-		    contextName, (path.endsWith("/") ? path : path + "/")
-			    + name);
-	} catch (Exception exp) {
-	    throw new RuntimeException(exp);
-	}
+	String name = UUID.randomUUID().toString().replaceAll("-", "");
+	persistence.applyNewValue(new Path((path.endsWith("/") ? path : path
+		+ "/")
+		+ name), data);
+
+	return new RoadrunnerService(authorization, persistence, contextName,
+		(path.endsWith("/") ? path : path + "/") + name);
     }
 
     public RoadrunnerService root() {
@@ -175,20 +157,12 @@ public class RoadrunnerService implements DataListener {
     }
 
     public RoadrunnerService set(Object data) {
-	try {
-	    boolean created = persistence.update(new Path(path), data);
-	    return this;
-	} catch (Exception exp) {
-	    throw new RuntimeException(exp);
-	}
+	boolean created = persistence.applyNewValue(new Path(path), data);
+	return this;
     }
 
     public RoadrunnerService update(Object data) {
-	try {
-	    persistence.update(new Path(path), data);
-	    return this;
-	} catch (Exception exp) {
-	    throw new RuntimeException(exp);
-	}
+	persistence.applyNewValue(new Path(path), data);
+	return this;
     }
 }

@@ -1,15 +1,13 @@
 package de.skiptag.roadrunner.persistence.inmemory;
 
-import org.json.JSONException;
-
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 
-public class DataSnapshot implements RulesDataSnapshot {
+public class InMemoryDataSnapshot implements RulesDataSnapshot {
 
     Object val;
     private Node node;
 
-    public DataSnapshot(Object value) {
+    public InMemoryDataSnapshot(Object value) {
 	val = value;
 	if (value instanceof Node) {
 	    this.node = (Node) value;
@@ -23,11 +21,7 @@ public class DataSnapshot implements RulesDataSnapshot {
 
     @Override
     public RulesDataSnapshot child(String childPath) {
-	try {
-	    return new DataSnapshot(node.get(childPath));
-	} catch (JSONException e) {
-	    return null;
-	}
+	return new InMemoryDataSnapshot(node.get(childPath));
     }
 
     @Override

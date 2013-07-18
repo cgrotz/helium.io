@@ -10,7 +10,6 @@ import journal.io.api.Journal.ReadType;
 import journal.io.api.Journal.WriteType;
 import journal.io.api.Location;
 
-import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,8 +28,7 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
 
     private Optional<Location> currentLocation = Optional.absent();
 
-    public EventSourceProcessor(File journal_dir,
-	    RoadrunnerDisruptor roadrunner)
+    public EventSourceProcessor(File journal_dir, RoadrunnerDisruptor roadrunner)
 	    throws IOException {
 	journal.setDirectory(journal_dir);
 	journal.open();
@@ -39,7 +37,7 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
 
     @Override
     public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
-	    throws Exception {
+	    throws ClosedJournalException, IOException {
 	if (!event.isFromHistory()) {
 	    currentLocation = Optional.of(journal.write(event.toString()
 		    .getBytes(), WriteType.SYNC));
@@ -47,7 +45,7 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
     }
 
     public void restore() throws ClosedJournalException,
-	    CompactedDataFileException, IOException, JSONException {
+	    CompactedDataFileException, IOException, RuntimeException {
 	Iterable<Location> redo;
 	if (currentLocation.isPresent()) {
 	    redo = journal.redo(currentLocation.get());
