@@ -108,14 +108,12 @@ public class RoadrunnerDisruptor {
     }
 
     public void handleEvent(final RoadrunnerEvent roadrunnerEvent) {
-
-	logger.trace("handling event: " + roadrunnerEvent + "("
-		+ roadrunnerEvent.length() + ")");
-
 	Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
 	Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
 	RoadrunnerEventTranslator eventTranslator = new RoadrunnerEventTranslator(
 		roadrunnerEvent);
+	logger.trace("handling event: " + roadrunnerEvent + "("
+		+ roadrunnerEvent.length() + ")");
 	disruptor.publishEvent(eventTranslator);
 
     }
