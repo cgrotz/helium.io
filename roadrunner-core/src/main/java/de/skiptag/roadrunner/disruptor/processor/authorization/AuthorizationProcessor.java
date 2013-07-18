@@ -10,7 +10,7 @@ import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
-import de.skiptag.roadrunner.persistence.inmemory.DataSnapshot;
+import de.skiptag.roadrunner.persistence.inmemory.InMemoryDataSnapshot;
 
 public class AuthorizationProcessor implements EventHandler<RoadrunnerEvent> {
 
@@ -28,20 +28,24 @@ public class AuthorizationProcessor implements EventHandler<RoadrunnerEvent> {
     }
 
     @Override
-    public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
-	    throws Exception {
+    public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch) {
 	Path path = new Path(event.extractNodePath());
 	if (event.getType() == RoadrunnerEventType.PUSH) {
-	    DataSnapshot root = new DataSnapshot(persistence.get(null));
-	    DataSnapshot data = new DataSnapshot(event.get("payload"));
+	    InMemoryDataSnapshot root = new InMemoryDataSnapshot(
+		    persistence.get(null));
+	    InMemoryDataSnapshot data = new InMemoryDataSnapshot(
+		    event.get("payload"));
 	    authorization.authorize(RoadrunnerOperation.WRITE, auth, root, path.toString(), data);
 	} else if (event.getType() == RoadrunnerEventType.SET) {
 	    if (event.has("payload")) {
-		DataSnapshot root = new DataSnapshot(persistence.get(null));
-		DataSnapshot data = new DataSnapshot(event.get("payload"));
+		InMemoryDataSnapshot root = new InMemoryDataSnapshot(
+			persistence.get(null));
+		InMemoryDataSnapshot data = new InMemoryDataSnapshot(
+			event.get("payload"));
 		authorization.authorize(RoadrunnerOperation.WRITE, auth, root, path.toString(), data);
 	    } else {
-		DataSnapshot root = new DataSnapshot(persistence.get(null));
+		InMemoryDataSnapshot root = new InMemoryDataSnapshot(
+			persistence.get(null));
 		authorization.authorize(RoadrunnerOperation.REMOVE, auth, root, path.toString(), null);
 	    }
 	}

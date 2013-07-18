@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.common.collect.Sets;
@@ -13,30 +12,26 @@ import de.skiptag.roadrunner.persistence.Path;
 
 public class Node extends JSONObject {
     public Object getObjectForPath(Path path) {
-	try {
-	    Object node;
-	    if (has(path.getFirstElement())) {
-		Object object = get(path.getFirstElement());
-		node = object;
-	    } else {
-		node = new Node();
-		put(path.getFirstElement(), node);
-	    }
+	Object node;
+	if (has(path.getFirstElement())) {
+	    Object object = get(path.getFirstElement());
+	    node = object;
+	} else {
+	    node = new Node();
+	    put(path.getFirstElement(), node);
+	}
 
-	    if (path.isSimple()) {
-		return node;
-	    } else {
-		if (node instanceof Node) {
-		    return ((Node) node).getObjectForPath(path.getSubpath(1));
-		}
+	if (path.isSimple()) {
+	    return node;
+	} else {
+	    if (node instanceof Node) {
+		return ((Node) node).getObjectForPath(path.getSubpath(1));
 	    }
-	} catch (JSONException exp) {
-
 	}
 	return null;
     }
 
-    public Node getNodeForPath(Path path) throws JSONException {
+    public Node getNodeForPath(Path path) {
 	Node node;
 	if (has(path.getFirstElement())) {
 	    Object object = get(path.getFirstElement());
@@ -53,7 +48,7 @@ public class Node extends JSONObject {
 	}
     }
 
-    public void populate(JSONObject payload) throws JSONException {
+    public void populate(JSONObject payload) {
 	Iterator<?> itr = payload.keys();
 	while (itr.hasNext()) {
 	    Object key = (Object) itr.next();
@@ -61,11 +56,11 @@ public class Node extends JSONObject {
 	}
     }
 
-    public void populate(String obj) throws JSONException {
+    public void populate(String obj) {
 	populate(new JSONObject(obj));
     }
 
-    public Collection<Node> getChildren() throws JSONException {
+    public Collection<Node> getChildren() {
 	Set<Node> nodes = Sets.newHashSet();
 	Iterator<?> itr = keys();
 	while (itr.hasNext()) {
@@ -77,11 +72,11 @@ public class Node extends JSONObject {
 	return nodes;
     }
 
-    public boolean hasChildren() throws JSONException {
+    public boolean hasChildren() {
 	return !getChildren().isEmpty();
     }
 
-    public boolean pathExists(Path path) throws JSONException {
+    public boolean pathExists(Path path) {
 	if (has(path.getFirstElement())) {
 	    Object object = get(path.getFirstElement());
 	    if (object instanceof Node) {

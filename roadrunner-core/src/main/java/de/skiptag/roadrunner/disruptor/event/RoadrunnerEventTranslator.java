@@ -1,7 +1,5 @@
 package de.skiptag.roadrunner.disruptor.event;
 
-import org.json.JSONException;
-
 import com.google.common.base.Preconditions;
 import com.lmax.disruptor.EventTranslator;
 
@@ -15,12 +13,8 @@ public class RoadrunnerEventTranslator implements
 
     @Override
     public void translateTo(RoadrunnerEvent event, long sequence) {
-	try {
-	    Preconditions.checkNotNull(roadrunnerEvent.getBasePath());
-	    event.setBasePath(roadrunnerEvent.getBasePath());
-	    event.populate(roadrunnerEvent.toString());
-	} catch (JSONException e) {
-	    e.printStackTrace();
-	}
+	Preconditions.checkNotNull(roadrunnerEvent.getBasePath());
+	event.setBasePath(roadrunnerEvent.getBasePath());
+	event.populate(roadrunnerEvent.toString());
     }
 }

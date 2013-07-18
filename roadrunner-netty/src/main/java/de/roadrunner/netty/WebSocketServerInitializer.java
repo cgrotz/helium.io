@@ -35,7 +35,7 @@ public class WebSocketServerInitializer extends
     }
 
     @Override
-    public void initChannel(SocketChannel ch) throws Exception {
+    public void initChannel(SocketChannel ch) {
 	ChannelPipeline pipeline = ch.pipeline();
 	pipeline.addLast("codec-http", new HttpServerCodec());
 	pipeline.addLast("aggregator", new HttpObjectAggregator(65536));

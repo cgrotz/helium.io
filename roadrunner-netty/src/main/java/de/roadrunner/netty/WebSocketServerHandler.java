@@ -47,9 +47,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
-import org.json.JSONException;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
 import de.skiptag.roadrunner.Roadrunner;
@@ -79,17 +79,20 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, Object msg)
-	    throws Exception {
+    public void messageReceived(ChannelHandlerContext ctx, Object msg) {
 	if (msg instanceof FullHttpRequest) {
-	    handleHttpRequest(ctx, (FullHttpRequest) msg);
+	    try {
+		handleHttpRequest(ctx, (FullHttpRequest) msg);
+	    } catch (IOException e) {
+		logger.error("Error handling HTTP Request", e);
+	    }
 	} else if (msg instanceof WebSocketFrame) {
 	    handleWebSocketFrame(ctx, (WebSocketFrame) msg);
 	}
     }
 
     private void handleHttpRequest(ChannelHandlerContext ctx,
-	    FullHttpRequest req) throws Exception {
+	    FullHttpRequest req) throws IOException {
 	roadrunner.setBasePath(getWebSocketLocation(req));
 	// Handle a bad request.
 	if (!req.getDecoderResult().isSuccess()) {
@@ -131,7 +134,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
     }
 
     private void handleRestCall(ChannelHandlerContext ctx, FullHttpRequest req,
-	    FullHttpResponse res) throws JSONException {
+	    FullHttpResponse res) {
 
 	String basePath = getHttpSocketLocation(req);
 	Path nodePath = new Path(
@@ -144,7 +147,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 	} else if (req.getMethod() == HttpMethod.POST
 		|| req.getMethod() == HttpMethod.PUT) {
 	    String msg = new String(req.content().array());
-	    roadrunner.handleEvent(RoadrunnerEventType.SET, req.getUri(), msg);
+	    roadrunner.handleEvent(RoadrunnerEventType.SET, req.getUri(), Optional.fromNullable(msg));
 	} else if (req.getMethod() == HttpMethod.DELETE) {
 	    roadrunner.handleEvent(RoadrunnerEventType.SET, req.getUri(), null);
 	}
@@ -206,8 +209,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
-	    throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 	cause.printStackTrace();
 	ctx.close();
     }

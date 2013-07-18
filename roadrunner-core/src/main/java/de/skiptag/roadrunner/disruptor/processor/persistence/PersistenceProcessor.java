@@ -19,21 +19,16 @@ public class PersistenceProcessor implements EventHandler<RoadrunnerEvent> {
     }
 
     @Override
-    public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
-	    throws Exception {
-	try {
-	    switch (event.getType()) {
-	    case PUSH:
-		pushAction.handle(event);
-		break;
-	    case SET:
-		setAction.handle(event);
-		break;
-	    default:
-		break;
-	    }
-	} catch (Exception e) {
-	    throw new RuntimeException(event.toString(), e);
+    public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch) {
+	switch (event.getType()) {
+	case PUSH:
+	    pushAction.handle(event);
+	    break;
+	case SET:
+	    setAction.handle(event);
+	    break;
+	default:
+	    break;
 	}
     }
 }

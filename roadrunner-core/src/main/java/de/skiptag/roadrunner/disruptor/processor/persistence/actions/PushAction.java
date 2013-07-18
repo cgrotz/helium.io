@@ -2,7 +2,6 @@ package de.skiptag.roadrunner.disruptor.processor.persistence.actions;
 
 import java.util.UUID;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
@@ -17,7 +16,7 @@ public class PushAction {
 	this.persistence = persistence;
     }
 
-    public void handle(RoadrunnerEvent message) throws JSONException {
+    public void handle(RoadrunnerEvent message) {
 	Path path = new Path(message.extractNodePath());
 	Object payload;
 	if (message.has("payload")) {
@@ -33,9 +32,9 @@ public class PushAction {
 	    nodeName = UUID.randomUUID().toString().replaceAll("-", "");
 	}
 	if (path.isEmtpy()) {
-	    persistence.update(new Path(nodeName), payload);
+	    persistence.applyNewValue(new Path(nodeName), payload);
 	} else {
-	    persistence.update(path.append(nodeName), payload);
+	    persistence.applyNewValue(path.append(nodeName), payload);
 	}
     }
 

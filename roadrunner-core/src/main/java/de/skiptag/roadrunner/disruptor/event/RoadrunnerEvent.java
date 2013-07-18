@@ -2,10 +2,11 @@ package de.skiptag.roadrunner.disruptor.event;
 
 import java.util.Date;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.lmax.disruptor.EventFactory;
 
 public class RoadrunnerEvent extends JSONObject {
@@ -22,21 +23,37 @@ public class RoadrunnerEvent extends JSONObject {
     public RoadrunnerEvent() {
     }
 
-    public RoadrunnerEvent(String string, String basePath) throws JSONException {
+    public RoadrunnerEvent(String string, String basePath) {
 	super(string);
+	put("basePath", basePath);
+	put("creationDate", new Date());
+	Preconditions.checkArgument(has("type"), "No type defined in Event");
+	Preconditions.checkArgument(has("basePath"), "No basePath defined in Event");
+    }
+
+    public RoadrunnerEvent(String string) {
+	super(string);
+    }
+
+    public RoadrunnerEvent(RoadrunnerEventType type, String nodePath,
+	    Optional<?> value, String basePath) {
+	Preconditions.checkArgument(has("type"), "No type defined in Event");
+	Preconditions.checkArgument(has("basePath"), "No basePath defined in Event");
+	Preconditions.checkArgument(has("nodePath"), "No nodePath defined in Event");
+	put("type", type.toString());
+	put("path", nodePath);
+	if (value.isPresent()) {
+	    put("payload", value.get());
+	}
 	put("basePath", basePath);
 	put("creationDate", new Date());
     }
 
-    public RoadrunnerEvent(String string) throws JSONException {
-	super(string);
-    }
-
-    public String getBasePath() throws JSONException {
+    public String getBasePath() {
 	return getString("basePath");
     }
 
-    public void populate(String obj) throws JSONException {
+    public void populate(String obj) {
 	JSONTokener x = new JSONTokener(obj);
 	char c;
 	String key;
@@ -82,11 +99,11 @@ public class RoadrunnerEvent extends JSONObject {
 	}
     }
 
-    public RoadrunnerEventType getType() throws JSONException {
+    public RoadrunnerEventType getType() {
 	return RoadrunnerEventType.valueOf(((String) get("type")).toUpperCase());
     }
 
-    public String extractNodePath() throws JSONException {
+    public String extractNodePath() {
 	if (!has("path")) {
 	    return null;
 	}
@@ -108,15 +125,15 @@ public class RoadrunnerEvent extends JSONObject {
 	return result.startsWith("/") ? result : "/" + result;
     }
 
-    public JSONObject getOldValue() throws JSONException {
+    public JSONObject getOldValue() {
 	return (JSONObject) get("oldValue");
     }
 
-    public void setBasePath(String basePath) throws JSONException {
+    public void setBasePath(String basePath) {
 	put("basePath", basePath);
     }
 
-    public boolean isFromHistory() throws JSONException {
+    public boolean isFromHistory() {
 	if (has("fromHistory")) {
 	    return getBoolean("fromHistory");
 	} else {
@@ -124,15 +141,15 @@ public class RoadrunnerEvent extends JSONObject {
 	}
     }
 
-    public void setFromHistory(boolean fromHistory) throws JSONException {
+    public void setFromHistory(boolean fromHistory) {
 	put("fromHistory", fromHistory);
     }
 
-    public Date getCreationDate() throws JSONException {
+    public Date getCreationDate() {
 	return new Date(getLong("creationDate"));
     }
 
-    public void setCreationDate(Date creationDate) throws JSONException {
+    public void setCreationDate(Date creationDate) {
 	put("creationDate", creationDate.getTime());
     }
 

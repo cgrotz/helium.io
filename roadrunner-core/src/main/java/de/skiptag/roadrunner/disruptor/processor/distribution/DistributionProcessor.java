@@ -26,7 +26,7 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
     @Override
     public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
-	    throws Exception {
+	    {
 	String path = event.getString("path");
 	if (!path.startsWith("ws://localhost:8080")) {
 	    path = "ws://localhost:8080" + path;

@@ -13,9 +13,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.websocket.StreamInbound;
 import org.apache.catalina.websocket.WebSocketServlet;
-import org.json.JSONException;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
@@ -30,6 +31,7 @@ import de.skiptag.roadrunner.persistence.Path;
  */
 public class RoadrunnerWebSocketServlet extends WebSocketServlet {
     private static final long serialVersionUID = 1L;
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(RoadrunnerWebSocketServlet.class.getName());
     private Roadrunner roadrunner;
 
     @Override
@@ -63,8 +65,8 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	String journalDirectory = Preconditions.checkNotNull(config.getInitParameter("journalDirectory"), "JournalDirectory must be configured in web.xml");
 	try {
 	    this.roadrunner = new Roadrunner(journalDirectory);
-	} catch (JSONException e) {
-	    throw new RuntimeException(e);
+	} catch (IOException e) {
+	    logger.error("Error loading Roadrunner", e);
 	}
     }
 
@@ -84,16 +86,12 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	    Resources.copy(url, outputStream);
 	    outputStream.close();
 	} else {
-	    try {
-		handleRestCall(req, resp);
-	    } catch (JSONException e) {
-		throw new RuntimeException(e);
-	    }
+	    handleRestCall(req, resp);
 	}
     }
 
     private void handleRestCall(HttpServletRequest req, HttpServletResponse resp)
-	    throws IOException, JSONException {
+	    throws IOException, RuntimeException {
 	String basePath = getHttpSocketLocation(req);
 	Path nodePath = new Path(
 		RoadrunnerEvent.extractPath(basePath, req.getRequestURI()));
@@ -105,7 +103,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 		|| req.getMethod().equals("PUT")) {
 	    String msg = new String(CharStreams.toString(new InputStreamReader(
 		    req.getInputStream(), Charsets.UTF_8)));
-	    roadrunner.handleEvent(RoadrunnerEventType.SET, req.getRequestURI(), msg);
+	    roadrunner.handleEvent(RoadrunnerEventType.SET, req.getRequestURI(), Optional.fromNullable(msg));
 	} else if (req.getMethod().equals("DELETE")) {
 	    roadrunner.handleEvent(RoadrunnerEventType.SET, req.getRequestURI(), null);
 	}

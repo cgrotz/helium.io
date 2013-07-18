@@ -11,7 +11,6 @@ import journal.io.api.Journal.ReadType;
 import journal.io.api.Journal.WriteType;
 import journal.io.api.Location;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +47,7 @@ public class RoadrunnerDisruptor {
 	    Optional<File> snapshotDirectory, Persistence persistence,
 	    Authorization authorization,
 	    RoadrunnerEventHandler roadrunnerEventHandler,
-	    boolean withDistribution) throws IOException, JSONException {
+	    boolean withDistribution) throws IOException {
 
 	ExecutorService executor = Executors.newCachedThreadPool();
 	disruptor = new Disruptor<RoadrunnerEvent>(
@@ -98,20 +97,16 @@ public class RoadrunnerDisruptor {
 
 	logger.trace("handling event: " + roadrunnerEvent + "("
 		+ roadrunnerEvent.length() + ")");
-	try {
-	    Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
-	    Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
-	    RoadrunnerEventTranslator eventTranslator = new RoadrunnerEventTranslator(
-		    roadrunnerEvent);
-	    disruptor.publishEvent(eventTranslator);
-	} catch (Exception exp) {
-	    logger.warn("Error in message (" + exp.getMessage() + "): "
-		    + roadrunnerEvent);
-	}
+
+	Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
+	Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
+	RoadrunnerEventTranslator eventTranslator = new RoadrunnerEventTranslator(
+		roadrunnerEvent);
+	disruptor.publishEvent(eventTranslator);
 
     }
 
-    public void snapshot() throws IOException, JSONException {
+    public void snapshot() throws IOException, RuntimeException {
 	Optional<Location> currentLocation = eventSourceProcessor.getCurrentLocation();
 	if (snapshotJournal.isPresent() || currentLocation.isPresent()) {
 	    Location location = currentLocation.get();
