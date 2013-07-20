@@ -44,7 +44,6 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Set;
 
 import org.slf4j.LoggerFactory;
@@ -109,7 +108,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
 	if (req.getMethod() == GET && "/roadrunner.js".equals(req.getUri())) {
 	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
-	    sendFile(res, "roadrunner.js");
+	    sendRoadrunnerJsFile(res);
 	    sendHttpResponse(ctx, req, res);
 	    return;
 	}
@@ -155,13 +154,9 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 	setContentLength(res, res.content().readableBytes());
     }
 
-    private void sendFile(FullHttpResponse res, String fileName)
-	    throws IOException {
-	URL resource = Thread.currentThread()
-		.getContextClassLoader()
-		.getResource(fileName);
-	res.content()
-		.writeBytes(com.google.common.io.Resources.toByteArray(resource));
+    private void sendRoadrunnerJsFile(FullHttpResponse res) throws IOException {
+	String roadrunnerJsFile = roadrunner.loadJsFile();
+	res.content().writeBytes(roadrunnerJsFile.getBytes());
 	res.headers()
 		.set(CONTENT_TYPE, "application/javascript; charset=UTF-8");
 	setContentLength(res, res.content().readableBytes());

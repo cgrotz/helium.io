@@ -9,7 +9,13 @@
 	<artifactId>roadrunner-core</artifactId>
 	<packaging>jar</packaging>
 	<name>Roadrunner Core</name>
-
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+	</build>
 	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>

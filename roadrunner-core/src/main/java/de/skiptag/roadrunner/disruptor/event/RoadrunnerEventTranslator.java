@@ -8,13 +8,12 @@ public class RoadrunnerEventTranslator implements
     private RoadrunnerEvent roadrunnerEvent;
 
     public RoadrunnerEventTranslator(RoadrunnerEvent roadrunnerEvent) {
+	Preconditions.checkNotNull(roadrunnerEvent.getBasePath());
 	this.roadrunnerEvent = roadrunnerEvent;
     }
 
     @Override
     public void translateTo(RoadrunnerEvent event, long sequence) {
-	Preconditions.checkNotNull(roadrunnerEvent.getBasePath());
-	event.setBasePath(roadrunnerEvent.getBasePath());
 	event.populate(roadrunnerEvent.toString());
     }
 }
