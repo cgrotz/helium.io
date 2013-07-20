@@ -16,9 +16,6 @@ public class InMemoryPersistence implements Persistence {
 
     private Node model = new Node();
 
-    public InMemoryPersistence() {
-    }
-
     @Override
     public Object get(Path path) {
 	if (path == null || model.getObjectForPath(path) == null) {
@@ -37,7 +34,6 @@ public class InMemoryPersistence implements Persistence {
 
     @Override
     public void syncPath(Path path, RoadrunnerEventHandler handler) {
-
 	Node node = model.getNodeForPath(path);
 
 	Iterator<?> itr = node.keys();
@@ -54,7 +50,6 @@ public class InMemoryPersistence implements Persistence {
 
     @Override
     public boolean applyNewValue(Path path, Object payload) {
-
 	Node node;
 	boolean created = false;
 	if (!model.pathExists(path)) {
