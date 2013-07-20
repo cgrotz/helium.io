@@ -46,11 +46,6 @@ public class InMemoryDataSnapshot implements RulesDataSnapshot {
     }
 
     @Override
-    public int getPriority() {
-	return 0;
-    }
-
-    @Override
     public boolean isNumber() {
 	return val instanceof Integer || val instanceof Float
 		|| val instanceof Double;

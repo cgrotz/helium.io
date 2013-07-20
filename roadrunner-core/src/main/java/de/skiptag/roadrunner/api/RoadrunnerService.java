@@ -51,7 +51,7 @@ public class RoadrunnerService implements DataListener {
 	    long numChildren) {
 	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
 		authorization, persistence, contextName, path, node, parent,
-		numChildren, prevChildName, hasChildren, 0);
+		numChildren, prevChildName, hasChildren);
 
 	if (on.containsKey("child_added")) {
 	    for (SnapshotHandler handler : on.get("child_added"))
@@ -70,7 +70,7 @@ public class RoadrunnerService implements DataListener {
 	    long numChildren) {
 	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
 		authorization, persistence, contextName, path, node, parent,
-		numChildren, prevChildName, hasChildren, 0);
+		numChildren, prevChildName, hasChildren);
 	if (on.containsKey("child_changed")) {
 	    for (SnapshotHandler handler : on.get("child_changed"))
 		handler.handle(roadrunnerSnapshot);
@@ -88,7 +88,7 @@ public class RoadrunnerService implements DataListener {
 
 	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
 		authorization, persistence, contextName, path, childSnapshot,
-		null, numChildren, prevChildName, hasChildren, 0);
+		null, numChildren, prevChildName, hasChildren);
 	if (on.containsKey("child_moved")) {
 	    for (SnapshotHandler handler : on.get("child_moved"))
 		handler.handle(roadrunnerSnapshot);
@@ -105,7 +105,7 @@ public class RoadrunnerService implements DataListener {
 
 	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
 		authorization, persistence, contextName, path, payload, null,
-		0, null, false, 0);
+		0, null, false);
 	if (on.containsKey("child_removed")) {
 	    for (SnapshotHandler handler : on.get("child_removed"))
 		handler.handle(roadrunnerSnapshot);

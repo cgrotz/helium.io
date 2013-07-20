@@ -14,13 +14,12 @@ public class RoadrunnerSnapshot {
     private long numChildren;
     private String name;
     private boolean hasChildren;
-    private int priority;
     private String contextName;
 
     public RoadrunnerSnapshot(Authorization authorization,
 	    Persistence persistence, String contextName, String path,
 	    Object value, String parentPath, long numChildren, String name,
-	    boolean hasChildren, int priority) {
+	    boolean hasChildren) {
 	super();
 	this.authorization = authorization;
 	this.persistence = persistence;
@@ -31,16 +30,11 @@ public class RoadrunnerSnapshot {
 	this.numChildren = numChildren;
 	this.name = name;
 	this.hasChildren = hasChildren;
-	this.priority = priority;
     }
 
     public RoadrunnerService child(String childPath) {
 	return new RoadrunnerService(authorization, persistence, contextName,
 		(path.endsWith("/") ? path : path + "/") + childPath);
-    }
-
-    public int getPriority() {
-	return priority;
     }
 
     public boolean hasChildren() {
