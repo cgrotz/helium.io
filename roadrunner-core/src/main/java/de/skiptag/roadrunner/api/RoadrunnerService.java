@@ -155,7 +155,7 @@ public class RoadrunnerService implements DataListener {
     }
 
     public RoadrunnerService set(Object data) {
-	boolean created = persistence.applyNewValue(new Path(path), data);
+	persistence.applyNewValue(new Path(path), data);
 	return this;
     }
 

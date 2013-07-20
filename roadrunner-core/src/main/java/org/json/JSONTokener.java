@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 
+import de.skiptag.roadrunner.persistence.inmemory.Node;
+
 /*
  Copyright (c) 2002 JSON.org
 
@@ -33,8 +35,8 @@ import java.io.StringReader;
 
 /**
  * A JSONTokener takes a source string and extracts characters and tokens from
- * it. It is used by the JSONObject and JSONArray constructors to parse JSON
- * source strings.
+ * it. It is used by the Node and JSONArray constructors to parse JSON source
+ * strings.
  * 
  * @author JSON.org
  * @version 2012-02-16
@@ -347,7 +349,7 @@ public class JSONTokener {
 
     /**
      * Get the next value. The value can be a Boolean, Double, Integer,
-     * JSONArray, JSONObject, Long, or String, or the JSONObject.NULL object.
+     * JSONArray, Node, Long, or String, or the Node.NULL object.
      * 
      * @throws RuntimeException
      *             If syntax error.
@@ -364,7 +366,7 @@ public class JSONTokener {
 	    return this.nextString(c);
 	case '{':
 	    this.back();
-	    return new JSONObject(this);
+	    return new Node(this);
 	}
 
 	/*

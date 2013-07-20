@@ -5,12 +5,29 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import com.google.common.collect.Sets;
 
 import de.skiptag.roadrunner.persistence.Path;
 
 public class Node extends JSONObject {
+
+    public Node() {
+	super();
+    }
+
+    public Node(JSONObject jo, String[] names) {
+	super(jo, names);
+    }
+
+    public Node(JSONTokener x) {
+	super(x);
+    }
+
+    public Node(String source) {
+	super(source);
+    }
 
     public Object getObjectForPath(Path path) {
 	Object node;
