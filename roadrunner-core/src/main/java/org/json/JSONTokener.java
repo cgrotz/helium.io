@@ -90,7 +90,8 @@ public class JSONTokener {
      */
     public void back() {
 	if (this.usePrevious || this.index <= 0) {
-	    throw new RuntimeException("Stepping back two steps is not supported");
+	    throw new RuntimeException(
+		    "Stepping back two steps is not supported");
 	}
 	this.index -= 1;
 	this.character -= 1;
@@ -364,9 +365,6 @@ public class JSONTokener {
 	case '{':
 	    this.back();
 	    return new JSONObject(this);
-	case '[':
-	    this.back();
-	    return new JSONArray(this);
 	}
 
 	/*
