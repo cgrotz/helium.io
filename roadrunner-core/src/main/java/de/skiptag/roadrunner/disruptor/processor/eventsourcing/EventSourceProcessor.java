@@ -56,18 +56,11 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
 	}
 	for (Location location : redo) {
 	    byte[] record = journal.read(location, ReadType.SYNC);
-	    RoadrunnerEvent roadrunnerEvent;
-	    try {
-		roadrunnerEvent = new RoadrunnerEvent(new String(record));
-		roadrunnerEvent.setFromHistory(true);
-		Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
-		Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
-	    } catch (Exception exp) {
-		logger.warn("Error in message (" + exp.getMessage() + "): "
-			+ new String(record));
-		roadrunnerEvent = null;
-
-	    }
+	    RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(new String(
+		    record));
+	    roadrunnerEvent.setFromHistory(true);
+	    Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
+	    Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
 	    roadrunner.handleEvent(roadrunnerEvent);
 	}
     }

@@ -1,7 +1,5 @@
 package de.skiptag.roadrunner.messaging;
 
-public interface RoadrunnerSender {
-
+public interface RoadrunnerResponseSender {
     void send(String string);
-
 }

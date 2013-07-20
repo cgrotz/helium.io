@@ -18,7 +18,7 @@ public class RoadrunnerSnapshot {
 
     public RoadrunnerSnapshot(Authorization authorization,
 	    Persistence persistence, String contextName, String path,
-	    Object value, String parentPath, long numChildren, String name,
+	    Object value, String parentPath, long numChildren,
 	    boolean hasChildren) {
 	super();
 	this.authorization = authorization;
@@ -28,7 +28,6 @@ public class RoadrunnerSnapshot {
 	this.value = value;
 	this.parentPath = parentPath.toString();
 	this.numChildren = numChildren;
-	this.name = name;
 	this.hasChildren = hasChildren;
     }
 

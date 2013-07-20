@@ -54,14 +54,14 @@ import com.google.common.collect.Sets;
 import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
-import de.skiptag.roadrunner.messaging.RoadrunnerSender;
+import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 import de.skiptag.roadrunner.persistence.Path;
 
 /**
  * Handles handshakes and messages
  */
 public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
-	implements RoadrunnerSender {
+	implements RoadrunnerResponseSender {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(WebSocketServerHandler.class.getName());
 
     private static final String WEBSOCKET_PATH = "/";

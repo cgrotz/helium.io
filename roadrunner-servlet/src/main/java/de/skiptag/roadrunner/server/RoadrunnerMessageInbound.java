@@ -9,10 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.skiptag.roadrunner.Roadrunner;
-import de.skiptag.roadrunner.messaging.RoadrunnerSender;
+import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 
 public class RoadrunnerMessageInbound extends MessageInbound implements
-	RoadrunnerSender {
+	RoadrunnerResponseSender {
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
     private Roadrunner roadrunner;
 

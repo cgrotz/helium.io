@@ -17,12 +17,12 @@ import de.skiptag.roadrunner.disruptor.RoadrunnerDisruptor;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
-import de.skiptag.roadrunner.messaging.RoadrunnerSender;
+import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
-public class Roadrunner implements RoadrunnerSender {
+public class Roadrunner implements RoadrunnerResponseSender {
     public static final JSONObject ALL_ACCESS_RULE = new JSONObject(
 	    "{\".write\": \"true\",\".read\": \"true\",\".remove\":\"true\"}");
 
@@ -34,7 +34,7 @@ public class Roadrunner implements RoadrunnerSender {
 
     private RoadrunnerDisruptor disruptor;
 
-    private Set<RoadrunnerSender> senders = Sets.newHashSet();
+    private Set<RoadrunnerResponseSender> senders = Sets.newHashSet();
 
     private RuleBasedAuthorization authorization;
 
@@ -54,13 +54,13 @@ public class Roadrunner implements RoadrunnerSender {
 	this(journalDirectory, ALL_ACCESS_RULE);
     }
 
-    public void addSender(RoadrunnerSender webSocketServerHandler) {
+    public void addSender(RoadrunnerResponseSender webSocketServerHandler) {
 	this.senders.add(webSocketServerHandler);
     }
 
     @Override
     public void send(String string) {
-	for (RoadrunnerSender sender : senders) {
+	for (RoadrunnerResponseSender sender : senders) {
 	    sender.send(string);
 	}
     }
@@ -94,7 +94,7 @@ public class Roadrunner implements RoadrunnerSender {
 	disruptor.handleEvent(roadrunnerEvent);
     }
 
-    public void removeSender(RoadrunnerSender roadrunnerSender) {
+    public void removeSender(RoadrunnerResponseSender roadrunnerSender) {
 	this.senders.remove(roadrunnerSender);
     }
 

@@ -47,11 +47,10 @@ public class RoadrunnerService implements DataListener {
 
     @Override
     public void child_added(String name, String path, String parent,
-	    Object node, String prevChildName, boolean hasChildren,
-	    long numChildren) {
+	    Object node, boolean hasChildren, long numChildren) {
 	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
 		authorization, persistence, contextName, path, node, parent,
-		numChildren, prevChildName, hasChildren);
+		numChildren, hasChildren);
 
 	if (on.containsKey("child_added")) {
 	    for (SnapshotHandler handler : on.get("child_added"))
@@ -66,11 +65,10 @@ public class RoadrunnerService implements DataListener {
 
     @Override
     public void child_changed(String name, String path, String parent,
-	    Object node, String prevChildName, boolean hasChildren,
-	    long numChildren) {
+	    Object node, boolean hasChildren, long numChildren) {
 	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
 		authorization, persistence, contextName, path, node, parent,
-		numChildren, prevChildName, hasChildren);
+		numChildren, hasChildren);
 	if (on.containsKey("child_changed")) {
 	    for (SnapshotHandler handler : on.get("child_changed"))
 		handler.handle(roadrunnerSnapshot);
@@ -83,12 +81,12 @@ public class RoadrunnerService implements DataListener {
     }
 
     @Override
-    public void child_moved(JSONObject childSnapshot, String prevChildName,
-	    boolean hasChildren, long numChildren) {
+    public void child_moved(JSONObject childSnapshot, boolean hasChildren,
+	    long numChildren) {
 
 	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
 		authorization, persistence, contextName, path, childSnapshot,
-		null, numChildren, prevChildName, hasChildren);
+		null, numChildren, hasChildren);
 	if (on.containsKey("child_moved")) {
 	    for (SnapshotHandler handler : on.get("child_moved"))
 		handler.handle(roadrunnerSnapshot);
@@ -105,7 +103,7 @@ public class RoadrunnerService implements DataListener {
 
 	RoadrunnerSnapshot roadrunnerSnapshot = new RoadrunnerSnapshot(
 		authorization, persistence, contextName, path, payload, null,
-		0, null, false);
+		0, false);
 	if (on.containsKey("child_removed")) {
 	    for (SnapshotHandler handler : on.get("child_removed"))
 		handler.handle(roadrunnerSnapshot);
