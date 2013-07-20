@@ -21,6 +21,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.cli.BasicParser;
@@ -31,6 +32,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import com.google.common.base.Optional;
 
 import de.skiptag.roadrunner.Roadrunner;
 
@@ -67,13 +70,22 @@ public class RoadrunnerServer {
 		.withDescription("Journal directory")
 		.isRequired()
 		.create("d");
+	@SuppressWarnings("static-access")
+	Option snaphshotOption = OptionBuilder.withArgName("snapshot")
+		.hasArg()
+		.withDescription("Snapshot directory")
+		.isRequired()
+		.create("s");
 	options.addOption(directoryOption);
+	options.addOption(snaphshotOption);
 	options.addOption("p", true, "Port for the webserver");
     }
 
-    public RoadrunnerServer(int port, String journalDir) throws IOException {
+    public RoadrunnerServer(int port, String journalDir, String snapshotDir)
+	    throws IOException {
 	this.port = port;
-	this.roadrunner = new Roadrunner(journalDir);
+	Optional<File> snapshotDirectory = Optional.of(new File(snapshotDir));
+	this.roadrunner = new Roadrunner(journalDir, snapshotDirectory);
     }
 
     public void run() throws InterruptedException {
@@ -98,8 +110,9 @@ public class RoadrunnerServer {
 	try {
 	    CommandLine cmd = parser.parse(options, args);
 	    String directory = cmd.getOptionValue("d");
+	    String snapshotDirectory = cmd.getOptionValue("s");
 	    int port = Integer.parseInt(cmd.getOptionValue("p", "8080"));
-	    new RoadrunnerServer(port, directory).run();
+	    new RoadrunnerServer(port, directory, snapshotDirectory).run();
 	} catch (ParseException e) {
 	    System.out.println(e.getLocalizedMessage());
 	    HelpFormatter formatter = new HelpFormatter();

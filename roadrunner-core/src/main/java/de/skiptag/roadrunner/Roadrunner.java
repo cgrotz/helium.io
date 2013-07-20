@@ -23,6 +23,7 @@ import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
 public class Roadrunner implements RoadrunnerResponseSender {
+
     public static final JSONObject ALL_ACCESS_RULE = new JSONObject(
 	    "{\".write\": \"true\",\".read\": \"true\",\".remove\":\"true\"}");
 
@@ -38,20 +39,21 @@ public class Roadrunner implements RoadrunnerResponseSender {
 
     private RuleBasedAuthorization authorization;
 
-    public Roadrunner(String journalDirectory, JSONObject rule)
+    public Roadrunner(String journalDirectory,
+	    Optional<File> snapshotDirectory, JSONObject rule)
 	    throws IOException {
 	this.roadrunnerEventHandler = new RoadrunnerEventHandler(this);
 	this.authorization = new RuleBasedAuthorization(rule);
 	this.persistence = new InMemoryPersistence();
 
-	Optional<File> snapshotDirectory = Optional.absent();
 	this.disruptor = new RoadrunnerDisruptor(new File(journalDirectory),
 		snapshotDirectory, persistence, authorization,
 		roadrunnerEventHandler);
     }
 
-    public Roadrunner(String journalDirectory) throws IOException {
-	this(journalDirectory, ALL_ACCESS_RULE);
+    public Roadrunner(String journalDirectory, Optional<File> snapshotDirectory)
+	    throws IOException {
+	this(journalDirectory, snapshotDirectory, ALL_ACCESS_RULE);
     }
 
     public void addSender(RoadrunnerResponseSender webSocketServerHandler) {

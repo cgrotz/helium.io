@@ -72,8 +72,8 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void restoreSnapshot(JSONObject payload) {
-	model.populate(payload);
+    public void restoreSnapshot(Node node) {
+	model.populate(node);
     }
 
 }

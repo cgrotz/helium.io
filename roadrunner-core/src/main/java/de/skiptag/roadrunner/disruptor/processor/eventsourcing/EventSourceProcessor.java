@@ -28,6 +28,10 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
 
     private Optional<Location> currentLocation = Optional.absent();
 
+    private int snapshotCount = 100;
+
+    private int messageCount = 0;
+
     public EventSourceProcessor(File journal_dir, RoadrunnerDisruptor roadrunner)
 	    throws IOException {
 	journal.setDirectory(journal_dir);
@@ -43,6 +47,11 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
 	    Location write = journal.write(event.toString().getBytes(), WriteType.SYNC);
 	    journal.sync();
 	    currentLocation = Optional.of(write);
+	    messageCount++;
+	    if (messageCount > snapshotCount) {
+		roadrunner.snapshot();
+		messageCount = 0;
+	    }
 	}
     }
 

@@ -1,5 +1,6 @@
 package de.skiptag.roadrunner.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Enumeration;
@@ -61,8 +62,10 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
     public void init(ServletConfig config) throws ServletException {
 	super.init(config);
 	String journalDirectory = Preconditions.checkNotNull(config.getInitParameter("journalDirectory"), "JournalDirectory must be configured in web.xml");
+	String snapshotDirectory = Preconditions.checkNotNull(config.getInitParameter("snapshotDirectory"), "SnapshotDirectory must be configured in web.xml");
 	try {
-	    this.roadrunner = new Roadrunner(journalDirectory);
+	    Optional<File> snapshotDir = Optional.of(new File(snapshotDirectory));
+	    this.roadrunner = new Roadrunner(journalDirectory, snapshotDir);
 	} catch (IOException e) {
 	    logger.error("Error loading Roadrunner", e);
 	}

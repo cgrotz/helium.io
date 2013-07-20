@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import de.skiptag.roadrunner.persistence.Path;
 
 public class Node extends JSONObject {
+
     public Object getObjectForPath(Path path) {
 	Object node;
 	if (has(path.getFirstElement())) {
@@ -52,12 +53,15 @@ public class Node extends JSONObject {
 	Iterator<?> itr = payload.keys();
 	while (itr.hasNext()) {
 	    Object key = (Object) itr.next();
-	    put((String) key, payload.get((String) key));
+	    Object value = payload.get((String) key);
+	    if (value instanceof JSONObject) {
+		Node value2 = new Node();
+		value2.populate((JSONObject) value);
+		put((String) key, value2);
+	    } else {
+		put((String) key, value);
+	    }
 	}
-    }
-
-    public void populate(String obj) {
-	populate(new JSONObject(obj));
     }
 
     public Collection<Node> getChildren() {

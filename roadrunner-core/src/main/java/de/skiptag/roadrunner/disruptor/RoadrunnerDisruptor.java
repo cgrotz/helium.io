@@ -30,6 +30,7 @@ import de.skiptag.roadrunner.disruptor.processor.eventsourcing.EventSourceProces
 import de.skiptag.roadrunner.disruptor.processor.persistence.PersistenceProcessor;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
 import de.skiptag.roadrunner.persistence.Persistence;
+import de.skiptag.roadrunner.persistence.inmemory.Node;
 
 public class RoadrunnerDisruptor {
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerDisruptor.class);
@@ -78,7 +79,9 @@ public class RoadrunnerDisruptor {
 	    int pointer = snapshot.getInt("currentEventLogPointer");
 	    int dataFileId = snapshot.getInt("currentEventLogDataFileId");
 	    JSONObject payload = snapshot.getJSONObject("payload");
-	    persistence.restoreSnapshot(payload);
+	    Node node = new Node();
+	    node.populate(payload);
+	    persistence.restoreSnapshot(node);
 	    eventSourceProcessor.setCurrentLocation(new Location(dataFileId,
 		    pointer));
 	}
