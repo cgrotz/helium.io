@@ -46,7 +46,7 @@ public class InMemoryPersistence implements Persistence {
 	    Object object = node.get(childNodeKey.toString());
 
 	    handler.child_added((String) childNodeKey, path + "/"
-		    + childNodeKey, path.toString(), object, null, (object instanceof Node) ? ((Node) object).hasChildren()
+		    + childNodeKey, path.toString(), object, (object instanceof Node) ? ((Node) object).hasChildren()
 		    : false, (object instanceof Node) ? ((Node) object).length()
 		    : 0);
 	}

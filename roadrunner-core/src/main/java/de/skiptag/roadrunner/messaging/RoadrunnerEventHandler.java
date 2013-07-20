@@ -18,8 +18,7 @@ public class RoadrunnerEventHandler implements DataListener {
 
     @Override
     public void child_added(String name, String path, String parent,
-	    Object node, String prevChildName, boolean hasChildren,
-	    long numChildren) {
+	    Object node, boolean hasChildren, long numChildren) {
 	try {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put("type", "child_added");
@@ -27,7 +26,6 @@ public class RoadrunnerEventHandler implements DataListener {
 	    broadcast.put("path", getPath(path));
 	    broadcast.put("parent", parent);
 	    broadcast.put("payload", node);
-	    broadcast.put("prevChildName", prevChildName);
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
 	    if (listenerAttached(path)) {
@@ -40,8 +38,7 @@ public class RoadrunnerEventHandler implements DataListener {
 
     @Override
     public void child_changed(String name, String path, String parent,
-	    Object node, String prevChildName, boolean hasChildren,
-	    long numChildren) {
+	    Object node, boolean hasChildren, long numChildren) {
 	try {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put("type", "child_changed");
@@ -49,7 +46,6 @@ public class RoadrunnerEventHandler implements DataListener {
 	    broadcast.put("path", getPath(path));
 	    broadcast.put("parent", parent);
 	    broadcast.put("payload", node);
-	    broadcast.put("prevChildName", prevChildName);
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
 	    roadrunnerSender.send(broadcast.toString());
@@ -59,13 +55,13 @@ public class RoadrunnerEventHandler implements DataListener {
     }
 
     @Override
-    public void child_moved(JSONObject childSnapshot, String prevChildName,
-	    boolean hasChildren, long numChildren) {
+    public void child_moved(JSONObject childSnapshot, boolean hasChildren,
+	    long numChildren) {
 	try {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put("type", "child_moved");
 	    broadcast.put("payload", childSnapshot);
-	    broadcast.put("prevChildName", prevChildName);
+	    ;
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
 	    roadrunnerSender.send(broadcast.toString());

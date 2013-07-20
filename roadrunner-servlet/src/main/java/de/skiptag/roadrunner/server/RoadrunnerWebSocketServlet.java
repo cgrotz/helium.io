@@ -2,7 +2,6 @@ package de.skiptag.roadrunner.server;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.Enumeration;
 
 import javax.servlet.ServletConfig;
@@ -19,7 +18,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
-import com.google.common.io.Resources;
 
 import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
@@ -77,13 +75,11 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	    super.service(req, resp);
 	} else if (req.getMethod().equals("GET")
 		&& req.getRequestURI().equals("roadrunner.js")) {
-	    URL url = RoadrunnerWebSocketServlet.class.getClassLoader()
-		    .getResource("roadrunner.js");
 	    resp.setContentType("application/javascript");
 	    resp.setCharacterEncoding("UTF-8");
 
 	    ServletOutputStream outputStream = resp.getOutputStream();
-	    Resources.copy(url, outputStream);
+	    outputStream.write(roadrunner.loadJsFile().getBytes());
 	    outputStream.close();
 	} else {
 	    handleRestCall(req, resp);

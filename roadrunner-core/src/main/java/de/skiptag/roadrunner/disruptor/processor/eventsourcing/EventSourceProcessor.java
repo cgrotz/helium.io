@@ -39,6 +39,7 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
     public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch)
 	    throws ClosedJournalException, IOException {
 	if (!event.isFromHistory()) {
+	    logger.trace("storing event: " + event);
 	    Location write = journal.write(event.toString().getBytes(), WriteType.SYNC);
 	    journal.sync();
 	    currentLocation = Optional.of(write);
