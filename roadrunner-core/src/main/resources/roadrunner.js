@@ -164,7 +164,7 @@ function Roadrunner(path) {
 	this.on = function(event_type, callback) {
 		events[event_type] = callback;
 		roadrunner_connection.sendMessage("attached_listener", path, {
-			RoadrunnerEvent.TYPE : event_type
+			"type" : event_type
 		});
 	};
 
@@ -176,7 +176,7 @@ function Roadrunner(path) {
 		events[event_type] = null;
 		events_once[event_type] = null;
 		roadrunner_connection.sendMessage("detached_listener", path, {
-			RoadrunnerEvent.TYPE : event_type
+			"type" : event_type
 		});
 	};
 

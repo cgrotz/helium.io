@@ -54,18 +54,21 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 
 import de.skiptag.roadrunner.Roadrunner;
+import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
+import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 import de.skiptag.roadrunner.persistence.Path;
+import de.skiptag.roadrunner.persistence.inmemory.InMemoryDataSnapshot;
 
 /**
  * Handles handshakes and messages
  */
 public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
     private static final AttributeKey<JSONObject> AUTH_ATTRIBUTE_KEY = new AttributeKey<JSONObject>(
-	    "auth");
+	    RoadrunnerEvent.AUTH);
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(WebSocketServerHandler.class.getName());
 
@@ -93,6 +96,11 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 	} else if (msg instanceof WebSocketFrame) {
 	    handleWebSocketFrame(ctx, (WebSocketFrame) msg);
 	}
+    }
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+	ctx.flush();
     }
 
     private void handleHttpRequest(ChannelHandlerContext ctx,
@@ -155,10 +163,15 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 
 	Path nodePath = new Path(RoadrunnerEvent.extractPath(req.getUri()));
 	if (req.getMethod() == GET) {
-	    res.content().writeBytes(roadrunner.getPersistence()
-		    .get(nodePath)
-		    .toString()
-		    .getBytes());
+	    RulesDataSnapshot root = new InMemoryDataSnapshot(
+		    roadrunner.getPersistence().get(null));
+	    Object node = roadrunner.getPersistence().get(nodePath);
+	    Object object = new InMemoryDataSnapshot(node);
+	    roadrunner.getAuthorization()
+		    .authorize(RoadrunnerOperation.READ, ctx.attr(WebSocketServerHandler.AUTH_ATTRIBUTE_KEY)
+			    .get(), root, nodePath.toString(), object);
+
+	    res.content().writeBytes(node.toString().getBytes());
 	} else if (req.getMethod() == HttpMethod.POST
 		|| req.getMethod() == HttpMethod.PUT) {
 	    String msg = new String(req.content().array());
@@ -200,7 +213,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 	// Send the uppercase string back.
 	String msg = ((TextWebSocketFrame) frame).text();
 	RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
-	roadrunnerEvent.put("auth", ctx.channel().attr(AUTH_ATTRIBUTE_KEY));
+	JSONObject auth = ctx.channel().attr(AUTH_ATTRIBUTE_KEY).get();
+	roadrunnerEvent.put(RoadrunnerEvent.AUTH, auth);
 	roadrunner.handle(handlers.get(ctx.channel()), roadrunnerEvent);
 
     }

@@ -12,4 +12,5 @@ public interface Authorization {
 
     boolean isAuthorized(RoadrunnerOperation read, JSONObject auth,
 	    RulesDataSnapshot root, String path, Object object);
+
 }

@@ -16,6 +16,7 @@ public class RoadrunnerEvent extends JSONObject {
     public static final String PATH = "path";
     public static final String FROM_HISTORY = "fromHistory";
     public static final String OLD_VALUE = "oldValue";
+    public static final String AUTH = "auth";
 
     public static final EventFactory<RoadrunnerEvent> EVENT_FACTORY = new EventFactory<RoadrunnerEvent>() {
 

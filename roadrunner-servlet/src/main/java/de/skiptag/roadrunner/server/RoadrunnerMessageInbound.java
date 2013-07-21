@@ -41,7 +41,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
     protected void onTextMessage(CharBuffer message) throws IOException {
 	String msg = message.toString();
 	RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
-	roadrunnerEvent.put("auth", auth);
+	roadrunnerEvent.put(RoadrunnerEvent.AUTH, auth);
 	roadrunner.handle(endpoint, roadrunnerEvent);
     }
 

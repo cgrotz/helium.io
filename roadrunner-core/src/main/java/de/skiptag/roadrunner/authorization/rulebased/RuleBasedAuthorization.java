@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.RoadrunnerNotAuthorizedException;
 import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
+import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 
 public class RuleBasedAuthorization implements Authorization {
 
@@ -45,7 +46,7 @@ public class RuleBasedAuthorization implements Authorization {
 	String expression = rule.getExpressionForPathAndOperation(path, op);
 
 	try {
-	    engine.put("auth", new AuthenticationWrapper(auth));
+	    engine.put(RoadrunnerEvent.AUTH, new AuthenticationWrapper(auth));
 	    Boolean result = (Boolean) engine.eval(expression);
 	    return result.booleanValue();
 	} catch (ScriptException ex) {
