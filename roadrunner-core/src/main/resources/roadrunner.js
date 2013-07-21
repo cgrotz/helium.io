@@ -59,16 +59,15 @@ function RoadrunnerConnection(url) {
 
 		roadrunner_endpoint.eventhandlers = [];
 		roadrunner_endpoint.onmessage = function(event) {
+			var message = JSON.parse(event.data);
+			console.debug('Receiving Message from Server: ',message);
 			for ( var i = 0; i < roadrunner_endpoint.eventhandlers.length; i++) {
 				var handler = roadrunner_endpoint.eventhandlers[i];
-				handler(event);
+				handler(message);
 			}
 		};
 	}
-	roadrunner_endpoint.eventhandlers.push(function(event) {
-		var message = JSON.parse(event.data);
-
-		console.debug('Receiving Message from Server: ',message);
+	roadrunner_endpoint.eventhandlers.push(function(message) {
 		if (Object.prototype.toString.call(message) === '[object Array]') {
 			for ( var i = 0; i < message.length; i++) {
 				self.handleMessage(message[i]);

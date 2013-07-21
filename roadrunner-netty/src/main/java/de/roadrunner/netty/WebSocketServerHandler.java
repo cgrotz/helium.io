@@ -127,18 +127,21 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 	} else {
 	    handshaker.handshake(ctx.channel(), req);
 	}
-	final Channel channel = ctx.channel();
-	RoadrunnerEndpoint handler = new RoadrunnerEndpoint(
-		getWebSocketLocation(req), new RoadrunnerResponseSender() {
 
-		    @Override
-		    public void send(String msg) {
-			logger.trace("Sending Message: " + msg);
-			channel.write(new TextWebSocketFrame(msg));
-		    }
-		});
-	handlers.put(channel, handler);
-	roadrunner.addEndpoint(handler);
+	final Channel channel = ctx.channel();
+	if (!handlers.containsKey(channel)) {
+	    RoadrunnerEndpoint handler = new RoadrunnerEndpoint(
+		    getWebSocketLocation(req), new RoadrunnerResponseSender() {
+
+			@Override
+			public void send(String msg) {
+			    logger.trace("Sending Message: " + msg);
+			    channel.write(new TextWebSocketFrame(msg));
+			}
+		    });
+	    handlers.put(channel, handler);
+	    roadrunner.addEndpoint(handler);
+	}
     }
 
     private void handleRestCall(ChannelHandlerContext ctx, FullHttpRequest req,
