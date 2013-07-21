@@ -77,7 +77,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, Object msg) {
+    protected void channelRead0(ChannelHandlerContext ctx, Object msg)
+	    throws Exception {
 	if (msg instanceof FullHttpRequest) {
 	    try {
 		handleHttpRequest(ctx, (FullHttpRequest) msg);
@@ -193,8 +194,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 
 	// Send the uppercase string back.
 	String msg = ((TextWebSocketFrame) frame).text();
-
-	roadrunner.handle(handlers.get(ctx.channel()), msg);
+	RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
+	roadrunner.handle(handlers.get(ctx.channel()), roadrunnerEvent);
 
     }
 

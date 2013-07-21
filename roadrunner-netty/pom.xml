@@ -10,7 +10,7 @@
 	<name>Roadrunner Vertx Server</name>
 
 	<properties>
-		<netty.version>4.0.0.CR9</netty.version>
+		<netty.version>4.0.3.Final</netty.version>
 		<commons.cli.version>1.2</commons.cli.version>
 	</properties>
 	<build>

@@ -45,8 +45,9 @@ public class Roadrunner {
 	this(basePath, journalDirectory, snapshotDirectory, ALL_ACCESS_RULE);
     }
 
-    public void handle(RoadrunnerEndpoint roadrunnerEventHandler, String msg) {
-	RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
+    public void handle(RoadrunnerEndpoint roadrunnerEventHandler,
+	    RoadrunnerEvent roadrunnerEvent) {
+
 	if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACHED_LISTENER) {
 	    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
 	    persistence.syncPath(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);

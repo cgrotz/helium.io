@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.skiptag.roadrunner.Roadrunner;
+import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 
@@ -39,7 +40,8 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
     @Override()
     protected void onTextMessage(CharBuffer message) throws IOException {
 	String msg = message.toString();
-	roadrunner.handle(endpoint, msg);
+	RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
+	roadrunner.handle(endpoint, roadrunnerEvent);
     }
 
     @Override
