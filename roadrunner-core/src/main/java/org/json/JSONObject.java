@@ -140,7 +140,7 @@ public class JSONObject {
      * Construct an empty JSONObject.
      */
     public JSONObject() {
-	this.map = Maps.newHashMap();
+	this.map = Maps.newHashMapWithExpectedSize(10000);
     }
 
     /**

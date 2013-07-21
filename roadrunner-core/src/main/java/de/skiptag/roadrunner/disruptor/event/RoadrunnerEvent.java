@@ -1,7 +1,5 @@
 package de.skiptag.roadrunner.disruptor.event;
 
-import java.util.Date;
-
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -21,12 +19,12 @@ public class RoadrunnerEvent extends JSONObject {
     private boolean created;
 
     public RoadrunnerEvent() {
-	put("creationDate", new Date());
+	put("creationDate", System.currentTimeMillis());
     }
 
     public RoadrunnerEvent(String string) {
 	super(string);
-	put("creationDate", new Date());
+	put("creationDate", System.currentTimeMillis());
 	Preconditions.checkArgument(has("type"), "No type defined in Event");
     }
 
@@ -39,7 +37,7 @@ public class RoadrunnerEvent extends JSONObject {
 	if (value.isPresent()) {
 	    put("payload", value.get());
 	}
-	put("creationDate", new Date());
+	put("creationDate", System.currentTimeMillis());
     }
 
     public void populate(String obj) {
@@ -127,12 +125,12 @@ public class RoadrunnerEvent extends JSONObject {
 	put("fromHistory", fromHistory);
     }
 
-    public Date getCreationDate() {
-	return new Date(getLong("creationDate"));
+    public long getCreationDate() {
+	return getLong("creationDate");
     }
 
-    public void setCreationDate(Date creationDate) {
-	put("creationDate", creationDate.getTime());
+    public void setCreationDate(long creationDate) {
+	put("creationDate", creationDate);
     }
 
     public boolean created() {

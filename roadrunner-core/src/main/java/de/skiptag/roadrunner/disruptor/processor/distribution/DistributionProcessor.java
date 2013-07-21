@@ -12,7 +12,7 @@ import com.lmax.disruptor.EventHandler;
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
-import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
+import de.skiptag.roadrunner.messaging.DataListener;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.Node;
@@ -22,7 +22,7 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
     private static final Logger logger = LoggerFactory.getLogger(DistributionProcessor.class);
     private Persistence persistence;
 
-    private Set<RoadrunnerEndpoint> handlers = Sets.newHashSet();
+    private Set<DataListener> handlers = Sets.newHashSet();
 
     public DistributionProcessor(Persistence persistence,
 	    Authorization authorization) {
@@ -54,10 +54,14 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 		firChildRemoved(path, event.getOldValue());
 	    }
 	}
+
+	org.joda.time.Duration dur = new org.joda.time.Duration(
+		event.getCreationDate(), System.currentTimeMillis());
+	logger.trace("Message Processing took: " + dur.getMillis() + "ms");
     }
 
     private void firChildRemoved(String path, JSONObject payload) {
-	for (RoadrunnerEndpoint handler : handlers) {
+	for (DataListener handler : handlers) {
 	    handler.child_removed(path, payload);
 	}
     }
@@ -65,14 +69,14 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
     private void fireChildChanged(String lastElement, String path,
 	    String lastElement2, Object node, boolean hasChildren,
 	    long childCount) {
-	for (RoadrunnerEndpoint handler : handlers) {
+	for (DataListener handler : handlers) {
 	    handler.child_changed(lastElement, path, lastElement2, node, hasChildren, childCount);
 	}
     }
 
     private void fireChildAdded(String string, String path, String lastElement,
 	    Object node, boolean hasChildren, long childCount) {
-	for (RoadrunnerEndpoint handler : handlers) {
+	for (DataListener handler : handlers) {
 	    handler.child_added(string, path, lastElement, node, hasChildren, childCount);
 	}
     }
@@ -85,11 +89,11 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 	return (node instanceof Node) ? ((Node) node).hasChildren() : false;
     }
 
-    public void addHandler(RoadrunnerEndpoint handler) {
+    public void addHandler(DataListener handler) {
 	handlers.add(handler);
     }
 
-    public void removeHandler(RoadrunnerEndpoint handler) {
+    public void removeHandler(DataListener handler) {
 	handlers.remove(handler);
     }
 }
