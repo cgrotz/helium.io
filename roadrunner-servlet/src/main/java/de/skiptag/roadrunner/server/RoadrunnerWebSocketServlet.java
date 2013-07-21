@@ -36,7 +36,10 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
     @Override
     protected StreamInbound createWebSocketInbound(String subProtocol,
 	    HttpServletRequest request) {
-	return new RoadrunnerMessageInbound("ws://localhost:8080/", roadrunner);
+
+	String servername = request.getScheme() + "://"
+		+ request.getServerName() + ":" + request.getServerPort();
+	return new RoadrunnerMessageInbound(servername, roadrunner);
     }
 
     /*
