@@ -43,6 +43,21 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<groupId>de.skiptag.roadrunner</groupId>
+				<artifactId>roadrunner-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.skiptag.roadrunner</groupId>
+				<artifactId>roadrunner-servlet</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.skiptag.roadrunner</groupId>
+				<artifactId>roadrunner-netty</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>com.google.javascript</groupId>
 				<artifactId>closure-compiler</artifactId>
 				<version>r2388</version>
@@ -56,11 +71,6 @@
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
 				<version>${guava.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>de.skiptag.roadrunner</groupId>
-				<artifactId>roadrunner-core</artifactId>
-				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.lmax</groupId>

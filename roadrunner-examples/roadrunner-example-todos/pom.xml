@@ -9,4 +9,10 @@
 	<artifactId>roadrunner-example-todos</artifactId>
 	<packaging>war</packaging>
 	<name>Roadrunner Example Todos</name>
+	<dependencies>
+		<dependency>
+			<groupId>de.skiptag.roadrunner</groupId>
+			<artifactId>roadrunner-servlet</artifactId>
+		</dependency>
+	</dependencies>
 </project>
