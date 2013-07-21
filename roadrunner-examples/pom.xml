@@ -15,4 +15,5 @@
 		<module>roadrunner-example-drawing</module>
 		<module>roadrunner-example-todos</module>
 	</modules>
+	<groupId>de.skiptag.roadrunner.examples</groupId>
 </project>

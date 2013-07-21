@@ -2,11 +2,12 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>de.skiptag.roadrunner</groupId>
+		<groupId>de.skiptag.roadrunner.examples</groupId>
 		<artifactId>roadrunner-examples</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>roadrunner-example-todos</artifactId>
 	<packaging>war</packaging>
 	<name>Roadrunner Example Todos</name>
+	<groupId>de.skiptag.roadrunner.examples</groupId>
 </project>
