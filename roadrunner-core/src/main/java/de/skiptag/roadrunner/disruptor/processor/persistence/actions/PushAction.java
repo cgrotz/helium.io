@@ -19,8 +19,8 @@ public class PushAction {
     public void handle(RoadrunnerEvent message) {
 	Path path = new Path(message.extractNodePath());
 	Object payload;
-	if (message.has("payload")) {
-	    payload = message.get("payload");
+	if (message.has(RoadrunnerEvent.PAYLOAD)) {
+	    payload = message.get(RoadrunnerEvent.PAYLOAD);
 	} else {
 	    payload = new JSONObject();
 	}

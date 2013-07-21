@@ -77,7 +77,7 @@ public class RoadrunnerDisruptor {
 	    JSONObject snapshot = new JSONObject(new String(lastEntry));
 	    int pointer = snapshot.getInt("currentEventLogPointer");
 	    int dataFileId = snapshot.getInt("currentEventLogDataFileId");
-	    JSONObject payload = snapshot.getJSONObject("payload");
+	    JSONObject payload = snapshot.getJSONObject(RoadrunnerEvent.PAYLOAD);
 	    Node node = new Node();
 	    node.populate(payload);
 	    persistence.restoreSnapshot(node);
@@ -110,7 +110,7 @@ public class RoadrunnerDisruptor {
     }
 
     public void handleEvent(final RoadrunnerEvent roadrunnerEvent) {
-	Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
+	Preconditions.checkArgument(roadrunnerEvent.has(RoadrunnerEvent.TYPE), "No type defined in Event");
 	RoadrunnerEventTranslator eventTranslator = new RoadrunnerEventTranslator(
 		roadrunnerEvent);
 	logger.trace("handling event: " + roadrunnerEvent + "("
@@ -127,7 +127,7 @@ public class RoadrunnerDisruptor {
 	    JSONObject snapshot = new JSONObject();
 	    snapshot.put("currentEventLogPointer", location.getPointer());
 	    snapshot.put("currentEventLogDataFileId", location.getDataFileId());
-	    snapshot.put("payload", payload);
+	    snapshot.put(RoadrunnerEvent.PAYLOAD, payload);
 	    snapshotJournal.get().open();
 	    snapshotJournal.get()
 		    .write(snapshot.toString().getBytes(), WriteType.SYNC);

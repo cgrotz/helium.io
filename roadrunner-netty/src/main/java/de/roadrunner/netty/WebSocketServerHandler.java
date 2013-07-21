@@ -41,11 +41,13 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
+import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 
 import java.io.IOException;
 import java.util.Map;
 
+import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
@@ -62,6 +64,9 @@ import de.skiptag.roadrunner.persistence.Path;
  * Handles handshakes and messages
  */
 public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
+    private static final AttributeKey<JSONObject> AUTH_ATTRIBUTE_KEY = new AttributeKey<JSONObject>(
+	    "auth");
+
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(WebSocketServerHandler.class.getName());
 
     private static final String WEBSOCKET_PATH = "/";
@@ -195,6 +200,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 	// Send the uppercase string back.
 	String msg = ((TextWebSocketFrame) frame).text();
 	RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
+	roadrunnerEvent.put("auth", ctx.channel().attr(AUTH_ATTRIBUTE_KEY));
 	roadrunner.handle(handlers.get(ctx.channel()), roadrunnerEvent);
 
     }

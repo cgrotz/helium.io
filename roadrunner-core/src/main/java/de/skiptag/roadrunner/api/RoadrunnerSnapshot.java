@@ -3,6 +3,7 @@ package de.skiptag.roadrunner.api;
 import com.google.common.base.Objects;
 
 import de.skiptag.roadrunner.authorization.Authorization;
+import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.persistence.Persistence;
 
 public class RoadrunnerSnapshot {
@@ -83,7 +84,9 @@ public class RoadrunnerSnapshot {
 
     @Override
     public String toString() {
-	return Objects.toStringHelper(this).add("path", path).toString();
+	return Objects.toStringHelper(this)
+		.add(RoadrunnerEvent.PATH, path)
+		.toString();
     }
 
 }

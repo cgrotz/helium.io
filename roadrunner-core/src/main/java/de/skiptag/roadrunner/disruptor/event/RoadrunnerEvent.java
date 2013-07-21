@@ -9,6 +9,14 @@ import com.lmax.disruptor.EventFactory;
 
 public class RoadrunnerEvent extends JSONObject {
 
+    public static final String PAYLOAD = "payload";
+    public static final String CREATION_DATE = "creationDate";
+    public static final String TYPE = "type";
+    public static final String NODE_PATH = "nodePath";
+    public static final String PATH = "path";
+    public static final String FROM_HISTORY = "fromHistory";
+    public static final String OLD_VALUE = "oldValue";
+
     public static final EventFactory<RoadrunnerEvent> EVENT_FACTORY = new EventFactory<RoadrunnerEvent>() {
 
 	@Override
@@ -19,25 +27,25 @@ public class RoadrunnerEvent extends JSONObject {
     private boolean created;
 
     public RoadrunnerEvent() {
-	put("creationDate", System.currentTimeMillis());
+	put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
     }
 
     public RoadrunnerEvent(String string) {
 	super(string);
-	put("creationDate", System.currentTimeMillis());
-	Preconditions.checkArgument(has("type"), "No type defined in Event");
+	put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
+	Preconditions.checkArgument(has(RoadrunnerEvent.TYPE), "No type defined in Event");
     }
 
     public RoadrunnerEvent(RoadrunnerEventType type, String nodePath,
 	    Optional<?> value) {
-	Preconditions.checkArgument(has("type"), "No type defined in Event");
-	Preconditions.checkArgument(has("nodePath"), "No nodePath defined in Event");
-	put("type", type.toString());
-	put("path", nodePath);
+	Preconditions.checkArgument(has(RoadrunnerEvent.TYPE), "No type defined in Event");
+	Preconditions.checkArgument(has(RoadrunnerEvent.NODE_PATH), "No nodePath defined in Event");
+	put(RoadrunnerEvent.TYPE, type.toString());
+	put(RoadrunnerEvent.PATH, nodePath);
 	if (value.isPresent()) {
-	    put("payload", value.get());
+	    put(RoadrunnerEvent.PAYLOAD, value.get());
 	}
-	put("creationDate", System.currentTimeMillis());
+	put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
     }
 
     public void populate(String obj) {
@@ -87,14 +95,14 @@ public class RoadrunnerEvent extends JSONObject {
     }
 
     public RoadrunnerEventType getType() {
-	return RoadrunnerEventType.valueOf(((String) get("type")).toUpperCase());
+	return RoadrunnerEventType.valueOf(((String) get(RoadrunnerEvent.TYPE)).toUpperCase());
     }
 
     public String extractNodePath() {
-	if (!has("path")) {
+	if (!has(RoadrunnerEvent.PATH)) {
 	    return null;
 	}
-	String requestPath = (String) get("path");
+	String requestPath = (String) get(RoadrunnerEvent.PATH);
 	return extractPath(requestPath);
     }
 
@@ -110,27 +118,27 @@ public class RoadrunnerEvent extends JSONObject {
     }
 
     public JSONObject getOldValue() {
-	return (JSONObject) get("oldValue");
+	return (JSONObject) get(RoadrunnerEvent.OLD_VALUE);
     }
 
     public boolean isFromHistory() {
-	if (has("fromHistory")) {
-	    return getBoolean("fromHistory");
+	if (has(RoadrunnerEvent.FROM_HISTORY)) {
+	    return getBoolean(RoadrunnerEvent.FROM_HISTORY);
 	} else {
 	    return false;
 	}
     }
 
     public void setFromHistory(boolean fromHistory) {
-	put("fromHistory", fromHistory);
+	put(RoadrunnerEvent.FROM_HISTORY, fromHistory);
     }
 
     public long getCreationDate() {
-	return getLong("creationDate");
+	return getLong(RoadrunnerEvent.CREATION_DATE);
     }
 
     public void setCreationDate(long creationDate) {
-	put("creationDate", creationDate);
+	put(RoadrunnerEvent.CREATION_DATE, creationDate);
     }
 
     public boolean created() {

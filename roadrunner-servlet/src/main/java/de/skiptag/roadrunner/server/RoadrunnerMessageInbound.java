@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
 import org.apache.catalina.websocket.MessageInbound;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,13 +18,12 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	RoadrunnerResponseSender {
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
     private Roadrunner roadrunner;
-    private String basePath;
     private RoadrunnerEndpoint endpoint;
+    private JSONObject auth;
 
     public RoadrunnerMessageInbound(String basePath, Roadrunner roadrunner) {
 	this.roadrunner = roadrunner;
-	this.basePath = basePath;
-	endpoint = new RoadrunnerEndpoint(basePath, this);
+	this.endpoint = new RoadrunnerEndpoint(basePath, this);
     }
 
     @Override
@@ -41,6 +41,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
     protected void onTextMessage(CharBuffer message) throws IOException {
 	String msg = message.toString();
 	RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
+	roadrunnerEvent.put("auth", auth);
 	roadrunner.handle(endpoint, roadrunnerEvent);
     }
 

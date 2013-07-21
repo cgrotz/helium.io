@@ -68,7 +68,7 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
 	    RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(new String(
 		    record));
 	    roadrunnerEvent.setFromHistory(true);
-	    Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
+	    Preconditions.checkArgument(roadrunnerEvent.has(RoadrunnerEvent.TYPE), "No type defined in Event");
 	    roadrunner.handleEvent(roadrunnerEvent);
 	}
     }

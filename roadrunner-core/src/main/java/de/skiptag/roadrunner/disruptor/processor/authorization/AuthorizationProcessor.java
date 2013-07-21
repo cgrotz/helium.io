@@ -18,13 +18,10 @@ public class AuthorizationProcessor implements EventHandler<RoadrunnerEvent> {
 
     private Persistence persistence;
 
-    private JSONObject auth;
-
     public AuthorizationProcessor(Authorization authorization,
 	    Persistence persistence) {
 	this.authorization = authorization;
 	this.persistence = persistence;
-	this.auth = new JSONObject();
     }
 
     @Override
@@ -34,19 +31,19 @@ public class AuthorizationProcessor implements EventHandler<RoadrunnerEvent> {
 	    InMemoryDataSnapshot root = new InMemoryDataSnapshot(
 		    persistence.get(null));
 	    InMemoryDataSnapshot data = new InMemoryDataSnapshot(
-		    event.has("payload") ? event.get("payload") : null);
-	    authorization.authorize(RoadrunnerOperation.WRITE, auth, root, path.toString(), data);
+		    event.has(RoadrunnerEvent.PAYLOAD) ? event.get(RoadrunnerEvent.PAYLOAD) : null);
+	    authorization.authorize(RoadrunnerOperation.WRITE, event.getJSONObject("auth"), root, path.toString(), data);
 	} else if (event.getType() == RoadrunnerEventType.SET) {
-	    if (event.has("payload")) {
+	    if (event.has(RoadrunnerEvent.PAYLOAD) && event.get(RoadrunnerEvent.PAYLOAD) == JSONObject.NULL) {
 		InMemoryDataSnapshot root = new InMemoryDataSnapshot(
 			persistence.get(null));
 		InMemoryDataSnapshot data = new InMemoryDataSnapshot(
-			event.get("payload"));
-		authorization.authorize(RoadrunnerOperation.WRITE, auth, root, path.toString(), data);
+			event.get(RoadrunnerEvent.PAYLOAD));
+		authorization.authorize(RoadrunnerOperation.WRITE, event.getJSONObject("auth"), root, path.toString(), data);
 	    } else {
 		InMemoryDataSnapshot root = new InMemoryDataSnapshot(
 			persistence.get(null));
-		authorization.authorize(RoadrunnerOperation.REMOVE, auth, root, path.toString(), null);
+		authorization.authorize(RoadrunnerOperation.REMOVE, event.getJSONObject("auth"), root, path.toString(), null);
 	    }
 	}
     }
