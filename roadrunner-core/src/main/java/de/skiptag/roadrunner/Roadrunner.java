@@ -3,13 +3,11 @@ package de.skiptag.roadrunner;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Set;
 
 import org.json.JSONObject;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
 
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
@@ -22,7 +20,7 @@ import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
-public class Roadrunner implements RoadrunnerResponseSender {
+public class Roadrunner {
 
     public static final JSONObject ALL_ACCESS_RULE = new JSONObject(
 	    "{\".write\": \"true\",\".read\": \"true\",\".remove\":\"true\"}");
@@ -35,14 +33,12 @@ public class Roadrunner implements RoadrunnerResponseSender {
 
     private RoadrunnerDisruptor disruptor;
 
-    private Set<RoadrunnerResponseSender> senders = Sets.newHashSet();
-
     private RuleBasedAuthorization authorization;
 
     public Roadrunner(String journalDirectory,
 	    Optional<File> snapshotDirectory, JSONObject rule)
 	    throws IOException {
-	this.roadrunnerEventHandler = new RoadrunnerEventHandler(this);
+	this.roadrunnerEventHandler = new RoadrunnerEventHandler();
 	this.authorization = new RuleBasedAuthorization(rule);
 	this.persistence = new InMemoryPersistence();
 
@@ -57,14 +53,7 @@ public class Roadrunner implements RoadrunnerResponseSender {
     }
 
     public void addSender(RoadrunnerResponseSender webSocketServerHandler) {
-	this.senders.add(webSocketServerHandler);
-    }
-
-    @Override
-    public void send(String string) {
-	for (RoadrunnerResponseSender sender : senders) {
-	    sender.send(string);
-	}
+	roadrunnerEventHandler.addSender(webSocketServerHandler);
     }
 
     public void handle(String msg) {
@@ -97,7 +86,7 @@ public class Roadrunner implements RoadrunnerResponseSender {
     }
 
     public void removeSender(RoadrunnerResponseSender roadrunnerSender) {
-	this.senders.remove(roadrunnerSender);
+	roadrunnerEventHandler.removeSender(roadrunnerSender);
     }
 
     public Authorization getAuthorization() {

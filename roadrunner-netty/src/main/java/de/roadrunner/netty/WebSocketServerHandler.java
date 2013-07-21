@@ -72,6 +72,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
     private Roadrunner roadrunner;
 
+    private String basePath;
+
     public WebSocketServerHandler(Roadrunner roadrunner) {
 	this.roadrunner = roadrunner;
 	roadrunner.addSender(this);
@@ -92,7 +94,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
     private void handleHttpRequest(ChannelHandlerContext ctx,
 	    FullHttpRequest req) throws IOException {
-	roadrunner.setBasePath(getWebSocketLocation(req));
+	basePath = getWebSocketLocation(req);
+	roadrunner.setBasePath(basePath);
 	// Handle a bad request.
 	if (!req.getDecoderResult().isSuccess()) {
 	    sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1,
@@ -122,7 +125,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
 	// Handshake
 	WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
-		getWebSocketLocation(req), null, false);
+		basePath, null, false);
 	handshaker = wsFactory.newHandshaker(req);
 	if (handshaker == null) {
 	    WebSocketServerHandshakerFactory.sendUnsupportedWebSocketVersionResponse(ctx.channel());
@@ -210,7 +213,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
     }
 
     private static String getWebSocketLocation(FullHttpRequest req) {
-	return "ws://" + req.headers().get(HOST) + WEBSOCKET_PATH;
+	return "ws://" + req.headers().get(HOST);
     }
 
     private static String getHttpSocketLocation(FullHttpRequest req) {
@@ -222,5 +225,10 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 	for (Channel channel : channels) {
 	    channel.write(new TextWebSocketFrame(msg));
 	}
+    }
+
+    @Override
+    public String getBasePath() {
+	return basePath;
     }
 }

@@ -34,7 +34,7 @@ public class AuthorizationProcessor implements EventHandler<RoadrunnerEvent> {
 	    InMemoryDataSnapshot root = new InMemoryDataSnapshot(
 		    persistence.get(null));
 	    InMemoryDataSnapshot data = new InMemoryDataSnapshot(
-		    event.get("payload"));
+		    event.has("payload") ? event.get("payload") : null);
 	    authorization.authorize(RoadrunnerOperation.WRITE, auth, root, path.toString(), data);
 	} else if (event.getType() == RoadrunnerEventType.SET) {
 	    if (event.has("payload")) {

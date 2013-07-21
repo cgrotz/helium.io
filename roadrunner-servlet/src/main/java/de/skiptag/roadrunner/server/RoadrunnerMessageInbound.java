@@ -15,9 +15,11 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	RoadrunnerResponseSender {
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
     private Roadrunner roadrunner;
+    private String basePath;
 
-    public RoadrunnerMessageInbound(Roadrunner roadrunner) {
+    public RoadrunnerMessageInbound(String basePath, Roadrunner roadrunner) {
 	this.roadrunner = roadrunner;
+	this.basePath = basePath;
     }
 
     @Override
@@ -44,5 +46,10 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	} catch (IOException e) {
 	    logger.error("Error sending message", e);
 	}
+    }
+
+    @Override
+    public String getBasePath() {
+	return basePath;
     }
 }

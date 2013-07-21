@@ -36,7 +36,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
     @Override
     protected StreamInbound createWebSocketInbound(String subProtocol,
 	    HttpServletRequest request) {
-	return new RoadrunnerMessageInbound(roadrunner);
+	return new RoadrunnerMessageInbound("ws://localhost:8080/", roadrunner);
     }
 
     /*

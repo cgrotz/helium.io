@@ -29,7 +29,8 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
     public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch) {
 	logger.trace("distributing event: " + event);
 
-	String path = event.getString("path");
+	String path = event.extractNodePath();
+
 	Path nodePath = new Path(event.extractNodePath());
 	RoadrunnerEventType type = event.getType();
 	Object node = persistence.get(nodePath);

@@ -68,7 +68,7 @@ function RoadrunnerConnection(url) {
 	roadrunner_endpoint.eventhandlers.push(function(event) {
 		var message = JSON.parse(event.data);
 
-		//console.debug('Receiving Message from Server: ',message);
+		console.debug('Receiving Message from Server: ',message);
 		if (Object.prototype.toString.call(message) === '[object Array]') {
 			for ( var i = 0; i < message.length; i++) {
 				self.handleMessage(message[i]);
@@ -85,7 +85,7 @@ function RoadrunnerConnection(url) {
 			path : path,
 			payload : payload
 		};
-		//console.debug('Sending Message to Server: ',message);
+		console.debug('Sending Message to Server: ',message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
 			roadrunner_endpoint.send(JSON.stringify(message));
 		} else {
@@ -94,7 +94,7 @@ function RoadrunnerConnection(url) {
 	};
 
 	this.sendSimpleMessage = function(message) {
-		//console.debug('Sending Message to Server: ',message);
+		console.debug('Sending Message to Server: ',message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
 			roadrunner_endpoint.send(JSON.stringify(message));
 		} else {
@@ -121,7 +121,7 @@ function Roadrunner(path) {
 		{
 			try
 			{
-				if (snapshot.path().indexOf(workpath) < 1) {
+				if (snapshot.path().indexOf(workpath) == 0) {
 					var callback = events['value'];
 					if (callback != null) {
 						callback(snapshot);
@@ -144,7 +144,7 @@ function Roadrunner(path) {
 		{
 			workpath = workpath + "/";
 		}
-		if (snapshot.path().indexOf(workpath) < 1) {
+		if (snapshot.path().indexOf(workpath) == 0) {
 			var callback = events[message.type];
 			if (callback != null) {
 				callback(snapshot);
