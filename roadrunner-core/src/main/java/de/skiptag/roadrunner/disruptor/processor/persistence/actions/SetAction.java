@@ -1,6 +1,5 @@
 package de.skiptag.roadrunner.disruptor.processor.persistence.actions;
 
-
 import org.json.JSONObject;
 
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
@@ -20,7 +19,10 @@ public class SetAction {
 	JSONObject payload;
 	if (message.has("payload")) {
 	    Object obj = message.get("payload");
-	    if (obj instanceof JSONObject) {
+	    if (obj == JSONObject.NULL || obj == null) {
+		message.put("oldValue", persistence.get(path));
+		persistence.remove(path);
+	    } else if (obj instanceof JSONObject) {
 		payload = (JSONObject) obj;
 		if (payload instanceof JSONObject) {
 		    boolean created = persistence.applyNewValue(path, payload);

@@ -69,7 +69,6 @@ public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
 		    record));
 	    roadrunnerEvent.setFromHistory(true);
 	    Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
-	    Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
 	    roadrunner.handleEvent(roadrunnerEvent);
 	}
     }

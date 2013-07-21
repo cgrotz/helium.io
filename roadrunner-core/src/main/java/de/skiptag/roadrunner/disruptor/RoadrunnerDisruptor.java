@@ -84,6 +84,7 @@ public class RoadrunnerDisruptor {
 	    eventSourceProcessor.setCurrentLocation(new Location(dataFileId,
 		    pointer));
 	}
+	restoreFromJournal();
     }
 
     @SuppressWarnings("unchecked")

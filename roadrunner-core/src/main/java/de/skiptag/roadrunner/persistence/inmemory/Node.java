@@ -53,7 +53,12 @@ public class Node extends JSONObject {
 	Node node;
 	if (has(path.getFirstElement())) {
 	    Object object = get(path.getFirstElement());
-	    node = (Node) object;
+	    if (object instanceof Node) {
+		node = (Node) object;
+	    } else {
+		node = new Node();
+		put(path.getFirstElement(), node);
+	    }
 	} else {
 	    node = new Node();
 	    put(path.getFirstElement(), node);

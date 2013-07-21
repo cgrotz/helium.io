@@ -37,16 +37,18 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
 	Path nodePath = new Path(event.extractNodePath());
 	RoadrunnerEventType type = event.getType();
-	Object node = persistence.get(nodePath);
 	if (type == RoadrunnerEventType.PUSH) {
+	    Object node = persistence.get(nodePath);
 	    fireChildAdded((String) event.get("name"), path, nodePath.getParent()
 		    .getLastElement(), node, hasChildren(node), childCount(node));
 	} else if (type == RoadrunnerEventType.SET) {
 	    if (event.has("payload") && !event.isNull("payload")) {
 		if (event.created()) {
+		    Object node = persistence.get(nodePath);
 		    fireChildAdded(nodePath.getLastElement(), path, nodePath.getParent()
 			    .getLastElement(), node, hasChildren(node), childCount(node));
 		} else {
+		    Object node = persistence.get(nodePath);
 		    fireChildChanged(nodePath.getLastElement(), path, nodePath.getParent()
 			    .getLastElement(), node, hasChildren(node), childCount(node));
 		}
