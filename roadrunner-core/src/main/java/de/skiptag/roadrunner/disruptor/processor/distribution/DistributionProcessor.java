@@ -32,34 +32,36 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
     @Override
     public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch) {
 	logger.trace("distributing event: " + event);
+	if (!event.isFromHistory()) {
+	    String path = event.extractNodePath();
 
-	String path = event.extractNodePath();
-
-	Path nodePath = new Path(event.extractNodePath());
-	RoadrunnerEventType type = event.getType();
-	if (type == RoadrunnerEventType.PUSH) {
-	    Object node = persistence.get(nodePath);
-	    fireChildAdded((String) event.get("name"), path, nodePath.getParent()
-		    .getLastElement(), node, hasChildren(node), childCount(node));
-	} else if (type == RoadrunnerEventType.SET) {
-	    if (event.has(RoadrunnerEvent.PAYLOAD) && !event.isNull(RoadrunnerEvent.PAYLOAD)) {
-		if (event.created()) {
-		    Object node = persistence.get(nodePath);
-		    fireChildAdded(nodePath.getLastElement(), path, nodePath.getParent()
-			    .getLastElement(), node, hasChildren(node), childCount(node));
+	    Path nodePath = new Path(event.extractNodePath());
+	    RoadrunnerEventType type = event.getType();
+	    if (type == RoadrunnerEventType.PUSH) {
+		Object node = persistence.get(nodePath);
+		fireChildAdded((String) event.get("name"), path, nodePath.getParent()
+			.getLastElement(), node, hasChildren(node), childCount(node));
+	    } else if (type == RoadrunnerEventType.SET) {
+		if (event.has(RoadrunnerEvent.PAYLOAD)
+			&& !event.isNull(RoadrunnerEvent.PAYLOAD)) {
+		    if (event.created()) {
+			Object node = persistence.get(nodePath);
+			fireChildAdded(nodePath.getLastElement(), path, nodePath.getParent()
+				.getLastElement(), node, hasChildren(node), childCount(node));
+		    } else {
+			Object node = persistence.get(nodePath);
+			fireChildChanged(nodePath.getLastElement(), path, nodePath.getParent()
+				.getLastElement(), node, hasChildren(node), childCount(node));
+		    }
 		} else {
-		    Object node = persistence.get(nodePath);
-		    fireChildChanged(nodePath.getLastElement(), path, nodePath.getParent()
-			    .getLastElement(), node, hasChildren(node), childCount(node));
+		    firChildRemoved(path, event.getOldValue());
 		}
-	    } else {
-		firChildRemoved(path, event.getOldValue());
 	    }
-	}
 
-	org.joda.time.Duration dur = new org.joda.time.Duration(
-		event.getCreationDate(), System.currentTimeMillis());
-	logger.trace("Message Processing took: " + dur.getMillis() + "ms");
+	    org.joda.time.Duration dur = new org.joda.time.Duration(
+		    event.getCreationDate(), System.currentTimeMillis());
+	    logger.trace("Message Processing took: " + dur.getMillis() + "ms");
+	}
     }
 
     private void firChildRemoved(String path, JSONObject payload) {

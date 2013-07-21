@@ -150,7 +150,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 			@Override
 			public void send(String msg) {
 			    logger.trace("Sending Message: " + msg);
-			    channel.write(new TextWebSocketFrame(msg));
+			    channel.writeAndFlush(new TextWebSocketFrame(msg));
 			}
 		    });
 	    handlers.put(channel, handler);
