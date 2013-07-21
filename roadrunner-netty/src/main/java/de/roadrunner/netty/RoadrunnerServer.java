@@ -76,16 +76,25 @@ public class RoadrunnerServer {
 		.withDescription("Snapshot directory")
 		.isRequired()
 		.create("s");
+	@SuppressWarnings("static-access")
+	Option basePathOption = OptionBuilder.withArgName("basepath")
+		.hasArg()
+		.withDescription("basePath of the Roadrunner instance")
+		.isRequired()
+		.create("b");
 	options.addOption(directoryOption);
 	options.addOption(snaphshotOption);
+	options.addOption(basePathOption);
+
 	options.addOption("p", true, "Port for the webserver");
     }
 
-    public RoadrunnerServer(int port, String journalDir, String snapshotDir)
-	    throws IOException {
+    public RoadrunnerServer(String basePath, int port, String journalDir,
+	    String snapshotDir) throws IOException {
 	this.port = port;
 	Optional<File> snapshotDirectory = Optional.of(new File(snapshotDir));
-	this.roadrunner = new Roadrunner(journalDir, snapshotDirectory);
+	this.roadrunner = new Roadrunner(basePath, journalDir,
+		snapshotDirectory);
     }
 
     public void run() throws InterruptedException {
@@ -110,9 +119,10 @@ public class RoadrunnerServer {
 	try {
 	    CommandLine cmd = parser.parse(options, args);
 	    String directory = cmd.getOptionValue("d");
+	    String basePath = cmd.getOptionValue("b");
 	    String snapshotDirectory = cmd.getOptionValue("s");
 	    int port = Integer.parseInt(cmd.getOptionValue("p", "8080"));
-	    new RoadrunnerServer(port, directory, snapshotDirectory).run();
+	    new RoadrunnerServer(basePath, port, directory, snapshotDirectory).run();
 	} catch (ParseException e) {
 	    System.out.println(e.getLocalizedMessage());
 	    HelpFormatter formatter = new HelpFormatter();

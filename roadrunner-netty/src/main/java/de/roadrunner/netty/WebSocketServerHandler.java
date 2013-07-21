@@ -44,39 +44,36 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.Map;
 
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 
 import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
+import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 import de.skiptag.roadrunner.persistence.Path;
 
 /**
  * Handles handshakes and messages
  */
-public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
-	implements RoadrunnerResponseSender {
+public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(WebSocketServerHandler.class.getName());
 
     private static final String WEBSOCKET_PATH = "/";
 
     private WebSocketServerHandshaker handshaker;
 
-    private Set<Channel> channels = Sets.newHashSet();
-
     private Roadrunner roadrunner;
 
-    private String basePath;
+    private Map<Channel, RoadrunnerEndpoint> handlers = Maps.newHashMap();
 
     public WebSocketServerHandler(Roadrunner roadrunner) {
 	this.roadrunner = roadrunner;
-	roadrunner.addSender(this);
     }
 
     @Override
@@ -94,8 +91,6 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
     private void handleHttpRequest(ChannelHandlerContext ctx,
 	    FullHttpRequest req) throws IOException {
-	basePath = getWebSocketLocation(req);
-	roadrunner.setBasePath(basePath);
 	// Handle a bad request.
 	if (!req.getDecoderResult().isSuccess()) {
 	    sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1,
@@ -125,22 +120,31 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
 	// Handshake
 	WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
-		basePath, null, false);
+		getWebSocketLocation(req), null, false);
 	handshaker = wsFactory.newHandshaker(req);
 	if (handshaker == null) {
 	    WebSocketServerHandshakerFactory.sendUnsupportedWebSocketVersionResponse(ctx.channel());
 	} else {
 	    handshaker.handshake(ctx.channel(), req);
 	}
-	channels.add(ctx.channel());
+	final Channel channel = ctx.channel();
+	RoadrunnerEndpoint handler = new RoadrunnerEndpoint(
+		getWebSocketLocation(req), new RoadrunnerResponseSender() {
+
+		    @Override
+		    public void send(String msg) {
+			logger.trace("Sending Message: " + msg);
+			channel.write(new TextWebSocketFrame(msg));
+		    }
+		});
+	handlers.put(channel, handler);
+	roadrunner.addEndpoint(handler);
     }
 
     private void handleRestCall(ChannelHandlerContext ctx, FullHttpRequest req,
 	    FullHttpResponse res) {
 
-	String basePath = getHttpSocketLocation(req);
-	Path nodePath = new Path(
-		RoadrunnerEvent.extractPath(basePath, req.getUri()));
+	Path nodePath = new Path(RoadrunnerEvent.extractPath(req.getUri()));
 	if (req.getMethod() == GET) {
 	    res.content().writeBytes(roadrunner.getPersistence()
 		    .get(nodePath)
@@ -186,7 +190,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
 
 	// Send the uppercase string back.
 	String msg = ((TextWebSocketFrame) frame).text();
-	roadrunner.handle(msg);
+
+	roadrunner.handle(handlers.get(ctx.channel()), msg);
 
     }
 
@@ -219,16 +224,5 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object>
     private static String getHttpSocketLocation(FullHttpRequest req) {
 
 	return "http://" + req.headers().get(HOST) + WEBSOCKET_PATH;
-    }
-
-    public void send(String msg) {
-	for (Channel channel : channels) {
-	    channel.write(new TextWebSocketFrame(msg));
-	}
-    }
-
-    @Override
-    public String getBasePath() {
-	return basePath;
     }
 }

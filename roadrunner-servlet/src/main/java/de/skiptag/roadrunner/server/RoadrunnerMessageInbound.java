@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.skiptag.roadrunner.Roadrunner;
+import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 
 public class RoadrunnerMessageInbound extends MessageInbound implements
@@ -16,10 +17,12 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
     private Roadrunner roadrunner;
     private String basePath;
+    private RoadrunnerEndpoint endpoint;
 
     public RoadrunnerMessageInbound(String basePath, Roadrunner roadrunner) {
 	this.roadrunner = roadrunner;
 	this.basePath = basePath;
+	endpoint = new RoadrunnerEndpoint(basePath, this);
     }
 
     @Override
@@ -30,13 +33,13 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
     @Override
     protected void onClose(int status) {
 	super.onClose(status);
-	roadrunner.removeSender(this);
+	roadrunner.removeEndpoint(endpoint);
     }
 
     @Override()
     protected void onTextMessage(CharBuffer message) throws IOException {
 	String msg = message.toString();
-	roadrunner.handle(msg);
+	roadrunner.handle(endpoint, msg);
     }
 
     @Override
@@ -46,10 +49,5 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 	} catch (IOException e) {
 	    logger.error("Error sending message", e);
 	}
-    }
-
-    @Override
-    public String getBasePath() {
-	return basePath;
     }
 }

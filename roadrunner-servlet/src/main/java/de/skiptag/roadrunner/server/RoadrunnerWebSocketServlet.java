@@ -66,9 +66,11 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	super.init(config);
 	String journalDirectory = Preconditions.checkNotNull(config.getInitParameter("journalDirectory"), "JournalDirectory must be configured in web.xml");
 	String snapshotDirectory = Preconditions.checkNotNull(config.getInitParameter("snapshotDirectory"), "SnapshotDirectory must be configured in web.xml");
+	String basePath = Preconditions.checkNotNull(config.getInitParameter("basePath"), "BasePath must be configured in web.xml");
 	try {
 	    Optional<File> snapshotDir = Optional.of(new File(snapshotDirectory));
-	    this.roadrunner = new Roadrunner(journalDirectory, snapshotDir);
+	    this.roadrunner = new Roadrunner(basePath, journalDirectory,
+		    snapshotDir);
 	} catch (IOException e) {
 	    logger.error("Error loading Roadrunner", e);
 	}
@@ -94,9 +96,8 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 
     private void handleRestCall(HttpServletRequest req, HttpServletResponse resp)
 	    throws IOException, RuntimeException {
-	String basePath = getHttpSocketLocation(req);
 	Path nodePath = new Path(
-		RoadrunnerEvent.extractPath(basePath, req.getRequestURI()));
+		RoadrunnerEvent.extractPath(req.getRequestURI()));
 	if (req.getMethod().equals("GET")) {
 	    resp.getWriter().append(roadrunner.getPersistence()
 		    .get(nodePath)

@@ -6,7 +6,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 
@@ -33,7 +33,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void syncPath(Path path, RoadrunnerEventHandler handler) {
+    public void syncPath(Path path, RoadrunnerEndpoint handler) {
 	Node node = model.getNodeForPath(path);
 
 	Iterator<?> itr = node.keys();

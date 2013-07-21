@@ -1,6 +1,6 @@
 package de.skiptag.roadrunner.persistence;
 
-import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 
 public interface Persistence extends SnapshotProcessor {
 
@@ -10,6 +10,6 @@ public interface Persistence extends SnapshotProcessor {
 
     boolean applyNewValue(Path path, Object payload);
 
-    void syncPath(Path path, RoadrunnerEventHandler handler);
+    void syncPath(Path path, RoadrunnerEndpoint handler);
 
 }

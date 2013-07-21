@@ -21,36 +21,25 @@ public class RoadrunnerEvent extends JSONObject {
     private boolean created;
 
     public RoadrunnerEvent() {
-    }
-
-    public RoadrunnerEvent(String string, String basePath) {
-	super(string);
-	put("basePath", basePath);
 	put("creationDate", new Date());
-	Preconditions.checkArgument(has("type"), "No type defined in Event");
-	Preconditions.checkArgument(has("basePath"), "No basePath defined in Event");
     }
 
     public RoadrunnerEvent(String string) {
 	super(string);
+	put("creationDate", new Date());
+	Preconditions.checkArgument(has("type"), "No type defined in Event");
     }
 
     public RoadrunnerEvent(RoadrunnerEventType type, String nodePath,
-	    Optional<?> value, String basePath) {
+	    Optional<?> value) {
 	Preconditions.checkArgument(has("type"), "No type defined in Event");
-	Preconditions.checkArgument(has("basePath"), "No basePath defined in Event");
 	Preconditions.checkArgument(has("nodePath"), "No nodePath defined in Event");
 	put("type", type.toString());
 	put("path", nodePath);
 	if (value.isPresent()) {
 	    put("payload", value.get());
 	}
-	put("basePath", basePath);
 	put("creationDate", new Date());
-    }
-
-    public String getBasePath() {
-	return getString("basePath");
     }
 
     public void populate(String obj) {
@@ -107,19 +96,16 @@ public class RoadrunnerEvent extends JSONObject {
 	if (!has("path")) {
 	    return null;
 	}
-	String basePath = getBasePath();
 	String requestPath = (String) get("path");
-
-	return extractPath(basePath, requestPath);
+	return extractPath(requestPath);
     }
 
-    public static String extractPath(String basePath, String requestPath) {
+    public static String extractPath(String requestPath) {
 	String result = requestPath;
-	int basePathLength = basePath.length();
-
-	int indexOfBasePath = result.indexOf(basePath);
-	if (indexOfBasePath > -1) {
-	    result = result.substring(indexOfBasePath + basePathLength);
+	if (requestPath.startsWith("ws://")) {
+	    result = requestPath.substring(requestPath.indexOf("/", 5));
+	} else if (requestPath.startsWith("wss://")) {
+	    result = requestPath.substring(requestPath.indexOf("/", 6));
 	}
 
 	return result.startsWith("/") ? result : "/" + result;
@@ -127,10 +113,6 @@ public class RoadrunnerEvent extends JSONObject {
 
     public JSONObject getOldValue() {
 	return (JSONObject) get("oldValue");
-    }
-
-    public void setBasePath(String basePath) {
-	put("basePath", basePath);
     }
 
     public boolean isFromHistory() {

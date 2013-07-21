@@ -28,7 +28,7 @@ import de.skiptag.roadrunner.disruptor.processor.authorization.AuthorizationProc
 import de.skiptag.roadrunner.disruptor.processor.distribution.DistributionProcessor;
 import de.skiptag.roadrunner.disruptor.processor.eventsourcing.EventSourceProcessor;
 import de.skiptag.roadrunner.disruptor.processor.persistence.PersistenceProcessor;
-import de.skiptag.roadrunner.messaging.RoadrunnerEventHandler;
+import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.Node;
 
@@ -46,11 +46,10 @@ public class RoadrunnerDisruptor {
 
     public RoadrunnerDisruptor(File journalDirectory,
 	    Optional<File> snapshotDirectory, Persistence persistence,
-	    Authorization authorization,
-	    RoadrunnerEventHandler roadrunnerEventHandler) throws IOException {
+	    Authorization authorization) throws IOException {
 
 	this.persistence = persistence;
-	initDisruptor(journalDirectory, persistence, authorization, roadrunnerEventHandler);
+	initDisruptor(journalDirectory, persistence, authorization);
 	if (snapshotDirectory.isPresent()) {
 	    restoreFromSnapshot(snapshotDirectory.get(), persistence);
 	} else {
@@ -89,8 +88,7 @@ public class RoadrunnerDisruptor {
 
     @SuppressWarnings("unchecked")
     private void initDisruptor(File journalDirectory, Persistence persistence,
-	    Authorization authorization,
-	    RoadrunnerEventHandler roadrunnerEventHandler) throws IOException {
+	    Authorization authorization) throws IOException {
 	ExecutorService executor = Executors.newCachedThreadPool();
 	disruptor = new Disruptor<RoadrunnerEvent>(
 		RoadrunnerEvent.EVENT_FACTORY, RING_SIZE, executor);
@@ -100,7 +98,7 @@ public class RoadrunnerDisruptor {
 	eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
 	persistenceProcessor = new PersistenceProcessor(persistence);
 	distributionProcessor = new DistributionProcessor(persistence,
-		authorization, roadrunnerEventHandler);
+		authorization);
 
 	disruptor.handleEventsWith(authorizationProcessor)
 		.then(eventSourceProcessor)
@@ -112,7 +110,6 @@ public class RoadrunnerDisruptor {
 
     public void handleEvent(final RoadrunnerEvent roadrunnerEvent) {
 	Preconditions.checkArgument(roadrunnerEvent.has("type"), "No type defined in Event");
-	Preconditions.checkArgument(roadrunnerEvent.has("basePath"), "No basePath defined in Event");
 	RoadrunnerEventTranslator eventTranslator = new RoadrunnerEventTranslator(
 		roadrunnerEvent);
 	logger.trace("handling event: " + roadrunnerEvent + "("
@@ -139,5 +136,13 @@ public class RoadrunnerDisruptor {
 
     public void shutdown() {
 	disruptor.shutdown();
+    }
+
+    public void addEndpoint(RoadrunnerEndpoint handler) {
+	distributionProcessor.addHandler(handler);
+    }
+
+    public void removeEndpoint(RoadrunnerEndpoint handler) {
+	distributionProcessor.removeHandler(handler);
     }
 }
