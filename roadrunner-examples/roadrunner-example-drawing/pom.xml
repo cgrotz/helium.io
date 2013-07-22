@@ -9,10 +9,27 @@
 	<artifactId>roadrunner-example-drawing</artifactId>
 	<packaging>war</packaging>
 	<name>Roadrunner Example Drawing</name>
+	<build>
+		<finalName>drawing</finalName>
+		<plugins>
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+					<warName>drawing</warName>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 	<dependencies>
 		<dependency>
 			<groupId>de.skiptag.roadrunner</groupId>
 			<artifactId>roadrunner-servlet</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j.version}</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -14,4 +14,6 @@ public interface DataListener {
 
     void child_changed(String name, String String, String parent,
 	    Object payload, boolean hasChildren, long numChildren);
+
+    void distributeEvent(String path, JSONObject jsonObject);
 }

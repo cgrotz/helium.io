@@ -182,6 +182,11 @@ function Roadrunner(path) {
 		roadrunner_connection.sendMessage('push', path, data, name);
 		return new Roadrunner(path + "/" + name);
 	};
+
+	this.send = function(data) {		
+		var name = UUID.generate();
+		roadrunner_connection.sendMessage('event', path, data, name);
+	};
 	
 	this.set = function(data) {		
 		roadrunner_connection.sendMessage('set', path, data);

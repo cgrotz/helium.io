@@ -75,6 +75,17 @@ public class RoadrunnerEndpoint implements DataListener {
 	}
     }
 
+    @Override
+    public void distributeEvent(String path, JSONObject payload) {
+	if (hasListener(path)) {
+	    JSONObject broadcast = new JSONObject();
+	    broadcast.put(RoadrunnerEvent.TYPE, "event");
+	    broadcast.put(RoadrunnerEvent.PATH, basePath + path);
+	    broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
+	    sender.send(broadcast.toString());
+	}
+    }
+
     public void addListener(String path) {
 	attached_listeners.add(path);
     }

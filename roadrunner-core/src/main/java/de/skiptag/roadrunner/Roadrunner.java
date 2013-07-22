@@ -53,6 +53,8 @@ public class Roadrunner {
 	    persistence.syncPath(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
 	} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACHED_LISTENER) {
 	    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
+	} else if (roadrunnerEvent.getType() == RoadrunnerEventType.EVENT) {
+	    disruptor.getDistributor().distribute(roadrunnerEvent);
 	} else {
 	    roadrunnerEvent.setFromHistory(false);
 	    disruptor.handleEvent(roadrunnerEvent);

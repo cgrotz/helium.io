@@ -38,6 +38,7 @@ public class RoadrunnerDisruptor {
     private EventSourceProcessor eventSourceProcessor;
     private PersistenceProcessor persistenceProcessor;
     private DistributionProcessor distributionProcessor;
+
     private Disruptor<RoadrunnerEvent> disruptor;
     private AuthorizationProcessor authorizationProcessor;
     private Persistence persistence;
@@ -145,5 +146,9 @@ public class RoadrunnerDisruptor {
 
     public void removeEndpoint(RoadrunnerEndpoint handler) {
 	distributionProcessor.removeHandler(handler);
+    }
+
+    public DistributionProcessor getDistributor() {
+	return distributionProcessor;
     }
 }

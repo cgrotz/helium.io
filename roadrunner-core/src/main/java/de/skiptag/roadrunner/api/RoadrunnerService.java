@@ -163,4 +163,10 @@ public class RoadrunnerService implements DataListener {
 	persistence.applyNewValue(new Path(path), data);
 	return this;
     }
+
+    @Override
+    public void distributeEvent(String path, JSONObject jsonObject) {
+	// TODO Auto-generated method stub
+
+    }
 }
