@@ -113,9 +113,6 @@ function Roadrunner(path) {
 	roadrunner_connection.handleMessage = function(message) {
 		var snapshot = new Snapshot(message, roadrunner_connection);
 		var workpath = self.path;
-		if (workpath.indexOf("/roadrunner") > -1) {
-			workpath = workpath.substr(workpath.lastIndexOf("/roadrunner")+11, workpath.length);
-		}
 		// Direkt Change start (value)
 		{
 			try
