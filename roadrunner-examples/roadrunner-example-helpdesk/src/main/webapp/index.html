@@ -1,158 +1,92 @@
-
 <!DOCTYPE html>
-<html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
 <head>
-<title>WebRTC Demo</title>
-<script src="roadrunner.js"></script>
-<script
-	src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>Todos</title>
+<meta name="description" content="">
+<meta name="viewport" content="width=device-width">
 
+<link rel="stylesheet" href="client/css/bootstrap.min.css">
+<style>
+body {
+	padding-top: 60px;
+	padding-bottom: 40px;
+}
+</style>
+<link rel="stylesheet" href="client/css/bootstrap-responsive.min.css">
+<link rel="stylesheet" href="client/css/main.css">
+
+<script src="client/js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+<script src="client/js/jquery.min.js"></script>
+
+<script src="roadrunner.js"></script>
+<script src="roadrunner-webrtc.js"></script>
 </head>
 <body>
-	<video id="webrtc-sourcevid" autoplay
-		style="width: 320px; height: 240px; border: 1px solid black;"></video>
-	<video id="webrtc-remotevid" autoplay
-		style="width: 320px; height: 240px; border: 1px solid black;"></video>
-<button type="button" onclick="connect();">Connect</button>
+	<!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
 
+	<!-- This code is taken from http://twitter.github.com/bootstrap/examples/hero.html -->
+
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+				<a class="btn btn-navbar" data-toggle="collapse"
+					data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+					class="icon-bar"></span> <span class="icon-bar"></span>
+				</a> <a class="brand" href="#">Todos</a>
+				<div class="nav-collapse collapse">
+					<ul class="nav">
+						<li class="active"><a href="#">Home</a></li>
+					</ul>
+				</div>
+				<!--/.nav-collapse -->
+			</div>
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="row">
+
+			<div class="span8">
+				<div>
+					<button class="btn btn-primary" type="button"
+						onclick="webRTC.connect();">Connect</button>
+				</div>
+			</div>
+			<div class="span4">
+				<div class="bs-docs bs-docs-remote">
+					<video id="webrtc-remoteVideoElement" autoplay
+						style="width: 100%;"></video>
+				</div>
+				<div class="bs-docs bs-docs-local">
+					<video id="webrtc-sourceVideoElement" autoplay
+						style="width: 100%;"></video>
+				</div>
+			</div>
+		</div>
+
+		<hr>
+
+		<footer>
+			<p>&copy; Helpdesk 2013</p>
+		</footer>
+
+	</div>
+	<!-- /container -->
+
+	<script src="client/js/vendor/bootstrap.min.js"></script>
 	<script>
 		var roadrunner = new Roadrunner('ws://localhost:8080/helpdesk/clients/clients/');
-		
-		var sourcevid = document.getElementById('webrtc-sourcevid');
-		var remotevid = document.getElementById('webrtc-remotevid');
-	
-		var localStream = null;
-		var peerConn = null;
-		var started = false;
-		var mediaConstraints = {
-			'mandatory' : {
-				'OfferToReceiveAudio' : true,
-				'OfferToReceiveVideo' : true
-			}
-		};
-		var isVideoMuted = false;
-
-		// get the local video up
-		function startVideo() {
-			navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || window.navigator.mozGetUserMedia || navigator.msGetUserMedia;
-			window.URL = window.URL || window.webkitURL;
-			navigator.getUserMedia({
-				video : true,
-				audio : true
-			}, successCallback, errorCallback);
-			function successCallback(stream) {
-				localStream = stream;
-				if (sourcevid.mozSrcObject) {
-					sourcevid.mozSrcObject = stream;
-					sourcevid.play();
-				} else {
-					try {
-						sourcevid.src = window.URL.createObjectURL(stream);
-						sourcevid.play();
-					} catch (e) {
-						console.log("Error setting video src: ", e);
-					}
-				}
-			}
-			function errorCallback(error) {
-				console.error('An error occurred: [CODE ' + error.code + ']');
-				return;
-			}
-		}
-
-		// send SDP via socket connection
-		function setLocalAndSendMessage(sessionDescription) {
-			peerConn.setLocalDescription(sessionDescription);
-			roadrunner.send(sessionDescription);
-		}
-
-		function failed(evt) {
-			console.log("Create Answer failed", evt);
-		}
-		roadrunner.on('event', function(snapshot) {
-			console.log('Websocket message recv:', snapshot.val());
-			var evt = snapshot.val();
-			if (evt.type === 'offer') {
-				console.log("Received offer...")
-				if (!started) {
-					createPeerConnection();
-					started = true;
-				}
-				console.log('Creating remote session description...');
-				peerConn.setRemoteDescription(new RTCSessionDescription(evt));
-				console.log('Sending answer...');
-				peerConn.createAnswer(setLocalAndSendMessage, failed, mediaConstraints);
-
-			} else if (evt.type === 'answer' && started) {
-				console.log('Received answer...');
-				console.log('Setting remote session description...');
-				peerConn.setRemoteDescription(new RTCSessionDescription(evt));
-
-			} else if (evt.type === 'candidate' && started) {
-				console.log('Received ICE candidate...');
-				var candidate = new RTCIceCandidate({
-					sdpMLineIndex : evt.sdpMLineIndex,
-					sdpMid : evt.sdpMid,
-					candidate : evt.candidate
-				});
-				console.log(candidate);
-				peerConn.addIceCandidate(candidate);
-
-			} else if (evt.type === 'bye' && started) {
-				console.log("Received bye");
-				stop();
-			}
-		});
-
-		// start the connection upon user request
-		function connect() {
-			if (!started && localStream) {
-				createPeerConnection();
-				started = true;
-				peerConn.createOffer(setLocalAndSendMessage, failed, mediaConstraints);
-			} else {
-				alert("Local stream not running yet - try again.");
-			}
-		}
-
-		function createPeerConnection() {
-			RTCPeerConnection = webkitRTCPeerConnection || mozRTCPeerConnection;
-			var pc_config = {
-				"iceServers" : []
-			};
-			try {
-				peerConn = new RTCPeerConnection(pc_config);
-			} catch (e) {
-				console.log("Failed to create PeerConnection, exception: " + e.message);
-			}
-			// send any ice candidates to the other peer
-			peerConn.onicecandidate = function(evt) {
-				if (event.candidate) {
-					roadrunner.send({
-						type : "candidate",
-						sdpMLineIndex : evt.candidate.sdpMLineIndex,
-						sdpMid : evt.candidate.sdpMid,
-						candidate : evt.candidate.candidate
-					});
-				}
-			};
-			peerConn.addStream(localStream);
-
-			peerConn.addEventListener("addstream", onRemoteStreamAdded, false);
-			peerConn.addEventListener("removestream", onRemoteStreamRemoved, false)
-
-			// when remote adds a stream, hand it on to the local video element
-			function onRemoteStreamAdded(event) {
-				remotevid.src = window.URL.createObjectURL(event.stream);
-			}
-
-			// when remote removes a stream, remove it from the local video element
-			function onRemoteStreamRemoved(event) {
-				remotevid.src = "";
-			}
-		}
-
-		startVideo();
+		var webRTC = new RoadrunnerWebRTC(roadrunner, '#webrtc-sourceVideoElement', '#webrtc-remoteVideoElement');
+		webRTC.start();
 	</script>
 </body>
 </html>
