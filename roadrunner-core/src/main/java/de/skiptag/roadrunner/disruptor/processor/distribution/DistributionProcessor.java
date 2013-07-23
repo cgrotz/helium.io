@@ -62,7 +62,7 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 		firChildRemoved(path, event.getOldValue());
 	    }
 	} else if (type == RoadrunnerEventType.EVENT) {
-	    for (DataListener handler : handlers) {
+	    for (DataListener handler : Sets.newHashSet(handlers)) {
 		handler.distributeEvent(path, event.getJSONObject(RoadrunnerEvent.PAYLOAD));
 	    }
 	}
@@ -73,7 +73,7 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
     }
 
     private void firChildRemoved(String path, JSONObject payload) {
-	for (DataListener handler : handlers) {
+	for (DataListener handler : Sets.newHashSet(handlers)) {
 	    handler.child_removed(path, payload);
 	}
     }
@@ -81,14 +81,14 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
     private void fireChildChanged(String lastElement, String path,
 	    String lastElement2, Object node, boolean hasChildren,
 	    long childCount) {
-	for (DataListener handler : handlers) {
+	for (DataListener handler : Sets.newHashSet(handlers)) {
 	    handler.child_changed(lastElement, path, lastElement2, node, hasChildren, childCount);
 	}
     }
 
     private void fireChildAdded(String string, String path, String lastElement,
 	    Object node, boolean hasChildren, long childCount) {
-	for (DataListener handler : handlers) {
+	for (DataListener handler : Sets.newHashSet(handlers)) {
 	    handler.child_added(string, path, lastElement, node, hasChildren, childCount);
 	}
     }

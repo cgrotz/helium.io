@@ -2,7 +2,6 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 	var sourceVideoElement = $(sourceVideoSelector).get(0);
 	var remoteVideoElement = $(remoteVideoSelector).get(0);
 	var self = this;
-
 	var localStream = null;
 	var peerConn = null;
 	var started = false;
@@ -33,16 +32,21 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 					console.error("Error setting video src: ", e);
 				}
 			}
+			self.createPeerConnection();
+			started = false;
 		}, function(error) {
 			console.error('An error occurred: [CODE ' + error.code + ']');
 			return;
 		});
-	}
+	};
 
 	// start the connection upon user request
 	this.connect = function() {
-		if (!started) {
-			self.createPeerConnection();
+		if (!started ) {
+			if(peerConn == null)
+			{
+				self.start();
+			}
 			peerConn.createOffer(self.setLocalAndSendMessage, function(evt) {
 				console.log(evt);
 			}, mediaConstraints);
@@ -50,13 +54,34 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 		} else {
 			alert("Already started");
 		}
-	}
+	};
+
+
+	this.disconnect = function() {
+		if (started) {
+			if (sourceVideoElement.mozSrcObject) {
+				sourceVideoElement.mozSrcObject.stop();
+				sourceVideoElement.src = null;
+	    } else {
+	    	sourceVideoElement.src = "";
+	      localStream.stop();
+	    }
+	    roadrunner.send(JSON.stringify({type: "bye"}));
+	    stop();
+	    peerConn.close();
+	    peerConn = null;
+	    started = false;  
+		} else {
+			alert("not started");
+		}
+	};
 
 	// send SDP via socket connection
 	this.setLocalAndSendMessage = function(sessionDescription) {
 		peerConn.setLocalDescription(sessionDescription);
 		roadrunner.send(sessionDescription);
-	}
+	};
+	
 	this.createPeerConnection = function() {
 		RTCPeerConnection = webkitRTCPeerConnection || mozRTCPeerConnection;
 		var pc_config = {
@@ -85,31 +110,27 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 		}, false);
 		peerConn.addEventListener("removestream", function(event) {
 			remoteVideoElement.src = "";
-		}, false)
-	}
+		}, false);
+	};
 
 	roadrunner.on('event', function(snapshot) {
 		console.log('Websocket message recv:', snapshot.val());
 		var evt = snapshot.val();
 		if (evt.type === 'offer') {
-			console.log("Received offer...")
-			if (!started) {
-				self.createPeerConnection();
-				started = true;
-			}
+			console.log("Received offer...");
 			console.log('Creating remote session description...');
 			peerConn.setRemoteDescription(new RTCSessionDescription(evt));
 			console.log('Sending answer...');
 			peerConn.createAnswer(self.setLocalAndSendMessage, function(evt) {
 				console.log(evt);
 			}, mediaConstraints);
-
-		} else if (evt.type === 'answer' && started) {
+			started = true;
+		} else if (evt.type === 'answer') {
 			console.log('Received answer...');
 			console.log('Setting remote session description...');
 			peerConn.setRemoteDescription(new RTCSessionDescription(evt));
 
-		} else if (evt.type === 'candidate' && started) {
+		} else if (evt.type === 'candidate' ) {
 			console.log('Received ICE candidate...');
 			var candidate = new RTCIceCandidate({
 				sdpMLineIndex : evt.sdpMLineIndex,
@@ -119,7 +140,7 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 			console.log(candidate);
 			peerConn.addIceCandidate(candidate);
 
-		} else if (evt.type === 'bye' && started) {
+		} else if (evt.type === 'bye' ) {
 			console.log("Received bye");
 			stop();
 		}
