@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>WebRTC Demo</title>
+<script src="roadrunner.js"></script>
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+
+</head>
+<body>
+	<video id="webrtc-sourcevid" autoplay
+		style="width: 320px; height: 240px; border: 1px solid black;"></video>
+	<video id="webrtc-remotevid" autoplay
+		style="width: 320px; height: 240px; border: 1px solid black;"></video>
+<button type="button" onclick="connect();">Connect</button>
+
+	<script>
+		var roadrunner = new Roadrunner('ws://localhost:8080/helpdesk/clients/clients/');
+		
+		var sourcevid = document.getElementById('webrtc-sourcevid');
+		var remotevid = document.getElementById('webrtc-remotevid');
+	
+		var localStream = null;
+		var peerConn = null;
+		var started = false;
+		var mediaConstraints = {
+			'mandatory' : {
+				'OfferToReceiveAudio' : true,
+				'OfferToReceiveVideo' : true
+			}
+		};
+		var isVideoMuted = false;
+
+		// get the local video up
+		function startVideo() {
+			navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || window.navigator.mozGetUserMedia || navigator.msGetUserMedia;
+			window.URL = window.URL || window.webkitURL;
+			navigator.getUserMedia({
+				video : true,
+				audio : true
+			}, successCallback, errorCallback);
+			function successCallback(stream) {
+				localStream = stream;
+				if (sourcevid.mozSrcObject) {
+					sourcevid.mozSrcObject = stream;
+					sourcevid.play();
+				} else {
+					try {
+						sourcevid.src = window.URL.createObjectURL(stream);
+						sourcevid.play();
+					} catch (e) {
+						console.log("Error setting video src: ", e);
+					}
+				}
+			}
+			function errorCallback(error) {
+				console.error('An error occurred: [CODE ' + error.code + ']');
+				return;
+			}
+		}
+
+		// send SDP via socket connection
+		function setLocalAndSendMessage(sessionDescription) {
+			peerConn.setLocalDescription(sessionDescription);
+			roadrunner.send(sessionDescription);
+		}
+
+		function failed(evt) {
+			console.log("Create Answer failed", evt);
+		}
+		roadrunner.on('event', function(snapshot) {
+			console.log('Websocket message recv:', snapshot.val());
+			var evt = snapshot.val();
+			if (evt.type === 'offer') {
+				console.log("Received offer...")
+				if (!started) {
+					createPeerConnection();
+					started = true;
+				}
+				console.log('Creating remote session description...');
+				peerConn.setRemoteDescription(new RTCSessionDescription(evt));
+				console.log('Sending answer...');
+				peerConn.createAnswer(setLocalAndSendMessage, failed, mediaConstraints);
+
+			} else if (evt.type === 'answer' && started) {
+				console.log('Received answer...');
+				console.log('Setting remote session description...');
+				peerConn.setRemoteDescription(new RTCSessionDescription(evt));
+
+			} else if (evt.type === 'candidate' && started) {
+				console.log('Received ICE candidate...');
+				var candidate = new RTCIceCandidate({
+					sdpMLineIndex : evt.sdpMLineIndex,
+					sdpMid : evt.sdpMid,
+					candidate : evt.candidate
+				});
+				console.log(candidate);
+				peerConn.addIceCandidate(candidate);
+
+			} else if (evt.type === 'bye' && started) {
+				console.log("Received bye");
+				stop();
+			}
+		});
+
+		// start the connection upon user request
+		function connect() {
+			if (!started && localStream) {
+				createPeerConnection();
+				started = true;
+				peerConn.createOffer(setLocalAndSendMessage, failed, mediaConstraints);
+			} else {
+				alert("Local stream not running yet - try again.");
+			}
+		}
+
+		function createPeerConnection() {
+			RTCPeerConnection = webkitRTCPeerConnection || mozRTCPeerConnection;
+			var pc_config = {
+				"iceServers" : []
+			};
+			try {
+				peerConn = new RTCPeerConnection(pc_config);
+			} catch (e) {
+				console.log("Failed to create PeerConnection, exception: " + e.message);
+			}
+			// send any ice candidates to the other peer
+			peerConn.onicecandidate = function(evt) {
+				if (event.candidate) {
+					roadrunner.send({
+						type : "candidate",
+						sdpMLineIndex : evt.candidate.sdpMLineIndex,
+						sdpMid : evt.candidate.sdpMid,
+						candidate : evt.candidate.candidate
+					});
+				}
+			};
+			peerConn.addStream(localStream);
+
+			peerConn.addEventListener("addstream", onRemoteStreamAdded, false);
+			peerConn.addEventListener("removestream", onRemoteStreamRemoved, false)
+
+			// when remote adds a stream, hand it on to the local video element
+			function onRemoteStreamAdded(event) {
+				remotevid.src = window.URL.createObjectURL(event.stream);
+			}
+
+			// when remote removes a stream, remove it from the local video element
+			function onRemoteStreamRemoved(event) {
+				remotevid.src = "";
+			}
+		}
+
+		startVideo();
+	</script>
+</body>
+</html>

@@ -47,20 +47,20 @@ function RoadrunnerConnection(url) {
 	if (roadrunner_endpoint == null) {
 		roadrunner_endpoint = new ReconnectingWebSocket(url);
 		roadrunner_endpoint.onopen = function(event) {
-			console.debug("Connection established resyncing");
+			//console.debug("Connection established resyncing");
 			for ( var i = 0; i < messages.length; i++) {
 				roadrunner_endpoint.send(JSON.stringify(messages[i]));
 			}
 			messages = [];
 		};
 		roadrunner_endpoint.onclose = function(event) {
-			console.debug("Connection lost trying reconnecting");
+			//console.debug("Connection lost trying reconnecting");
 		};
 
 		roadrunner_endpoint.eventhandlers = [];
 		roadrunner_endpoint.onmessage = function(event) {
 			var message = JSON.parse(event.data);
-			console.debug('Receiving Message from Server: ',message);
+			//console.debug('Receiving Message from Server: ',message);
 			for ( var i = 0; i < roadrunner_endpoint.eventhandlers.length; i++) {
 				var handler = roadrunner_endpoint.eventhandlers[i];
 				handler(message);
@@ -84,7 +84,7 @@ function RoadrunnerConnection(url) {
 			path : path,
 			payload : payload
 		};
-		console.debug('Sending Message to Server: ',message);
+		//console.debug('Sending Message to Server: ',message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
 			roadrunner_endpoint.send(JSON.stringify(message));
 		} else {
@@ -93,7 +93,7 @@ function RoadrunnerConnection(url) {
 	};
 
 	this.sendSimpleMessage = function(message) {
-		console.debug('Sending Message to Server: ',message);
+		//console.debug('Sending Message to Server: ',message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
 			roadrunner_endpoint.send(JSON.stringify(message));
 		} else {
