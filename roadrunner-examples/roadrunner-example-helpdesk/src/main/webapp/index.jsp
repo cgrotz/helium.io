@@ -12,7 +12,7 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<title>Todos</title>
+<title>Helpdesk</title>
 <meta name="description" content="">
 <meta name="viewport" content="width=device-width">
 
@@ -69,12 +69,10 @@ body {
 			</div>
 			<div class="span4">
 				<div class="bs-docs bs-docs-remote">
-					<video id="webrtc-remoteVideoElement" autoplay
-						style="width: 100%;"></video>
+					<video id="webrtc-remoteVideoElement" autoplay></video>
 				</div>
 				<div class="bs-docs bs-docs-local">
-					<video id="webrtc-sourceVideoElement" autoplay
-						style="width: 100%;"></video>
+					<video id="webrtc-localVideoElement" autoplay muted></video>
 				</div>
 			</div>
 		</div>
@@ -90,8 +88,8 @@ body {
 
 	<script src="client/js/vendor/bootstrap.min.js"></script>
 	<script>
-		var roadrunner = new Roadrunner('ws://<%=hostName%>/helpdesk/clients/clients/');
-		var webRTC = new RoadrunnerWebRTC(roadrunner, '#webrtc-sourceVideoElement', '#webrtc-remoteVideoElement');
+		var roadrunner = new Roadrunner('http://<%=hostName%>/helpdesk/clients/clients/');
+		var webRTC = new RoadrunnerWebRTC(roadrunner, '#webrtc-localVideoElement', '#webrtc-remoteVideoElement');
 		webRTC.start();
 	</script>
 </body>

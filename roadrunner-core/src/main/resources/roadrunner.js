@@ -1,8 +1,5 @@
-
-
 // Roadrunner
 var roadrunner_endpoint;
-
 function Snapshot(message, roadrunner_connection) {
 	var payload = message.payload;
 	var name = message.name;
@@ -45,7 +42,20 @@ function RoadrunnerConnection(url) {
 	self.url = url;
 	var messages = [];
 	if (roadrunner_endpoint == null) {
-		roadrunner_endpoint = new ReconnectingWebSocket(url);
+		var wsurl;
+		if(url.indexOf("http://") == 0)
+		{
+			wsurl = url.replace('http://','ws://');
+		}
+		else if( url.indexOf("https://") == 0)
+		{
+			wsurl = url.replace('https://','wss://');
+		}
+		else
+		{
+			throw "Illegal URL Schema";
+		}
+		roadrunner_endpoint = new ReconnectingWebSocket(wsurl);
 		roadrunner_endpoint.onopen = function(event) {
 			//console.debug("Connection established resyncing");
 			for ( var i = 0; i < messages.length; i++) {

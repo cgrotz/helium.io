@@ -145,8 +145,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 	final Channel channel = ctx.channel();
 	if (!handlers.containsKey(channel)) {
 	    RoadrunnerEndpoint handler = new RoadrunnerEndpoint(
-		    getWebSocketLocation(req), new RoadrunnerResponseSender() {
-
+		    getHttpSocketLocation(req), new RoadrunnerResponseSender() {
 			@Override
 			public void send(String msg) {
 			    logger.trace("Sending Message: " + msg);

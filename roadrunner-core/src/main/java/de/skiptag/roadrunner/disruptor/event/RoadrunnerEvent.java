@@ -109,10 +109,10 @@ public class RoadrunnerEvent extends JSONObject {
 
     public static String extractPath(String requestPath) {
 	String result = requestPath;
-	if (requestPath.startsWith("ws://")) {
-	    result = requestPath.substring(requestPath.indexOf("/", 5));
-	} else if (requestPath.startsWith("wss://")) {
-	    result = requestPath.substring(requestPath.indexOf("/", 6));
+	if (requestPath.startsWith("http://")) {
+	    result = requestPath.substring(requestPath.indexOf("/", 7));
+	} else if (requestPath.startsWith("https://")) {
+	    result = requestPath.substring(requestPath.indexOf("/", 8));
 	}
 
 	return result.startsWith("/") ? result : "/" + result;
