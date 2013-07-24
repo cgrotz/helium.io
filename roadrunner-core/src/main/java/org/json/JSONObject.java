@@ -367,7 +367,7 @@ public class JSONObject {
 	    return (JSONObject) object;
 	}
 	throw new RuntimeException("JSONObject[" + quote(key)
-		+ "] is not a JSONObject.");
+		+ "] is not a JSONObject. " + toString(2));
     }
 
     /**
@@ -387,7 +387,7 @@ public class JSONObject {
 		    : Long.parseLong((String) object);
 	} catch (Exception e) {
 	    throw new RuntimeException("JSONObject[" + quote(key)
-		    + "] is not a long.");
+		    + "] is not a long. " + toString(2));
 	}
     }
 
@@ -426,7 +426,7 @@ public class JSONObject {
 	    return (String) object;
 	}
 	throw new RuntimeException("JSONObject[" + quote(key)
-		+ "] not a string.");
+		+ "] not a string. " + toString(2));
     }
 
     /**
@@ -466,7 +466,7 @@ public class JSONObject {
 	    this.put(key, ((Float) value).floatValue() + 1);
 	} else {
 	    throw new RuntimeException("Unable to increment [" + quote(key)
-		    + "].");
+		    + "]. " + toString(2));
 	}
 	return this;
     }

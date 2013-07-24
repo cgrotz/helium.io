@@ -1,3 +1,7 @@
+<%@ page contentType="text/html; charset=utf-8" language="java"  %>
+<%
+ String hostName=request.getServerName()+":"+request.getServerPort();
+%>
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
@@ -86,7 +90,7 @@ body {
 
 	<script src="client/js/vendor/bootstrap.min.js"></script>
 	<script>
-		var roadrunner = new Roadrunner('ws://localhost:8080/helpdesk/clients/clients/');
+		var roadrunner = new Roadrunner('ws://<%=hostName%>/helpdesk/clients/clients/');
 		var webRTC = new RoadrunnerWebRTC(roadrunner, '#webrtc-sourceVideoElement', '#webrtc-remoteVideoElement');
 		webRTC.start();
 	</script>

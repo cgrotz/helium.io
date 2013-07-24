@@ -4,7 +4,6 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 	var self = this;
 	var localStream = null;
 	var peerConn = null;
-	var started = false;
 	var mediaConstraints = {
 		'mandatory' : {
 			'OfferToReceiveAudio' : true,
@@ -33,7 +32,10 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 				}
 			}
 			self.createPeerConnection();
-			started = false;
+			roadrunner.send({
+				type : 'handshake'
+			});
+			self.registerRoadrunner();
 		}, function(error) {
 			console.error('An error occurred: [CODE ' + error.code + ']');
 			return;
@@ -42,38 +44,28 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 
 	// start the connection upon user request
 	this.connect = function() {
-		if (!started ) {
-			if(peerConn == null)
-			{
+			if (peerConn == null) {
 				self.start();
 			}
 			peerConn.createOffer(self.setLocalAndSendMessage, function(evt) {
 				console.log(evt);
 			}, mediaConstraints);
-			started = true;
-		} else {
-			alert("Already started");
-		}
 	};
 
-
 	this.disconnect = function() {
-		if (started) {
 			if (sourceVideoElement.mozSrcObject) {
 				sourceVideoElement.mozSrcObject.stop();
 				sourceVideoElement.src = null;
-	    } else {
-	    	sourceVideoElement.src = "";
-	      localStream.stop();
-	    }
-	    roadrunner.send(JSON.stringify({type: "bye"}));
-	    stop();
-	    peerConn.close();
-	    peerConn = null;
-	    started = false;  
-		} else {
-			alert("not started");
-		}
+			} else {
+				sourceVideoElement.src = "";
+				localStream.stop();
+			}
+			roadrunner.send(JSON.stringify({
+				type : "bye"
+			}));
+			stop();
+			peerConn.close();
+			peerConn = null;
 	};
 
 	// send SDP via socket connection
@@ -81,7 +73,7 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 		peerConn.setLocalDescription(sessionDescription);
 		roadrunner.send(sessionDescription);
 	};
-	
+
 	this.createPeerConnection = function() {
 		RTCPeerConnection = webkitRTCPeerConnection || mozRTCPeerConnection;
 		var pc_config = {
@@ -112,37 +104,39 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 			remoteVideoElement.src = "";
 		}, false);
 	};
+	this.registerRoadrunner = function() {
+		roadrunner.on('event', function(snapshot) {
+			console.log('Websocket message recv:', snapshot.val());
+			var evt = snapshot.val();
+			if (evt.type === 'offer') {
+				console.log("Received offer...");
+				console.log('Creating remote session description...');
+				peerConn.setRemoteDescription(new RTCSessionDescription(evt));
+				console.log('Sending answer...');
+				peerConn.createAnswer(self.setLocalAndSendMessage, function(evt) {
+					console.log(evt);
+				}, mediaConstraints);
+			} else if (evt.type === 'answer') {
+				console.log('Received answer...');
+				console.log('Setting remote session description...');
+				peerConn.setRemoteDescription(new RTCSessionDescription(evt));
 
-	roadrunner.on('event', function(snapshot) {
-		console.log('Websocket message recv:', snapshot.val());
-		var evt = snapshot.val();
-		if (evt.type === 'offer') {
-			console.log("Received offer...");
-			console.log('Creating remote session description...');
-			peerConn.setRemoteDescription(new RTCSessionDescription(evt));
-			console.log('Sending answer...');
-			peerConn.createAnswer(self.setLocalAndSendMessage, function(evt) {
-				console.log(evt);
-			}, mediaConstraints);
-			started = true;
-		} else if (evt.type === 'answer') {
-			console.log('Received answer...');
-			console.log('Setting remote session description...');
-			peerConn.setRemoteDescription(new RTCSessionDescription(evt));
+			} else if (evt.type === 'candidate') {
+				console.log('Received ICE candidate...');
+				var candidate = new RTCIceCandidate({
+					sdpMLineIndex : evt.sdpMLineIndex,
+					sdpMid : evt.sdpMid,
+					candidate : evt.candidate
+				});
+				console.log(candidate);
+				peerConn.addIceCandidate(candidate);
 
-		} else if (evt.type === 'candidate' ) {
-			console.log('Received ICE candidate...');
-			var candidate = new RTCIceCandidate({
-				sdpMLineIndex : evt.sdpMLineIndex,
-				sdpMid : evt.sdpMid,
-				candidate : evt.candidate
-			});
-			console.log(candidate);
-			peerConn.addIceCandidate(candidate);
-
-		} else if (evt.type === 'bye' ) {
-			console.log("Received bye");
-			stop();
-		}
-	});
+			} else if (evt.type === 'bye') {
+				console.log("Received bye");
+				stop();
+			} else if (evt.type === 'handshake') {
+				self.connect();
+			}
+		});
+	};
 }

@@ -20,4 +20,16 @@
 		<servlet-name>RoadrunnerServlet</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
+	<servlet>
+		<servlet-name>index.jsp</servlet-name>
+		<jsp-file>/index.jsp</jsp-file>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>index.jsp</servlet-name>
+		<url-pattern>/index.html</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>index.jsp</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
 </web-app>
