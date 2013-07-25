@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=utf-8" language="java"  %>
+<%@ page contentType="text/html; charset=utf-8" language="java"%>
 <%
  String hostName=request.getServerName()+":"+request.getServerPort();
 %>
@@ -7,7 +7,7 @@
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
 <!--[if gt IE 8]><!-->
-<html class="no-js">
+<html class="no-js" ng-app="helpdesk">
 <!--<![endif]-->
 <head>
 <meta charset="utf-8">
@@ -29,10 +29,13 @@ body {
 <script src="client/js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
 <script src="client/js/jquery.min.js"></script>
 
-<script src="http://localhost:9090/roadrunner.js"></script>
+<script src="angular.min.js"></script>
+<script src="roadrunner.js"></script>
 <script src="roadrunner-webrtc.js"></script>
+<script src="angularRoadrunner.js"></script>
+<script src="app.js"></script>
 </head>
-<body>
+<body ng-controller="HelpdeskCtrl">
 	<!--[if lt IE 7]>
             <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
         <![endif]-->
@@ -45,7 +48,7 @@ body {
 				<a class="btn btn-navbar" data-toggle="collapse"
 					data-target=".nav-collapse"> <span class="icon-bar"></span> <span
 					class="icon-bar"></span> <span class="icon-bar"></span>
-				</a> <a class="brand" href="#">Todos</a>
+				</a> <a class="brand" href="#">Helpdesk</a>
 				<div class="nav-collapse collapse">
 					<ul class="nav">
 						<li class="active"><a href="#">Home</a></li>
@@ -61,10 +64,18 @@ body {
 
 			<div class="span8">
 				<div>
-					<button class="btn btn-primary" type="button"
-						onclick="webRTC.connect();">Connect</button>
-					<button class="btn btn-primary" type="button"
-						onclick="webRTC.disconnect();">Disconnect</button>
+					<span>{{remaining()}} of {{todos.length}} remaining</span> [ <a
+						href="" ng-click="archive()">archive</a> ]
+					<ul class="unstyled">
+						<li ng-repeat="todo in todos"><input type="checkbox"
+							ng-model="todo.done"> <span class="done-{{todo.done}}">{{todo.text}}</span>
+						</li>
+					</ul>
+					<form ng-submit="addTodo()">
+						<input type="text" ng-model="todoText" size="30"
+							placeholder="add new todo here"> <input
+							class="btn-primary" type="submit" value="add">
+					</form>
 				</div>
 			</div>
 			<div class="span4">
@@ -74,6 +85,10 @@ body {
 				<div class="bs-docs bs-docs-local">
 					<video id="webrtc-localVideoElement" autoplay muted></video>
 				</div>
+				<button class="btn btn-primary" type="button"
+					onclick="webRTC.connect();">Connect</button>
+				<button class="btn btn-primary" type="button"
+					onclick="webRTC.disconnect();">Disconnect</button>
 			</div>
 		</div>
 
@@ -88,8 +103,8 @@ body {
 
 	<script src="client/js/vendor/bootstrap.min.js"></script>
 	<script>
-		/*http://<%=hostName%>/helpdesk/clients/clients/*/
-		var roadrunner = new Roadrunner('http://localhost:9090/clients/clients/');
+		
+		var roadrunner = new Roadrunner('http://<%=hostName%>/helpdesk/clients/clients');
 		var webRTC = new RoadrunnerWebRTC(roadrunner, '#webrtc-localVideoElement', '#webrtc-remoteVideoElement');
 		webRTC.start();
 	</script>

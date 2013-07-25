@@ -40,7 +40,6 @@ function Snapshot(message, roadrunner_connection) {
 function RoadrunnerConnection(url) {
 	var self = this;
 	self.url = url;
-	var messages = [];
 	if (roadrunner_endpoint == null) {
 		var wsurl;
 		if(url.indexOf("http://") == 0)
@@ -56,21 +55,22 @@ function RoadrunnerConnection(url) {
 			throw "Illegal URL Schema";
 		}
 		roadrunner_endpoint = new ReconnectingWebSocket(wsurl);
+		roadrunner_endpoint.messages = [];
 		roadrunner_endpoint.onopen = function(event) {
-			//console.debug("Connection established resyncing");
-			for ( var i = 0; i < messages.length; i++) {
-				roadrunner_endpoint.send(JSON.stringify(messages[i]));
+			console.debug("Connection established resyncing");
+			for ( var i = 0; i < this.messages.length; i++) {
+				roadrunner_endpoint.send(JSON.stringify(this.messages[i]));
 			}
-			messages = [];
+			this.messages = [];
 		};
 		roadrunner_endpoint.onclose = function(event) {
-			//console.debug("Connection lost trying reconnecting");
+			console.debug("Connection lost trying reconnecting");
 		};
 
 		roadrunner_endpoint.eventhandlers = [];
 		roadrunner_endpoint.onmessage = function(event) {
 			var message = JSON.parse(event.data);
-			//console.debug('Receiving Message from Server: ',message);
+			console.debug('Receiving Message from Server: ',message);
 			for ( var i = 0; i < roadrunner_endpoint.eventhandlers.length; i++) {
 				var handler = roadrunner_endpoint.eventhandlers[i];
 				handler(message);
@@ -94,16 +94,16 @@ function RoadrunnerConnection(url) {
 			path : path,
 			payload : payload
 		};
-		//console.debug('Sending Message to Server: ',message);
+		console.debug('Sending Message to Server: ',message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
 			roadrunner_endpoint.send(JSON.stringify(message));
 		} else {
-			messages.push(message);
+			roadrunner_endpoint.messages.push(message);
 		}
 	};
 
 	this.sendSimpleMessage = function(message) {
-		//console.debug('Sending Message to Server: ',message);
+		console.debug('Sending Message to Server: ',message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
 			roadrunner_endpoint.send(JSON.stringify(message));
 		} else {
