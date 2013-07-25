@@ -27,7 +27,7 @@ public class RoadrunnerEndpoint implements DataListener {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put(RoadrunnerEvent.TYPE, "child_added");
 	    broadcast.put("name", name);
-	    broadcast.put(RoadrunnerEvent.PATH, basePath + path);
+	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));
 	    broadcast.put("parent", parent);
 	    broadcast.put(RoadrunnerEvent.PAYLOAD, node);
 	    broadcast.put("hasChildren", hasChildren);
@@ -43,7 +43,7 @@ public class RoadrunnerEndpoint implements DataListener {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put(RoadrunnerEvent.TYPE, "child_changed");
 	    broadcast.put("name", name);
-	    broadcast.put(RoadrunnerEvent.PATH, basePath + path);
+	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));
 	    broadcast.put("parent", parent);
 	    broadcast.put(RoadrunnerEvent.PAYLOAD, node);
 	    broadcast.put("hasChildren", hasChildren);
@@ -68,7 +68,7 @@ public class RoadrunnerEndpoint implements DataListener {
 	if (hasListener(path)) {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put(RoadrunnerEvent.TYPE, "child_removed");
-	    broadcast.put(RoadrunnerEvent.PATH, basePath + path);
+	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));
 	    broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
 
 	    sender.send(broadcast.toString());
@@ -80,9 +80,18 @@ public class RoadrunnerEndpoint implements DataListener {
 	if (hasListener(path)) {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put(RoadrunnerEvent.TYPE, "event");
-	    broadcast.put(RoadrunnerEvent.PATH, basePath + path);
+
+	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));
 	    broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
 	    sender.send(broadcast.toString());
+	}
+    }
+
+    private String createPath(String basePath2, String path) {
+	if (basePath2.endsWith("/") && path.startsWith("/")) {
+	    return basePath2 + path.substring(1);
+	} else {
+	    return basePath2 + path;
 	}
     }
 

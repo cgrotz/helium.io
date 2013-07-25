@@ -3,6 +3,8 @@
 	version="3.0">
 
 	<display-name>drawing</display-name>
+	<!--
+	
 	<servlet>
 		<servlet-name>RoadrunnerServlet</servlet-name>
 		<servlet-class>de.skiptag.roadrunner.server.RoadrunnerWebSocketServlet</servlet-class>
@@ -31,5 +33,5 @@
 	<servlet-mapping>
 		<servlet-name>index.jsp</servlet-name>
 		<url-pattern>/</url-pattern>
-	</servlet-mapping>
+	</servlet-mapping>-->
 </web-app>

@@ -69,7 +69,7 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 		    jsonObject = event.getJSONObject(RoadrunnerEvent.PAYLOAD);
 		    handler.distributeEvent(path, jsonObject);
 		} else if (object instanceof String) {
-		    jsonObject = event.getJSONObject(RoadrunnerEvent.PAYLOAD);
+		    jsonObject = new JSONObject(RoadrunnerEvent.PAYLOAD);
 		    handler.distributeEvent(path, new JSONObject(
 			    (String) object));
 		}

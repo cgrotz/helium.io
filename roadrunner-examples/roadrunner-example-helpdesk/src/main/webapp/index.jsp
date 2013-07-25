@@ -29,7 +29,7 @@ body {
 <script src="client/js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
 <script src="client/js/jquery.min.js"></script>
 
-<script src="roadrunner.js"></script>
+<script src="http://localhost:9090/roadrunner.js"></script>
 <script src="roadrunner-webrtc.js"></script>
 </head>
 <body>
@@ -88,7 +88,8 @@ body {
 
 	<script src="client/js/vendor/bootstrap.min.js"></script>
 	<script>
-		var roadrunner = new Roadrunner('http://<%=hostName%>/helpdesk/clients/clients/');
+		/*http://<%=hostName%>/helpdesk/clients/clients/*/
+		var roadrunner = new Roadrunner('http://localhost:9090/clients/clients/');
 		var webRTC = new RoadrunnerWebRTC(roadrunner, '#webrtc-localVideoElement', '#webrtc-remoteVideoElement');
 		webRTC.start();
 	</script>
