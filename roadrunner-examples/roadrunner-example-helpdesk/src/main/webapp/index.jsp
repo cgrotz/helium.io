@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=utf-8" language="java"%>
 <%
- String hostName=request.getServerName()+":"+request.getServerPort();
+    String hostName = request.getServerName() + ":"
+		    + request.getServerPort();
 %>
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
@@ -63,23 +64,45 @@ body {
 		<div class="row">
 
 			<div class="span8">
-				<div>
-					<span>{{remaining()}} of {{todos.length}} remaining</span> [ <a
-						href="" ng-click="archive()">archive</a> ]
-					<ul class="unstyled">
-						<li ng-repeat="todo in todos"><input type="checkbox"
-							ng-model="todo.done"> <span class="done-{{todo.done}}">{{todo.text}}</span>
-						</li>
-					</ul>
-					<form ng-submit="addTodo()">
-						<input type="text" ng-model="todoText" size="30"
-							placeholder="add new todo here"> <input
-							class="btn-primary" type="submit" value="add">
-					</form>
-					<span>{{name}}</span>
-					<input type="text" ng-model="name" size="30"
-							placeholder="name">
-				</div>
+				<form class="form-horizontal">
+					<div class="control-group">
+						<label class="control-label" for="inputName">Name</label>
+						<div class="controls">
+							<input type="text" ng-model="name" id="inputName"
+								placeholder="Name">
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="inputJob">Job</label>
+						<div class="controls">
+							<input type="text" ng-model="job" id="inputJob" placeholder="Job">
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="inputCountry">Country</label>
+						<div class="controls">
+							<select ng-model="country" id="inputCountry" placeholder="Country">
+								<option value="de">Germany</option>
+								<option value="fr">France</option>
+								<option value="pr">Portugal</option>
+							</select>
+						</div>
+					</div>
+				</form>
+				<form class="form-horizontal">
+					<div class="control-group">
+						<label class="control-label" >Name</label>
+						<div class="controls">{{name}}</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label">Job</label>
+						<div class="controls">{{job}}</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label">Country</label>
+						<div class="controls">{{country}}</div>
+					</div>
+				</form>
 			</div>
 			<div class="span4">
 				<div class="bs-docs bs-docs-remote">
