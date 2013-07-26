@@ -157,7 +157,7 @@ public class RoadrunnerWebSocketServlet extends HttpServlet {
     private void handleRestCall(HttpServletRequest req, HttpServletResponse resp)
 	    throws IOException, RuntimeException {
 	Path nodePath = new Path(
-		RoadrunnerEvent.extractPath(req.getRequestURI()));
+		RoadrunnerEvent.extractPath(req.getRequestURI(), null));
 	if (req.getMethod().equals("GET")) {
 	    resp.getWriter().append(roadrunner.getPersistence()
 		    .get(nodePath)

@@ -44,7 +44,7 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 	RoadrunnerEventType type = event.getType();
 	if (type == RoadrunnerEventType.PUSH) {
 	    Object node = persistence.get(nodePath);
-	    fireChildAdded((String) event.get("name"), path, nodePath.getParent()
+	    fireChildAdded((String) event.get(RoadrunnerEvent.NAME), path, nodePath.getParent()
 		    .getLastElement(), node, hasChildren(node), childCount(node));
 	} else if (type == RoadrunnerEventType.SET) {
 	    if (event.has(RoadrunnerEvent.PAYLOAD)

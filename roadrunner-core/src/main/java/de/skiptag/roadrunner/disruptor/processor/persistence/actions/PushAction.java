@@ -34,7 +34,7 @@ public class PushAction {
 	if (path.isEmtpy()) {
 	    persistence.applyNewValue(new Path(nodeName), payload);
 	} else {
-	    persistence.applyNewValue(path.append(nodeName), payload);
+	    persistence.applyNewValue(path, payload);
 	}
     }
 

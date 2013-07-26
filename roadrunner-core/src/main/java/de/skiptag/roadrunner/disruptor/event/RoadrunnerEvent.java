@@ -5,6 +5,7 @@ import org.json.JSONTokener;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.lmax.disruptor.EventFactory;
 
 public class RoadrunnerEvent extends JSONObject {
@@ -17,6 +18,7 @@ public class RoadrunnerEvent extends JSONObject {
     public static final String FROM_HISTORY = "fromHistory";
     public static final String OLD_VALUE = "oldValue";
     public static final String AUTH = "auth";
+    public static final String NAME = "name";
 
     public static final EventFactory<RoadrunnerEvent> EVENT_FACTORY = new EventFactory<RoadrunnerEvent>() {
 
@@ -104,10 +106,12 @@ public class RoadrunnerEvent extends JSONObject {
 	    return null;
 	}
 	String requestPath = (String) get(RoadrunnerEvent.PATH);
-	return extractPath(requestPath);
+	String name = has(RoadrunnerEvent.NAME) ? (String) get(RoadrunnerEvent.NAME)
+		: null;
+	return extractPath(requestPath, name);
     }
 
-    public static String extractPath(String requestPath) {
+    public static String extractPath(String requestPath, String name) {
 	String result = requestPath;
 	if (requestPath.startsWith("http://")) {
 	    result = requestPath.substring(requestPath.indexOf("/", 7));
@@ -115,7 +119,11 @@ public class RoadrunnerEvent extends JSONObject {
 	    result = requestPath.substring(requestPath.indexOf("/", 8));
 	}
 
-	return result.startsWith("/") ? result : "/" + result;
+	String path = result.startsWith("/") ? result : "/" + result;
+	if (!Strings.isNullOrEmpty(name)) {
+	    path = path + "/" + name;
+	}
+	return path;
     }
 
     public JSONObject getOldValue() {

@@ -55,7 +55,7 @@ public class InMemoryPersistence implements Persistence {
 	if (!model.pathExists(path)) {
 	    created = true;
 	}
-	if (payload instanceof JSONObject) {
+	if (payload instanceof Node) {
 	    node = model.getNodeForPath(path);
 	    node.populate((JSONObject) payload);
 	} else {

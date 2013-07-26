@@ -35,16 +35,15 @@ public class Node extends JSONObject {
 	    Object object = get(path.getFirstElement());
 	    node = object;
 	} else {
+	    if (path.getFirstElement() == null) {
+		return this;
+	    }
 	    node = new Node();
 	    put(path.getFirstElement(), node);
 	}
 
-	if (path.isSimple()) {
-	    return node;
-	} else {
-	    if (node instanceof Node) {
-		return ((Node) node).getObjectForPath(path.getSubpath(1));
-	    }
+	if (node instanceof Node) {
+	    return ((Node) node).getObjectForPath(path.getSubpath(1));
 	}
 	return null;
     }
@@ -63,12 +62,22 @@ public class Node extends JSONObject {
 	    node = new Node();
 	    put(path.getFirstElement(), node);
 	}
-
 	if (path.isSimple()) {
+	    if (has(path.getFirstElement())) {
+		Object object = get(path.getFirstElement());
+		if (object instanceof Node) {
+		    node = (Node) object;
+		} else {
+		    node = new Node();
+		    put(path.getFirstElement(), node);
+		}
+	    } else {
+		node = new Node();
+		put(path.getFirstElement(), node);
+	    }
 	    return node;
-	} else {
-	    return node.getNodeForPath(path.getSubpath(1));
 	}
+	return node.getNodeForPath(path.getSubpath(1));
     }
 
     public void populate(JSONObject payload) {
