@@ -1,5 +1,6 @@
-angular.module('helpdesk', [ 'roadrunner' ]).controller('HelpdeskCtrl', [ '$scope', '$timeout', 'angularRoadrunnerCollection', function($scope, $timeout, angularRoadrunnerCollection) {
+angular.module('helpdesk', [ 'roadrunner' ]).controller('HelpdeskCtrl', [ '$scope', '$timeout', 'angularRoadrunner', 'angularRoadrunnerCollection', function($scope, $timeout, angularRoadrunner, angularRoadrunnerCollection) {
 	$scope.todos = angularRoadrunnerCollection(new Roadrunner('http://localhost:8080/helpdesk/todos/todos'));
+	$scope.name = angularRoadrunner('http://localhost:8080/helpdesk/test/test/name', $scope, 'name', "");
 
 	$scope.addTodo = function() {
 		$scope.todos.add({

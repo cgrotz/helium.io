@@ -43,20 +43,30 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 	Path nodePath = new Path(event.extractNodePath());
 	RoadrunnerEventType type = event.getType();
 	if (type == RoadrunnerEventType.PUSH) {
-	    Object node = persistence.get(nodePath);
+	    Node parent = persistence.getNode(nodePath.getParent());
+	    Object node = parent.get(nodePath.getLastElement());
+	    int priority = priority((Node) persistence.get(nodePath.getParent()), nodePath.getLastElement());
 	    fireChildAdded((String) event.get(RoadrunnerEvent.NAME), path, nodePath.getParent()
-		    .getLastElement(), node, hasChildren(node), childCount(node));
+		    .getLastElement(), node, hasChildren(node), childCount(node), prevChildName(parent, priority), priority);
 	} else if (type == RoadrunnerEventType.SET) {
 	    if (event.has(RoadrunnerEvent.PAYLOAD)
 		    && !event.isNull(RoadrunnerEvent.PAYLOAD)) {
 		if (event.created()) {
-		    Object node = persistence.get(nodePath);
+		    Node parent = persistence.getNode(nodePath.getParent());
+		    Object node = parent.get(nodePath.getLastElement());
+		    int priority = priority((Node) persistence.get(nodePath.getParent()), nodePath.getLastElement());
 		    fireChildAdded(nodePath.getLastElement(), path, nodePath.getParent()
-			    .getLastElement(), node, hasChildren(node), childCount(node));
+			    .getLastElement(), node, hasChildren(node), childCount(node), prevChildName(parent, priority), priority);
 		} else {
-		    Object node = persistence.get(nodePath);
+		    Node parent = persistence.getNode(nodePath.getParent());
+		    Object value = parent.get(nodePath.getLastElement());
+		    int priority = priority((Node) persistence.get(nodePath.getParent()), nodePath.getLastElement());
 		    fireChildChanged(nodePath.getLastElement(), path, nodePath.getParent()
-			    .getLastElement(), node, hasChildren(node), childCount(node));
+			    .getLastElement(), value, hasChildren(value), childCount(value), prevChildName(parent, priority), priority);
+		    if (!(value instanceof Node)) {
+			fireValue(nodePath.getLastElement(), path, nodePath.getParent()
+				.getLastElement(), value, false, 0, prevChildName(parent, priority), priority);
+		    }
 		}
 	    } else {
 		firChildRemoved(path, event.getOldValue());
@@ -74,11 +84,20 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 			    (String) object));
 		}
 	    }
+	} else if (type == RoadrunnerEventType.SETPRIORITY) {
+
 	}
 
 	org.joda.time.Duration dur = new org.joda.time.Duration(
 		event.getCreationDate(), System.currentTimeMillis());
 	logger.trace("Message Processing took: " + dur.getMillis() + "ms");
+    }
+
+    private String prevChildName(Node parent, int priority) {
+	if (priority <= 0) {
+	    return null;
+	}
+	return parent.keys().get(priority - 1);
     }
 
     private void firChildRemoved(String path, JSONObject payload) {
@@ -89,21 +108,34 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
     private void fireChildChanged(String lastElement, String path,
 	    String lastElement2, Object node, boolean hasChildren,
-	    long childCount) {
+	    long childCount, String prevChildName, int priority) {
 	for (DataListener handler : Sets.newHashSet(handlers)) {
-	    handler.child_changed(lastElement, path, lastElement2, node, hasChildren, childCount);
+	    handler.child_changed(lastElement, path, lastElement2, node, hasChildren, childCount, priority);
+	}
+    }
+
+    private void fireValue(String lastElement, String path,
+	    String lastElement2, Object node, boolean hasChildren,
+	    long childCount, String prevChildName, int priority) {
+	for (DataListener handler : Sets.newHashSet(handlers)) {
+	    handler.value(lastElement, path, lastElement2, node, hasChildren, childCount, priority);
 	}
     }
 
     private void fireChildAdded(String string, String path, String lastElement,
-	    Object node, boolean hasChildren, long childCount) {
+	    Object node, boolean hasChildren, long childCount,
+	    String prevChildName, int priority) {
 	for (DataListener handler : Sets.newHashSet(handlers)) {
-	    handler.child_added(string, path, lastElement, node, hasChildren, childCount);
+	    handler.child_added(string, path, lastElement, node, hasChildren, childCount, priority);
 	}
     }
 
     private long childCount(Object node) {
 	return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
+    }
+
+    private int priority(Node parentNode, String name) {
+	return parentNode.indexOf(name);
     }
 
     private boolean hasChildren(Object node) {

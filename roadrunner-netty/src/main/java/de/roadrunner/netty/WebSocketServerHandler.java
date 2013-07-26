@@ -160,7 +160,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
     private void handleRestCall(ChannelHandlerContext ctx, FullHttpRequest req,
 	    FullHttpResponse res) {
 
-	Path nodePath = new Path(RoadrunnerEvent.extractPath(req.getUri()));
+	Path nodePath = new Path(
+		RoadrunnerEvent.extractPath(req.getUri(), null));
 	if (req.getMethod() == GET) {
 	    RulesDataSnapshot root = new InMemoryDataSnapshot(
 		    roadrunner.getPersistence().get(null));

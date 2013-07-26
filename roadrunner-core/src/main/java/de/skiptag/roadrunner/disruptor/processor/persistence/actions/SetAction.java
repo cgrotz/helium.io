@@ -25,14 +25,23 @@ public class SetAction {
 	    } else if (obj instanceof JSONObject) {
 		payload = (JSONObject) obj;
 		if (payload instanceof JSONObject) {
-		    boolean created = persistence.applyNewValue(path, payload);
+		    boolean created;
+		    if (message.hasPriority()) {
+			created = persistence.applyNewValue(path, message.getPriority(), obj);
+		    } else {
+			created = persistence.applyNewValue(path, -1, obj);
+		    }
 		    message.created(created);
 		}
 	    } else if (obj == null || obj == JSONObject.NULL) {
 		message.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
 		persistence.remove(path);
 	    } else {
-		persistence.applyNewValue(path, obj);
+		if (message.hasPriority()) {
+		    persistence.applyNewValue(path, message.getPriority(), obj);
+		} else {
+		    persistence.applyNewValue(path, -1, obj);
+		}
 	    }
 	} else {
 	    message.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));

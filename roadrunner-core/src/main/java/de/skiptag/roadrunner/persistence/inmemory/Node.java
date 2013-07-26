@@ -81,7 +81,7 @@ public class Node extends JSONObject {
     }
 
     public void populate(JSONObject payload) {
-	Iterator<?> itr = payload.keys();
+	Iterator<?> itr = payload.keyIterator();
 	while (itr.hasNext()) {
 	    Object key = (Object) itr.next();
 	    Object value = payload.get((String) key);
@@ -97,7 +97,7 @@ public class Node extends JSONObject {
 
     public Collection<Node> getChildren() {
 	Set<Node> nodes = Sets.newHashSet();
-	Iterator<?> itr = keys();
+	Iterator<?> itr = keyIterator();
 	while (itr.hasNext()) {
 	    Object key = itr.next();
 	    if (get((String) key) instanceof Node) {

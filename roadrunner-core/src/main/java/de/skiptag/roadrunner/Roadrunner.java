@@ -50,7 +50,12 @@ public class Roadrunner {
 
 	if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACHED_LISTENER) {
 	    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
-	    persistence.syncPath(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
+	    if ("child_added".equals(((JSONObject) roadrunnerEvent.getPayload()).get("type"))) {
+		persistence.syncPath(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
+	    } else if ("value".equals(((JSONObject) roadrunnerEvent.getPayload()).get("type"))) {
+		persistence.syncPropertyValue(new Path(
+			roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
+	    }
 	} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACHED_LISTENER) {
 	    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
 	} else if (roadrunnerEvent.getType() == RoadrunnerEventType.EVENT) {

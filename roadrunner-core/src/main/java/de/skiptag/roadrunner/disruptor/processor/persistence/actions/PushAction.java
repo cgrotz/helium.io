@@ -32,9 +32,9 @@ public class PushAction {
 	    nodeName = UUID.randomUUID().toString().replaceAll("-", "");
 	}
 	if (path.isEmtpy()) {
-	    persistence.applyNewValue(new Path(nodeName), payload);
+	    persistence.applyNewValue(new Path(nodeName), -1, payload);
 	} else {
-	    persistence.applyNewValue(path, payload);
+	    persistence.applyNewValue(path, -1, payload);
 	}
     }
 

@@ -7,6 +7,7 @@ function Snapshot(message, roadrunner_connection) {
 	var parent = message.parent;
 	var hasChildren = message.hasChildren;
 	var numChildren = message.numChildren;
+	var priority = message.priority;
 	this.val = function() {
 		return payload;
 	};
@@ -34,6 +35,9 @@ function Snapshot(message, roadrunner_connection) {
 	};
 	this.numChildren = function() {
 		return numChildren;
+	};
+	this.getPriority = function() {
+		return priority;
 	};
 }
 
@@ -101,6 +105,33 @@ function RoadrunnerConnection(url) {
 			roadrunner_endpoint.messages.push(message);
 		}
 	};
+	this.sendMessageWithPriority = function(type, path, payload, priority) {
+		var message = {
+				type : type,
+				path : path,
+				payload : payload,
+				priority : priority
+			};
+			console.debug('Sending Message to Server: ',message);
+			if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
+				roadrunner_endpoint.send(JSON.stringify(message));
+			} else {
+				roadrunner_endpoint.messages.push(message);
+			}
+		};
+		this.sendPriorityChange = function(type, path, priority) {
+			var message = {
+					type : type,
+					path : path,
+					priority : priority
+				};
+				console.debug('Sending Message to Server: ',message);
+				if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
+					roadrunner_endpoint.send(JSON.stringify(message));
+				} else {
+					roadrunner_endpoint.messages.push(message);
+				}
+			};
 
 	this.sendSimpleMessage = function(message) {
 		console.debug('Sending Message to Server: ',message);
@@ -123,42 +154,15 @@ function Roadrunner(path) {
 	roadrunner_connection.handleMessage = function(message) {
 		var snapshot = new Snapshot(message, roadrunner_connection);
 		var workpath = self.path;
-		// Direkt Change start (value)
-		{
-			try
-			{
-				if (snapshot.path().indexOf(workpath) == 0) {
-					var callback = events['value'];
-					if (callback != null) {
-						callback(snapshot);
-					}
-	
-					var callback = events_once['value'];
-					if (callback != null) {
-						callback(snapshot);
-						events_once['value'] = null;
-					}
-				}
-			}
-			catch (e) {
-				
-			}
-		}
-		
-		// Endswith /
-		if(!(workpath.indexOf("/", workpath.length - "/".length) !== -1))
-		{
-			workpath = workpath + "/";
-		}
 		if (snapshot.path().indexOf(workpath) == 0) {
 			var callback = events[message.type];
 			if (callback != null) {
-				callback(snapshot);
+				callback(snapshot,message.prevChildName);
 			}
 
 			var callback = events_once[message.type];
 			if (callback != null) {
-				callback(snapshot);
+				callback(snapshot,message.prevChildName);
 				events_once[message.type] = null;
 			}
 		}
@@ -206,6 +210,24 @@ function Roadrunner(path) {
 			return null;
 		}
 	};
+	
+	this.setWithPriority = function(data, priority) {		
+		roadrunner_connection.sendMessageWithPriority('set', path, data, priority);
+		if (data != null) {
+			return new Roadrunner(path);
+		} else {
+			return null;
+		}
+	};
+	
+	this.setPriority = function(priority) {		
+		roadrunner_connection.sendPriorityChange('setPriority', path, priority);
+		if (data != null) {
+			return new Roadrunner(path);
+		} else {
+			return null;
+		}
+	};
 
 	this.parent = function() {
 		new Roadrunner(parentPath);
@@ -222,5 +244,9 @@ function Roadrunner(path) {
 
 	this.update = function(content) {
 		roadrunner_connection.sendMessage('set', path, content);
+	};
+	
+	this.ref = function(){
+		return self;
 	};
 };

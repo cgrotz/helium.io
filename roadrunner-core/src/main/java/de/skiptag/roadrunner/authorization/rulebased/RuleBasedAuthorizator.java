@@ -20,7 +20,7 @@ public class RuleBasedAuthorizator {
 
     @SuppressWarnings("unchecked")
     private void parseRuleObject(TreeNode node, JSONObject rule) {
-	Iterator<String> itr = rule.keys();
+	Iterator<String> itr = rule.keyIterator();
 	while (itr.hasNext()) {
 	    String key = itr.next();
 	    Object value = rule.get(key);

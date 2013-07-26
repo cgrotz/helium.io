@@ -8,12 +8,15 @@ public interface DataListener {
 	    long numChildren);
 
     void child_added(String name, String String, String parent, Object payload,
-	    boolean hasChildren, long numChildren);
+	    boolean hasChildren, long numChildren, int priority);
 
     void child_removed(String String, Object payload);
 
     void child_changed(String name, String String, String parent,
-	    Object payload, boolean hasChildren, long numChildren);
+	    Object payload, boolean hasChildren, long numChildren, int priority);
+
+    void value(String name, String String, String parent, Object payload,
+	    boolean hasChildren, long numChildren, int priority);
 
     void distributeEvent(String path, JSONObject jsonObject);
 }

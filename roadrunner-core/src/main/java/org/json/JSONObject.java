@@ -28,9 +28,10 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
@@ -128,6 +129,7 @@ public class JSONObject {
      */
     private final Map<String, Object> map;
 
+    private final List<String> key_order = Lists.newArrayList();
     /**
      * It is sometimes more convenient and less ambiguous to have a
      * <code>NULL</code> object than to use Java's <code>null</code> value.
@@ -401,7 +403,7 @@ public class JSONObject {
 	if (length == 0) {
 	    return null;
 	}
-	Iterator<String> iterator = jo.keys();
+	Iterator<String> iterator = jo.keyIterator();
 	String[] names = new String[length];
 	int i = 0;
 	while (iterator.hasNext()) {
@@ -489,8 +491,8 @@ public class JSONObject {
      * 
      * @return An iterator of the keys.
      */
-    public Iterator<String> keys() {
-	return this.keySet().iterator();
+    public Iterator<String> keyIterator() {
+	return (Lists.newArrayList(this.key_order)).iterator();
     }
 
     /**
@@ -498,8 +500,8 @@ public class JSONObject {
      * 
      * @return A keySet.
      */
-    public Set<String> keySet() {
-	return this.map.keySet();
+    public List<String> keys() {
+	return Lists.newArrayList(this.key_order);
     }
 
     /**
@@ -799,12 +801,24 @@ public class JSONObject {
      *             If the value is non-finite number or if the key is null.
      */
     public JSONObject put(String key, Object value) {
+	return putWithIndex(key, value, -1);
+    }
+
+    public JSONObject putWithIndex(String key, Object value, int index) {
 	if (key == null) {
 	    throw new NullPointerException("Null key.");
 	}
 	if (value != null) {
 	    testValidity(value);
 	    this.map.put(key, value);
+	    if (key_order.contains(key)) {
+		key_order.remove(key);
+	    }
+	    if (index == -1) {
+		this.key_order.add(key);
+	    } else {
+		this.key_order.add(index, key);
+	    }
 	} else {
 	    this.remove(key);
 	}
@@ -827,27 +841,6 @@ public class JSONObject {
 	    if (this.opt(key) != null) {
 		throw new RuntimeException("Duplicate key \"" + key + "\"");
 	    }
-	    this.put(key, value);
-	}
-	return this;
-    }
-
-    /**
-     * Put a key/value pair in the JSONObject, but only if the key and the value
-     * are both non-null.
-     * 
-     * @param key
-     *            A key string.
-     * @param value
-     *            An object which is the value. It should be of one of these
-     *            types: Boolean, Double, Integer, JSONArray, JSONObject, Long,
-     *            String, or the JSONObject.NULL object.
-     * @return this.
-     * @throws RuntimeException
-     *             If the value is a non-finite number.
-     */
-    public JSONObject putOpt(String key, Object value) {
-	if (key != null && value != null) {
 	    this.put(key, value);
 	}
 	return this;
@@ -943,6 +936,7 @@ public class JSONObject {
      *         no value.
      */
     public Object remove(String key) {
+	this.key_order.remove(key);
 	return this.map.remove(key);
     }
 
@@ -1166,7 +1160,7 @@ public class JSONObject {
 	try {
 	    boolean commanate = false;
 	    final int length = this.length();
-	    Iterator keys = this.keys();
+	    Iterator keys = this.keyIterator();
 	    writer.write('{');
 
 	    if (length == 1) {
@@ -1206,6 +1200,15 @@ public class JSONObject {
 	} catch (IOException exception) {
 	    throw new RuntimeException(exception);
 	}
+    }
+
+    public int indexOf(String name) {
+	return key_order.indexOf(name);
+    }
+
+    public void setIndexOf(String name, int index) {
+	key_order.remove(name);
+	key_order.add(index, name);
     }
 
 }

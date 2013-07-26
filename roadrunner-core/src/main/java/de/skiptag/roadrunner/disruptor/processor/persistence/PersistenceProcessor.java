@@ -5,6 +5,7 @@ import com.lmax.disruptor.EventHandler;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.processor.persistence.actions.PushAction;
 import de.skiptag.roadrunner.disruptor.processor.persistence.actions.SetAction;
+import de.skiptag.roadrunner.disruptor.processor.persistence.actions.SetPriorityAction;
 import de.skiptag.roadrunner.persistence.Persistence;
 
 public class PersistenceProcessor implements EventHandler<RoadrunnerEvent> {
@@ -13,9 +14,12 @@ public class PersistenceProcessor implements EventHandler<RoadrunnerEvent> {
 
     private SetAction setAction;
 
+    private SetPriorityAction setPriorityAction;
+
     public PersistenceProcessor(Persistence persistence) {
 	pushAction = new PushAction(persistence);
 	setAction = new SetAction(persistence);
+	setPriorityAction = new SetPriorityAction(persistence);
     }
 
     @Override
@@ -26,6 +30,9 @@ public class PersistenceProcessor implements EventHandler<RoadrunnerEvent> {
 	    break;
 	case SET:
 	    setAction.handle(event);
+	    break;
+	case SETPRIORITY:
+	    setPriorityAction.handle(event);
 	    break;
 	default:
 	    break;

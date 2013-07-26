@@ -22,7 +22,7 @@ public class RoadrunnerEndpoint implements DataListener {
 
     @Override
     public void child_added(String name, String path, String parent,
-	    Object node, boolean hasChildren, long numChildren) {
+	    Object node, boolean hasChildren, long numChildren, int priority) {
 	if (hasListener(path)) {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put(RoadrunnerEvent.TYPE, "child_added");
@@ -32,13 +32,14 @@ public class RoadrunnerEndpoint implements DataListener {
 	    broadcast.put(RoadrunnerEvent.PAYLOAD, node);
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
+	    broadcast.put("priority", priority);
 	    sender.send(broadcast.toString());
 	}
     }
 
     @Override
     public void child_changed(String name, String path, String parent,
-	    Object node, boolean hasChildren, long numChildren) {
+	    Object node, boolean hasChildren, long numChildren, int priority) {
 	if (hasListener(path)) {
 	    JSONObject broadcast = new JSONObject();
 	    broadcast.put(RoadrunnerEvent.TYPE, "child_changed");
@@ -48,6 +49,24 @@ public class RoadrunnerEndpoint implements DataListener {
 	    broadcast.put(RoadrunnerEvent.PAYLOAD, node);
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
+	    broadcast.put("priority", priority);
+	    sender.send(broadcast.toString());
+	}
+    }
+
+    @Override
+    public void value(String name, String path, String parent, Object value,
+	    boolean hasChildren, long numChildren, int priority) {
+	if (hasListener(path)) {
+	    JSONObject broadcast = new JSONObject();
+	    broadcast.put(RoadrunnerEvent.TYPE, "value");
+	    broadcast.put("name", name);
+	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));
+	    broadcast.put("parent", parent);
+	    broadcast.put(RoadrunnerEvent.PAYLOAD, value);
+	    broadcast.put("hasChildren", hasChildren);
+	    broadcast.put("numChildren", numChildren);
+	    broadcast.put("priority", priority);
 	    sender.send(broadcast.toString());
 	}
     }

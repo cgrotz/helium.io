@@ -76,6 +76,9 @@ body {
 							placeholder="add new todo here"> <input
 							class="btn-primary" type="submit" value="add">
 					</form>
+					<span>{{name}}</span>
+					<input type="text" ng-model="name" size="30"
+							placeholder="name">
 				</div>
 			</div>
 			<div class="span4">

@@ -163,7 +163,7 @@ angular.module("roadrunner").factory("angularRoadrunnerCollection", ["$timeout",
         this.$ref = ref.ref();
         this.$id = ref.name();
         this.$index = index;
-          angular.extend(this, {priority: 0}, ref.val());
+          angular.extend(this, {priority: ref.getPriority()}, ref.val());
       }
 
       var indexes = {};

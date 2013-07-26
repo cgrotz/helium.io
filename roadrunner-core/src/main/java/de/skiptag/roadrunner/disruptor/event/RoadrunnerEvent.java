@@ -19,6 +19,8 @@ public class RoadrunnerEvent extends JSONObject {
     public static final String OLD_VALUE = "oldValue";
     public static final String AUTH = "auth";
     public static final String NAME = "name";
+    public static final String PRIORITY = "priority";
+    public static final String PREVCHILDNAME = "prevChildName";
 
     public static final EventFactory<RoadrunnerEvent> EVENT_FACTORY = new EventFactory<RoadrunnerEvent>() {
 
@@ -156,5 +158,21 @@ public class RoadrunnerEvent extends JSONObject {
 
     public void created(boolean created) {
 	this.created = created;
+    }
+
+    public int getPriority() {
+	return getInt(RoadrunnerEvent.PRIORITY);
+    }
+
+    public void setPriority(int priority) {
+	put(RoadrunnerEvent.PRIORITY, priority);
+    }
+
+    public boolean hasPriority() {
+	return has(RoadrunnerEvent.PRIORITY);
+    }
+
+    public Object getPayload() {
+	return get(RoadrunnerEvent.PAYLOAD);
     }
 }
