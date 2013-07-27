@@ -116,6 +116,22 @@ public class RoadrunnerEvent extends JSONObject {
 	return extractPath(requestPath, null);
     }
 
+    public String extractParentPath() {
+	if (!has(RoadrunnerEvent.PATH)) {
+	    return null;
+	}
+	String parentPath;
+	String requestPath = (String) get(RoadrunnerEvent.PATH);
+	if (has(RoadrunnerEvent.NAME)
+		&& get(RoadrunnerEvent.NAME) != JSONObject.NULL) {
+	    parentPath = extractPath(requestPath, getString(RoadrunnerEvent.NAME));
+	} else {
+	    parentPath = extractPath(requestPath, null);
+	}
+	return parentPath.substring(0, parentPath.lastIndexOf("/"));
+
+    }
+
     public static String extractPath(String requestPath, String name) {
 	String result = requestPath;
 	if (requestPath.startsWith("http://")) {

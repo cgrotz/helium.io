@@ -39,35 +39,34 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
     public void distribute(RoadrunnerEvent event) {
 	String path = event.extractNodePath();
+	String pathToParent = event.extractParentPath();
 
 	Path nodePath = new Path(event.extractNodePath());
 	RoadrunnerEventType type = event.getType();
+	Path parentPath = nodePath.getParent();
 	if (type == RoadrunnerEventType.PUSH) {
-	    Node parent = persistence.getNode(nodePath.getParent());
+	    Node parent = persistence.getNode(parentPath);
 	    Object node = parent.get(nodePath.getLastElement());
-	    int priority = priority((Node) persistence.get(nodePath.getParent()), nodePath.getLastElement());
-	    fireChildAdded((String) event.get(RoadrunnerEvent.NAME), path, nodePath.getParent()
-		    .getLastElement(), node, hasChildren(node), childCount(node), prevChildName(parent, priority), priority);
+	    int priority = priority((Node) persistence.get(parentPath), nodePath.getLastElement());
+	    fireChildAdded((String) event.get(RoadrunnerEvent.NAME), path, parentPath.getLastElement(), node, hasChildren(node), childCount(node), prevChildName(parent, priority), priority);
 	} else if (type == RoadrunnerEventType.SET) {
 	    if (event.has(RoadrunnerEvent.PAYLOAD)
 		    && !event.isNull(RoadrunnerEvent.PAYLOAD)) {
+		Node parent = persistence.getNode(parentPath);
+		Object value = parent.get(nodePath.getLastElement());
+		int priority = priority((Node) persistence.get(parentPath), nodePath.getLastElement());
+
 		if (event.created()) {
-		    Node parent = persistence.getNode(nodePath.getParent());
-		    Object node = parent.get(nodePath.getLastElement());
-		    int priority = priority((Node) persistence.get(nodePath.getParent()), nodePath.getLastElement());
-		    fireChildAdded(nodePath.getLastElement(), path, nodePath.getParent()
-			    .getLastElement(), node, hasChildren(node), childCount(node), prevChildName(parent, priority), priority);
+		    fireChildAdded(nodePath.getLastElement(), path, parentPath.getLastElement(), value, hasChildren(value), childCount(value), prevChildName(parent, priority), priority);
 		} else {
-		    Node parent = persistence.getNode(nodePath.getParent());
-		    Object value = parent.get(nodePath.getLastElement());
-		    int priority = priority((Node) persistence.get(nodePath.getParent()), nodePath.getLastElement());
-		    fireChildChanged(nodePath.getLastElement(), path, nodePath.getParent()
-			    .getLastElement(), value, hasChildren(value), childCount(value), prevChildName(parent, priority), priority);
-		    if (!(value instanceof Node)) {
-			fireValue(nodePath.getLastElement(), path, nodePath.getParent()
-				.getLastElement(), value, false, 0, prevChildName(parent, priority), priority);
-		    }
+		    fireChildChanged(nodePath.getLastElement(), path, parentPath.getLastElement(), value, hasChildren(value), childCount(value), prevChildName(parent, priority), priority);
+
+		    int parentPriority = priority(persistence.getNode(parentPath.getParent()), parentPath.getLastElement());
+		    fireChildChanged(parentPath.getLastElement(), pathToParent, parentPath.getParent()
+			    .getLastElement(), parent, hasChildren(parent), childCount(parent), prevChildName(persistence.getNode(parentPath.getParent()), parentPriority), parentPriority);
 		}
+
+		fireValue(nodePath.getLastElement(), path, parentPath.getLastElement(), value, false, 0, prevChildName(parent, priority), priority);
 	    } else {
 		firChildRemoved(path, event.getOldValue());
 	    }
