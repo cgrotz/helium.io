@@ -1,4 +1,9 @@
-function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) {
+function RoadrunnerWebRTC(ref, sourceVideoSelector, remoteVideoSelector) {
+	if (typeof ref == "string") {
+    this.roadrunner = new Roadrunner(ref);
+  } else {
+    this.roadrunner = ref;
+  }
 	var sourceVideoElement = $(sourceVideoSelector).get(0);
 	var remoteVideoElement = $(remoteVideoSelector).get(0);
 	var self = this;
@@ -12,7 +17,7 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 	};
 
 	// get the local video up
-	this.start = function() {
+	this.start = function(callback) {
 		navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || window.navigator.mozGetUserMedia || navigator.msGetUserMedia;
 		window.URL = window.URL || window.webkitURL;
 		navigator.getUserMedia({
@@ -32,9 +37,7 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 				}
 			}
 			self.createPeerConnection();
-			roadrunner.send({
-				type : 'handshake'
-			});
+			callback();
 			self.registerRoadrunner();
 		}, function(error) {
 			console.error('An error occurred: [CODE ' + error.code + ']');
@@ -42,6 +45,12 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 		});
 	};
 
+	this.handshake = function(){
+		self.roadrunner.send({
+			type : 'handshake'
+		});
+	};
+	
 	// start the connection upon user request
 	this.connect = function() {
 			if (peerConn == null) {
@@ -60,7 +69,7 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 				sourceVideoElement.src = "";
 				localStream.stop();
 			}
-			roadrunner.send(JSON.stringify({
+			self.roadrunner.send(JSON.stringify({
 				type : "bye"
 			}));
 			stop();
@@ -71,7 +80,7 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 	// send SDP via socket connection
 	this.setLocalAndSendMessage = function(sessionDescription) {
 		peerConn.setLocalDescription(sessionDescription);
-		roadrunner.send(sessionDescription);
+		self.roadrunner.send(sessionDescription);
 	};
 
 	this.createPeerConnection = function() {
@@ -87,7 +96,7 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 		// send any ice candidates to the other peer
 		peerConn.onicecandidate = function(evt) {
 			if (event.candidate) {
-				roadrunner.send({
+				self.roadrunner.send({
 					type : "candidate",
 					sdpMLineIndex : evt.candidate.sdpMLineIndex,
 					sdpMid : evt.candidate.sdpMid,
@@ -105,7 +114,7 @@ function RoadrunnerWebRTC(roadrunner, sourceVideoSelector, remoteVideoSelector) 
 		}, false);
 	};
 	this.registerRoadrunner = function() {
-		roadrunner.on('event', function(snapshot) {
+		self.roadrunner.on('event', function(snapshot) {
 			console.log('Websocket message recv:', snapshot.val());
 			var evt = snapshot.val();
 			if (evt.type === 'offer') {

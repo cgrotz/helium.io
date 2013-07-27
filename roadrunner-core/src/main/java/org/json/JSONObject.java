@@ -1207,6 +1207,9 @@ public class JSONObject {
     }
 
     public void setIndexOf(String name, int index) {
+	if (index <= 0) {
+	    return;
+	}
 	key_order.remove(name);
 	key_order.add(index, name);
     }

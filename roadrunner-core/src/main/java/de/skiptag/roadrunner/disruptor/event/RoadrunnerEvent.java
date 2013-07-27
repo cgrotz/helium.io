@@ -108,9 +108,12 @@ public class RoadrunnerEvent extends JSONObject {
 	    return null;
 	}
 	String requestPath = (String) get(RoadrunnerEvent.PATH);
-	String name = has(RoadrunnerEvent.NAME) ? (String) get(RoadrunnerEvent.NAME)
-		: null;
-	return extractPath(requestPath, name);
+	if (has(RoadrunnerEvent.NAME)) {
+	    if (get(RoadrunnerEvent.NAME) != JSONObject.NULL) {
+		return extractPath(requestPath, getString(RoadrunnerEvent.NAME));
+	    }
+	}
+	return extractPath(requestPath, null);
     }
 
     public static String extractPath(String requestPath, String name) {

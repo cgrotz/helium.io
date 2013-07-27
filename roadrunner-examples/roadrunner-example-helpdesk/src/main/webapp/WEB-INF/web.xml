@@ -28,8 +28,13 @@
 		<servlet-name>index.jsp</servlet-name>
 		<url-pattern>/index.html</url-pattern>
 	</servlet-mapping>
+	
+	<servlet>
+		<servlet-name>support.jsp</servlet-name>
+		<jsp-file>/support.jsp</jsp-file>
+	</servlet>
 	<servlet-mapping>
-		<servlet-name>index.jsp</servlet-name>
-		<url-pattern>/</url-pattern>
+		<servlet-name>support.jsp</servlet-name>
+		<url-pattern>/support.html</url-pattern>
 	</servlet-mapping>
 </web-app>

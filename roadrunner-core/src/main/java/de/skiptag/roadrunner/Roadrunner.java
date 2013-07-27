@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
@@ -20,6 +22,8 @@ import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
 public class Roadrunner {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Roadrunner.class);
 
     public static final JSONObject ALL_ACCESS_RULE = new JSONObject(
 	    "{\".write\": \"true\",\".read\": \"true\",\".remove\":\"true\"}");
@@ -59,6 +63,7 @@ public class Roadrunner {
 	} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACHED_LISTENER) {
 	    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
 	} else if (roadrunnerEvent.getType() == RoadrunnerEventType.EVENT) {
+	    LOGGER.trace("Recevived Message: " + roadrunnerEvent.toString());
 	    disruptor.getDistributor().distribute(roadrunnerEvent);
 	} else {
 	    roadrunnerEvent.setFromHistory(false);

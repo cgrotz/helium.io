@@ -3,12 +3,16 @@ package de.skiptag.roadrunner.messaging;
 import java.util.Set;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 
 public class RoadrunnerEndpoint implements DataListener {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoadrunnerEndpoint.class);
 
     private Set<String> attached_listeners = Sets.newHashSet();
     private RoadrunnerResponseSender sender;
@@ -102,6 +106,8 @@ public class RoadrunnerEndpoint implements DataListener {
 
 	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));
 	    broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
+	    LOGGER.trace("Distributing Message (basePath: '" + basePath
+		    + "',path: '" + path + "') : " + broadcast.toString());
 	    sender.send(broadcast.toString());
 	}
     }

@@ -62,7 +62,6 @@ body {
 
 	<div class="container">
 		<div class="row">
-
 			<div class="span8">
 				<form class="form-horizontal">
 					<div class="control-group">
@@ -81,7 +80,8 @@ body {
 					<div class="control-group">
 						<label class="control-label" for="inputCountry">Country</label>
 						<div class="controls">
-							<select ng-model="country" id="inputCountry" placeholder="Country">
+							<select ng-model="country" id="inputCountry"
+								placeholder="Country">
 								<option value="de">Germany</option>
 								<option value="fr">France</option>
 								<option value="pr">Portugal</option>
@@ -89,32 +89,24 @@ body {
 						</div>
 					</div>
 				</form>
-				<form class="form-horizontal">
-					<div class="control-group">
-						<label class="control-label" >Name</label>
-						<div class="controls">{{name}}</div>
-					</div>
-					<div class="control-group">
-						<label class="control-label">Job</label>
-						<div class="controls">{{job}}</div>
-					</div>
-					<div class="control-group">
-						<label class="control-label">Country</label>
-						<div class="controls">{{country}}</div>
-					</div>
-				</form>
 			</div>
 			<div class="span4">
-				<div class="bs-docs bs-docs-remote">
-					<video id="webrtc-remoteVideoElement" autoplay></video>
+				<div id="support">
+					<button class="btn btn-primary" type="button"
+						ng-click="requestSupport()">Request support</button>
 				</div>
-				<div class="bs-docs bs-docs-local">
-					<video id="webrtc-localVideoElement" autoplay muted></video>
+				<div id="video">
+					<div class="bs-docs bs-docs-remote">
+						<video id="webrtc-remoteVideoElement" autoplay></video>
+					</div>
+					<div class="bs-docs bs-docs-local">
+						<video id="webrtc-localVideoElement" autoplay muted></video>
+					</div>
+					<!-- <button class="btn btn-primary" type="button"
+						onclick="webRTC.connect();">Connect</button>
+					<button class="btn btn-primary" type="button"
+						onclick="webRTC.disconnect();">Disconnect</button> -->
 				</div>
-				<button class="btn btn-primary" type="button"
-					onclick="webRTC.connect();">Connect</button>
-				<button class="btn btn-primary" type="button"
-					onclick="webRTC.disconnect();">Disconnect</button>
 			</div>
 		</div>
 
@@ -129,10 +121,7 @@ body {
 
 	<script src="client/js/vendor/bootstrap.min.js"></script>
 	<script>
-		
-		var roadrunner = new Roadrunner('http://<%=hostName%>/helpdesk/clients/clients');
-		var webRTC = new RoadrunnerWebRTC(roadrunner, '#webrtc-localVideoElement', '#webrtc-remoteVideoElement');
-		webRTC.start();
+		$('#video').hide();
 	</script>
 </body>
 </html>

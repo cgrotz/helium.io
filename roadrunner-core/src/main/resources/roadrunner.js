@@ -198,8 +198,7 @@ function Roadrunner(path) {
 	};
 
 	this.send = function(data) {		
-		var name = UUID.generate();
-		roadrunner_connection.sendMessage('event', path, data, name);
+		roadrunner_connection.sendMessage('event', path, data, null);
 	};
 	
 	this.set = function(data) {		
