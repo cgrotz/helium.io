@@ -52,7 +52,7 @@ public class Roadrunner {
 	    RoadrunnerEvent roadrunnerEvent) {
 
 	if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACHED_LISTENER) {
-	    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
+	    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath(), ((Node) roadrunnerEvent.getPayload()).getString("type"));
 	    if ("child_added".equals(((Node) roadrunnerEvent.getPayload()).get("type"))) {
 		persistence.syncPath(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
 	    } else if ("value".equals(((Node) roadrunnerEvent.getPayload()).get("type"))) {
@@ -60,7 +60,7 @@ public class Roadrunner {
 			roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
 	    }
 	} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACHED_LISTENER) {
-	    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath());
+	    roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath(), ((Node) roadrunnerEvent.getPayload()).getString("type"));
 	} else if (roadrunnerEvent.getType() == RoadrunnerEventType.EVENT) {
 	    LOGGER.trace("Recevived Message: " + roadrunnerEvent.toString());
 	    disruptor.getDistributor().distribute(roadrunnerEvent);

@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
 import de.skiptag.roadrunner.persistence.Path;
 
 /**
@@ -1275,17 +1276,25 @@ public class Node {
 	}
     }
 
-    public void populate(Node payload) {
-	Iterator<?> itr = payload.keyIterator();
-	while (itr.hasNext()) {
-	    Object key = (Object) itr.next();
-	    Object value = payload.get((String) key);
+    public void populate(ChangeLogBuilder logBuilder, Node payload) {
+	for (String key : payload.keys()) {
+	    Object value = payload.get(key);
 	    if (value instanceof Node) {
-		Node value2 = new Node();
-		value2.populate((Node) value);
-		put((String) key, value2);
+		Node childNode = new Node();
+		childNode.populate(logBuilder.getChildLogBuilder(key), (Node) value);
+		if (has(key)) {
+		    put(key, childNode);
+		    logBuilder.addNewNode(key, childNode);
+		} else {
+		    put(key, childNode);
+		    logBuilder.addChangedNode(key, childNode);
+		}
 	    } else {
-		put((String) key, value);
+		logBuilder.addChange(key, value);
+		if (value == null) {
+		    logBuilder.addRemoved(key, get(key));
+		}
+		put(key, value);
 	    }
 	}
     }

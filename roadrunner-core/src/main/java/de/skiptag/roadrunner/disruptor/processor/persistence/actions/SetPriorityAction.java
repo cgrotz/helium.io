@@ -12,10 +12,10 @@ public class SetPriorityAction {
 	this.persistence = persistence;
     }
 
-    public void handle(RoadrunnerEvent message) {
-	Path path = new Path(message.extractNodePath());
-	int priority = message.getPriority();
-	persistence.setPriority(path, priority);
+    public void handle(RoadrunnerEvent event) {
+	Path path = new Path(event.extractNodePath());
+	int priority = event.getPriority();
+	persistence.setPriority(event.getChangeLog(), path, priority);
     }
 
 }

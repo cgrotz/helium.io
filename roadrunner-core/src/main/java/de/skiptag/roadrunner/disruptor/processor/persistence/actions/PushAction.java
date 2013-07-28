@@ -16,25 +16,25 @@ public class PushAction {
 	this.persistence = persistence;
     }
 
-    public void handle(RoadrunnerEvent message) {
-	Path path = new Path(message.extractNodePath());
+    public void handle(RoadrunnerEvent event) {
+	Path path = new Path(event.extractNodePath());
 	Object payload;
-	if (message.has(RoadrunnerEvent.PAYLOAD)) {
-	    payload = message.get(RoadrunnerEvent.PAYLOAD);
+	if (event.has(RoadrunnerEvent.PAYLOAD)) {
+	    payload = event.get(RoadrunnerEvent.PAYLOAD);
 	} else {
 	    payload = new Node();
 	}
 
 	String nodeName;
-	if (message.has("name")) {
-	    nodeName = message.getString("name");
+	if (event.has("name")) {
+	    nodeName = event.getString("name");
 	} else {
 	    nodeName = UUID.randomUUID().toString().replaceAll("-", "");
 	}
 	if (path.isEmtpy()) {
-	    persistence.applyNewValue(new Path(nodeName), -1, payload);
+	    persistence.applyNewValue(event.getChangeLog(), new Path(nodeName), -1, payload);
 	} else {
-	    persistence.applyNewValue(path, -1, payload);
+	    persistence.applyNewValue(event.getChangeLog(), path, -1, payload);
 	}
     }
 
