@@ -4,6 +4,8 @@ import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
+import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
@@ -29,10 +31,12 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void remove(Path path) {
+    public void remove(ChangeLog log, Path path) {
 	String nodeName = path.getLastElement();
 	Path parentPath = path.getParent();
+	Node node = model.getNodeForPath(parentPath).getNode(nodeName);
 	model.getNodeForPath(parentPath).remove(nodeName);
+	log.addChildRemovedLogEntry(parentPath, nodeName, node);
     }
 
     @Override
@@ -41,15 +45,13 @@ public class InMemoryPersistence implements Persistence {
 
 	for (String childNodeKey : node.keys()) {
 	    Object object = node.get(childNodeKey);
-	    String pathForReturn = path.toString();
-	    String parentName = path.toString();
 	    boolean hasChildren = (object instanceof Node) ? ((Node) object).hasChildren()
 		    : false;
 	    int indexOf = node.indexOf(childNodeKey);
 	    int numChildren = (object instanceof Node) ? ((Node) object).length()
 		    : 0;
 	    if (object != null && object != Node.NULL) {
-		handler.child_added(childNodeKey, pathForReturn, parentName, object, hasChildren, numChildren, indexOf);
+		handler.fireChildAdded(childNodeKey, path, path.getParent(), object, hasChildren, numChildren, null, indexOf);
 	    }
 	}
     }
@@ -60,16 +62,15 @@ public class InMemoryPersistence implements Persistence {
 	String childNodeKey = path.getLastElement();
 	if (node.has(path.getLastElement())) {
 	    Object object = node.get(path.getLastElement());
-	    handler.value(childNodeKey, path.toString(), path.getParent()
-		    .toString(), object, false, 0L, node.indexOf(childNodeKey));
+	    handler.fireValue(childNodeKey, path, path.getParent(), object, "", node.indexOf(childNodeKey));
 	} else {
-	    handler.value(childNodeKey, path.toString(), path.getParent()
-		    .toString(), "", false, 0L, node.indexOf(childNodeKey));
+	    handler.fireValue(childNodeKey, path, path.getParent(), "", "", node.indexOf(childNodeKey));
 	}
     }
 
     @Override
-    public boolean applyNewValue(Path path, int priority, Object payload) {
+    public void applyNewValue(ChangeLog log, Path path, int priority,
+	    Object payload) {
 	Node node;
 	boolean created = false;
 	if (!model.pathExists(path)) {
@@ -84,16 +85,34 @@ public class InMemoryPersistence implements Persistence {
 		node = new Node();
 		parent.putWithIndex(path.getLastElement(), node, priority);
 	    }
-	    node.populate((Node) payload);
+	    node.populate(new ChangeLogBuilder(log, path, path.getParent(),
+		    node), (Node) payload);
+	    if (created) {
+		log.addChildAddedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
+			.getParent(), payload, false, 0, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+	    } else {
+		log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
+			.getParent(), payload, false, 0, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+	    }
 	} else {
 	    parent.putWithIndex(path.getLastElement(), payload, priority);
+
+	    if (created) {
+		log.addChildAddedLogEntry(path.getLastElement(), path, path.getParent(), payload, false, 0, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+	    } else {
+		log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
+			.getParent(), payload, false, 0, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+		log.addValueChangedLogEntry(path.getLastElement(), path, path.getParent(), payload, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+	    }
+	    log.addChildChangedLogEntry(path.getParent().getLastElement(), path.getParent()
+		    .getParent(), path.getParent().getParent().getParent(), parent, false, 0, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+
 	}
 	logger.trace("Model changed: " + model);
-	return created;
     }
 
     @Override
-    public void setPriority(Path path, int priority) {
+    public void setPriority(ChangeLog log, Path path, int priority) {
 	Node parent = model.getNodeForPath(path.getParent());
 	parent.setIndexOf(path.getLastElement(), priority);
     }
@@ -105,7 +124,25 @@ public class InMemoryPersistence implements Persistence {
 
     @Override
     public void restoreSnapshot(Node node) {
-	model.populate(node);
+	model.populate(null, node);
     }
 
+    private String prevChildName(Node parent, int priority) {
+	if (priority <= 0) {
+	    return null;
+	}
+	return parent.keys().get(priority - 1);
+    }
+
+    private long childCount(Object node) {
+	return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
+    }
+
+    private int priority(Node parentNode, String name) {
+	return parentNode.indexOf(name);
+    }
+
+    private boolean hasChildren(Object node) {
+	return (node instanceof Node) ? ((Node) node).hasChildren() : false;
+    }
 }

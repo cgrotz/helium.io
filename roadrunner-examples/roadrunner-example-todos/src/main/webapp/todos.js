@@ -201,7 +201,7 @@ $(function(){
       if (e.keyCode != 13) return;
       if (!this.input.val()) return;
 
-      Todos.add({title: this.input.val()});
+      Todos.add({title: this.input.val(), done:false});
       this.input.val('');
     },
 
