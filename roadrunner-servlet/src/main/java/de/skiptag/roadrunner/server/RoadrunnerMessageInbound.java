@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
 import org.apache.catalina.websocket.MessageInbound;
-import org.json.JSONObject;
+import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +19,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
     private Roadrunner roadrunner;
     private RoadrunnerEndpoint endpoint;
-    private JSONObject auth;
+    private Node auth;
 
     public RoadrunnerMessageInbound(String basePath, Roadrunner roadrunner) {
 	this.roadrunner = roadrunner;

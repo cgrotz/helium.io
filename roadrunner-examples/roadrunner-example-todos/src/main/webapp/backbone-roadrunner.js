@@ -13,7 +13,6 @@ Backbone.Roadrunner = function(ref) {
   if (typeof ref == "string") {
     this._fbref = new Roadrunner(ref);
   }
-
   _.bindAll(this);
   this._fbref.on("child_added", this._childAdded);
   this._fbref.on("child_moved", this._childMoved);
@@ -59,14 +58,14 @@ _.extend(Backbone.Roadrunner.prototype, {
 
   create: function(model, cb) {
     if (!model.id) {
-      model.id = this._fbref.push().name();
+      model.id = this._fbref.ref().push().name();
     }
     var val = model.toJSON();
-    this._fbref.child(model.id).set(val, _.bind(function(err) {
+    this._fbref.ref().child(model.id).set(val, _.bind(function(err) {
       if (!err) {
         cb(null, val);
       } else {
-        cb("Could not create model " + model.id);callback
+        cb("Could not create model " + model.id);
       }
     }, this));
   },
@@ -88,7 +87,7 @@ _.extend(Backbone.Roadrunner.prototype, {
 
   update: function(model, cb) {
     var val = model.toJSON();
-    this._fbref.child(model.id).update(val, function(err) {
+    this._fbref.ref().child(model.id).update(val, function(err) {
       if (!err) {
         cb(null, val);
       } else {
@@ -98,8 +97,7 @@ _.extend(Backbone.Roadrunner.prototype, {
   },
 
   'delete': function(model, cb) {
-    console.log('delete',cb);
-    this._fbref.child(model.id).remove(function(err) {
+    this._fbref.ref().child(model.id).remove(function(err) {
       if (!err) {
         cb(null, model);
       } else {
@@ -111,7 +109,7 @@ _.extend(Backbone.Roadrunner.prototype, {
 
 
 Backbone.Roadrunner.sync = function(method, model, options, error) {
-  var store = model.Roadrunner || model.collection.Roadrunner;
+  var store = model.roadrunner || model.collection.roadrunner;
 
   // Backwards compatibility with Backbone <= 0.3.3
   if (typeof options == 'function') {
@@ -127,9 +125,19 @@ Backbone.Roadrunner.sync = function(method, model, options, error) {
 
   store[method].apply(this, [model, function(err, val) {
     if (err) {
-      options.error(model, err, options);
+      model.trigger("error", model, err, options);
+      if (Backbone.VERSION === "0.9.10") { 
+        options.error(model, err, options);
+      } else {
+        options.error(err);
+      }
     } else {
-      options.success(model, val, options);
+      model.trigger("sync", model, val, options);
+      if (Backbone.VERSION === "0.9.10") { 
+        options.success(model, val, options);
+      } else {
+        options.success(val);
+      }
     }
   }]);
 };
@@ -140,10 +148,10 @@ Backbone.oldSync = Backbone.sync;
 // the original 'Backbone.sync' is still available in 'Backbone.oldSync'
 Backbone.sync = function(method, model, options, error) {
   var syncMethod = Backbone.oldSync;
-  if (model.Roadrunner || (model.collection && model.collection.Roadrunner)) {
+  if (model.roadrunner || (model.collection && model.collection.roadrunner)) {
     syncMethod = Backbone.Roadrunner.sync;
   }
-	return syncMethod.apply(this, [method, model, options, error]);
+  return syncMethod.apply(this, [method, model, options, error]);
 };
 
 // Custom Roadrunner Collection.
@@ -157,28 +165,30 @@ Backbone.Roadrunner.Collection = Backbone.Collection.extend({
   },
 
   constructor: function(models, options) {
-    if (options && options.Roadrunner) {
-      this.Roadrunner = options.Roadrunner;
-    }
-    switch (typeof this.Roadrunner) {
-      case "object": break;
-      case "string": this.Roadrunner = new Roadrunner(this.Roadrunner); break;
-      default: throw new Error("Invalid Roadrunner reference created");
-    }
 
     // Apply parent constructor (this will also call initialize).
     Backbone.Collection.apply(this, arguments);
-    
+
+    if (options && options.roadrunner) {
+      this.roadrunner = options.roadrunner;
+    }
+    switch (typeof this.roadrunner) {
+      case "object": break;
+      case "string": this.roadrunner = new Roadrunner(this.roadrunner); break;
+      case "function": this.roadrunner = this.roadrunner(); break;
+      default: throw new Error("Invalid roadrunner reference created");
+    }
+
     // Add handlers for remote events.
-    this.Roadrunner.on("child_added", this._childAdded.bind(this));
-    this.Roadrunner.on("child_moved", this._childMoved.bind(this));
-    this.Roadrunner.on("child_changed", this._childChanged.bind(this));
-    this.Roadrunner.on("child_removed", this._childRemoved.bind(this));
+    this.roadrunner.on("child_added", _.bind(this._childAdded, this));
+    this.roadrunner.on("child_moved", _.bind(this._childMoved, this));
+    this.roadrunner.on("child_changed", _.bind(this._childChanged, this));
+    this.roadrunner.on("child_removed", _.bind(this._childRemoved, this));
 
     // Add handlers for all models in this collection, and any future ones
     // that may be added.
     function _updateModel(model, options) {
-      this.Roadrunner.child(model.id).update(model.toJSON());
+      this.roadrunner.ref().child(model.id).update(model.toJSON());
     }
     function _unUpdateModel(model) {
       model.off("change", _updateModel, this);
@@ -200,20 +210,24 @@ Backbone.Roadrunner.Collection = Backbone.Collection.extend({
 
   add: function(models, options) {
     var parsed = this._parseModels(models);
+    options = options ? _.clone(options) : {};
+    options.success = _.isFunction(options.success) ? options.success : function() {};
+
     for (var i = 0; i < parsed.length; i++) {
       var model = parsed[i];
-      this.Roadrunner.child(model.id).set(model);
+      this.roadrunner.ref().child(model.id).set(model, _.bind(options.success, model));
     }
-    // TODO: Implement options.success
   },
 
   remove: function(models, options) {
     var parsed = this._parseModels(models);
+    options = options ? _.clone(options) : {};
+    options.success = _.isFunction(options.success) ? options.success : function() {};
+
     for (var i = 0; i < parsed.length; i++) {
       var model = parsed[i];
-      this.Roadrunner.child(model.id).set(null);
+      this.roadrunner.ref().child(model.id).set(null, _.bind(options.success, model));
     }
-    // TODO: Implement options.success
   },
 
   create: function(model, options) {
@@ -244,11 +258,11 @@ Backbone.Roadrunner.Collection = Backbone.Collection.extend({
     models = _.isArray(models) ? models.slice() : [models];
     for (var i = 0; i < models.length; i++) {
       var model = models[i];
-      if (!model.id) {
-        model.id = this.Roadrunner.push().name();
-      }
       if (model.toJSON && typeof model.toJSON == "function") {
         model = model.toJSON();
+      }
+      if (!model.id) {
+        model.id = this.roadrunner.ref().push().name();
       }
       ret.push(model);
     }
@@ -256,11 +270,8 @@ Backbone.Roadrunner.Collection = Backbone.Collection.extend({
   },
 
   _childAdded: function(snap) {
-    var model = snap.val();
-    // If a node was added without Backfire, it may not have an ID.
-    if (!model.id) {
-      model.id = snap.name();
-    }
+    var model = snap.val()
+    if (!model.id) model.id = snap.name()
     Backbone.Collection.prototype.add.apply(this, [model]);
   },
 
@@ -271,20 +282,100 @@ Backbone.Roadrunner.Collection = Backbone.Collection.extend({
 
   _childChanged: function(snap) {
     var model = snap.val();
+    if (!model.id) model.id = snap.name()
     var item = _.find(this.models, function(child) {
       return child.id == model.id
     });
     if (!item) {
       // TODO: Investigate: what is the right way to handle this case?
-      throw new Error("Could not find model with ID " + model.id);
+      //throw new Error("Could not find model with ID " + model.id);
+    	return null;
     }
+
+    var diff = _.difference(_.keys(item.attributes), _.keys(model));
+    _.each(diff, function(key) {
+      item.unset(key);
+    });
+
     item.set(model);
   },
 
   _childRemoved: function(snap) {
-    Backbone.Collection.prototype.remove.apply(this, [snap.val()]);
+    var model = snap.val()
+    if (!model.id) model.id = snap.name()
+    Backbone.Collection.prototype.remove.apply(this, [model]);
   }
 });
 
-})();
+// Custom Roadrunner Model.
+Backbone.Roadrunner.Model = Backbone.Model.extend({
+  save: function() {
+    this._log("Save called on a Roadrunner model, ignoring.");
+  },
 
+  destroy: function(options) {
+    // TODO: Fix naive success callback. Add error callback.
+    this.roadrunner.ref().set(null, this._log);
+    this.trigger('destroy', this, this.collection, options);
+    if (options.success) {
+      options.success(this,null,options);
+    }
+  },
+
+  constructor: function(model, options) {
+
+    // Apply parent constructor (this will also call initialize).
+    Backbone.Model.apply(this, arguments);
+
+    if (options && options.roadrunner) {
+      this.roadrunner = options.roadrunner;
+    }
+    switch (typeof this.roadrunner) {
+      case "object": break;
+      case "string": this.roadrunner = new Roadrunner(this.roadrunner); break;
+      case "function": this.roadrunner = this.roadrunner(); break;
+      default: throw new Error("Invalid roadrunner reference created");
+    }
+
+    // Add handlers for remote events.
+    this.roadrunner.on("value", this._modelChanged.bind(this));
+
+    this.on("change", this._updateModel, this);
+  },
+
+  _updateModel: function(model, options) {
+    // Find the deleted keys and set their values to null
+    // so Roadrunner properly deletes them.
+    var modelObj = model.toJSON();
+    _.each(model.changed, function(value, key) {
+      if (typeof value === "undefined" || value === null)
+        modelObj[key] = null;
+    });
+    this.roadrunner.ref().update(modelObj, this._log);
+  },
+
+  _modelChanged: function(snap) {
+    // Unset attributes that have been deleted from the server
+    // by comparing the keys that have been removed.
+    var newModel = snap.val();
+    if (typeof newModel === "object" && newModel !== null) {
+      var diff = _.difference(_.keys(this.attributes), _.keys(newModel));
+      var _this = this;
+      _.each(diff, function(key) {
+        _this.unset(key);
+      });
+    }
+    this.set(newModel);
+    this.trigger('sync', this, null, null);
+  },
+
+  _log: function(msg) {
+    if (typeof msg === "undefined" || msg === null) return;
+    if (console && console.log) {
+      console.log(msg);
+    }
+  }
+  
+});
+
+})();

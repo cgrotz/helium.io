@@ -7,8 +7,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 
-import de.skiptag.roadrunner.persistence.inmemory.Node;
-
 /*
  Copyright (c) 2002 JSON.org
 
@@ -389,7 +387,7 @@ public class JSONTokener {
 	if ("".equals(string)) {
 	    throw this.syntaxError("Missing value");
 	}
-	return JSONObject.stringToValue(string);
+	return Node.stringToValue(string);
     }
 
     /**

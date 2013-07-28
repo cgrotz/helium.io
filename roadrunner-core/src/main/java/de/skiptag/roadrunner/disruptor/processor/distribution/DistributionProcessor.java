@@ -2,7 +2,7 @@ package de.skiptag.roadrunner.disruptor.processor.distribution;
 
 import java.util.Set;
 
-import org.json.JSONObject;
+import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +15,6 @@ import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.messaging.DataListener;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
-import de.skiptag.roadrunner.persistence.inmemory.Node;
 
 public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
@@ -46,9 +45,9 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 	Path parentPath = nodePath.getParent();
 	if (type == RoadrunnerEventType.PUSH) {
 	    Node parent = persistence.getNode(parentPath);
-	    Object node = parent.get(nodePath.getLastElement());
+	    Object value = parent.get(nodePath.getLastElement());
 	    int priority = priority((Node) persistence.get(parentPath), nodePath.getLastElement());
-	    fireChildAdded((String) event.get(RoadrunnerEvent.NAME), path, parentPath.getLastElement(), node, hasChildren(node), childCount(node), prevChildName(parent, priority), priority);
+	    fireChildAdded((String) event.get(RoadrunnerEvent.NAME), pathToParent, parentPath.getLastElement(), value, hasChildren(value), childCount(value), prevChildName(parent, priority), priority);
 	} else if (type == RoadrunnerEventType.SET) {
 	    if (event.has(RoadrunnerEvent.PAYLOAD)
 		    && !event.isNull(RoadrunnerEvent.PAYLOAD)) {
@@ -57,7 +56,7 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 		int priority = priority((Node) persistence.get(parentPath), nodePath.getLastElement());
 
 		if (event.created()) {
-		    fireChildAdded(nodePath.getLastElement(), path, parentPath.getLastElement(), value, hasChildren(value), childCount(value), prevChildName(parent, priority), priority);
+		    fireChildAdded(nodePath.getLastElement(), pathToParent, parentPath.getLastElement(), value, hasChildren(value), childCount(value), prevChildName(parent, priority), priority);
 		} else {
 		    fireChildChanged(nodePath.getLastElement(), path, parentPath.getLastElement(), value, hasChildren(value), childCount(value), prevChildName(parent, priority), priority);
 
@@ -68,19 +67,18 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
 		fireValue(nodePath.getLastElement(), path, parentPath.getLastElement(), value, false, 0, prevChildName(parent, priority), priority);
 	    } else {
-		firChildRemoved(path, event.getOldValue());
+		firChildRemoved(pathToParent, nodePath.getLastElement(), event.getOldValue());
 	    }
 	} else if (type == RoadrunnerEventType.EVENT) {
 	    for (DataListener handler : Sets.newHashSet(handlers)) {
-		JSONObject jsonObject;
+		Node jsonObject;
 		Object object = event.get(RoadrunnerEvent.PAYLOAD);
-		if (object instanceof JSONObject) {
-		    jsonObject = event.getJSONObject(RoadrunnerEvent.PAYLOAD);
+		if (object instanceof Node) {
+		    jsonObject = event.getNode(RoadrunnerEvent.PAYLOAD);
 		    handler.distributeEvent(path, jsonObject);
 		} else if (object instanceof String) {
-		    jsonObject = new JSONObject(RoadrunnerEvent.PAYLOAD);
-		    handler.distributeEvent(path, new JSONObject(
-			    (String) object));
+		    jsonObject = new Node(RoadrunnerEvent.PAYLOAD);
+		    handler.distributeEvent(path, new Node((String) object));
 		}
 	    }
 	} else if (type == RoadrunnerEventType.SETPRIORITY) {
@@ -99,17 +97,19 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 	return parent.keys().get(priority - 1);
     }
 
-    private void firChildRemoved(String path, JSONObject payload) {
+    private void firChildRemoved(String path, String name, Node payload) {
 	for (DataListener handler : Sets.newHashSet(handlers)) {
-	    handler.child_removed(path, payload);
+	    handler.child_removed(path, name, payload);
 	}
     }
 
     private void fireChildChanged(String lastElement, String path,
 	    String lastElement2, Object node, boolean hasChildren,
 	    long childCount, String prevChildName, int priority) {
-	for (DataListener handler : Sets.newHashSet(handlers)) {
-	    handler.child_changed(lastElement, path, lastElement2, node, hasChildren, childCount, priority);
+	if (node != null && node != Node.NULL) {
+	    for (DataListener handler : Sets.newHashSet(handlers)) {
+		handler.child_changed(lastElement, path, lastElement2, node, hasChildren, childCount, priority);
+	    }
 	}
     }
 
@@ -124,8 +124,10 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
     private void fireChildAdded(String string, String path, String lastElement,
 	    Object node, boolean hasChildren, long childCount,
 	    String prevChildName, int priority) {
-	for (DataListener handler : Sets.newHashSet(handlers)) {
-	    handler.child_added(string, path, lastElement, node, hasChildren, childCount, priority);
+	if (node != null && node != Node.NULL) {
+	    for (DataListener handler : Sets.newHashSet(handlers)) {
+		handler.child_added(string, path, lastElement, node, hasChildren, childCount, priority);
+	    }
 	}
     }
 

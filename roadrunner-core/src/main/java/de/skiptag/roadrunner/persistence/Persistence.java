@@ -1,7 +1,8 @@
 package de.skiptag.roadrunner.persistence;
 
+import org.json.Node;
+
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
-import de.skiptag.roadrunner.persistence.inmemory.Node;
 
 public interface Persistence extends SnapshotProcessor {
 

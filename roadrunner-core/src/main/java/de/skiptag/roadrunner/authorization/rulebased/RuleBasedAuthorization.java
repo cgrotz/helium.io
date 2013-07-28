@@ -4,7 +4,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import org.json.JSONObject;
+import org.json.Node;
 
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.RoadrunnerNotAuthorizedException;
@@ -14,7 +14,7 @@ import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 public class RuleBasedAuthorization implements Authorization {
 
     public class AuthenticationWrapper {
-	public AuthenticationWrapper(JSONObject auth) {
+	public AuthenticationWrapper(Node auth) {
 	    if (auth != null && auth.has("id")) {
 		this.id = auth.getString("id");
 	    }
@@ -27,12 +27,12 @@ public class RuleBasedAuthorization implements Authorization {
     ScriptEngineManager mgr = new ScriptEngineManager();
     ScriptEngine engine = mgr.getEngineByName("JavaScript");
 
-    public RuleBasedAuthorization(JSONObject rule) {
+    public RuleBasedAuthorization(Node rule) {
 	this.rule = new RuleBasedAuthorizator(rule);
     }
 
     @Override
-    public void authorize(RoadrunnerOperation op, JSONObject auth,
+    public void authorize(RoadrunnerOperation op, Node auth,
 	    RulesDataSnapshot root, String path, Object data)
 	    throws RoadrunnerNotAuthorizedException {
 	if (!isAuthorized(op, auth, root, path, data)) {
@@ -41,7 +41,7 @@ public class RuleBasedAuthorization implements Authorization {
     }
 
     @Override
-    public boolean isAuthorized(RoadrunnerOperation op, JSONObject auth,
+    public boolean isAuthorized(RoadrunnerOperation op, Node auth,
 	    RulesDataSnapshot root, String path, Object data) {
 	String expression = rule.getExpressionForPathAndOperation(path, op);
 

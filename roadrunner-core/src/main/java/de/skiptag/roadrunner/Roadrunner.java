@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
-import org.json.JSONObject;
+import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ public class Roadrunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Roadrunner.class);
 
-    public static final JSONObject ALL_ACCESS_RULE = new JSONObject(
+    public static final Node ALL_ACCESS_RULE = new Node(
 	    "{\".write\": \"true\",\".read\": \"true\",\".remove\":\"true\"}");
 
     private InMemoryPersistence persistence;
@@ -35,8 +35,7 @@ public class Roadrunner {
     private RuleBasedAuthorization authorization;
 
     public Roadrunner(String basePath, String journalDirectory,
-	    Optional<File> snapshotDirectory, JSONObject rule)
-	    throws IOException {
+	    Optional<File> snapshotDirectory, Node rule) throws IOException {
 	this.authorization = new RuleBasedAuthorization(rule);
 	this.persistence = new InMemoryPersistence();
 
@@ -54,9 +53,9 @@ public class Roadrunner {
 
 	if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACHED_LISTENER) {
 	    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath());
-	    if ("child_added".equals(((JSONObject) roadrunnerEvent.getPayload()).get("type"))) {
+	    if ("child_added".equals(((Node) roadrunnerEvent.getPayload()).get("type"))) {
 		persistence.syncPath(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
-	    } else if ("value".equals(((JSONObject) roadrunnerEvent.getPayload()).get("type"))) {
+	    } else if ("value".equals(((Node) roadrunnerEvent.getPayload()).get("type"))) {
 		persistence.syncPropertyValue(new Path(
 			roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);
 	    }
@@ -97,9 +96,11 @@ public class Roadrunner {
 	URL roadrunner = Thread.currentThread()
 		.getContextClassLoader()
 		.getResource("roadrunner.js");
+
 	String uuidContent = com.google.common.io.Resources.toString(uuid, Charsets.UTF_8);
 	String reconnectingWebsocketContent = com.google.common.io.Resources.toString(reconnectingwebsocket, Charsets.UTF_8);
 	String roadrunnerContent = com.google.common.io.Resources.toString(roadrunner, Charsets.UTF_8);
+
 	return uuidContent + "\r\n" + reconnectingWebsocketContent + "\r\n"
 		+ roadrunnerContent;
     }

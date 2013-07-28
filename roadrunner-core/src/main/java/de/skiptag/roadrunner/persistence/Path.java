@@ -13,6 +13,9 @@ public final class Path {
 	} else {
 	    this.elements = getPathElements(path);
 	}
+	if (elements == null) {
+	    this.elements = new String[] {};
+	}
     }
 
     private String[] getPathElements(String path) {
@@ -49,6 +52,9 @@ public final class Path {
     }
 
     public String getLastElement() {
+	if (elements.length == 0) {
+	    return null;
+	}
 	return elements[elements.length - 1];
     }
 
@@ -65,7 +71,7 @@ public final class Path {
     }
 
     public boolean isEmtpy() {
-	return empty;
+	return elements.length <= 0;
     }
 
 }

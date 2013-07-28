@@ -1,6 +1,6 @@
 package de.skiptag.roadrunner.disruptor.processor.authorization;
 
-import org.json.JSONObject;
+import org.json.Node;
 
 import com.lmax.disruptor.EventHandler;
 
@@ -36,7 +36,7 @@ public class AuthorizationProcessor implements EventHandler<RoadrunnerEvent> {
 	    authorization.authorize(RoadrunnerOperation.WRITE, getAuth(event), root, path.toString(), data);
 	} else if (event.getType() == RoadrunnerEventType.SET) {
 	    if (event.has(RoadrunnerEvent.PAYLOAD)
-		    && event.get(RoadrunnerEvent.PAYLOAD) == JSONObject.NULL) {
+		    && event.get(RoadrunnerEvent.PAYLOAD) == Node.NULL) {
 		InMemoryDataSnapshot root = new InMemoryDataSnapshot(
 			persistence.get(null));
 		InMemoryDataSnapshot data = new InMemoryDataSnapshot(
@@ -50,11 +50,11 @@ public class AuthorizationProcessor implements EventHandler<RoadrunnerEvent> {
 	}
     }
 
-    private JSONObject getAuth(RoadrunnerEvent event) {
+    private Node getAuth(RoadrunnerEvent event) {
 	if (event.has(RoadrunnerEvent.AUTH)) {
-	    return event.getJSONObject(RoadrunnerEvent.AUTH);
+	    return event.getNode(RoadrunnerEvent.AUTH);
 	} else {
-	    return new JSONObject();
+	    return new Node();
 	}
     }
 }

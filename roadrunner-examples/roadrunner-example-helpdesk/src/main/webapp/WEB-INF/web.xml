@@ -28,7 +28,7 @@
 		<servlet-name>index.jsp</servlet-name>
 		<url-pattern>/index.html</url-pattern>
 	</servlet-mapping>
-	
+
 	<servlet>
 		<servlet-name>support.jsp</servlet-name>
 		<jsp-file>/support.jsp</jsp-file>

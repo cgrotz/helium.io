@@ -2,7 +2,7 @@ package de.skiptag.roadrunner.disruptor.processor.persistence.actions;
 
 import java.util.UUID;
 
-import org.json.JSONObject;
+import org.json.Node;
 
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.persistence.Path;
@@ -22,7 +22,7 @@ public class PushAction {
 	if (message.has(RoadrunnerEvent.PAYLOAD)) {
 	    payload = message.get(RoadrunnerEvent.PAYLOAD);
 	} else {
-	    payload = new JSONObject();
+	    payload = new Node();
 	}
 
 	String nodeName;

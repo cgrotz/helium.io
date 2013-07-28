@@ -1,5 +1,7 @@
 package de.skiptag.roadrunner.persistence.inmemory;
 
+import org.json.Node;
+
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 
 public class InMemoryDataSnapshot implements RulesDataSnapshot {

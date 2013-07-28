@@ -27,29 +27,34 @@ package org.json;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
+import de.skiptag.roadrunner.persistence.Path;
 
 /**
- * A JSONObject is an unordered collection of name/value pairs. Its external
- * form is a string wrapped in curly braces with colons between the names and
- * values, and commas between the values and names. The internal form is an
- * object having <code>get</code> and <code>opt</code> methods for accessing the
- * values by name, and <code>put</code> methods for adding or replacing values
- * by name. The values can be any of these types: <code>Boolean</code>,
- * <code>JSONArray</code>, <code>JSONObject</code>, <code>Number</code>,
- * <code>String</code>, or the <code>JSONObject.NULL</code> object. A JSONObject
- * constructor can be used to convert an external form JSON text into an
- * internal form whose values can be retrieved with the <code>get</code> and
- * <code>opt</code> methods, or to convert values into a JSON text using the
- * <code>put</code> and <code>toString</code> methods. A <code>get</code> method
- * returns a value if one can be found, and throws an exception if one cannot be
- * found. An <code>opt</code> method returns a default value instead of throwing
- * an exception, and so is useful for obtaining optional values.
+ * A Node is an unordered collection of name/value pairs. Its external form is a
+ * string wrapped in curly braces with colons between the names and values, and
+ * commas between the values and names. The internal form is an object having
+ * <code>get</code> and <code>opt</code> methods for accessing the values by
+ * name, and <code>put</code> methods for adding or replacing values by name.
+ * The values can be any of these types: <code>Boolean</code>,
+ * <code>JSONArray</code>, <code>Node</code>, <code>Number</code>,
+ * <code>String</code>, or the <code>Node.NULL</code> object. A Node constructor
+ * can be used to convert an external form JSON text into an internal form whose
+ * values can be retrieved with the <code>get</code> and <code>opt</code>
+ * methods, or to convert values into a JSON text using the <code>put</code> and
+ * <code>toString</code> methods. A <code>get</code> method returns a value if
+ * one can be found, and throws an exception if one cannot be found. An
+ * <code>opt</code> method returns a default value instead of throwing an
+ * exception, and so is useful for obtaining optional values.
  * <p>
  * The generic <code>get()</code> and <code>opt()</code> methods return an
  * object, which you can cast or query for type. There are also typed
@@ -60,7 +65,7 @@ import com.google.common.collect.Maps;
  * The <code>put</code> methods add or replace values in an object. For example,
  * 
  * <pre>
- * myString = new JSONObject().put(&quot;JSON&quot;, &quot;Hello, World!&quot;).toString();
+ * myString = new Node().put(&quot;JSON&quot;, &quot;Hello, World!&quot;).toString();
  * </pre>
  * 
  * produces the string <code>{"JSON": "Hello, World"}</code>.
@@ -84,11 +89,10 @@ import com.google.common.collect.Maps;
  * @author JSON.org
  * @version 2013-06-17
  */
-public class JSONObject {
+public class Node {
     /**
-     * JSONObject.NULL is equivalent to the value that JavaScript calls null,
-     * whilst Java's null is equivalent to the value that JavaScript calls
-     * undefined.
+     * Node.NULL is equivalent to the value that JavaScript calls null, whilst
+     * Java's null is equivalent to the value that JavaScript calls undefined.
      */
     private static final class Null {
 
@@ -107,8 +111,7 @@ public class JSONObject {
 	 * 
 	 * @param object
 	 *            An object to test for nullness.
-	 * @return true if the object parameter is the JSONObject.NULL object or
-	 *         null.
+	 * @return true if the object parameter is the Node.NULL object or null.
 	 */
 	public boolean equals(Object object) {
 	    return object == null || object == this;
@@ -125,7 +128,7 @@ public class JSONObject {
     }
 
     /**
-     * The map where the JSONObject's properties are kept.
+     * The map where the Node's properties are kept.
      */
     private final Map<String, Object> map;
 
@@ -133,25 +136,25 @@ public class JSONObject {
     /**
      * It is sometimes more convenient and less ambiguous to have a
      * <code>NULL</code> object than to use Java's <code>null</code> value.
-     * <code>JSONObject.NULL.equals(null)</code> returns <code>true</code>.
-     * <code>JSONObject.NULL.toString()</code> returns <code>"null"</code>.
+     * <code>Node.NULL.equals(null)</code> returns <code>true</code>.
+     * <code>Node.NULL.toString()</code> returns <code>"null"</code>.
      */
     public static final Object NULL = new Null();
 
     /**
-     * Construct an empty JSONObject.
+     * Construct an empty Node.
      */
-    public JSONObject() {
+    public Node() {
 	this.map = Maps.newHashMapWithExpectedSize(10000);
     }
 
     /**
-     * Construct a JSONObject from a subset of another JSONObject. An array of
-     * strings is used to identify the keys that should be copied. Missing keys
-     * are ignored.
+     * Construct a Node from a subset of another Node. An array of strings is
+     * used to identify the keys that should be copied. Missing keys are
+     * ignored.
      * 
      * @param jo
-     *            A JSONObject.
+     *            A Node.
      * @param names
      *            An array of strings.
      * @throws RuntimeException
@@ -159,7 +162,7 @@ public class JSONObject {
      *                If a value is a non-finite number or if a name is
      *                duplicated.
      */
-    public JSONObject(JSONObject jo, String[] names) {
+    public Node(Node jo, String[] names) {
 	this();
 	for (int i = 0; i < names.length; i += 1) {
 	    try {
@@ -170,7 +173,7 @@ public class JSONObject {
     }
 
     /**
-     * Construct a JSONObject from a JSONTokener.
+     * Construct a Node from a JSONTokener.
      * 
      * @param x
      *            A JSONTokener object containing the source string.
@@ -178,19 +181,19 @@ public class JSONObject {
      *             If there is a syntax error in the source string or a
      *             duplicated key.
      */
-    public JSONObject(JSONTokener x) {
+    public Node(JSONTokener x) {
 	this();
 	char c;
 	String key;
 
 	if (x.nextClean() != '{') {
-	    throw x.syntaxError("A JSONObject text must begin with '{'");
+	    throw x.syntaxError("A Node text must begin with '{'");
 	}
 	for (;;) {
 	    c = x.nextClean();
 	    switch (c) {
 	    case 0:
-		throw x.syntaxError("A JSONObject text must end with '}'");
+		throw x.syntaxError("A Node text must end with '}'");
 	    case '}':
 		return;
 	    default:
@@ -225,8 +228,8 @@ public class JSONObject {
     }
 
     /**
-     * Construct a JSONObject from a source JSON text string. This is the most
-     * commonly used JSONObject constructor.
+     * Construct a Node from a source JSON text string. This is the most
+     * commonly used Node constructor.
      * 
      * @param source
      *            A string beginning with <code>{</code>&nbsp;<small>(left
@@ -236,7 +239,7 @@ public class JSONObject {
      *                If there is a syntax error in the source string or a
      *                duplicated key.
      */
-    public JSONObject(String source) {
+    public Node(String source) {
 	this(new JSONTokener(source));
     }
 
@@ -283,8 +286,7 @@ public class JSONObject {
 	}
 	Object object = this.opt(key);
 	if (object == null) {
-	    throw new RuntimeException("JSONObject[" + quote(key)
-		    + "] not found.");
+	    throw new RuntimeException("Node[" + quote(key) + "] not found.");
 	}
 	return object;
     }
@@ -308,8 +310,7 @@ public class JSONObject {
 		|| (object instanceof String && ((String) object).equalsIgnoreCase("true"))) {
 	    return true;
 	}
-	throw new RuntimeException("JSONObject[" + quote(key)
-		+ "] is not a Boolean.");
+	throw new RuntimeException("Node[" + quote(key) + "] is not a Boolean.");
     }
 
     /**
@@ -328,7 +329,7 @@ public class JSONObject {
 	    return object instanceof Number ? ((Number) object).doubleValue()
 		    : Double.parseDouble((String) object);
 	} catch (Exception e) {
-	    throw new RuntimeException("JSONObject[" + quote(key)
+	    throw new RuntimeException("Node[" + quote(key)
 		    + "] is not a number.");
 	}
     }
@@ -349,27 +350,27 @@ public class JSONObject {
 	    return object instanceof Number ? ((Number) object).intValue()
 		    : Integer.parseInt((String) object);
 	} catch (Exception e) {
-	    throw new RuntimeException("JSONObject[" + quote(key)
+	    throw new RuntimeException("Node[" + quote(key)
 		    + "] is not an int.");
 	}
     }
 
     /**
-     * Get the JSONObject value associated with a key.
+     * Get the Node value associated with a key.
      * 
      * @param key
      *            A key string.
-     * @return A JSONObject which is the value.
+     * @return A Node which is the value.
      * @throws RuntimeException
-     *             if the key is not found or if the value is not a JSONObject.
+     *             if the key is not found or if the value is not a Node.
      */
-    public JSONObject getJSONObject(String key) {
+    public Node getNode(String key) {
 	Object object = this.get(key);
-	if (object instanceof JSONObject) {
-	    return (JSONObject) object;
+	if (object instanceof Node) {
+	    return (Node) object;
 	}
-	throw new RuntimeException("JSONObject[" + quote(key)
-		+ "] is not a JSONObject. " + toString(2));
+	throw new RuntimeException("Node[" + quote(key) + "] is not a Node. "
+		+ toString(2));
     }
 
     /**
@@ -388,17 +389,17 @@ public class JSONObject {
 	    return object instanceof Number ? ((Number) object).longValue()
 		    : Long.parseLong((String) object);
 	} catch (Exception e) {
-	    throw new RuntimeException("JSONObject[" + quote(key)
+	    throw new RuntimeException("Node[" + quote(key)
 		    + "] is not a long. " + toString(2));
 	}
     }
 
     /**
-     * Get an array of field names from a JSONObject.
+     * Get an array of field names from a Node.
      * 
      * @return An array of field names, or null if there are no names.
      */
-    public static String[] getNames(JSONObject jo) {
+    public static String[] getNames(Node jo) {
 	int length = jo.length();
 	if (length == 0) {
 	    return null;
@@ -427,25 +428,26 @@ public class JSONObject {
 	if (object instanceof String) {
 	    return (String) object;
 	}
-	throw new RuntimeException("JSONObject[" + quote(key)
-		+ "] not a string. " + toString(2));
+	throw new RuntimeException("Node[" + quote(key) + "] not a string. "
+		+ toString(2));
     }
 
     /**
-     * Determine if the JSONObject contains a specific key.
+     * Determine if the Node contains a specific key.
      * 
      * @param key
      *            A key string.
-     * @return true if the key exists in the JSONObject.
+     * @return true if the key exists in the Node.
      */
     public boolean has(String key) {
-	return this.map.containsKey(key);
+	return this.map.containsKey(key)
+		&& (this.map.get(key) != null && this.map.get(key) != NULL);
     }
 
     /**
-     * Increment a property of a JSONObject. If there is no such property,
-     * create one with a value of 1. If there is such a property, and if it is
-     * an Integer, Long, Double, or Float, then add one to it.
+     * Increment a property of a Node. If there is no such property, create one
+     * with a value of 1. If there is such a property, and if it is an Integer,
+     * Long, Double, or Float, then add one to it.
      * 
      * @param key
      *            A key string.
@@ -454,7 +456,7 @@ public class JSONObject {
      *             If there is already a property with this name that is not an
      *             Integer, Long, Double, or Float.
      */
-    public JSONObject increment(String key) {
+    public Node increment(String key) {
 	Object value = this.opt(key);
 	if (value == null) {
 	    this.put(key, 1);
@@ -480,14 +482,14 @@ public class JSONObject {
      * @param key
      *            A key string.
      * @return true if there is no value associated with the key or if the value
-     *         is the JSONObject.NULL object.
+     *         is the Node.NULL object.
      */
     public boolean isNull(String key) {
-	return JSONObject.NULL.equals(this.opt(key));
+	return Node.NULL.equals(this.opt(key));
     }
 
     /**
-     * Get an enumeration of the keys of the JSONObject.
+     * Get an enumeration of the keys of the Node.
      * 
      * @return An iterator of the keys.
      */
@@ -496,7 +498,7 @@ public class JSONObject {
     }
 
     /**
-     * Get a set of keys of the JSONObject.
+     * Get a set of keys of the Node.
      * 
      * @return A keySet.
      */
@@ -505,9 +507,9 @@ public class JSONObject {
     }
 
     /**
-     * Get the number of keys stored in the JSONObject.
+     * Get the number of keys stored in the Node.
      * 
-     * @return The number of keys in the JSONObject.
+     * @return The number of keys in the Node.
      */
     public int length() {
 	return this.map.size();
@@ -650,16 +652,16 @@ public class JSONObject {
     }
 
     /**
-     * Get an optional JSONObject associated with a key. It returns null if
-     * there is no such key, or if its value is not a JSONObject.
+     * Get an optional Node associated with a key. It returns null if there is
+     * no such key, or if its value is not a Node.
      * 
      * @param key
      *            A key string.
-     * @return A JSONObject which is the value.
+     * @return A Node which is the value.
      */
-    public JSONObject optJSONObject(String key) {
+    public Node optNode(String key) {
 	Object object = this.opt(key);
-	return object instanceof JSONObject ? (JSONObject) object : null;
+	return object instanceof Node ? (Node) object : null;
     }
 
     /**
@@ -723,7 +725,7 @@ public class JSONObject {
     }
 
     /**
-     * Put a key/boolean pair in the JSONObject.
+     * Put a key/boolean pair in the Node.
      * 
      * @param key
      *            A key string.
@@ -733,13 +735,13 @@ public class JSONObject {
      * @throws RuntimeException
      *             If the key is null.
      */
-    public JSONObject put(String key, boolean value) {
+    public Node put(String key, boolean value) {
 	this.put(key, value ? Boolean.TRUE : Boolean.FALSE);
 	return this;
     }
 
     /**
-     * Put a key/double pair in the JSONObject.
+     * Put a key/double pair in the Node.
      * 
      * @param key
      *            A key string.
@@ -749,13 +751,13 @@ public class JSONObject {
      * @throws RuntimeException
      *             If the key is null or if the number is invalid.
      */
-    public JSONObject put(String key, double value) {
+    public Node put(String key, double value) {
 	this.put(key, new Double(value));
 	return this;
     }
 
     /**
-     * Put a key/int pair in the JSONObject.
+     * Put a key/int pair in the Node.
      * 
      * @param key
      *            A key string.
@@ -765,13 +767,13 @@ public class JSONObject {
      * @throws RuntimeException
      *             If the key is null.
      */
-    public JSONObject put(String key, int value) {
+    public Node put(String key, int value) {
 	this.put(key, new Integer(value));
 	return this;
     }
 
     /**
-     * Put a key/long pair in the JSONObject.
+     * Put a key/long pair in the Node.
      * 
      * @param key
      *            A key string.
@@ -781,30 +783,30 @@ public class JSONObject {
      * @throws RuntimeException
      *             If the key is null.
      */
-    public JSONObject put(String key, long value) {
+    public Node put(String key, long value) {
 	this.put(key, new Long(value));
 	return this;
     }
 
     /**
-     * Put a key/value pair in the JSONObject. If the value is null, then the
-     * key will be removed from the JSONObject if it is present.
+     * Put a key/value pair in the Node. If the value is null, then the key will
+     * be removed from the Node if it is present.
      * 
      * @param key
      *            A key string.
      * @param value
      *            An object which is the value. It should be of one of these
-     *            types: Boolean, Double, Integer, JSONArray, JSONObject, Long,
-     *            String, or the JSONObject.NULL object.
+     *            types: Boolean, Double, Integer, JSONArray, Node, Long,
+     *            String, or the Node.NULL object.
      * @return this.
      * @throws RuntimeException
      *             If the value is non-finite number or if the key is null.
      */
-    public JSONObject put(String key, Object value) {
+    public Node put(String key, Object value) {
 	return putWithIndex(key, value, -1);
     }
 
-    public JSONObject putWithIndex(String key, Object value, int index) {
+    public Node putWithIndex(String key, Object value, int index) {
 	if (key == null) {
 	    throw new NullPointerException("Null key.");
 	}
@@ -826,9 +828,8 @@ public class JSONObject {
     }
 
     /**
-     * Put a key/value pair in the JSONObject, but only if the key and the value
-     * are both non-null, and only if there is not already a member with that
-     * name.
+     * Put a key/value pair in the Node, but only if the key and the value are
+     * both non-null, and only if there is not already a member with that name.
      * 
      * @param key
      * @param value
@@ -836,7 +837,7 @@ public class JSONObject {
      * @throws RuntimeException
      *             if the key is a duplicate
      */
-    public JSONObject putOnce(String key, Object value) {
+    public Node putOnce(String key, Object value) {
 	if (key != null && value != null) {
 	    if (this.opt(key) != null) {
 		throw new RuntimeException("Duplicate key \"" + key + "\"");
@@ -960,7 +961,7 @@ public class JSONObject {
 	    return Boolean.FALSE;
 	}
 	if (string.equalsIgnoreCase("null")) {
-	    return JSONObject.NULL;
+	    return Node.NULL;
 	}
 
 	/*
@@ -1018,9 +1019,9 @@ public class JSONObject {
     }
 
     /**
-     * Make a JSON text of this JSONObject. For compactness, no whitespace is
-     * added. If this would not result in a syntactically correct JSON text,
-     * then null will be returned instead.
+     * Make a JSON text of this Node. For compactness, no whitespace is added.
+     * If this would not result in a syntactically correct JSON text, then null
+     * will be returned instead.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      * 
@@ -1038,7 +1039,7 @@ public class JSONObject {
     }
 
     /**
-     * Make a prettyprinted JSON text of this JSONObject.
+     * Make a prettyprinted JSON text of this Node.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      * 
@@ -1065,10 +1066,10 @@ public class JSONObject {
      * If the object does not contain a toJSONString method (which is the most
      * common case), then a text will be produced by other means. If the value
      * is an array or Collection, then a JSONArray will be made from it and its
-     * toJSONString method will be called. If the value is a MAP, then a
-     * JSONObject will be made from it and its toJSONString method will be
-     * called. Otherwise, the value's toString method will be called, and the
-     * result will be quoted.
+     * toJSONString method will be called. If the value is a MAP, then a Node
+     * will be made from it and its toJSONString method will be called.
+     * Otherwise, the value's toString method will be called, and the result
+     * will be quoted.
      * 
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
@@ -1105,8 +1106,8 @@ public class JSONObject {
     }
 
     /**
-     * Write the contents of the JSONObject as JSON text to a writer. For
-     * compactness, no whitespace is added.
+     * Write the contents of the Node as JSON text to a writer. For compactness,
+     * no whitespace is added.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      * 
@@ -1121,8 +1122,8 @@ public class JSONObject {
 	    int indentFactor, int indent) throws RuntimeException, IOException {
 	if (value == null || value.equals(null)) {
 	    writer.write("null");
-	} else if (value instanceof JSONObject) {
-	    ((JSONObject) value).write(writer, indentFactor, indent);
+	} else if (value instanceof Node) {
+	    ((Node) value).write(writer, indentFactor, indent);
 	} else if (value instanceof Number) {
 	    writer.write(numberToString((Number) value));
 	} else if (value instanceof Boolean) {
@@ -1148,8 +1149,8 @@ public class JSONObject {
     }
 
     /**
-     * Write the contents of the JSONObject as JSON text to a writer. For
-     * compactness, no whitespace is added.
+     * Write the contents of the Node as JSON text to a writer. For compactness,
+     * no whitespace is added.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      * 
@@ -1212,6 +1213,115 @@ public class JSONObject {
 	}
 	key_order.remove(name);
 	key_order.add(index, name);
+    }
+
+    public Object getObjectForPath(Path path) {
+	Object node;
+	if (has(path.getFirstElement())) {
+	    Object object = get(path.getFirstElement());
+	    node = object;
+	} else {
+	    if (path.getFirstElement() == null) {
+		return this;
+	    }
+	    node = new Node();
+	    put(path.getFirstElement(), node);
+	}
+
+	if (node instanceof Node) {
+	    return ((Node) node).getObjectForPath(path.getSubpath(1));
+	}
+	return null;
+    }
+
+    public Node getNodeForPath(Path path) {
+	Node node;
+	String firstElement = path.getFirstElement();
+	if (firstElement == null) {
+	    return this;
+	}
+	if (has(firstElement)) {
+	    Object object = get(firstElement);
+	    if (object instanceof Node) {
+		node = (Node) object;
+	    } else {
+		node = new Node();
+		put(firstElement, node);
+	    }
+	} else {
+	    node = new Node();
+	    put(firstElement, node);
+	}
+	if (path.isSimple()) {
+	    if (has(firstElement)) {
+		Object object = get(firstElement);
+		if (object instanceof Node) {
+		    node = (Node) object;
+		} else {
+		    node = new Node();
+		    put(firstElement, node);
+		}
+	    } else {
+		node = new Node();
+		put(firstElement, node);
+	    }
+	    return node;
+	}
+	Path subpath = path.getSubpath(1);
+	if (subpath.isEmtpy()) {
+	    return this;
+	} else {
+	    return node.getNodeForPath(subpath);
+	}
+    }
+
+    public void populate(Node payload) {
+	Iterator<?> itr = payload.keyIterator();
+	while (itr.hasNext()) {
+	    Object key = (Object) itr.next();
+	    Object value = payload.get((String) key);
+	    if (value instanceof Node) {
+		Node value2 = new Node();
+		value2.populate((Node) value);
+		put((String) key, value2);
+	    } else {
+		put((String) key, value);
+	    }
+	}
+    }
+
+    public Collection<Node> getChildren() {
+	Set<Node> nodes = Sets.newHashSet();
+	Iterator<?> itr = keyIterator();
+	while (itr.hasNext()) {
+	    Object key = itr.next();
+	    if (get((String) key) instanceof Node) {
+		nodes.add((Node) get((String) key));
+	    }
+	}
+	return nodes;
+    }
+
+    public boolean hasChildren() {
+	return !getChildren().isEmpty();
+    }
+
+    public boolean pathExists(Path path) {
+	if (path.isEmtpy()) {
+	    return true;
+	} else if (has(path.getFirstElement())) {
+	    Object object = get(path.getFirstElement());
+	    if (object instanceof Node) {
+		Node node = (Node) object;
+		return node.pathExists(path.getSubpath(1));
+	    } else if (path.isSimple()) {
+		return true;
+	    } else {
+		return false;
+	    }
+	} else {
+	    return false;
+	}
     }
 
 }

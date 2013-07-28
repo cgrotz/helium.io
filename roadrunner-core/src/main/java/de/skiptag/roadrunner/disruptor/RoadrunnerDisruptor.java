@@ -13,7 +13,7 @@ import journal.io.api.Journal.ReadType;
 import journal.io.api.Journal.WriteType;
 import journal.io.api.Location;
 
-import org.json.JSONObject;
+import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,6 @@ import de.skiptag.roadrunner.disruptor.processor.eventsourcing.EventSourceProces
 import de.skiptag.roadrunner.disruptor.processor.persistence.PersistenceProcessor;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Persistence;
-import de.skiptag.roadrunner.persistence.inmemory.Node;
 
 public class RoadrunnerDisruptor {
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerDisruptor.class);
@@ -75,10 +74,10 @@ public class RoadrunnerDisruptor {
 	if (iterator.hasNext()) {
 	    Location lastEntryLocation = iterator.next();
 	    byte[] lastEntry = journal.read(lastEntryLocation, ReadType.SYNC);
-	    JSONObject snapshot = new JSONObject(new String(lastEntry));
+	    Node snapshot = new Node(new String(lastEntry));
 	    int pointer = snapshot.getInt("currentEventLogPointer");
 	    int dataFileId = snapshot.getInt("currentEventLogDataFileId");
-	    JSONObject payload = snapshot.getJSONObject(RoadrunnerEvent.PAYLOAD);
+	    Node payload = snapshot.getNode(RoadrunnerEvent.PAYLOAD);
 	    Node node = new Node();
 	    node.populate(payload);
 	    persistence.restoreSnapshot(node);
@@ -124,8 +123,8 @@ public class RoadrunnerDisruptor {
 	Optional<Location> currentLocation = eventSourceProcessor.getCurrentLocation();
 	if (snapshotJournal.isPresent() || currentLocation.isPresent()) {
 	    Location location = currentLocation.get();
-	    JSONObject payload = persistence.dumpSnapshot();
-	    JSONObject snapshot = new JSONObject();
+	    Node payload = persistence.dumpSnapshot();
+	    Node snapshot = new Node();
 	    snapshot.put("currentEventLogPointer", location.getPointer());
 	    snapshot.put("currentEventLogDataFileId", location.getDataFileId());
 	    snapshot.put(RoadrunnerEvent.PAYLOAD, payload);

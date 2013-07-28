@@ -3,7 +3,7 @@ package de.skiptag.roadrunner.authorization.rulebased;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.json.JSONObject;
+import org.json.Node;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
@@ -14,12 +14,12 @@ public class RuleBasedAuthorizator {
 
     private TreeNode ruleTree = new TreeNode();
 
-    public RuleBasedAuthorizator(JSONObject rule) {
+    public RuleBasedAuthorizator(Node rule) {
 	parseRuleObject(ruleTree, rule);
     }
 
     @SuppressWarnings("unchecked")
-    private void parseRuleObject(TreeNode node, JSONObject rule) {
+    private void parseRuleObject(TreeNode node, Node rule) {
 	Iterator<String> itr = rule.keyIterator();
 	while (itr.hasNext()) {
 	    String key = itr.next();
@@ -33,8 +33,8 @@ public class RuleBasedAuthorizator {
 		} else {
 		    node.put(op, expression);
 		}
-	    } else if (value instanceof JSONObject) {
-		parseRuleObject(node.getNodeCreateIfNecessary(key), (JSONObject) value);
+	    } else if (value instanceof Node) {
+		parseRuleObject(node.getNodeCreateIfNecessary(key), (Node) value);
 	    } else {
 		throw new RuntimeException("Type not accepted");
 	    }

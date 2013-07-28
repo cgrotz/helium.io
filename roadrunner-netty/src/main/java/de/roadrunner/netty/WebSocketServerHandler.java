@@ -47,7 +47,7 @@ import io.netty.util.CharsetUtil;
 import java.io.IOException;
 import java.util.Map;
 
-import org.json.JSONObject;
+import org.json.Node;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
@@ -67,7 +67,7 @@ import de.skiptag.roadrunner.persistence.inmemory.InMemoryDataSnapshot;
  * Handles handshakes and messages
  */
 public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
-    private static final AttributeKey<JSONObject> AUTH_ATTRIBUTE_KEY = new AttributeKey<JSONObject>(
+    private static final AttributeKey<Node> AUTH_ATTRIBUTE_KEY = new AttributeKey<Node>(
 	    RoadrunnerEvent.AUTH);
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(WebSocketServerHandler.class.getName());
@@ -213,7 +213,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 	// Send the uppercase string back.
 	String msg = ((TextWebSocketFrame) frame).text();
 	RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
-	JSONObject auth = ctx.channel().attr(AUTH_ATTRIBUTE_KEY).get();
+	Node auth = ctx.channel().attr(AUTH_ATTRIBUTE_KEY).get();
 	roadrunnerEvent.put(RoadrunnerEvent.AUTH, auth);
 	roadrunner.handle(handlers.get(ctx.channel()), roadrunnerEvent);
 

@@ -1,6 +1,6 @@
 package de.skiptag.roadrunner.disruptor.processor.persistence.actions;
 
-import org.json.JSONObject;
+import org.json.Node;
 
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.persistence.Path;
@@ -16,15 +16,15 @@ public class SetAction {
 
     public void handle(RoadrunnerEvent message) {
 	Path path = new Path(message.extractNodePath());
-	JSONObject payload;
+	Node payload;
 	if (message.has(RoadrunnerEvent.PAYLOAD)) {
 	    Object obj = message.get(RoadrunnerEvent.PAYLOAD);
-	    if (obj == JSONObject.NULL || obj == null) {
+	    if (obj == Node.NULL || obj == null) {
 		message.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
 		persistence.remove(path);
-	    } else if (obj instanceof JSONObject) {
-		payload = (JSONObject) obj;
-		if (payload instanceof JSONObject) {
+	    } else if (obj instanceof Node) {
+		payload = (Node) obj;
+		if (payload instanceof Node) {
 		    boolean created;
 		    if (message.hasPriority()) {
 			created = persistence.applyNewValue(path, message.getPriority(), obj);
@@ -33,7 +33,7 @@ public class SetAction {
 		    }
 		    message.created(created);
 		}
-	    } else if (obj == null || obj == JSONObject.NULL) {
+	    } else if (obj == null || obj == Node.NULL) {
 		message.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
 		persistence.remove(path);
 	    } else {

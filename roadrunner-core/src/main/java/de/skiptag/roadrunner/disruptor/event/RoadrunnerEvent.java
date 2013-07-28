@@ -1,6 +1,6 @@
 package de.skiptag.roadrunner.disruptor.event;
 
-import org.json.JSONObject;
+import org.json.Node;
 import org.json.JSONTokener;
 
 import com.google.common.base.Optional;
@@ -8,7 +8,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.lmax.disruptor.EventFactory;
 
-public class RoadrunnerEvent extends JSONObject {
+public class RoadrunnerEvent extends Node {
 
     public static final String PAYLOAD = "payload";
     public static final String CREATION_DATE = "creationDate";
@@ -109,7 +109,7 @@ public class RoadrunnerEvent extends JSONObject {
 	}
 	String requestPath = (String) get(RoadrunnerEvent.PATH);
 	if (has(RoadrunnerEvent.NAME)) {
-	    if (get(RoadrunnerEvent.NAME) != JSONObject.NULL) {
+	    if (get(RoadrunnerEvent.NAME) != Node.NULL) {
 		return extractPath(requestPath, getString(RoadrunnerEvent.NAME));
 	    }
 	}
@@ -123,7 +123,7 @@ public class RoadrunnerEvent extends JSONObject {
 	String parentPath;
 	String requestPath = (String) get(RoadrunnerEvent.PATH);
 	if (has(RoadrunnerEvent.NAME)
-		&& get(RoadrunnerEvent.NAME) != JSONObject.NULL) {
+		&& get(RoadrunnerEvent.NAME) != Node.NULL) {
 	    parentPath = extractPath(requestPath, getString(RoadrunnerEvent.NAME));
 	} else {
 	    parentPath = extractPath(requestPath, null);
@@ -147,8 +147,8 @@ public class RoadrunnerEvent extends JSONObject {
 	return path;
     }
 
-    public JSONObject getOldValue() {
-	return (JSONObject) get(RoadrunnerEvent.OLD_VALUE);
+    public Node getOldValue() {
+	return (Node) get(RoadrunnerEvent.OLD_VALUE);
     }
 
     public boolean isFromHistory() {

@@ -1,6 +1,6 @@
 package de.skiptag.roadrunner.persistence.inmemory;
 
-import org.json.JSONObject;
+import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +41,16 @@ public class InMemoryPersistence implements Persistence {
 
 	for (String childNodeKey : node.keys()) {
 	    Object object = node.get(childNodeKey);
-
-	    handler.child_added(childNodeKey, path + "/" + childNodeKey, path.toString(), object, (object instanceof Node) ? ((Node) object).hasChildren()
-		    : false, (object instanceof Node) ? ((Node) object).length()
-		    : 0, node.indexOf(childNodeKey));
+	    String pathForReturn = path.toString();
+	    String parentName = path.toString();
+	    boolean hasChildren = (object instanceof Node) ? ((Node) object).hasChildren()
+		    : false;
+	    int indexOf = node.indexOf(childNodeKey);
+	    int numChildren = (object instanceof Node) ? ((Node) object).length()
+		    : 0;
+	    if (object != null && object != Node.NULL) {
+		handler.child_added(childNodeKey, pathForReturn, parentName, object, hasChildren, numChildren, indexOf);
+	    }
 	}
     }
 
@@ -72,13 +78,13 @@ public class InMemoryPersistence implements Persistence {
 	Node parent = model.getNodeForPath(path.getParent());
 	if (payload instanceof Node) {
 	    if (parent.has(path.getLastElement())) {
-		node = (Node) parent.get(path.getLastElement());
+		node = parent.getNode(path.getLastElement());
 		parent.setIndexOf(path.getLastElement(), priority);
 	    } else {
 		node = new Node();
 		parent.putWithIndex(path.getLastElement(), node, priority);
 	    }
-	    node.populate((JSONObject) payload);
+	    node.populate((Node) payload);
 	} else {
 	    parent.putWithIndex(path.getLastElement(), payload, priority);
 	}
@@ -93,7 +99,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public JSONObject dumpSnapshot() {
+    public Node dumpSnapshot() {
 	return model;
     }
 

@@ -2,7 +2,7 @@ package de.skiptag.roadrunner.messaging;
 
 import java.util.Set;
 
-import org.json.JSONObject;
+import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ public class RoadrunnerEndpoint implements DataListener {
     public void child_added(String name, String path, String parent,
 	    Object node, boolean hasChildren, long numChildren, int priority) {
 	if (hasListener(path)) {
-	    JSONObject broadcast = new JSONObject();
+	    Node broadcast = new Node();
 	    broadcast.put(RoadrunnerEvent.TYPE, "child_added");
 	    broadcast.put("name", name);
 	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));
@@ -45,7 +45,7 @@ public class RoadrunnerEndpoint implements DataListener {
     public void child_changed(String name, String path, String parent,
 	    Object node, boolean hasChildren, long numChildren, int priority) {
 	if (hasListener(path)) {
-	    JSONObject broadcast = new JSONObject();
+	    Node broadcast = new Node();
 	    broadcast.put(RoadrunnerEvent.TYPE, "child_changed");
 	    broadcast.put("name", name);
 	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));
@@ -62,7 +62,7 @@ public class RoadrunnerEndpoint implements DataListener {
     public void value(String name, String path, String parent, Object value,
 	    boolean hasChildren, long numChildren, int priority) {
 	if (hasListener(path)) {
-	    JSONObject broadcast = new JSONObject();
+	    Node broadcast = new Node();
 	    broadcast.put(RoadrunnerEvent.TYPE, "value");
 	    broadcast.put("name", name);
 	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));
@@ -76,9 +76,9 @@ public class RoadrunnerEndpoint implements DataListener {
     }
 
     @Override
-    public void child_moved(JSONObject childSnapshot, boolean hasChildren,
+    public void child_moved(Node childSnapshot, boolean hasChildren,
 	    long numChildren) {
-	JSONObject broadcast = new JSONObject();
+	Node broadcast = new Node();
 	broadcast.put(RoadrunnerEvent.TYPE, "child_moved");
 	broadcast.put(RoadrunnerEvent.PAYLOAD, childSnapshot);
 	broadcast.put("hasChildren", hasChildren);
@@ -87,10 +87,11 @@ public class RoadrunnerEndpoint implements DataListener {
     }
 
     @Override
-    public void child_removed(String path, Object payload) {
+    public void child_removed(String path, String name, Object payload) {
 	if (hasListener(path)) {
-	    JSONObject broadcast = new JSONObject();
+	    Node broadcast = new Node();
 	    broadcast.put(RoadrunnerEvent.TYPE, "child_removed");
+	    broadcast.put(RoadrunnerEvent.NAME, name);
 	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));
 	    broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
 
@@ -99,9 +100,9 @@ public class RoadrunnerEndpoint implements DataListener {
     }
 
     @Override
-    public void distributeEvent(String path, JSONObject payload) {
+    public void distributeEvent(String path, Node payload) {
 	if (hasListener(path)) {
-	    JSONObject broadcast = new JSONObject();
+	    Node broadcast = new Node();
 	    broadcast.put(RoadrunnerEvent.TYPE, "event");
 
 	    broadcast.put(RoadrunnerEvent.PATH, createPath(basePath, path));

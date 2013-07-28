@@ -1,3 +1,18 @@
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+	line-height: 1.4em;
+	background: #eeeeee;
+	color: #333333;
+	width: 520px;
+	margin: 0 auto;
+	-webkit-font-smoothing: antialiased;
+}
 
 #todoapp {
 	background: #fff;
@@ -76,7 +91,7 @@
 	cursor: pointer;
 	width: 20px;
 	height: 20px;
-	background: url(../img/destroy.png) no-repeat;
+	background: url(destroy.png) no-repeat;
 }
 
 #todo-list li:hover .destroy {
