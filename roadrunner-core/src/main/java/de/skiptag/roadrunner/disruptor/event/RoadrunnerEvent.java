@@ -1,12 +1,14 @@
 package de.skiptag.roadrunner.disruptor.event;
 
-import org.json.Node;
 import org.json.JSONTokener;
+import org.json.Node;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.lmax.disruptor.EventFactory;
+
+import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
 
 public class RoadrunnerEvent extends Node {
 
@@ -29,7 +31,8 @@ public class RoadrunnerEvent extends Node {
 	    return new RoadrunnerEvent();
 	}
     };
-    private boolean created;
+
+    private ChangeLog changeLog = new ChangeLog();
 
     public RoadrunnerEvent() {
 	put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
@@ -122,8 +125,7 @@ public class RoadrunnerEvent extends Node {
 	}
 	String parentPath;
 	String requestPath = (String) get(RoadrunnerEvent.PATH);
-	if (has(RoadrunnerEvent.NAME)
-		&& get(RoadrunnerEvent.NAME) != Node.NULL) {
+	if (has(RoadrunnerEvent.NAME) && get(RoadrunnerEvent.NAME) != Node.NULL) {
 	    parentPath = extractPath(requestPath, getString(RoadrunnerEvent.NAME));
 	} else {
 	    parentPath = extractPath(requestPath, null);
@@ -171,14 +173,6 @@ public class RoadrunnerEvent extends Node {
 	put(RoadrunnerEvent.CREATION_DATE, creationDate);
     }
 
-    public boolean created() {
-	return created;
-    }
-
-    public void created(boolean created) {
-	this.created = created;
-    }
-
     public int getPriority() {
 	return getInt(RoadrunnerEvent.PRIORITY);
     }
@@ -193,5 +187,9 @@ public class RoadrunnerEvent extends Node {
 
     public Object getPayload() {
 	return get(RoadrunnerEvent.PAYLOAD);
+    }
+
+    public ChangeLog getChangeLog() {
+	return changeLog;
     }
 }

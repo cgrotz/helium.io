@@ -147,18 +147,21 @@ function Roadrunner(path) {
 	var parentPath;
 	var roadrunner_connection = new RoadrunnerConnection(path);
 	roadrunner_connection.handleMessage = function(message) {
-		var snapshot = new Snapshot(message, roadrunner_connection);
-		var workpath = self.path;
-		if (workpath.indexOf(snapshot.path()) == 0) {
-			var callback = events[message.type];
-			if (callback != null) {
-				callback(snapshot, message.prevChildName);
-			}
+		if (events[message.type] != null) {
+			var snapshot = new Snapshot(message, roadrunner_connection);
+			var workpath = self.path;
+			// if (workpath.indexOf(snapshot.path()) == 0) {
+			if (workpath === snapshot.path()) {
+				var callback = events[message.type];
+				if (callback != null) {
+					callback(snapshot, message.prevChildName);
+				}
 
-			var callback = events_once[message.type];
-			if (callback != null) {
-				callback(snapshot, message.prevChildName);
-				events_once[message.type] = null;
+				var callback = events_once[message.type];
+				if (callback != null) {
+					callback(snapshot, message.prevChildName);
+					events_once[message.type] = null;
+				}
 			}
 		}
 	};

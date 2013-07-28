@@ -79,7 +79,7 @@ public class RoadrunnerDisruptor {
 	    int dataFileId = snapshot.getInt("currentEventLogDataFileId");
 	    Node payload = snapshot.getNode(RoadrunnerEvent.PAYLOAD);
 	    Node node = new Node();
-	    node.populate(payload);
+	    node.populate(null, node);
 	    persistence.restoreSnapshot(node);
 	    eventSourceProcessor.setCurrentLocation(new Location(dataFileId,
 		    pointer));
@@ -98,8 +98,7 @@ public class RoadrunnerDisruptor {
 		persistence);
 	eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
 	persistenceProcessor = new PersistenceProcessor(persistence);
-	distributionProcessor = new DistributionProcessor(persistence,
-		authorization);
+	distributionProcessor = new DistributionProcessor();
 
 	disruptor.handleEventsWith(authorizationProcessor)
 		.then(eventSourceProcessor)

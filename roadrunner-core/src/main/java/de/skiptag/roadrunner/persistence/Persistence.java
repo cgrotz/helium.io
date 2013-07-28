@@ -2,6 +2,7 @@ package de.skiptag.roadrunner.persistence;
 
 import org.json.Node;
 
+import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 
 public interface Persistence extends SnapshotProcessor {
@@ -10,11 +11,11 @@ public interface Persistence extends SnapshotProcessor {
 
     Node getNode(Path path);
 
-    void remove(Path path);
+    void remove(ChangeLog log, Path path);
 
-    boolean applyNewValue(Path path, int priority, Object payload);
+    void applyNewValue(ChangeLog log, Path path, int priority, Object payload);
 
-    void setPriority(Path path, int priority);
+    void setPriority(ChangeLog log, Path path, int priority);
 
     void syncPath(Path path, RoadrunnerEndpoint handler);
 

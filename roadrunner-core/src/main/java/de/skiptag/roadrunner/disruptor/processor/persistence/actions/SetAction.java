@@ -14,38 +14,36 @@ public class SetAction {
 	this.persistence = persistence;
     }
 
-    public void handle(RoadrunnerEvent message) {
-	Path path = new Path(message.extractNodePath());
+    public void handle(RoadrunnerEvent event) {
+	Path path = new Path(event.extractNodePath());
 	Node payload;
-	if (message.has(RoadrunnerEvent.PAYLOAD)) {
-	    Object obj = message.get(RoadrunnerEvent.PAYLOAD);
+	if (event.has(RoadrunnerEvent.PAYLOAD)) {
+	    Object obj = event.get(RoadrunnerEvent.PAYLOAD);
 	    if (obj == Node.NULL || obj == null) {
-		message.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
-		persistence.remove(path);
+		event.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
+		persistence.remove(event.getChangeLog(), path);
 	    } else if (obj instanceof Node) {
 		payload = (Node) obj;
 		if (payload instanceof Node) {
-		    boolean created;
-		    if (message.hasPriority()) {
-			created = persistence.applyNewValue(path, message.getPriority(), obj);
+		    if (event.hasPriority()) {
+			persistence.applyNewValue(event.getChangeLog(), path, event.getPriority(), obj);
 		    } else {
-			created = persistence.applyNewValue(path, -1, obj);
+			persistence.applyNewValue(event.getChangeLog(), path, -1, obj);
 		    }
-		    message.created(created);
 		}
 	    } else if (obj == null || obj == Node.NULL) {
-		message.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
-		persistence.remove(path);
+		event.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
+		persistence.remove(event.getChangeLog(), path);
 	    } else {
-		if (message.hasPriority()) {
-		    persistence.applyNewValue(path, message.getPriority(), obj);
+		if (event.hasPriority()) {
+		    persistence.applyNewValue(event.getChangeLog(), path, event.getPriority(), obj);
 		} else {
-		    persistence.applyNewValue(path, -1, obj);
+		    persistence.applyNewValue(event.getChangeLog(), path, -1, obj);
 		}
 	    }
 	} else {
-	    message.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
-	    persistence.remove(path);
+	    event.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
+	    persistence.remove(event.getChangeLog(), path);
 	}
 
     }
