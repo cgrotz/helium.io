@@ -8,11 +8,11 @@
 		<servlet-class>de.skiptag.roadrunner.server.RoadrunnerWebSocketServlet</servlet-class>
 		<init-param>
 			<param-name>journalDirectory</param-name>
-			<param-value>/home/balu/tmp/roadrunner</param-value>
+			<param-value>drawing-journal</param-value>
 		</init-param>
 		<init-param>
 			<param-name>snapshotDirectory</param-name>
-			<param-value>/home/balu/tmp/snapshots</param-value>
+			<param-value>drawing-snapshots</param-value>
 		</init-param>
 	</servlet>
 
