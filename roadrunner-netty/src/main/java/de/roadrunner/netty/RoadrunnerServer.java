@@ -93,7 +93,7 @@ public class RoadrunnerServer {
 	    String snapshotDir) throws IOException {
 	this.port = port;
 	Optional<File> snapshotDirectory = Optional.of(new File(snapshotDir));
-	this.roadrunner = new Roadrunner(basePath, journalDir,
+	this.roadrunner = new Roadrunner(basePath, new File(journalDir),
 		snapshotDirectory);
     }
 
