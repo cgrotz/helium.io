@@ -68,33 +68,47 @@ public class RoadrunnerServer {
 	Option directoryOption = OptionBuilder.withArgName("directory")
 		.hasArg()
 		.withDescription("Journal directory")
-		.isRequired()
 		.create("d");
+
 	@SuppressWarnings("static-access")
 	Option snaphshotOption = OptionBuilder.withArgName("snapshot")
 		.hasArg()
 		.withDescription("Snapshot directory")
-		.isRequired()
 		.create("s");
+
 	@SuppressWarnings("static-access")
 	Option basePathOption = OptionBuilder.withArgName("basepath")
 		.hasArg()
 		.withDescription("basePath of the Roadrunner instance")
 		.isRequired()
 		.create("b");
+
+	@SuppressWarnings("static-access")
+	Option productiveModeOption = OptionBuilder.withArgName("productionMode")
+		.hasArg()
+		.withDescription("set to true if the application runs in productive mode")
+		.create("prod");
+
 	options.addOption(directoryOption);
 	options.addOption(snaphshotOption);
 	options.addOption(basePathOption);
+	options.addOption(productiveModeOption);
 
 	options.addOption("p", true, "Port for the webserver");
     }
 
-    public RoadrunnerServer(String basePath, int port, String journalDir,
-	    String snapshotDir) throws IOException {
+    public RoadrunnerServer(String basePath, boolean productiveMode, int port,
+	    String journalDir, String snapshotDir) throws IOException {
 	this.port = port;
-	Optional<File> snapshotDirectory = Optional.of(new File(snapshotDir));
-	this.roadrunner = new Roadrunner(basePath, new File(journalDir),
-		snapshotDirectory);
+	if (productiveMode) {
+	    Optional<File> snapshotDirectory = Optional.of(new File(snapshotDir));
+	    this.roadrunner = new Roadrunner(basePath, new File(journalDir),
+		    snapshotDirectory);
+	} else {
+	    Optional<File> snapshotDirectory = Optional.of(createTempDirectory());
+	    this.roadrunner = new Roadrunner(basePath, createTempDirectory(),
+		    snapshotDirectory);
+	}
     }
 
     public void run() throws InterruptedException {
@@ -122,7 +136,9 @@ public class RoadrunnerServer {
 	    String basePath = cmd.getOptionValue("b");
 	    String snapshotDirectory = cmd.getOptionValue("s");
 	    int port = Integer.parseInt(cmd.getOptionValue("p", "8080"));
-	    new RoadrunnerServer(basePath, port, directory, snapshotDirectory).run();
+	    boolean productiveMode = Boolean.parseBoolean(cmd.getOptionValue("prod", "false"));
+	    new RoadrunnerServer(basePath, productiveMode, port, directory,
+		    snapshotDirectory).run();
 	} catch (ParseException e) {
 	    System.out.println(e.getLocalizedMessage());
 	    HelpFormatter formatter = new HelpFormatter();
@@ -130,5 +146,20 @@ public class RoadrunnerServer {
 	} catch (Exception exp) {
 	    exp.printStackTrace();
 	}
+    }
+
+    public File createTempDirectory() throws IOException {
+	final File temp;
+	temp = File.createTempFile("Temp" + System.currentTimeMillis(), "");
+	if (!(temp.delete())) {
+	    throw new IOException("Could not delete temp file: "
+		    + temp.getAbsolutePath());
+	}
+
+	if (!(temp.mkdir())) {
+	    throw new IOException("Could not create temp directory: "
+		    + temp.getAbsolutePath());
+	}
+	return temp;
     }
 }
