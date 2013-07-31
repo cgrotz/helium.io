@@ -17,8 +17,11 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
     private Set<DataListener> handlers = Sets.newHashSet();
 
+    private long sequence;
+
     @Override
     public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch) {
+	this.sequence = sequence;
 	distribute(event);
     }
 
@@ -37,5 +40,9 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
     public void removeHandler(DataListener handler) {
 	handlers.remove(handler);
+    }
+
+    public long getSequence() {
+	return sequence;
     }
 }

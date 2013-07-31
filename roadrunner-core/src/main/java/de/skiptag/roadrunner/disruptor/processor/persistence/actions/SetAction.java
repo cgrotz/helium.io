@@ -20,7 +20,6 @@ public class SetAction {
 	if (event.has(RoadrunnerEvent.PAYLOAD)) {
 	    Object obj = event.get(RoadrunnerEvent.PAYLOAD);
 	    if (obj == Node.NULL || obj == null) {
-		event.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
 		persistence.remove(event.getChangeLog(), path);
 	    } else if (obj instanceof Node) {
 		payload = (Node) obj;
@@ -32,7 +31,6 @@ public class SetAction {
 		    }
 		}
 	    } else if (obj == null || obj == Node.NULL) {
-		event.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
 		persistence.remove(event.getChangeLog(), path);
 	    } else {
 		if (event.hasPriority()) {
@@ -42,7 +40,6 @@ public class SetAction {
 		}
 	    }
 	} else {
-	    event.put(RoadrunnerEvent.OLD_VALUE, persistence.get(path));
 	    persistence.remove(event.getChangeLog(), path);
 	}
 

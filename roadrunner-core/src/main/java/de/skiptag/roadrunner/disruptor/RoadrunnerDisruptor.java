@@ -39,10 +39,16 @@ public class RoadrunnerDisruptor {
     private DistributionProcessor distributionProcessor;
 
     private Disruptor<RoadrunnerEvent> disruptor;
+
+    public Disruptor<RoadrunnerEvent> getDisruptor() {
+	return disruptor;
+    }
+
     private AuthorizationProcessor authorizationProcessor;
     private Persistence persistence;
 
     private Optional<Journal> snapshotJournal = Optional.absent();
+    private long currentSequence;
 
     public RoadrunnerDisruptor(File journalDirectory,
 	    Optional<File> snapshotDirectory, Persistence persistence,
@@ -115,7 +121,7 @@ public class RoadrunnerDisruptor {
 	logger.trace("handling event: " + roadrunnerEvent + "("
 		+ roadrunnerEvent.length() + ")");
 	disruptor.publishEvent(eventTranslator);
-
+	this.currentSequence = eventTranslator.getSequence();
     }
 
     public void snapshot() throws IOException, RuntimeException {
@@ -148,5 +154,9 @@ public class RoadrunnerDisruptor {
 
     public DistributionProcessor getDistributor() {
 	return distributionProcessor;
+    }
+
+    public boolean hasBacklog() {
+	return currentSequence != distributionProcessor.getSequence();
     }
 }

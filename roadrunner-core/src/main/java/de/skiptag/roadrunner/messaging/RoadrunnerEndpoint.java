@@ -100,6 +100,7 @@ public class RoadrunnerEndpoint implements DataListener {
 	broadcast.put("hasChildren", hasChildren);
 	broadcast.put("numChildren", numChildren);
 	broadcast.put("priority", priority);
+	System.out.println(broadcast.toString());
 	sender.send(broadcast.toString());
     }
 
@@ -116,6 +117,7 @@ public class RoadrunnerEndpoint implements DataListener {
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
 	    broadcast.put("priority", priority);
+	    System.out.println(broadcast.toString());
 	    sender.send(broadcast.toString());
 	}
     }
@@ -129,6 +131,7 @@ public class RoadrunnerEndpoint implements DataListener {
 	broadcast.put("parent", createPath(parent));
 	broadcast.put(RoadrunnerEvent.PAYLOAD, value);
 	broadcast.put("priority", priority);
+	System.out.println(broadcast.toString());
 	sender.send(broadcast.toString());
     }
 
@@ -139,6 +142,8 @@ public class RoadrunnerEndpoint implements DataListener {
 	broadcast.put(RoadrunnerEvent.PAYLOAD, childSnapshot);
 	broadcast.put("hasChildren", hasChildren);
 	broadcast.put("numChildren", numChildren);
+
+	System.out.println(broadcast.toString());
 	sender.send(broadcast.toString());
     }
 
@@ -149,6 +154,7 @@ public class RoadrunnerEndpoint implements DataListener {
 	broadcast.put(RoadrunnerEvent.PATH, createPath(path));
 	broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
 
+	System.out.println(broadcast.toString());
 	sender.send(broadcast.toString());
     }
 
@@ -161,6 +167,7 @@ public class RoadrunnerEndpoint implements DataListener {
 	    broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
 	    LOGGER.trace("Distributing Message (basePath: '" + basePath
 		    + "',path: '" + path + "') : " + broadcast.toString());
+	    System.out.println(broadcast.toString());
 	    sender.send(broadcast.toString());
 	}
     }

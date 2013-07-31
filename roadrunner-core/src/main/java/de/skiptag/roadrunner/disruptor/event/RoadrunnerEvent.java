@@ -18,7 +18,6 @@ public class RoadrunnerEvent extends Node {
     public static final String NODE_PATH = "nodePath";
     public static final String PATH = "path";
     public static final String FROM_HISTORY = "fromHistory";
-    public static final String OLD_VALUE = "oldValue";
     public static final String AUTH = "auth";
     public static final String NAME = "name";
     public static final String PRIORITY = "priority";
@@ -147,10 +146,6 @@ public class RoadrunnerEvent extends Node {
 	    path = path + "/" + name;
 	}
 	return path;
-    }
-
-    public Node getOldValue() {
-	return (Node) get(RoadrunnerEvent.OLD_VALUE);
     }
 
     public boolean isFromHistory() {

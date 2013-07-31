@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import de.skiptag.roadrunner.disruptor.event.builder.RoadrunnerEventBuilder;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
 import de.skiptag.roadrunner.persistence.Path;
 
@@ -134,6 +135,8 @@ public class Node {
     private final Map<String, Object> map;
 
     private final List<String> key_order = Lists.newArrayList();
+
+    private RoadrunnerEventBuilder builder;
     /**
      * It is sometimes more convenient and less ambiguous to have a
      * <code>NULL</code> object than to use Java's <code>null</code> value.
@@ -242,6 +245,15 @@ public class Node {
      */
     public Node(String source) {
 	this(new JSONTokener(source));
+    }
+
+    public Node(RoadrunnerEventBuilder roadrunnerEventBuilder) {
+	this();
+	this.builder = roadrunnerEventBuilder;
+    }
+
+    public RoadrunnerEventBuilder complete() {
+	return this.builder;
     }
 
     /**
