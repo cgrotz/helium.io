@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 
 import de.skiptag.roadrunner.authorization.Authorization;
@@ -31,7 +32,7 @@ import de.skiptag.roadrunner.disruptor.processor.persistence.PersistenceProcesso
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Persistence;
 
-public class RoadrunnerDisruptor {
+public class RoadrunnerDisruptor implements ExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(RoadrunnerDisruptor.class);
     private static final int RING_SIZE = 256;
     private EventSourceProcessor eventSourceProcessor;
@@ -106,6 +107,7 @@ public class RoadrunnerDisruptor {
 	persistenceProcessor = new PersistenceProcessor(persistence);
 	distributionProcessor = new DistributionProcessor();
 
+	disruptor.handleExceptionsWith(this);
 	disruptor.handleEventsWith(authorizationProcessor)
 		.then(eventSourceProcessor)
 		.then(persistenceProcessor)
@@ -158,5 +160,21 @@ public class RoadrunnerDisruptor {
 
     public boolean hasBacklog() {
 	return currentSequence != distributionProcessor.getSequence();
+    }
+
+    @Override
+    public void handleEventException(Throwable ex, long sequence, Object event) {
+	logger.error("Event Exception (msg: " + ex.getMessage()
+		+ ", sequence: +" + sequence + ", event: " + event + ")", ex);
+    }
+
+    @Override
+    public void handleOnStartException(Throwable ex) {
+	logger.error("OnStart Exception (msg: " + ex.getMessage() + ")", ex);
+    }
+
+    @Override
+    public void handleOnShutdownException(Throwable ex) {
+	logger.error("OnShutdown Exception (msg: " + ex.getMessage() + ")", ex);
     }
 }

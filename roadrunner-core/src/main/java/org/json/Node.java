@@ -153,30 +153,6 @@ public class Node {
     }
 
     /**
-     * Construct a Node from a subset of another Node. An array of strings is
-     * used to identify the keys that should be copied. Missing keys are
-     * ignored.
-     * 
-     * @param jo
-     *            A Node.
-     * @param names
-     *            An array of strings.
-     * @throws RuntimeException
-     * @exception RuntimeException
-     *                If a value is a non-finite number or if a name is
-     *                duplicated.
-     */
-    public Node(Node jo, String[] names) {
-	this();
-	for (int i = 0; i < names.length; i += 1) {
-	    try {
-		this.putOnce(names[i], jo.opt(names[i]));
-	    } catch (Exception ignore) {
-	    }
-	}
-    }
-
-    /**
      * Construct a Node from a JSONTokener.
      * 
      * @param x
@@ -254,34 +230,6 @@ public class Node {
 
     public RoadrunnerEventBuilder complete() {
 	return this.builder;
-    }
-
-    /**
-     * Produce a string from a double. The string "null" will be returned if the
-     * number is not finite.
-     * 
-     * @param d
-     *            A double.
-     * @return A String.
-     */
-    public static String doubleToString(double d) {
-	if (Double.isInfinite(d) || Double.isNaN(d)) {
-	    return "null";
-	}
-
-	// Shave off trailing zeros and decimal point, if possible.
-
-	String string = Double.toString(d);
-	if (string.indexOf('.') > 0 && string.indexOf('e') < 0
-		&& string.indexOf('E') < 0) {
-	    while (string.endsWith("0")) {
-		string = string.substring(0, string.length() - 1);
-	    }
-	    if (string.endsWith(".")) {
-		string = string.substring(0, string.length() - 1);
-	    }
-	}
-	return string;
     }
 
     /**
@@ -829,7 +777,7 @@ public class Node {
 	    if (key_order.contains(key)) {
 		key_order.remove(key);
 	    }
-	    if (index == -1) {
+	    if (index < 0 || index > key_order.size()) {
 		this.key_order.add(key);
 	    } else {
 		this.key_order.add(index, key);
@@ -1100,35 +1048,10 @@ public class Node {
 	if (value == null || value.equals(null)) {
 	    return "null";
 	}
-	if (value instanceof JSONString) {
-	    Object object;
-	    try {
-		object = ((JSONString) value).toJSONString();
-	    } catch (Exception e) {
-		throw new RuntimeException(e);
-	    }
-	    if (object instanceof String) {
-		return (String) object;
-	    }
-	    throw new RuntimeException("Bad value from toJSONString: " + object);
-	}
 	if (value instanceof Number) {
 	    return numberToString((Number) value);
 	}
 	return quote(value.toString());
-    }
-
-    /**
-     * Write the contents of the Node as JSON text to a writer. For compactness,
-     * no whitespace is added.
-     * <p>
-     * Warning: This method assumes that the data structure is acyclical.
-     * 
-     * @return The writer.
-     * @throws RuntimeException
-     */
-    public Writer write(Writer writer) {
-	return this.write(writer, 0, 0);
     }
 
     static final Writer writeValue(Writer writer, Object value,
@@ -1141,14 +1064,6 @@ public class Node {
 	    writer.write(numberToString((Number) value));
 	} else if (value instanceof Boolean) {
 	    writer.write(value.toString());
-	} else if (value instanceof JSONString) {
-	    Object o;
-	    try {
-		o = ((JSONString) value).toJSONString();
-	    } catch (Exception e) {
-		throw new RuntimeException(e);
-	    }
-	    writer.write(o != null ? o.toString() : quote(value.toString()));
 	} else {
 	    quote(value.toString(), writer);
 	}
@@ -1225,7 +1140,11 @@ public class Node {
 	    return;
 	}
 	key_order.remove(name);
-	key_order.add(index, name);
+	if (index < key_order.size()) {
+	    key_order.add(index, name);
+	} else {
+	    key_order.add(name);
+	}
     }
 
     public Object getObjectForPath(Path path) {
@@ -1244,7 +1163,7 @@ public class Node {
 	if (node instanceof Node) {
 	    return ((Node) node).getObjectForPath(path.getSubpath(1));
 	}
-	return null;
+	return node;
     }
 
     public Node getNodeForPath(Path path) {
