@@ -13,16 +13,6 @@ import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 
 public class RuleBasedAuthorization implements Authorization {
 
-    public class AuthenticationWrapper {
-	public AuthenticationWrapper(Node auth) {
-	    if (auth != null && auth.has("id")) {
-		this.id = auth.getString("id");
-	    }
-	}
-
-	public String id;
-    }
-
     private RuleBasedAuthorizator rule;
     ScriptEngineManager mgr = new ScriptEngineManager();
     ScriptEngine engine = mgr.getEngineByName("JavaScript");
@@ -44,7 +34,6 @@ public class RuleBasedAuthorization implements Authorization {
     public boolean isAuthorized(RoadrunnerOperation op, Node auth,
 	    RulesDataSnapshot root, String path, Object data) {
 	String expression = rule.getExpressionForPathAndOperation(path, op);
-
 	try {
 	    engine.put(RoadrunnerEvent.AUTH, new AuthenticationWrapper(auth));
 	    Boolean result = (Boolean) engine.eval(expression);
