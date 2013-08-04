@@ -20,6 +20,7 @@ import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
+import de.skiptag.roadrunner.queries.QueryEvaluator;
 
 public class Roadrunner {
 
@@ -56,7 +57,14 @@ public class Roadrunner {
     public void handle(RoadrunnerEndpoint roadrunnerEventHandler,
 	    RoadrunnerEvent roadrunnerEvent) {
 
-	if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACHED_LISTENER) {
+	if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACH_QUERY) {
+	    roadrunnerEventHandler.addQuery(roadrunnerEvent.extractNodePath(), ((Node) roadrunnerEvent.getPayload()).getString("query"));
+	    persistence.syncPathWithQuery(new Path(
+		    roadrunnerEvent.extractNodePath()), roadrunnerEventHandler, new QueryEvaluator(), ((Node) roadrunnerEvent.getPayload()).getString("query"));
+	} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACH_QUERY) {
+	    roadrunnerEventHandler.removeQuery(roadrunnerEvent.extractNodePath(), ((Node) roadrunnerEvent.getPayload()).getString("query"));
+
+	} else if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACHED_LISTENER) {
 	    roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath(), ((Node) roadrunnerEvent.getPayload()).getString("type"));
 	    if ("child_added".equals(((Node) roadrunnerEvent.getPayload()).get("type"))) {
 		persistence.syncPath(new Path(roadrunnerEvent.extractNodePath()), roadrunnerEventHandler);

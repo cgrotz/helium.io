@@ -151,7 +151,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 			    logger.trace("Sending Message: " + msg);
 			    channel.writeAndFlush(new TextWebSocketFrame(msg));
 			}
-		    }, roadrunner.getPersistence());
+		    });
 	    handlers.put(channel, handler);
 	    roadrunner.addEndpoint(handler);
 	}

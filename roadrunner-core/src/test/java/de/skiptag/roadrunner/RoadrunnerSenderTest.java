@@ -12,7 +12,6 @@ import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.disruptor.event.builder.RoadrunnerEventBuilder;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
-import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
 /**
  * @author balu
@@ -30,8 +29,7 @@ public class RoadrunnerSenderTest {
     @Before
     public void setUp() throws Exception {
 	this.sender = Mockito.mock(RoadrunnerResponseSender.class);
-	this.endpoint = new RoadrunnerEndpoint(BASE_PATH, sender,
-		new InMemoryPersistence());
+	this.endpoint = new RoadrunnerEndpoint(BASE_PATH, sender);
     }
 
     @Test

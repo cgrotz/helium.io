@@ -1,3 +1,19 @@
+var stringify = function(obj, prop) {
+  var placeholder = '____PLACEHOLDER____';
+  var fns = [];
+  var json = JSON.stringify(obj, function(key, value) {
+    if (typeof value === 'function') {
+      fns.push(value);
+      return placeholder;
+    }
+    return value;
+  }, 2);
+  json = json.replace(new RegExp('"' + placeholder + '"', 'g'), function(_) {
+    return fns.shift();
+  });
+  return json;
+};
+
 // Roadrunner
 var roadrunner_endpoint;
 function Snapshot(message, roadrunner_connection) {
@@ -58,7 +74,7 @@ function RoadrunnerConnection(url) {
 		roadrunner_endpoint.onopen = function(event) {
 			console.debug("Connection established resyncing");
 			for ( var i = 0; i < this.messages.length; i++) {
-				roadrunner_endpoint.send(JSON.stringify(this.messages[i]));
+				roadrunner_endpoint.send(stringify(this.messages[i]));
 			}
 			this.messages = [];
 		};
@@ -95,7 +111,7 @@ function RoadrunnerConnection(url) {
 		};
 		console.debug('Sending Message to Server: ', message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
-			roadrunner_endpoint.send(JSON.stringify(message));
+			roadrunner_endpoint.send(stringify(message));
 		} else {
 			roadrunner_endpoint.messages.push(message);
 		}
@@ -109,7 +125,7 @@ function RoadrunnerConnection(url) {
 		};
 		console.debug('Sending Message to Server: ', message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
-			roadrunner_endpoint.send(JSON.stringify(message));
+			roadrunner_endpoint.send(stringify(message));
 		} else {
 			roadrunner_endpoint.messages.push(message);
 		}
@@ -122,7 +138,7 @@ function RoadrunnerConnection(url) {
 		};
 		console.debug('Sending Message to Server: ', message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
-			roadrunner_endpoint.send(JSON.stringify(message));
+			roadrunner_endpoint.send(stringify(message));
 		} else {
 			roadrunner_endpoint.messages.push(message);
 		}
@@ -131,7 +147,7 @@ function RoadrunnerConnection(url) {
 	this.sendSimpleMessage = function(message) {
 		console.debug('Sending Message to Server: ', message);
 		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
-			roadrunner_endpoint.send(JSON.stringify(message));
+			roadrunner_endpoint.send(stringify(message));
 		} else {
 			messages.push(message);
 		}
@@ -186,6 +202,21 @@ function Roadrunner(path) {
 		events_once[event_type] = null;
 		roadrunner_connection.sendMessage("detached_listener", path, {
 			"type" : event_type
+		});
+	};
+	
+	this.query = function(query, child_added,child_changed, child_removed) {
+		events['query_child_added'] = child_added;
+		events['query_child_changed'] = child_changed;
+		events['query_child_removed'] = child_removed;
+		roadrunner_connection.sendMessage("attach_query", path, {
+			"query" : stringify(query)
+		});
+	};
+
+	this.remove_query = function(query) {
+		roadrunner_connection.sendMessage("detach_query", path, {
+			"query" : stringify(query)
 		});
 	};
 

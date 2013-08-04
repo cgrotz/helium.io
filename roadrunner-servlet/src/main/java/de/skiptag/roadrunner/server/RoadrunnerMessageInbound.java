@@ -23,8 +23,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
 
     public RoadrunnerMessageInbound(String basePath, Roadrunner roadrunner) {
 	this.roadrunner = roadrunner;
-	this.endpoint = new RoadrunnerEndpoint(basePath, this,
-		roadrunner.getPersistence());
+	this.endpoint = new RoadrunnerEndpoint(basePath, this);
 	this.roadrunner.addEndpoint(endpoint);
     }
 

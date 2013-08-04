@@ -9,6 +9,7 @@ import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
+import de.skiptag.roadrunner.queries.QueryEvaluator;
 
 public class InMemoryPersistence implements Persistence {
 
@@ -52,6 +53,25 @@ public class InMemoryPersistence implements Persistence {
 		    : 0;
 	    if (object != null && object != Node.NULL) {
 		handler.fireChildAdded(childNodeKey, path, path.getParent(), object, hasChildren, numChildren, null, indexOf);
+	    }
+	}
+    }
+
+    public void syncPathWithQuery(Path path, RoadrunnerEndpoint handler,
+	    QueryEvaluator queryEvaluator, String query) {
+	Node node = model.getNodeForPath(path);
+
+	for (String childNodeKey : node.keys()) {
+	    Object object = node.get(childNodeKey);
+	    if (queryEvaluator.evaluateQueryOnValue(object, query)) {
+		boolean hasChildren = (object instanceof Node) ? ((Node) object).hasChildren()
+			: false;
+		int indexOf = node.indexOf(childNodeKey);
+		int numChildren = (object instanceof Node) ? ((Node) object).length()
+			: 0;
+		if (object != null && object != Node.NULL) {
+		    handler.fireQueryChildAdded(childNodeKey, path, path.getParent(), object, hasChildren, numChildren, null, indexOf);
+		}
 	    }
 	}
     }

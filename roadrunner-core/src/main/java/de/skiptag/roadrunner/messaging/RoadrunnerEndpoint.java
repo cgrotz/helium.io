@@ -15,9 +15,14 @@ import de.skiptag.roadrunner.disruptor.event.changelog.ChildChangedLogEvent;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChildRemovedLogEvent;
 import de.skiptag.roadrunner.disruptor.event.changelog.ValueChangedLogEvent;
 import de.skiptag.roadrunner.persistence.Path;
-import de.skiptag.roadrunner.persistence.Persistence;
+import de.skiptag.roadrunner.queries.QueryEvaluator;
 
 public class RoadrunnerEndpoint implements DataListener {
+    private static final String QUERY_CHILD_REMOVED = "query_child_removed";
+
+    private static final String QUERY_CHILD_CHANGED = "query_child_changed";
+
+    private static final String QUERY_CHILD_ADDED = "query_child_added";
 
     private static final String CHILD_REMOVED = "child_removed";
 
@@ -35,55 +40,69 @@ public class RoadrunnerEndpoint implements DataListener {
     private RoadrunnerResponseSender sender;
     private String basePath;
 
-    private Persistence persistence;
+    private QueryEvaluator queryEvaluator;
 
     public RoadrunnerEndpoint(String basePath,
-	    RoadrunnerResponseSender roadrunnerResponseSender,
-	    Persistence persistence) {
+	    RoadrunnerResponseSender roadrunnerResponseSender) {
 	this.sender = roadrunnerResponseSender;
 	this.basePath = basePath;
-	this.persistence = persistence;
+	this.queryEvaluator = new QueryEvaluator();
     }
 
     @Override
     public void distribute(RoadrunnerEvent event) {
-	for (ChangeLogEvent logE : event.getChangeLog().getLog()) {
-	    if (logE instanceof ChildAddedLogEvent) {
-		ChildAddedLogEvent logEvent = (ChildAddedLogEvent) logE;
-		if (hasListener(logEvent.getPath().toString(), CHILD_ADDED)) {
-		    fireChildAdded(logEvent.getName(), logEvent.getPath(), logEvent.getParent(), logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren(), logEvent.getPrevChildName(), logEvent.getPriority());
-		}
-	    }
-	    if (logE instanceof ChildChangedLogEvent) {
-		ChildChangedLogEvent logEvent = (ChildChangedLogEvent) logE;
-		if (hasListener(logEvent.getPath().toString(), CHILD_CHANGED)) {
-		    fireChildChanged(logEvent.getName(), logEvent.getPath(), logEvent.getParent(), logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren(), logEvent.getPrevChildName(), logEvent.getPriority());
-		}
-	    }
-	    if (logE instanceof ValueChangedLogEvent) {
-		ValueChangedLogEvent logEvent = (ValueChangedLogEvent) logE;
-		if (hasListener(logEvent.getPath().toString(), VALUE)) {
-		    fireValue(logEvent.getName(), logEvent.getPath(), logEvent.getParent(), logEvent.getValue(), logEvent.getPrevChildName(), logEvent.getPriority());
-		}
-	    }
-	    if (logE instanceof ChildRemovedLogEvent) {
-		ChildRemovedLogEvent logEvent = (ChildRemovedLogEvent) logE;
-		if (hasListener(logEvent.getPath().toString(), CHILD_REMOVED)) {
-		    fireChildRemoved(logEvent.getPath(), logEvent.getName(), logEvent.getValue());
-		}
-	    }
-	}
-	String path = event.extractNodePath();
-	RoadrunnerEventType type = event.getType();
-	if (type == RoadrunnerEventType.EVENT) {
+	if (event.getType() == RoadrunnerEventType.EVENT) {
 	    Node jsonObject;
 	    Object object = event.get(RoadrunnerEvent.PAYLOAD);
 	    if (object instanceof Node) {
 		jsonObject = event.getNode(RoadrunnerEvent.PAYLOAD);
-		distributeEvent(path, jsonObject);
+		distributeEvent(event.extractNodePath(), jsonObject);
 	    } else if (object instanceof String) {
 		jsonObject = new Node(RoadrunnerEvent.PAYLOAD);
-		distributeEvent(path, new Node((String) object));
+		distributeEvent(event.extractNodePath(), new Node(
+			(String) object));
+	    }
+	} else {
+	    for (ChangeLogEvent logE : event.getChangeLog().getLog()) {
+		if (logE instanceof ChildAddedLogEvent) {
+		    ChildAddedLogEvent logEvent = (ChildAddedLogEvent) logE;
+		    if (hasListener(logEvent.getPath().toString(), CHILD_ADDED)) {
+			fireChildAdded(logEvent.getName(), logEvent.getPath(), logEvent.getParent(), logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren(), logEvent.getPrevChildName(), logEvent.getPriority());
+		    }
+		    if (hasQuery(logEvent.getPath().toString())) {
+			if (appliesToQuery(logEvent.getPath(), logEvent.getValue())) {
+			    fireQueryChildAdded(logEvent.getName(), logEvent.getPath(), logEvent.getParent(), logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren(), logEvent.getPrevChildName(), logEvent.getPriority());
+			}
+		    }
+		}
+		if (logE instanceof ChildChangedLogEvent) {
+		    ChildChangedLogEvent logEvent = (ChildChangedLogEvent) logE;
+		    if (hasListener(logEvent.getPath().toString(), CHILD_CHANGED)) {
+			fireChildChanged(logEvent.getName(), logEvent.getPath(), logEvent.getParent(), logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren(), logEvent.getPrevChildName(), logEvent.getPriority());
+		    }
+		    if (hasQuery(logEvent.getPath().toString())) {
+			if (appliesToQuery(logEvent.getPath(), logEvent.getValue())) {
+			    fireQueryChildChanged(logEvent.getName(), logEvent.getPath(), logEvent.getParent(), logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren(), logEvent.getPrevChildName(), logEvent.getPriority());
+			}
+		    }
+		}
+		if (logE instanceof ValueChangedLogEvent) {
+		    ValueChangedLogEvent logEvent = (ValueChangedLogEvent) logE;
+		    if (hasListener(logEvent.getPath().toString(), VALUE)) {
+			fireValue(logEvent.getName(), logEvent.getPath(), logEvent.getParent(), logEvent.getValue(), logEvent.getPrevChildName(), logEvent.getPriority());
+		    }
+		}
+		if (logE instanceof ChildRemovedLogEvent) {
+		    ChildRemovedLogEvent logEvent = (ChildRemovedLogEvent) logE;
+		    if (hasListener(logEvent.getPath().toString(), CHILD_REMOVED)) {
+			fireChildRemoved(logEvent.getPath(), logEvent.getName(), logEvent.getValue());
+		    }
+		    if (hasQuery(logEvent.getPath().toString())) {
+			if (appliesToQuery(logEvent.getPath(), logEvent.getValue())) {
+			    fireQueryChildRemoved(logEvent.getPath(), logEvent.getName(), logEvent.getValue());
+			}
+		    }
+		}
 	    }
 	}
     }
@@ -100,7 +119,6 @@ public class RoadrunnerEndpoint implements DataListener {
 	broadcast.put("hasChildren", hasChildren);
 	broadcast.put("numChildren", numChildren);
 	broadcast.put("priority", priority);
-	System.out.println(broadcast.toString());
 	sender.send(broadcast.toString());
     }
 
@@ -117,9 +135,17 @@ public class RoadrunnerEndpoint implements DataListener {
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
 	    broadcast.put("priority", priority);
-	    System.out.println(broadcast.toString());
 	    sender.send(broadcast.toString());
 	}
+    }
+
+    public void fireChildRemoved(Path path, String name, Object payload) {
+	Node broadcast = new Node();
+	broadcast.put(RoadrunnerEvent.TYPE, CHILD_REMOVED);
+	broadcast.put(RoadrunnerEvent.NAME, name);
+	broadcast.put(RoadrunnerEvent.PATH, createPath(path));
+	broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
+	sender.send(broadcast.toString());
     }
 
     public void fireValue(String name, Path path, Path parent, Object value,
@@ -131,7 +157,6 @@ public class RoadrunnerEndpoint implements DataListener {
 	broadcast.put("parent", createPath(parent));
 	broadcast.put(RoadrunnerEvent.PAYLOAD, value);
 	broadcast.put("priority", priority);
-	System.out.println(broadcast.toString());
 	sender.send(broadcast.toString());
     }
 
@@ -142,19 +167,47 @@ public class RoadrunnerEndpoint implements DataListener {
 	broadcast.put(RoadrunnerEvent.PAYLOAD, childSnapshot);
 	broadcast.put("hasChildren", hasChildren);
 	broadcast.put("numChildren", numChildren);
-
-	System.out.println(broadcast.toString());
 	sender.send(broadcast.toString());
     }
 
-    public void fireChildRemoved(Path path, String name, Object payload) {
+    public void fireQueryChildAdded(String name, Path path, Path parent,
+	    Object node, boolean hasChildren, long numChildren,
+	    String prevChildName, int priority) {
 	Node broadcast = new Node();
-	broadcast.put(RoadrunnerEvent.TYPE, CHILD_REMOVED);
+	broadcast.put(RoadrunnerEvent.TYPE, QUERY_CHILD_ADDED);
+	broadcast.put("name", name);
+	broadcast.put(RoadrunnerEvent.PATH, createPath(path));
+	broadcast.put("parent", createPath(parent));
+	broadcast.put(RoadrunnerEvent.PAYLOAD, node);
+	broadcast.put("hasChildren", hasChildren);
+	broadcast.put("numChildren", numChildren);
+	broadcast.put("priority", priority);
+	sender.send(broadcast.toString());
+    }
+
+    public void fireQueryChildChanged(String name, Path path, Path parent,
+	    Object node, boolean hasChildren, long numChildren,
+	    String prevChildName, int priority) {
+	if (node != null && node != Node.NULL) {
+	    Node broadcast = new Node();
+	    broadcast.put(RoadrunnerEvent.TYPE, QUERY_CHILD_CHANGED);
+	    broadcast.put("name", name);
+	    broadcast.put(RoadrunnerEvent.PATH, createPath(path));
+	    broadcast.put("parent", createPath(parent));
+	    broadcast.put(RoadrunnerEvent.PAYLOAD, node);
+	    broadcast.put("hasChildren", hasChildren);
+	    broadcast.put("numChildren", numChildren);
+	    broadcast.put("priority", priority);
+	    sender.send(broadcast.toString());
+	}
+    }
+
+    public void fireQueryChildRemoved(Path path, String name, Object payload) {
+	Node broadcast = new Node();
+	broadcast.put(RoadrunnerEvent.TYPE, QUERY_CHILD_REMOVED);
 	broadcast.put(RoadrunnerEvent.NAME, name);
 	broadcast.put(RoadrunnerEvent.PATH, createPath(path));
 	broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
-
-	System.out.println(broadcast.toString());
 	sender.send(broadcast.toString());
     }
 
@@ -167,7 +220,6 @@ public class RoadrunnerEndpoint implements DataListener {
 	    broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
 	    LOGGER.trace("Distributing Message (basePath: '" + basePath
 		    + "',path: '" + path + "') : " + broadcast.toString());
-	    System.out.println(broadcast.toString());
 	    sender.send(broadcast.toString());
 	}
     }
@@ -195,5 +247,21 @@ public class RoadrunnerEndpoint implements DataListener {
     private boolean hasListener(String path, String type) {
 	return attached_listeners.containsKey(path)
 		&& attached_listeners.get(path).contains(type);
+    }
+
+    public void addQuery(String path, String query) {
+	queryEvaluator.addQuery(path, query);
+    }
+
+    public void removeQuery(String path, String query) {
+	queryEvaluator.removeQuery(path, query);
+    }
+
+    public boolean hasQuery(String path) {
+	return queryEvaluator.hasQuery(path);
+    }
+
+    private boolean appliesToQuery(Path path, Object value) {
+	return queryEvaluator.appliesToQuery(path, value);
     }
 }
