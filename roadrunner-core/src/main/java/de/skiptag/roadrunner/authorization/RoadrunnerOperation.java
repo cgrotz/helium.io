@@ -1,7 +1,7 @@
 package de.skiptag.roadrunner.authorization;
 
 public enum RoadrunnerOperation {
-    READ(".read"), WRITE(".write"), REMOVE(".remove");
+    READ(".read"), WRITE(".write"), VALIDATE(".validate");
 
     private String op;
 

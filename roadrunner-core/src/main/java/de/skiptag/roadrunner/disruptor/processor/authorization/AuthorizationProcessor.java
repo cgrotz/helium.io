@@ -33,7 +33,7 @@ public class AuthorizationProcessor implements EventHandler<RoadrunnerEvent> {
 	    InMemoryDataSnapshot data = new InMemoryDataSnapshot(
 		    event.has(RoadrunnerEvent.PAYLOAD) ? event.get(RoadrunnerEvent.PAYLOAD)
 			    : null);
-	    authorization.authorize(RoadrunnerOperation.WRITE, getAuth(event), root, path.toString(), data);
+	    authorization.authorize(RoadrunnerOperation.WRITE, getAuth(event), root, path, data);
 	} else if (event.getType() == RoadrunnerEventType.SET) {
 	    if (event.has(RoadrunnerEvent.PAYLOAD)
 		    && event.get(RoadrunnerEvent.PAYLOAD) == Node.NULL) {
@@ -41,11 +41,11 @@ public class AuthorizationProcessor implements EventHandler<RoadrunnerEvent> {
 			persistence.get(null));
 		InMemoryDataSnapshot data = new InMemoryDataSnapshot(
 			event.get(RoadrunnerEvent.PAYLOAD));
-		authorization.authorize(RoadrunnerOperation.WRITE, getAuth(event), root, path.toString(), data);
+		authorization.authorize(RoadrunnerOperation.WRITE, getAuth(event), root, path, data);
 	    } else {
 		InMemoryDataSnapshot root = new InMemoryDataSnapshot(
 			persistence.get(null));
-		authorization.authorize(RoadrunnerOperation.REMOVE, getAuth(event), root, path.toString(), null);
+		authorization.authorize(RoadrunnerOperation.WRITE, getAuth(event), root, path, null);
 	    }
 	}
     }

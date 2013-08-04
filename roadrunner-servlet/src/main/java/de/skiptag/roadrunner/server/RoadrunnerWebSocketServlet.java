@@ -20,6 +20,7 @@ import org.apache.catalina.websocket.StreamInbound;
 import org.apache.catalina.websocket.WebSocketServlet;
 import org.apache.catalina.websocket.WsHttpServletRequestWrapper;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
+import org.json.Node;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
@@ -40,10 +41,11 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 
     private static final long serialVersionUID = 1L;
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(RoadrunnerWebSocketServlet.class.getName());
-    private Roadrunner roadrunner;
+    protected Roadrunner roadrunner;
     private String journalDirectoryPath;
     private String snapshotDirectoryPath;
     private boolean productiveMode;
+    private Node rule;
 
     @Override
     protected StreamInbound createWebSocketInbound(String subProtocol,
@@ -59,7 +61,12 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	    servername = request.getScheme() + "://" + request.getServerName()
 		    + ":" + request.getServerPort();
 	}
-	return new RoadrunnerMessageInbound(servername, roadrunner);
+
+	return createInbound(servername);
+    }
+
+    public RoadrunnerMessageInbound createInbound(String servername) {
+	return new RoadrunnerMessageInbound(new Node(), servername, roadrunner);
     }
 
     /*
@@ -84,6 +91,15 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
 	super.init(config);
+	String ruleFileStr = config.getInitParameter("rule");
+	try {
+	    URL ruleUrl = config.getServletContext().getResource(ruleFileStr);
+	    this.rule = new Node(Streams.asString(ruleUrl.openStream()));
+	} catch (MalformedURLException e1) {
+	    logger.error(e1.getLocalizedMessage(), e1);
+	} catch (IOException e) {
+	    logger.error(e.getLocalizedMessage(), e);
+	}
 	String productiveModeString = config.getInitParameter("productiveMode");
 	try {
 	    productiveMode = Boolean.parseBoolean(productiveModeString);
@@ -100,33 +116,10 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
     protected void service(HttpServletRequest req, HttpServletResponse resp)
 	    throws ServletException, IOException {
 	if (roadrunner == null) {
-	    String basePath = req.getScheme() + "://" + req.getServerName()
-		    + ":" + req.getServerPort() + req.getContextPath() + ""
-		    + req.getServletPath();
-	    try {
-		if (productiveMode) {
-		    Optional<File> snapshotDirectory;
-		    if (!Strings.isNullOrEmpty(snapshotDirectoryPath)) {
-			snapshotDirectory = Optional.of(createDirectory(snapshotDirectoryPath));
-		    } else {
-			snapshotDirectory = Optional.absent();
-		    }
-		    this.roadrunner = new Roadrunner(basePath,
-			    createDirectory(journalDirectoryPath),
-			    snapshotDirectory);
-		} else {
-		    Optional<File> snapshotDirectory = Optional.of(createTempDirectory());
-		    this.roadrunner = new Roadrunner(basePath,
-			    createTempDirectory(), snapshotDirectory);
-		}
-
-	    } catch (IOException e) {
-		logger.error("Error loading Roadrunner", e);
-	    }
+	    this.roadrunner = createRoadrunner(req);
 	}
-
 	if (req.getMethod().equals("GET")
-		&& resourceForURI(req, "/roadrunner.js")) {
+		&& resourceForURI(req, "roadrunner.js")) {
 	    resp.setContentType("application/javascript");
 	    resp.setCharacterEncoding("UTF-8");
 
@@ -143,6 +136,34 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	}
     }
 
+    protected Roadrunner createRoadrunner(HttpServletRequest req) {
+
+	String basePath = req.getScheme() + "://" + req.getServerName() + ":"
+		+ req.getServerPort() + req.getContextPath() + ""
+		+ req.getServletPath();
+	try {
+	    if (productiveMode) {
+		Optional<File> snapshotDirectory;
+		if (!Strings.isNullOrEmpty(snapshotDirectoryPath)) {
+		    snapshotDirectory = Optional.of(createDirectory(snapshotDirectoryPath));
+		} else {
+		    snapshotDirectory = Optional.absent();
+		}
+		return new Roadrunner(basePath, rule,
+			createDirectory(journalDirectoryPath),
+			snapshotDirectory);
+	    } else {
+		Optional<File> snapshotDirectory = Optional.of(createTempDirectory());
+		return new Roadrunner(basePath, rule, createTempDirectory(),
+			snapshotDirectory);
+	    }
+
+	} catch (IOException e) {
+	    logger.error("Error loading Roadrunner", e);
+	}
+	return null;
+    }
+
     private URL resourceForURI(HttpServletRequest req)
 	    throws MalformedURLException {
 	String requestURI = req.getRequestURI();
@@ -156,7 +177,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	String requestURI = req.getRequestURI();
 	String contextPath = req.getContextPath();
 	String resourcePath = requestURI.replaceAll(contextPath, "");
-	return uri.equals(resourcePath);
+	return resourcePath.endsWith(uri);
     }
 
     private void handleRestCall(HttpServletRequest req, HttpServletResponse resp)

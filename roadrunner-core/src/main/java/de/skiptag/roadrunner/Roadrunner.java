@@ -26,17 +26,14 @@ public class Roadrunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Roadrunner.class);
 
-    public static final Node ALL_ACCESS_RULE = new Node(
-	    "{\".write\": \"true\",\".read\": \"true\",\".remove\":\"true\"}");
-
     private InMemoryPersistence persistence;
 
     private RoadrunnerDisruptor disruptor;
 
     private RuleBasedAuthorization authorization;
 
-    public Roadrunner(String basePath, File journalDirectory,
-	    Optional<File> snapshotDirectory, Node rule) throws IOException {
+    public Roadrunner(String basePath, Node rule, File journalDirectory,
+	    Optional<File> snapshotDirectory) throws IOException {
 	this.authorization = new RuleBasedAuthorization(rule);
 	this.persistence = new InMemoryPersistence();
 
@@ -47,11 +44,13 @@ public class Roadrunner {
 
     public Roadrunner(String basePath, File journalDirectory,
 	    Optional<File> snapshotDirectory) throws IOException {
-	this(basePath, journalDirectory, snapshotDirectory, ALL_ACCESS_RULE);
+	this(basePath, Authorization.ALL_ACCESS_RULE, journalDirectory,
+		snapshotDirectory);
     }
 
     public Roadrunner(String basePath) throws IOException {
-	this(basePath, createTempDirectory().get(), createTempDirectory());
+	this(basePath, Authorization.ALL_ACCESS_RULE,
+		createTempDirectory().get(), createTempDirectory());
     }
 
     public void handle(RoadrunnerEndpoint roadrunnerEventHandler,

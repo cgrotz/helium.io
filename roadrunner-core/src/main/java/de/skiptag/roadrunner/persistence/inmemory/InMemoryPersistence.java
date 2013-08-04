@@ -4,6 +4,7 @@ import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
@@ -164,5 +165,10 @@ public class InMemoryPersistence implements Persistence {
 
     private boolean hasChildren(Object node) {
 	return (node instanceof Node) ? ((Node) node).hasChildren() : false;
+    }
+
+    @Override
+    public RulesDataSnapshot getRoot() {
+	return new InMemoryDataSnapshot(model);
     }
 }

@@ -1264,4 +1264,20 @@ public class Node {
 	}
     }
 
+    public Node getLastLeafNode(Path path) {
+	if (has(path.getFirstElement())) {
+	    if (path.isSimple()) {
+		if (get(path.getFirstElement()) instanceof Node) {
+		    return getNode(path.getFirstElement());
+		} else {
+		    return this;
+		}
+	    } else {
+		return getLastLeafNode(path.getSubpath(1));
+	    }
+	} else {
+	    return this;
+	}
+    }
+
 }

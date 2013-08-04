@@ -26,7 +26,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>de.skiptag.roadrunner</groupId>
-			<artifactId>roadrunner-servlet</artifactId>
+			<artifactId>roadrunner-spring</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

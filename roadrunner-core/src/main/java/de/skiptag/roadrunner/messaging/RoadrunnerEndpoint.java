@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import de.skiptag.roadrunner.authorization.Authorization;
+import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogEvent;
@@ -15,6 +17,8 @@ import de.skiptag.roadrunner.disruptor.event.changelog.ChildChangedLogEvent;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChildRemovedLogEvent;
 import de.skiptag.roadrunner.disruptor.event.changelog.ValueChangedLogEvent;
 import de.skiptag.roadrunner.persistence.Path;
+import de.skiptag.roadrunner.persistence.Persistence;
+import de.skiptag.roadrunner.persistence.inmemory.InMemoryDataSnapshot;
 import de.skiptag.roadrunner.queries.QueryEvaluator;
 
 public class RoadrunnerEndpoint implements DataListener {
@@ -39,12 +43,18 @@ public class RoadrunnerEndpoint implements DataListener {
     private Multimap<String, String> attached_listeners = HashMultimap.create();
     private RoadrunnerResponseSender sender;
     private String basePath;
-
+    private Node auth;
+    private Authorization authorization;
+    private Persistence persistence;
     private QueryEvaluator queryEvaluator;
 
-    public RoadrunnerEndpoint(String basePath,
-	    RoadrunnerResponseSender roadrunnerResponseSender) {
+    public RoadrunnerEndpoint(String basePath, Node auth,
+	    RoadrunnerResponseSender roadrunnerResponseSender,
+	    Persistence persistence, Authorization authorization) {
 	this.sender = roadrunnerResponseSender;
+	this.persistence = persistence;
+	this.authorization = authorization;
+	this.auth = auth;
 	this.basePath = basePath;
 	this.queryEvaluator = new QueryEvaluator();
     }
@@ -110,28 +120,14 @@ public class RoadrunnerEndpoint implements DataListener {
     public void fireChildAdded(String name, Path path, Path parent,
 	    Object node, boolean hasChildren, long numChildren,
 	    String prevChildName, int priority) {
-	Node broadcast = new Node();
-	broadcast.put(RoadrunnerEvent.TYPE, CHILD_ADDED);
-	broadcast.put("name", name);
-	broadcast.put(RoadrunnerEvent.PATH, createPath(path));
-	broadcast.put("parent", createPath(parent));
-	broadcast.put(RoadrunnerEvent.PAYLOAD, node);
-	broadcast.put("hasChildren", hasChildren);
-	broadcast.put("numChildren", numChildren);
-	broadcast.put("priority", priority);
-	sender.send(broadcast.toString());
-    }
-
-    public void fireChildChanged(String name, Path path, Path parent,
-	    Object node, boolean hasChildren, long numChildren,
-	    String prevChildName, int priority) {
-	if (node != null && node != Node.NULL) {
+	if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path, new InMemoryDataSnapshot(
+		node))) {
 	    Node broadcast = new Node();
-	    broadcast.put(RoadrunnerEvent.TYPE, CHILD_CHANGED);
+	    broadcast.put(RoadrunnerEvent.TYPE, CHILD_ADDED);
 	    broadcast.put("name", name);
 	    broadcast.put(RoadrunnerEvent.PATH, createPath(path));
 	    broadcast.put("parent", createPath(parent));
-	    broadcast.put(RoadrunnerEvent.PAYLOAD, node);
+	    broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, node));
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
 	    broadcast.put("priority", priority);
@@ -139,25 +135,51 @@ public class RoadrunnerEndpoint implements DataListener {
 	}
     }
 
+    public void fireChildChanged(String name, Path path, Path parent,
+	    Object node, boolean hasChildren, long numChildren,
+	    String prevChildName, int priority) {
+	if (node != null && node != Node.NULL) {
+	    if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path, new InMemoryDataSnapshot(
+		    node))) {
+		Node broadcast = new Node();
+		broadcast.put(RoadrunnerEvent.TYPE, CHILD_CHANGED);
+		broadcast.put("name", name);
+		broadcast.put(RoadrunnerEvent.PATH, createPath(path));
+		broadcast.put("parent", createPath(parent));
+		broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, node));
+		broadcast.put("hasChildren", hasChildren);
+		broadcast.put("numChildren", numChildren);
+		broadcast.put("priority", priority);
+		sender.send(broadcast.toString());
+	    }
+	}
+    }
+
     public void fireChildRemoved(Path path, String name, Object payload) {
-	Node broadcast = new Node();
-	broadcast.put(RoadrunnerEvent.TYPE, CHILD_REMOVED);
-	broadcast.put(RoadrunnerEvent.NAME, name);
-	broadcast.put(RoadrunnerEvent.PATH, createPath(path));
-	broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
-	sender.send(broadcast.toString());
+	if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path, new InMemoryDataSnapshot(
+		payload))) {
+	    Node broadcast = new Node();
+	    broadcast.put(RoadrunnerEvent.TYPE, CHILD_REMOVED);
+	    broadcast.put(RoadrunnerEvent.NAME, name);
+	    broadcast.put(RoadrunnerEvent.PATH, createPath(path));
+	    broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, payload));
+	    sender.send(broadcast.toString());
+	}
     }
 
     public void fireValue(String name, Path path, Path parent, Object value,
 	    String prevChildName, int priority) {
-	Node broadcast = new Node();
-	broadcast.put(RoadrunnerEvent.TYPE, VALUE);
-	broadcast.put("name", name);
-	broadcast.put(RoadrunnerEvent.PATH, createPath(path));
-	broadcast.put("parent", createPath(parent));
-	broadcast.put(RoadrunnerEvent.PAYLOAD, value);
-	broadcast.put("priority", priority);
-	sender.send(broadcast.toString());
+	if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path, new InMemoryDataSnapshot(
+		value))) {
+	    Node broadcast = new Node();
+	    broadcast.put(RoadrunnerEvent.TYPE, VALUE);
+	    broadcast.put("name", name);
+	    broadcast.put(RoadrunnerEvent.PATH, createPath(path));
+	    broadcast.put("parent", createPath(parent));
+	    broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, value));
+	    broadcast.put("priority", priority);
+	    sender.send(broadcast.toString());
+	}
     }
 
     public void fireChildMoved(Node childSnapshot, boolean hasChildren,
@@ -173,28 +195,14 @@ public class RoadrunnerEndpoint implements DataListener {
     public void fireQueryChildAdded(String name, Path path, Path parent,
 	    Object node, boolean hasChildren, long numChildren,
 	    String prevChildName, int priority) {
-	Node broadcast = new Node();
-	broadcast.put(RoadrunnerEvent.TYPE, QUERY_CHILD_ADDED);
-	broadcast.put("name", name);
-	broadcast.put(RoadrunnerEvent.PATH, createPath(path));
-	broadcast.put("parent", createPath(parent));
-	broadcast.put(RoadrunnerEvent.PAYLOAD, node);
-	broadcast.put("hasChildren", hasChildren);
-	broadcast.put("numChildren", numChildren);
-	broadcast.put("priority", priority);
-	sender.send(broadcast.toString());
-    }
-
-    public void fireQueryChildChanged(String name, Path path, Path parent,
-	    Object node, boolean hasChildren, long numChildren,
-	    String prevChildName, int priority) {
-	if (node != null && node != Node.NULL) {
+	if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path, new InMemoryDataSnapshot(
+		node))) {
 	    Node broadcast = new Node();
-	    broadcast.put(RoadrunnerEvent.TYPE, QUERY_CHILD_CHANGED);
+	    broadcast.put(RoadrunnerEvent.TYPE, QUERY_CHILD_ADDED);
 	    broadcast.put("name", name);
 	    broadcast.put(RoadrunnerEvent.PATH, createPath(path));
 	    broadcast.put("parent", createPath(parent));
-	    broadcast.put(RoadrunnerEvent.PAYLOAD, node);
+	    broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, node));
 	    broadcast.put("hasChildren", hasChildren);
 	    broadcast.put("numChildren", numChildren);
 	    broadcast.put("priority", priority);
@@ -202,13 +210,36 @@ public class RoadrunnerEndpoint implements DataListener {
 	}
     }
 
+    public void fireQueryChildChanged(String name, Path path, Path parent,
+	    Object node, boolean hasChildren, long numChildren,
+	    String prevChildName, int priority) {
+	if (node != null && node != Node.NULL) {
+	    if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path, new InMemoryDataSnapshot(
+		    node))) {
+		Node broadcast = new Node();
+		broadcast.put(RoadrunnerEvent.TYPE, QUERY_CHILD_CHANGED);
+		broadcast.put("name", name);
+		broadcast.put(RoadrunnerEvent.PATH, createPath(path));
+		broadcast.put("parent", createPath(parent));
+		broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, node));
+		broadcast.put("hasChildren", hasChildren);
+		broadcast.put("numChildren", numChildren);
+		broadcast.put("priority", priority);
+		sender.send(broadcast.toString());
+	    }
+	}
+    }
+
     public void fireQueryChildRemoved(Path path, String name, Object payload) {
-	Node broadcast = new Node();
-	broadcast.put(RoadrunnerEvent.TYPE, QUERY_CHILD_REMOVED);
-	broadcast.put(RoadrunnerEvent.NAME, name);
-	broadcast.put(RoadrunnerEvent.PATH, createPath(path));
-	broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
-	sender.send(broadcast.toString());
+	if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path, new InMemoryDataSnapshot(
+		payload))) {
+	    Node broadcast = new Node();
+	    broadcast.put(RoadrunnerEvent.TYPE, QUERY_CHILD_REMOVED);
+	    broadcast.put(RoadrunnerEvent.NAME, name);
+	    broadcast.put(RoadrunnerEvent.PATH, createPath(path));
+	    broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, payload));
+	    sender.send(broadcast.toString());
+	}
     }
 
     public void distributeEvent(String path, Node payload) {
@@ -221,6 +252,22 @@ public class RoadrunnerEndpoint implements DataListener {
 	    LOGGER.trace("Distributing Message (basePath: '" + basePath
 		    + "',path: '" + path + "') : " + broadcast.toString());
 	    sender.send(broadcast.toString());
+	}
+    }
+
+    private Object checkPayload(Path path, Object value) {
+	if (value instanceof Node) {
+	    Node org = (Node) value;
+	    Node node = new Node();
+	    for (String key : org.keys()) {
+		if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path.append(key), new InMemoryDataSnapshot(
+			org.get(key)))) {
+		    node.put(key, checkPayload(path.append(key), org.get(key)));
+		}
+	    }
+	    return node;
+	} else {
+	    return value;
 	}
     }
 

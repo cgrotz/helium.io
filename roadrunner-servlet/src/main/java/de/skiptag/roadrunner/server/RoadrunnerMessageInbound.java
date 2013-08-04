@@ -21,9 +21,12 @@ public class RoadrunnerMessageInbound extends MessageInbound implements
     private RoadrunnerEndpoint endpoint;
     private Node auth;
 
-    public RoadrunnerMessageInbound(String basePath, Roadrunner roadrunner) {
+    public RoadrunnerMessageInbound(Node auth, String basePath,
+	    Roadrunner roadrunner) {
 	this.roadrunner = roadrunner;
-	this.endpoint = new RoadrunnerEndpoint(basePath, this);
+	this.auth = auth;
+	this.endpoint = new RoadrunnerEndpoint(basePath, auth, this,
+		roadrunner.getPersistence(), roadrunner.getAuthorization());
 	this.roadrunner.addEndpoint(endpoint);
     }
 

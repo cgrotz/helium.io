@@ -12,6 +12,7 @@
 	<modules>
 		<module>roadrunner-core</module>
 		<module>roadrunner-servlet</module>
+		<module>roadrunner-spring</module>
 		<module>roadrunner-netty</module>
 		<module>roadrunner-examples</module>
 	</modules>
@@ -55,6 +56,11 @@
 			<dependency>
 				<groupId>de.skiptag.roadrunner</groupId>
 				<artifactId>roadrunner-netty</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.skiptag.roadrunner</groupId>
+				<artifactId>roadrunner-spring</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

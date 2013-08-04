@@ -118,7 +118,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 	    return;
 	}
 
-	if (req.getMethod() == GET && "/roadrunner.js".equals(req.getUri())) {
+	if (req.getMethod() == GET && req.getUri().endsWith("roadrunner.js")) {
 	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
 	    sendRoadrunnerJsFile(res);
 	    sendHttpResponse(ctx, req, res);
@@ -145,13 +145,15 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 	final Channel channel = ctx.channel();
 	if (!handlers.containsKey(channel)) {
 	    RoadrunnerEndpoint handler = new RoadrunnerEndpoint(
-		    getHttpSocketLocation(req), new RoadrunnerResponseSender() {
+		    getHttpSocketLocation(req), new Node(),
+		    new RoadrunnerResponseSender() {
 			@Override
 			public void send(String msg) {
 			    logger.trace("Sending Message: " + msg);
 			    channel.writeAndFlush(new TextWebSocketFrame(msg));
 			}
-		    });
+		    }, roadrunner.getPersistence(),
+		    roadrunner.getAuthorization());
 	    handlers.put(channel, handler);
 	    roadrunner.addEndpoint(handler);
 	}
@@ -169,7 +171,8 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 	    Object object = new InMemoryDataSnapshot(node);
 	    roadrunner.getAuthorization()
 		    .authorize(RoadrunnerOperation.READ, ctx.attr(WebSocketServerHandler.AUTH_ATTRIBUTE_KEY)
-			    .get(), root, nodePath.toString(), object);
+			    .get(), root, nodePath, new InMemoryDataSnapshot(
+			    node));
 
 	    res.content().writeBytes(node.toString().getBytes());
 	} else if (req.getMethod() == HttpMethod.POST

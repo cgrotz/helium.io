@@ -31,7 +31,7 @@ body {
 <script src="client/js/jquery.min.js"></script>
 
 <script src="angular.min.js"></script>
-<script src="roadrunner.js"></script>
+<script src="repo/roadrunner.js"></script>
 <script src="roadrunner-webrtc.js"></script>
 <script src="angularRoadrunner.js"></script>
 <script src="app.js"></script>
@@ -52,7 +52,13 @@ body {
 				</a> <a class="brand" href="#">Helpdesk</a>
 				<div class="nav-collapse collapse">
 					<ul class="nav">
-						<li class="active"><a href="#">Home</a></li>
+						<li class="active"><a href="index.html">Home</a></li>
+						<li><a href="support.html">Support Desk</a></li>
+						<li class="dropdown"><a href="#" class="dropdown-toggle"
+							data-toggle="dropdown">Account <b class="caret"></b></a>
+							<ul class="dropdown-menu">
+								<li><a href="j_spring_security_logout">Logout</a></li>
+							</ul></li>
 					</ul>
 				</div>
 				<!--/.nav-collapse -->

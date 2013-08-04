@@ -3,15 +3,18 @@
  */
 package de.skiptag.roadrunner;
 
+import org.json.Node;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.disruptor.event.builder.RoadrunnerEventBuilder;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
+import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
 /**
  * @author balu
@@ -29,7 +32,9 @@ public class RoadrunnerSenderTest {
     @Before
     public void setUp() throws Exception {
 	this.sender = Mockito.mock(RoadrunnerResponseSender.class);
-	this.endpoint = new RoadrunnerEndpoint(BASE_PATH, sender);
+	this.endpoint = new RoadrunnerEndpoint(BASE_PATH, new Node(), sender,
+		new InMemoryPersistence(), new RuleBasedAuthorization(
+			new Node()));
     }
 
     @Test

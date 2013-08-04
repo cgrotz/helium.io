@@ -1,7 +1,7 @@
-angular.module('helpdesk', [ 'roadrunner' ]).controller('HelpdeskCtrl', [ '$scope', '$timeout', 'angularRoadrunner', 'angularRoadrunnerCollection', function($scope, $timeout, angularRoadrunner, angularRoadrunnerCollection) {
-	var rr = new Roadrunner('http://localhost:8080/helpdesk/test/test');
+angular.module('helpdesk', [ 'roadrunner' ]).controller('HelpdeskCtrl', [ '$scope', '$timeout', 'angularRoadrunner', 'angularRoadrunnerCollection', 'angularRoadrunnerQuery', function($scope, $timeout, angularRoadrunner, angularRoadrunnerCollection,angularRoadrunnerQuery) {
+	var rr = new Roadrunner('http://localhost:8080/helpdesk/repo');
 	var webRTC;
-	$scope.sessions = angularRoadrunnerCollection(rr);
+	$scope.sessions = angularRoadrunnerQuery(rr,function(val){return (val.status == 'Support requested');});
 	
 	$scope.support = function(selected_session){
 		console.log('Supporting session: '+selected_session.$id,selected_session);
@@ -13,7 +13,7 @@ angular.module('helpdesk', [ 'roadrunner' ]).controller('HelpdeskCtrl', [ '$scop
 		$('#processes').hide();
 		$('#form').show();
 		$('#video').show();
-		webRTC = new RoadrunnerWebRTC('http://localhost:8080/helpdesk/rtc/rtc', '#webrtc-localVideoElement', '#webrtc-remoteVideoElement');
+		webRTC = new RoadrunnerWebRTC('http://localhost:8080/helpdesk/repo/rtc', '#webrtc-localVideoElement', '#webrtc-remoteVideoElement');
 		webRTC.start(function(){
 			webRTC.handshake();
 		});
