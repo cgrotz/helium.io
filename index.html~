@@ -29,9 +29,9 @@
           <ul class="nav navbar-nav">
             <li class="active"><a href="#">Home</a></li>
 		<li><a href="userguide.html">User Guide</a></li>
-		<!--<li><a href="javascript.html">Javascript API</a></li>
+		<li><a href="javascript.html">Javascript API</a></li>
 		<li><a href="security.html">Security API</a></li>
-		<li><a href="rest.html">REST API</a></li>-->
+		<li><a href="rest.html">REST API</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>

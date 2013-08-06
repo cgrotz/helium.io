@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Roadrunner</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/roadrunner.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Roadrunner</a>
+        <div class="nav-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="index.html">Home</a></li>
+		<li><a href="userguide.html">User Guide</a></li>
+                <li class="active"><a href="#">Javascript API</a></li>
+                <li><a href="security.html">Security API</a></li>
+                <li><a href="rest.html">REST API</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+   <div class="container mainContent">
+	<div class="row-fluid breadcrumb-row">
+	  <ul class="breadcrumb">
+		<li><a href="index.html">Home</a></li>
+		<li><a href="#">Javascript API</a></li>
+	  </ul>
+	</div>
+
+    <div class="row-fluid">
+        <div class="col-lg-3">
+            <ul class="nav nav-pills nav-stacked">
+		<li class="active"><a href="#wells">Roadrunner</a>
+			<ul>
+			  <li><a href="#wells">Sub1</a></li>
+			</ul>
+		</li>
+		<li><a href="#wells">Wells</a></li>
+            </ul>
+        </div>
+        <div class="col-lg-9">
+		<div id="section_page">
+        <h1 class="section_title">Roadrunner</h1>
+        <p>
+          A Roadrunner reference represents a particular location in your Roadrunner and can be used for reading or writing data to that Roadrunner location.</p><p>Your initial Roadrunner reference will be constructed from a full, secure Roadrunner URL (e.g. https://SampleChat.RoadrunnerIO-demo.com), but you can subsequently reference child locations by calling <a href="child.html" class="functionLink">child( )</a> on an existing Roadrunner reference.  See <a href="../../creating-references.html">Creating Roadrunner References</a> for more details.</p><p>Writing is done with <a href="set.html" class="functionLink">set( )</a> and reading can be done with <a href="on.html" class="functionLink">on( )</a> (see <a href="../../writing-data.html">Writing Data to Roadrunner</a> and <a href="../../reading-data.html">Reading Data from Roadrunner</a>).</p><p>Every Roadrunner reference has a corresponding URL, which can be retrieved by calling <a href="tostring.html" class="functionLink">toString( )</a>.
+        </p>
+        <div class="hr"></div>
+
+
+        <h2>Member Functions</h2>
+<ul class="wide simple">
+<li><tt class="docutils literal"><a href="#"><span class="pre">new Roadrunner( )</span></a>Construct a new Roadrunner reference from a full Roadrunner URL.</tt></li>
+<li><tt class="docutils literal"><a href="child.html"><span class="pre">child( )</span></a>Get a Roadrunner reference to a child location.</tt></li>
+<li><tt class="docutils literal"><a href="parent.html"><span class="pre">parent( )</span></a>Get a Roadrunner reference for the parent location.</tt></li>
+<li><tt class="docutils literal"><a href="root.html"><span class="pre">root( )</span></a>Get a Roadrunner reference for the root of the Roadrunner.</tt></li>
+<li><tt class="docutils literal"><a href="name.html"><span class="pre">name( )</span></a>Get the last token of this location's full URL.</tt></li>
+<li><tt class="docutils literal"><a href="tostring.html"><span class="pre">toString( )</span></a>Get the absolute URL corresponding to this location.</tt></li>
+<li><tt class="docutils literal"><a href="set.html"><span class="pre">set( )</span></a>Write data into your Roadrunner.</tt></li>
+<li><tt class="docutils literal"><a href="update.html"><span class="pre">update( )</span></a>Modify existing data in your Roadrunner.</tt></li>
+<li><tt class="docutils literal"><a href="remove.html"><span class="pre">remove( )</span></a>Delete data from your Roadrunner.</tt></li>
+<li><tt class="docutils literal"><a href="push.html"><span class="pre">push( )</span></a>Add data to a list using a unique name.</tt></li>
+<li><tt class="docutils literal"><a href="setwithpriority.html">
+    <span class="pre">setWithPriority( )</span>
+    Write data into your Roadrunner using a specific priority.</span>
+</a></tt></li>
+<li><tt class="docutils literal"><a href="setpriority.html">
+    <span class="pre">setPriority( )</span>
+    Update the priority of data in your Roadrunner.</span>
+</a></tt></li>
+<li><tt class="docutils literal"><a href="transaction.html">
+    <span class="pre">transaction( )</span>
+    Atomically modify data.</span>
+</a></tt></li>
+<li><tt class="docutils literal"><a href="on.html">
+    <span class="pre">on( )</span>
+    Attach a callback to read data and receive data changes.</span>
+</a></tt></li>
+<li><tt class="docutils literal"><a href="off.html">
+    <span class="pre">off( )</span>
+    Remove a callback attached with on( ).</span>
+</a></tt></li>
+<li><tt class="docutils literal"><a href="once.html">
+    <span class="pre">once( )</span>
+    Attach a callback that will only be triggered once.</span>
+</a></tt></li>
+<li><tt class="docutils literal"><a href="limit.html">
+    <span class="pre">limit( )</span>
+    Create a Query limited to a maximum number of children.</span>
+</a></tt></li>
+<li><tt class="docutils literal"><a href="startat.html">
+    <span class="pre">startAt( )</span>
+    Create a Query with the specified starting point.</span>
+</a></tt></li>
+<li><tt class="docutils literal"><a href="endat.html">
+    <span class="pre">endAt( )</span>
+    Create a Query with the specified ending point.</span>
+</a></tt></li>
+</ul>
+          
+        </div>
+
+        <h2>Tutorials</h2>
+        <p>
+          Traverse to a Roadrunner location (using <a href="new-Roadrunner.html" class="functionLink">new Roadrunner( )</a> and <a href="child.html" class="functionLink">child( )</a>), and write some data.
+        </p>
+        <pre class="prettyprint prettyprinted" style=""><span class="kwd">var</span><span class="pln"> sampleChatRef </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">new</span><span class="pln"> </span><span class="typ">Roadrunner</span><span class="pun">(</span><span class="str">'https://SampleChat.RoadrunnerIO-demo.com'</span><span class="pun">);</span><span class="pln">
+</span><span class="kwd">var</span><span class="pln"> fredNameRef </span><span class="pun">=</span><span class="pln"> sampleChatRef</span><span class="pun">.</span><span class="pln">child</span><span class="pun">(</span><span class="str">'users/fred/name'</span><span class="pun">);</span><span class="pln">
+fredNameRef</span><span class="pun">.</span><span class="kwd">set</span><span class="pun">({</span><span class="pln">first</span><span class="pun">:</span><span class="pln"> </span><span class="str">'Fred'</span><span class="pun">,</span><span class="pln"> </span><span class="kwd">last</span><span class="pun">:</span><span class="pln"> </span><span class="str">'Flintstone'</span><span class="pun">});</span></pre>
+        <p>
+          Now read the data back (and get notified whenever it changes).
+        </p>
+        <pre class="prettyprint prettyprinted" style=""><span class="pln">fredNameRef</span><span class="pun">.</span><span class="pln">on</span><span class="pun">(</span><span class="str">'value'</span><span class="pun">,</span><span class="pln"> </span><span class="kwd">function</span><span class="pun">(</span><span class="pln">nameSnapshot</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+  </span><span class="kwd">var</span><span class="pln"> y </span><span class="pun">=</span><span class="pln"> nameSnapshot</span><span class="pun">.</span><span class="pln">val</span><span class="pun">();</span><span class="pln">
+  </span><span class="com">// y now contains the object { first: 'Fred', last: 'Flintstone' }.</span><span class="pln">
+</span><span class="pun">});</span></pre>
+        <p>
+          Let's add a new chat message child to the message_list location using <a href="push.html" class="functionLink">push( )</a>.
+        </p>
+        <pre class="prettyprint prettyprinted" style=""><span class="kwd">var</span><span class="pln"> messageListRef </span><span class="pun">=</span><span class="pln"> sampleChatRef</span><span class="pun">.</span><span class="pln">child</span><span class="pun">(</span><span class="str">'message_list'</span><span class="pun">);</span><span class="pln">
+messageListRef</span><span class="pun">.</span><span class="pln">push</span><span class="pun">({</span><span class="str">'user_id'</span><span class="pun">:</span><span class="pln"> </span><span class="str">'fred'</span><span class="pun">,</span><span class="pln"> </span><span class="str">'text'</span><span class="pun">:</span><span class="pln"> </span><span class="str">'Yabba Dabba Doo!'</span><span class="pun">});</span></pre>
+        <p>
+          And let's listen for new children added to the message_list location using <a href="on.html" class="functionLink">on( )</a>.  We'll be notified of our 'Yabba Dabba Doo!' message as well as any other messages that were added in the past, and any new messages that get added in the future.
+        </p>
+        <pre class="prettyprint prettyprinted" style=""><span class="pln">messageListRef</span><span class="pun">.</span><span class="pln">on</span><span class="pun">(</span><span class="str">'child_added'</span><span class="pun">,</span><span class="pln"> </span><span class="kwd">function</span><span class="pun">(</span><span class="pln">newMessageSnapshot</span><span class="pun">)</span><span class="pln"> </span><span class="pun">{</span><span class="pln">
+  </span><span class="kwd">var</span><span class="pln"> userId </span><span class="pun">=</span><span class="pln"> newMessageSnapshot</span><span class="pun">.</span><span class="pln">child</span><span class="pun">(</span><span class="str">'user_id'</span><span class="pun">).</span><span class="pln">val</span><span class="pun">();</span><span class="pln">
+  </span><span class="kwd">var</span><span class="pln"> text </span><span class="pun">=</span><span class="pln"> newMessageSnapshot</span><span class="pun">.</span><span class="pln">child</span><span class="pun">(</span><span class="str">'text'</span><span class="pun">).</span><span class="pln">val</span><span class="pun">();</span><span class="pln">
+  </span><span class="com">// Do something with user_id and text.</span><span class="pln">
+</span><span class="pun">});</span></pre>
+        <div class="hr"></div>
+
+        <h2>References</h2>
+        <p>
+          <a href="../../creating-references.html">Creating Roadrunner References</a><br><a href="../../writing-data.html">Writing Data to Roadrunner</a><br><a href="../../reading-data.html">Reading Data from Roadrunner</a><br>
+        </p>
+      </div>
+        </div>
+</div>
+    </div><!-- /.container -->
+
+    <!-- JavaScript plugins (requires jQuery) -->
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+    <script src="js/respond.min.js"></script>
+
+  </body>
+</html>
