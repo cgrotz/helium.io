@@ -395,18 +395,12 @@ angular.module("roadrunner").factory("angularRoadrunnerQuery", [ "$timeout", fun
 		}, function(data, prevId) {
 			$timeout(function() {
 				var index = indexes[data.name()];
-				if (index == undefined) {
-					var index2 = getIndex(prevId);
-					addChild(index2, new angularRoadrunnerItem(data, index2));
-					updateIndexes(index2);
-				} else {
-					var newIndex = getIndex(prevId);
-					var item = new angularRoadrunnerItem(data, index);
+				var newIndex = getIndex(prevId);
+				var item = new angularRoadrunnerItem(data, index);
 
-					updateChild(index, item);
-					if (newIndex !== index) {
-						moveChild(index, newIndex, item);
-					}
+				updateChild(index, item);
+				if (newIndex !== index) {
+					moveChild(index, newIndex, item);
 				}
 			});
 		}, function(data) {

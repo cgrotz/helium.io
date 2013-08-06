@@ -6,16 +6,16 @@ import de.skiptag.roadrunner.persistence.Persistence;
 
 public class SetPriorityAction {
 
-    private Persistence persistence;
+	private Persistence persistence;
 
-    public SetPriorityAction(Persistence persistence) {
-	this.persistence = persistence;
-    }
+	public SetPriorityAction(Persistence persistence) {
+		this.persistence = persistence;
+	}
 
-    public void handle(RoadrunnerEvent event) {
-	Path path = new Path(event.extractNodePath());
-	int priority = event.getPriority();
-	persistence.setPriority(event.getChangeLog(), path, priority);
-    }
+	public void handle(RoadrunnerEvent event) {
+		Path path = event.extractNodePath();
+		int priority = event.getPriority();
+		persistence.setPriority(event.getChangeLog(), path, priority);
+	}
 
 }

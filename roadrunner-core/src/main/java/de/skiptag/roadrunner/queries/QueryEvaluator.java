@@ -1,5 +1,8 @@
 package de.skiptag.roadrunner.queries;
 
+import java.util.Collection;
+import java.util.Map.Entry;
+
 import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,48 +23,63 @@ import de.skiptag.roadrunner.scripting.SandboxedScriptingEnvironment;
  */
 public class QueryEvaluator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(QueryEvaluator.class);
-    private Multimap<String, String> attached_queries = HashMultimap.create();
+	private static final Logger LOGGER = LoggerFactory.getLogger(QueryEvaluator.class);
+	private Multimap<String, String> attached_queries = HashMultimap.create();
+	private Multimap<String, String> nodesForQuery = HashMultimap.create();
 
-    private SandboxedScriptingEnvironment scriptingEnvironment = new SandboxedScriptingEnvironment();
+	private SandboxedScriptingEnvironment scriptingEnvironment = new SandboxedScriptingEnvironment();
 
-    public boolean appliesToQuery(Path path, Object value) {
-	for (String queryStr : attached_queries.get(path.toString())) {
-	    return evaluateQueryOnValue(value, queryStr);
+	public boolean appliesToQuery(Path path, Object value) {
+		for (String queryStr : attached_queries.get(path.toString())) {
+			return evaluateQueryOnValue(value, queryStr);
+		}
+		return false;
 	}
-	return false;
-    }
 
-    public boolean evaluateQueryOnValue(Object value, String queryStr) {
-	try {
+	public boolean evaluateQueryOnValue(Object value, String queryStr) {
+		try {
 
-	    Object parsedValue;
-	    if (value instanceof Node) {
-		parsedValue = scriptingEnvironment.eval("JSON.parse('"
-			+ value.toString() + "');");
-	    } else {
-		parsedValue = value;
-	    }
-	    scriptingEnvironment.eval("var query = " + queryStr + ";");
-	    Boolean result = (Boolean) scriptingEnvironment.invokeFunction("query", parsedValue);
-	    return result.booleanValue();
-	} catch (Exception e) {
-	    LOGGER.error("Error (" + e.getMessage() + ") on Query (" + queryStr
-		    + ")", e);
+			Object parsedValue;
+			if (value instanceof Node) {
+				parsedValue = scriptingEnvironment.eval("JSON.parse('"
+						+ value.toString() + "');");
+			} else {
+				parsedValue = value;
+			}
+			scriptingEnvironment.eval("var query = " + queryStr + ";");
+			Boolean result = (Boolean) scriptingEnvironment.invokeFunction("query", parsedValue);
+			return result.booleanValue();
+		} catch (Exception e) {
+			LOGGER.error("Error (" + e.getMessage() + ") on Query (" + queryStr + ")", e);
+		}
+		return false;
 	}
-	return false;
-    }
 
-    public void addQuery(String path, String query) {
-	attached_queries.put(path, query);
-    }
+	public void addQuery(Path path, String query) {
+		attached_queries.put(path.toString(), query);
+	}
 
-    public void removeQuery(String path, String query) {
-	attached_queries.remove(path, query);
-    }
+	public void removeQuery(Path path, String query) {
+		attached_queries.remove(path.toString(), query);
+	}
 
-    public boolean hasQuery(String path) {
-	return attached_queries.containsKey(path);
-    }
+	public boolean hasQuery(Path path) {
+		return attached_queries.containsKey(path.toString());
+	}
 
+	public boolean queryContainsNode(Path queryPath, String query, Path nodePath) {
+		return nodesForQuery.containsEntry(new QueryEntry(queryPath, query).toString(), nodePath.toString());
+	}
+
+	public boolean addNodeToQuery(Path path, String query, Path pathToNode) {
+		return nodesForQuery.put(new QueryEntry(path, query).toString(), pathToNode.toString());
+	}
+
+	public boolean removeNodeFromQuery(Path path, String query, Path pathToNode) {
+		return nodesForQuery.remove(new QueryEntry(path, query).toString(), pathToNode.toString());
+	}
+
+	public Collection<Entry<String, String>> getQueries() {
+		return attached_queries.entries();
+	}
 }
