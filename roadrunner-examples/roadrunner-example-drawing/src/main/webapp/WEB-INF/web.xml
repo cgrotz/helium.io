@@ -3,21 +3,4 @@
 	version="3.0">
 
 	<display-name>drawing</display-name>
-	<servlet>
-		<servlet-name>RoadrunnerServlet</servlet-name>
-		<servlet-class>de.skiptag.roadrunner.server.RoadrunnerWebSocketServlet</servlet-class>
-		<init-param>
-			<param-name>journalDirectory</param-name>
-			<param-value>drawing-journal</param-value>
-		</init-param>
-		<init-param>
-			<param-name>snapshotDirectory</param-name>
-			<param-value>drawing-snapshots</param-value>
-		</init-param>
-	</servlet>
-
-	<servlet-mapping>
-		<servlet-name>RoadrunnerServlet</servlet-name>
-		<url-pattern>/*</url-pattern>
-	</servlet-mapping>
 </web-app>

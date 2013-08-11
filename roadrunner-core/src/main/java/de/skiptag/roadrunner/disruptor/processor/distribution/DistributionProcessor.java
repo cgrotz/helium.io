@@ -13,36 +13,37 @@ import de.skiptag.roadrunner.messaging.DataListener;
 
 public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
-    private static final Logger logger = LoggerFactory.getLogger(DistributionProcessor.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(DistributionProcessor.class);
 
-    private Set<DataListener> handlers = Sets.newHashSet();
+	private Set<DataListener> handlers = Sets.newHashSet();
 
-    private long sequence;
+	private long sequence;
 
-    @Override
-    public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch) {
-	this.sequence = sequence;
-	distribute(event);
-    }
-
-    public void distribute(RoadrunnerEvent event) {
-	logger.trace("distributing event: " + event);
-	if (!event.isFromHistory()) {
-	    for (DataListener handler : Sets.newHashSet(handlers)) {
-		handler.distribute(event);
-	    }
+	@Override
+	public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch) {
+		this.sequence = sequence;
+		distribute(event);
 	}
-    }
 
-    public void addHandler(DataListener handler) {
-	handlers.add(handler);
-    }
+	public void distribute(RoadrunnerEvent event) {
+		logger.trace("distributing event: " + event);
+		if (!event.isFromHistory()) {
+			for (DataListener handler : Sets.newHashSet(handlers)) {
+				handler.distribute(event);
+			}
+		}
+	}
 
-    public void removeHandler(DataListener handler) {
-	handlers.remove(handler);
-    }
+	public void addHandler(DataListener handler) {
+		handlers.add(handler);
+	}
 
-    public long getSequence() {
-	return sequence;
-    }
+	public void removeHandler(DataListener handler) {
+		handlers.remove(handler);
+	}
+
+	public long getSequence() {
+		return sequence;
+	}
 }

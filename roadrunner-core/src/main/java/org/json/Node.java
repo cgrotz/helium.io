@@ -1209,13 +1209,20 @@ public class Node {
 				childNode.populate(logBuilder.getChildLogBuilder(key), (Node) value);
 				if (has(key)) {
 					put(key, childNode);
-					logBuilder.addNewNode(key, childNode);
+					logBuilder.addNew(key, childNode);
 				} else {
 					put(key, childNode);
 					logBuilder.addChangedNode(key, childNode);
 				}
 			} else {
-				logBuilder.addChange(key, value);
+				if(has(key))
+				{
+					logBuilder.addChange(key, value);
+				}
+				else
+				{
+					logBuilder.addNew(key, value);	
+				}
 				if (value == null) {
 					logBuilder.addRemoved(key, get(key));
 				}

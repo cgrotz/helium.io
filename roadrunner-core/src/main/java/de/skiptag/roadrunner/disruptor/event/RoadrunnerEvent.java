@@ -41,13 +41,10 @@ public class RoadrunnerEvent extends Node {
 	public RoadrunnerEvent(String string) {
 		super(string);
 		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
-		Preconditions.checkArgument(has(RoadrunnerEvent.TYPE), "No type defined in Event");
 	}
 
 	public RoadrunnerEvent(RoadrunnerEventType type, String nodePath,
 			Optional<?> value) {
-		Preconditions.checkArgument(has(RoadrunnerEvent.TYPE), "No type defined in Event");
-		Preconditions.checkArgument(has(RoadrunnerEvent.NODE_PATH), "No nodePath defined in Event");
 		put(RoadrunnerEvent.TYPE, type.toString());
 		put(RoadrunnerEvent.PATH, nodePath);
 		if (value.isPresent()) {

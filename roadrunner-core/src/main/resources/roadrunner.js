@@ -37,10 +37,10 @@ function Snapshot(message, roadrunner_connection) {
 		return path;
 	};
 	this.ref = function() {
-		return new Roadrunner(path);
+		return new Roadrunner(path+"/"+name);
 	};
 	this.child = function(childPath) {
-		new Roadrunner(path + "/" + childPath);
+		new Roadrunner(path+"/"+name + "/" + childPath);
 	};
 	this.forEach = function(childAction) {
 		var dataRef = new Roadrunner(path);
@@ -239,6 +239,15 @@ function Roadrunner(path) {
 		}
 	};
 
+	this.update = function(content) {
+		roadrunner_connection.sendMessage('update', path, content);
+		if (content != null) {
+			return new Roadrunner(path);
+		} else {
+			return null;
+		}
+	};
+
 	this.setWithPriority = function(data, priority) {
 		roadrunner_connection.sendMessageWithPriority('set', path, data, priority);
 		if (data != null) {
@@ -268,10 +277,6 @@ function Roadrunner(path) {
 	this.name = function() {
 		var name = path.substring(path.lastIndexOf('/') + 1, path.length);
 		return name;
-	};
-
-	this.update = function(content) {
-		roadrunner_connection.sendMessage('set', path, content);
 	};
 
 	this.ref = function() {

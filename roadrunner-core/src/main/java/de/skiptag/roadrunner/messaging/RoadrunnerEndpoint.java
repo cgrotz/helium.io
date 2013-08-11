@@ -43,7 +43,7 @@ public class RoadrunnerEndpoint implements DataListener {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(RoadrunnerEndpoint.class);
 
-	private Multimap<Path, String> attached_listeners = HashMultimap.create();
+	private Multimap<String, String> attached_listeners = HashMultimap.create();
 	private RoadrunnerResponseSender sender;
 	private String basePath;
 	private Node auth;
@@ -302,7 +302,7 @@ public class RoadrunnerEndpoint implements DataListener {
 	}
 
 	public void addListener(Path path, String type) {
-		attached_listeners.put(path, type);
+		attached_listeners.put(path.toString(), type);
 	}
 
 	public void removeListener(Path path, String type) {
@@ -310,8 +310,8 @@ public class RoadrunnerEndpoint implements DataListener {
 	}
 
 	private boolean hasListener(Path path, String type) {
-		return attached_listeners.containsKey(path)
-				&& attached_listeners.get(path).contains(type);
+		return attached_listeners.containsKey(path.toString())
+				&& attached_listeners.get(path.toString()).contains(type);
 	}
 
 	public void addQuery(Path path, String query) {

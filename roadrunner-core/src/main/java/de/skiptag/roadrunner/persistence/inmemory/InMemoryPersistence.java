@@ -47,12 +47,12 @@ public class InMemoryPersistence implements Persistence {
 
 		for (String childNodeKey : node.keys()) {
 			Object object = node.get(childNodeKey);
-			boolean hasChildren = (object instanceof Node) ? ((Node) object).hasChildren()
-					: false;
+			boolean hasChildren = (object instanceof Node) ? ((Node) object).hasChildren() : false;
 			int indexOf = node.indexOf(childNodeKey);
 			int numChildren = (object instanceof Node) ? ((Node) object).length() : 0;
 			if (object != null && object != Node.NULL) {
-				handler.fireChildAdded(childNodeKey, path, path.getParent(), object, hasChildren, numChildren, null, indexOf);
+				handler.fireChildAdded(childNodeKey, path, path.getParent(), object, hasChildren,
+						numChildren, null, indexOf);
 			}
 		}
 	}
@@ -76,15 +76,16 @@ public class InMemoryPersistence implements Persistence {
 		String childNodeKey = path.getLastElement();
 		if (node.has(path.getLastElement())) {
 			Object object = node.get(path.getLastElement());
-			handler.fireValue(childNodeKey, path, path.getParent(), object, "", node.indexOf(childNodeKey));
+			handler.fireValue(childNodeKey, path, path.getParent(), object, "",
+					node.indexOf(childNodeKey));
 		} else {
-			handler.fireValue(childNodeKey, path, path.getParent(), "", "", node.indexOf(childNodeKey));
+			handler.fireValue(childNodeKey, path, path.getParent(), "", "",
+					node.indexOf(childNodeKey));
 		}
 	}
 
 	@Override
-	public void applyNewValue(ChangeLog log, Path path, int priority,
-			Object payload) {
+	public void updateValue(ChangeLog log, Path path, int priority, Object payload) {
 		Node node;
 		boolean created = false;
 		if (!model.pathExists(path)) {
@@ -102,24 +103,65 @@ public class InMemoryPersistence implements Persistence {
 			node.populate(new ChangeLogBuilder(log, path, path.getParent(), node), (Node) payload);
 			if (created) {
 				log.addChildAddedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
-						.getParent(), payload, false, 0, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+						.getParent(), payload, false, 0,
+						prevChildName(parent, priority(parent, path.getLastElement())),
+						priority(parent, path.getLastElement()));
 			} else {
-				log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
-						.getParent(), payload, false, 0, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+				log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path
+						.getParent().getParent(), payload, false, 0,
+						prevChildName(parent, priority(parent, path.getLastElement())),
+						priority(parent, path.getLastElement()));
 			}
 		} else {
 			parent.putWithIndex(path.getLastElement(), payload, priority);
 
 			if (created) {
-				log.addChildAddedLogEntry(path.getLastElement(), path, path.getParent(), payload, false, 0, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+				log.addChildAddedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
+						.getParent(), payload, false, 0,
+						prevChildName(parent, priority(parent, path.getLastElement())),
+						priority(parent, path.getLastElement()));
 			} else {
-				log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
-						.getParent(), payload, false, 0, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
-				log.addValueChangedLogEntry(path.getLastElement(), path, path.getParent(), payload, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+				log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path
+						.getParent().getParent(), payload, false, 0,
+						prevChildName(parent, priority(parent, path.getLastElement())),
+						priority(parent, path.getLastElement()));
+				log.addValueChangedLogEntry(path.getLastElement(), path, path.getParent(), payload,
+						prevChildName(parent, priority(parent, path.getLastElement())),
+						priority(parent, path.getLastElement()));
 			}
 			log.addChildChangedLogEntry(path.getParent().getLastElement(), path.getParent()
-					.getParent(), path.getParent().getParent().getParent(), parent, false, 0, prevChildName(parent, priority(parent, path.getLastElement())), priority(parent, path.getLastElement()));
+					.getParent(), path.getParent().getParent().getParent(), parent, false, 0,
+					prevChildName(parent, priority(parent, path.getLastElement())),
+					priority(parent, path.getLastElement()));
 
+		}
+		logger.trace("Model changed: " + model);
+	}
+
+	@Override
+	public void applyNewValue(ChangeLog log, Path path, int priority, Object payload) {
+		boolean created = false;
+		if (!model.pathExists(path)) {
+			created = true;
+		}
+		Node parent = model.getNodeForPath(path.getParent());
+		if (payload instanceof Node) {
+			Node node = new Node();
+			node.populate(new ChangeLogBuilder(log, path, path.getParent(), node), (Node) payload);
+			parent.putWithIndex(path.getLastElement(), node, priority);
+		} else {
+			parent.putWithIndex(path.getLastElement(), payload, priority);
+		}
+		if (created) {
+			log.addChildAddedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
+					.getParent(), payload, false, 0,
+					prevChildName(parent, priority(parent, path.getLastElement())),
+					priority(parent, path.getLastElement()));
+		} else {
+			log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
+					.getParent(), payload, false, 0,
+					prevChildName(parent, priority(parent, path.getLastElement())),
+					priority(parent, path.getLastElement()));
 		}
 		logger.trace("Model changed: " + model);
 	}

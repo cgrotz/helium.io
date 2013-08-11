@@ -8,20 +8,22 @@ import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 
 public interface Persistence extends SnapshotProcessor {
 
-    Object get(Path path);
+	Object get(Path path);
 
-    Node getNode(Path path);
+	Node getNode(Path path);
 
-    void remove(ChangeLog log, Path path);
+	void remove(ChangeLog log, Path path);
 
-    void applyNewValue(ChangeLog log, Path path, int priority, Object payload);
+	void applyNewValue(ChangeLog log, Path path, int priority, Object payload);
 
-    void setPriority(ChangeLog log, Path path, int priority);
+	void updateValue(ChangeLog log, Path path, int priority, Object payload);
 
-    void syncPath(Path path, RoadrunnerEndpoint handler);
+	void setPriority(ChangeLog log, Path path, int priority);
 
-    void syncPropertyValue(Path path, RoadrunnerEndpoint roadrunnerEventHandler);
+	void syncPath(Path path, RoadrunnerEndpoint handler);
 
-    RulesDataSnapshot getRoot();
+	void syncPropertyValue(Path path, RoadrunnerEndpoint roadrunnerEventHandler);
+
+	RulesDataSnapshot getRoot();
 
 }
