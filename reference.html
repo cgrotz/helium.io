@@ -46,8 +46,6 @@
          <li class=""><a href="#basics-references">Creating References</a></li> 
          <li class=""><a href="#basics-writing">Writing Data</a></li> 
          <li class=""><a href="#basics-reading">Reading Data</a></li> 
-         <li class=""><a href="#basics-list">Lists of Data</a></li> 
-         <li class=""><a href="#basics-queries">Queries</a></li> 
         </ul> </li> 
       </ul> 
      </div> 
@@ -56,7 +54,7 @@
      <div class="page-header"> 
       <h1 id="quickstart">Quick Start</h1> 
      </div> 
-     <h2>Installation</h2> 
+     <h2 id="quickstart-installation">Installation</h2> 
      <h4></h4> 
      <h3>Tomcat</h3> 
      <p>Simply put the <i>roadrunner.war</i> into the webapps folder of your Apache Tomcat v7.0.3x. Afterwards roadrunner will be available to your under <i>http://localhost:8080/roadrunner</i></p> 
@@ -65,21 +63,21 @@
      <pre style=""><code style="font-size: 12px;">java -jar roadrunner-netty.jar -url <span class="string">http://localhost:8080/roadrunner</span><span class="xml"><span class="tag"><br style="" /></span></span></code></pre> 
      <p></p> 
      <p></p> 
-     <h2>Javascript</h2> 
+     <h2 id="quickstart-javascript">Javascript</h2> 
      <p>Simply include the JavaScript library in the &lt;head&gt; tag of your web page.&nbsp;</p> 
      <pre><code>&lt;script type=<span class="string">'text/javascript'</span> src=<span class="string">'http://localhost:8080/roadrunner/roadrunner.js'</span>&gt;<span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span></code></pre> 
      <p>Finally, create a Roadrunner reference using the URL to your Roadrunner Repository and start using your data: </p> 
      <pre><code><span class="keyword">var</span> myRootRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner'</span>);
 myRootRef.set(<span class="string">'Beep, Beep'</span>);</code></pre> 
      <p></p> 
-     <h2>REST</h2> 
+     <h2 id="quickstart-rest">REST</h2> 
      <p>You can use any Roadrunner URL as a REST endpoint. </p> 
      <p>Here we read some data from the root of our Roadrunner: </p> 
      <pre><code>curl http:<span class="comment">//localhost:8080/roadrunner</span></code></pre> 
      <p>Next, we write data at some data inside the repository: </p> 
      <pre><code>curl -X PUT -d <span class="string">&quot;\&quot;Beep, Beep\&quot;&quot;</span> http:<span class="comment">//localhost:8080/roadrunner</span></code></pre> 
-     <h1>Basics&nbsp; </h1> 
-     <h2>Data Structure</h2> 
+     <h1 id="basics">Basics&nbsp; </h1> 
+     <h2 id="basics-structure">Data Structure</h2> 
      <pre><code>http:<span class="comment">//localhost:8080/roadrunner/sample-chat</span></code></pre> 
      <p>Every data node inside a Roadrunner repository is addressable by URL. For example, here's a depiction of a Simple Roadrunner Repository with a title and two heroes: </p> 
      <p><img src="images/RepositoryStructure.png" alt="SampleChat Data Structure" /> </p> 
@@ -93,7 +91,7 @@ http:<span class="comment">//localhost:8080/roadrunner/heroes/superman</span></c
      <p>Locations for data can nest as deeply as you like. For example, the last name for user 'batman' is located at: </p> 
      <pre><code>http:<span class="comment">//localhost:8080/roadrunner/heroes/batman/lastname</span></code></pre> 
      <ol></ol> 
-     <h2>Creating References</h2> 
+     <h2 id="basics-references">Creating References</h2> 
      <p>Before doing any operations on your Roadrunner repository, you need a Roadrunner reference, which is a pointer to data inside your Roadrunner repository. </p> 
      <p>You create a Roadrunner reference by specifying the URL of the data you would like to access: </p> 
      <p></p> 
@@ -133,7 +131,7 @@ messageListRef = <span class="keyword">new</span> Roadrunner(<span class="string
      <p></p> 
      <p>Once you have a Roadrunner reference, you can use it to read, write, and query data at that location using the other Roadrunner API functions.&nbsp;</p> 
      <ul></ul> 
-     <h2>Writing Data</h2> 
+     <h2 id="basics-writing">Writing Data</h2> 
      <p>The basic Roadrunner write operation is a &quot;set&quot;, which overwrites any data at the specified location. The example below demonstrates setting the first and last names of hero 'batman'. </p> 
      <p></p> 
      <p></p> 
@@ -157,7 +155,7 @@ nameRef.child(<span class="string">'lastname'</span>).set(<span class="string">'
      <p></p> 
      <pre><code>nameRef.update({firstname : <span class="string">'Bruce'</span>, lastname : <span class="string">'Wayne'</span>});</code></pre> 
      <p></p> 
-     <h2>Reading Data</h2> 
+     <h2 id="basics-reading">Reading Data</h2> 
      <p>Because Roadrunner allows real-time data access, data is never read synchronously. Instead, you read data by attaching a callback to a Roadrunner reference as shown: </p> 
      <p></p> 
      <p></p> 
@@ -167,189 +165,17 @@ dataRef.on(<span class="string">'value'</span>, <span class="keyword">function</
 });</code></pre> 
      <p></p> 
      <p></p> 
-     <p><strong>Callbacks are triggered both for the initial state of your data and again any time data changes.</strong> In the above example, the callback will be called again if Batman's first name ever changes.</p>
+     <p><strong>Callbacks are triggered both for the initial state of your data and again any time data changes.</strong> In the above example, the callback will be called again if Batman's first name ever changes.</p> 
      <p><strong>Callbacks receive snapshots of data.</strong> A snapshot is a wrapper that holds the data of a specific location.&nbsp;</p> 
      <h3>Roadrunner Event Types</h3> 
      <p>There are 4 event types for which you can attach callbacks: </p> 
-     <ol>
-      <li>Value</li>
-      <li>Child Added</li>
-      <li>Child Changed</li>
-      <li>Child Removed</li>
+     <ol> 
+      <li>Value</li> 
+      <li>Child Added</li> 
+      <li>Child Changed</li> 
+      <li>Child Removed</li> 
      </ol> 
-     <p>Roadrunner only distributes the changes to the client that the client has event listeners attached to. </p> 
-     <h4>Value</h4> 
-     <p>The 'value' event is used to read the entire contents of a Roadrunner location. It is triggered once with the initial data and again every time the data changes. Your event callback is passed a snapshot containing all data at that location, including child data. If no data exists, the event will trigger with an empty snapshot. </p> 
-     <p>For example, the following code snippet reads all of the data for user 'julie' in the SampleChat Roadrunner: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="keyword">var</span> julieRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/users/julie/'</span>);
-julieRef.on(<span class="string">'value'</span>, <span class="keyword">function</span>(snapshot) {
-  <span class="keyword">if</span>(snapshot.val() === <span class="literal">null</span>) {
-    alert(<span class="string">'User julie does not exist.'</span>);
-  } <span class="keyword">else</span> {
-    <span class="keyword">var</span> firstName = snapshot.val().name.first;
-    <span class="keyword">var</span> lastName = snapshot.val().name.last;
-    alert(<span class="string">'User julie’s full name is: '</span> + firstName + <span class="string">' '</span> + lastName);
-  }
-});</code></pre> 
-     <p></p> 
-     <p></p> 
-     <p>Value events are always fired after any other callbacks are triggered for a given location, and they are only triggered after all of the data has finished loading. This makes Value events ideal for detecting when your &quot;initial state&quot; has loaded. For example, if you want to place a &quot;Loading...&quot; message in your app that disappears once the app has loaded its data, you could use a Value event to determine that loading is complete. Note that adding a Value event callback to a location that already has other callbacks attached is an extremely efficient operation, so you should feel comfortable doing this regularly in your app. </p> 
-     <h4>Child Added</h4> 
-     <p>The Child Added event is typically used when retrieving a list of items (e.g. chat messages) in Roadrunner. Unlike 'value' which fires for the entire contents of the location, 'child_added' fires once for each immediate child and continues to trigger as new children are added. Your event callback is passed a snapshot containing the new child's data. </p> 
-     <p>Here is an example use of the Child Added event: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="keyword">var</span> usersRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/users/'</span>);
-usersRef.on(<span class="string">'child_added'</span>, <span class="keyword">function</span>(snapshot) {
-  <span class="keyword">var</span> userName = snapshot.name(), userData = snapshot.val();
-  alert(<span class="string">'User '</span> + userName + <span class="string">' has entered the chat'</span>);
-});</code></pre> 
-     <p></p> 
-     <p></p> 
-     <h4>Child Changed</h4> 
-     <p>The Child Changed event is triggered any time a child (or one of its descendants) changes. It is typically used in conjunction with Child Added and Child Removed to respond to changes to a list of items. The snapshot passed to the event callback contains the updated data for the child. </p> 
-     <p>Here is an example use of the Child Changed event: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="keyword">var</span> usersRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/users/'</span>);
-usersRef.on(<span class="string">'child_changed'</span>, <span class="keyword">function</span>(snapshot) {
-  <span class="keyword">var</span> userName = snapshot.name(), userData = snapshot.val();
-  alert(<span class="string">'User '</span> + userName + <span class="string">' now has a name of '</span> + userData.name.first + <span class="string">' '</span> + userData.name.last);
-});</code></pre> 
-     <p></p> 
-     <p></p> 
-     <h4>Child Removed</h4> 
-     <p>The Child Removed event is triggered when an immediate child is removed.<br />It's typically used in conjunction with Child Added and Child Changed. The snapshot passed into the event callback contains the data for the removed child. </p> 
-     <p>Here is an example use of the Child Removed event: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="keyword">var</span> usersRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/users/'</span>);
-usersRef.on(<span class="string">'child_removed'</span>, <span class="keyword">function</span>(snapshot) {
-  <span class="keyword">var</span> userName = snapshot.name(), userData = snapshot.val();
-  alert(<span class="string">'User '</span> + userName + <span class="string">' has left the chat.'</span>);
-});</code></pre> 
-     <p></p> 
-     <p></p> 
-     <h4>Detaching Callbacks</h4> 
-     <p>In JavaScript, callbacks are removed by specifying the event type and the callback function you would like removed. In Objective-C, callbacks are removed by specifying the handle you would like removed (handles are returned when the callback is initially attached). In Java, callbacks are removed by removing the specific listener that was attached. </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code>dataRef.off(<span class="string">'value'</span>, someCallback);</code></pre> 
-     <p></p> 
-     <p></p> 
-     <p>Note that if a callback has been added multiple times to a data location, it will be called multiple times for each event, and you must detach it multiple times in order to remove it completely. </p> 
-     <p>If you would like to remove all callbacks at a location, you can do so as shown: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="comment">//Remove all Value callbacks</span>
-dataRef.off(<span class="string">'value'</span>);
-
-<span class="comment">//Remove all callbacks of any type</span>
-dataRef.off();</code></pre> 
-     <p></p> 
-     <p></p> 
-     <h4>Reading Data Once</h4> 
-     <p>In some special cases, it may be useful for a callback to be called once and then immediately removed. We've created a helper function to make this easy: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code>dataRef.once(<span class="string">'value'</span>, <span class="keyword">function</span>(data) {
-  <span class="comment">// do some stuff once</span>
-});</code></pre> 
-     <p></p> 
-     <p></p> 
-     <p>This is equivalent to: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="keyword">var</span> func = <span class="keyword">function</span>(data) {
-  <span class="comment">// do some stuff</span>
-  ...
-
-  <span class="comment">// Remove the callback</span>
-  dataRef.off(<span class="string">'value'</span>, func);
-}
-dataRef.on(<span class="string">'value'</span>, func);</code></pre> 
-     <p></p> 
-     <p></p> 
-     <h4>Events Reflect Changes to Data</h4> 
-     <p>Events that are triggered in Roadrunner do not always correspond exactly with the write operations that were performed on other clients. For example, if two other clients were to set the same piece of data at approximately the same time, there is no guarantee that two events will be triggered on your local client. Depending on the timing, those two changes could be aggregated into a single local event. As another example, if you set data on your local machine slightly before another client sets the same data, the other client may never see the change that you made, since his set overwrote the data that you set. Your client, however, will end up triggering events for both set operations. There are a number of more complicated cases where local events do not exactly correspond to remote operations, especially in regards to ordering and transactions. </p> 
-     <p>Eventually all clients will have a consistent view of the data, even if the events triggered in the process may differ from client-to-client. </p> 
-     <h4>Guarantees</h4> 
-     <p>Roadrunner makes several important guarantees regarding events: </p> 
-     <ol>
-      <li><p>Events will always be triggered when local state changes.</p></li>
-      <li><p>For local write operations, events will be triggered immediately.</p></li>
-      <li><p>Events will always eventually reflect the correct state of the data, regardless of whether or not timing or local operations cause temporary differences between the local state and the state of the data on the Roadrunner servers.</p></li>
-      <li><p>Value events will only be triggered after all relevant data has been loaded from the server.</p></li>
-      <li><p>Writes from a single client will always be written to the server and broadcast out to other users in-order.</p></li>
-     </ol> 
-     <p>You may find these notes useful as well: </p> 
-     <ol>
-      <li><p>Attaching an event callback to a Roadrunner location is a very lightweight operation. You should not be concerned if your application attaches a large number (thousands) of callbacks.</p></li>
-      <li><p>Data updates are propagated, and events are triggered, extremely quickly. Roadrunner is designed for use in real-time applications, and you should expect latencies for events to be similar to network latencies.</p></li>
-     </ol> 
-     <h3>Lists of Data</h3> 
-     <h4>The Naive Way</h4> 
-     <p>You can easily create a &quot;list&quot; of data in Roadrunner by adding multiple children to a Roadrunner location. The following simple approach will create a list with 3 items: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="keyword">var</span> listRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/message_list'</span>);
-listRef.child(<span class="string">'message1'</span>).set({user_id: <span class="string">'wilma'</span>, text: <span class="string">'Hello'</span>});
-listRef.child(<span class="string">'message2'</span>).set({user_id: <span class="string">'fred'</span>, text: <span class="string">'How are you?'</span>});
-listRef.child(<span class="string">'message3'</span>).set({user_id: <span class="string">'wilma'</span>, text: <span class="string">'I’m doing well, thank you!'</span>});</code></pre> 
-     <p></p> 
-     <p></p> 
-     <p>This will work fine if only a single user is modifying the list so there are no name conflicts, but Roadrunner is designed for collaborative applications, where many users might append to the list at the same time. </p> 
-     <h5>The Better Way</h5> 
-     <p>Roadrunner provides a helper function which automates the generation of unique child names. This function is called <a href="javascript/roadrunner/push.html" class="functionLink">push( )</a> in JavaScript and <a href="ios-api/Classes/Roadrunner.html#//api/name/childByAutoId">childByAutoId</a> in Objective-C. By using unique child names for each write, many clients can append children to the same location at the same time without fear of conflicts. In addition, the generated names are based partially on a timestamp, so the list items will automatically be ordered chronologically. </p> 
-     <p>Here is an example: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="comment">// Generate a reference to a new location with push</span>
-<span class="keyword">var</span> newPushRef = listRef.push();
-
-<span class="comment">// Set some data to the generated location</span>
-newPushRef.set({user_id: <span class="string">'wilma'</span>, text: <span class="string">'Hello'</span>});
-
-<span class="comment">// Get the name generated by push</span>
-<span class="keyword">var</span> pushedName = newPushRef.name();</code></pre> 
-     <p></p> 
-     <p></p> 
-     <p>When push( ) with no arguments (on JavaScript) or childByAutoId (in Objective-C) is called, it returns a Roadrunner reference. You can then use this reference to do any of the usual Roadrunner operations, such as getting its name or setting data to it. </p> 
-     <p>In JavaScript, the pattern of calling push( ) and then immediately calling set( ) is so common that we let you combine them by just passing the data to be set directly to push( ) as follows: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="comment">// These two methods are equivalent</span>
-listRef.push().set({user_id: <span class="string">'wilma'</span>, text: <span class="string">'Hello'</span>});
-listRef.push({user_id: <span class="string">'wilma'</span>, text: <span class="string">'Hello'</span>});</code></pre> 
-     <p></p> 
-     <p></p> 
-     <h4>Reading List Data</h4> 
-     <p>Reading list data is simply done with the Child Added event. The event will be triggered once for each existing child, and then again as new children are added. </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="keyword">var</span> listRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/message_list'</span>);
-listRef.on(<span class="string">'child_added'</span>, <span class="keyword">function</span>(snapshot) {
-  <span class="keyword">var</span> msgData = snapshot.val();
-  alert(msgData.user_id + <span class="string">' says '</span> + msgData.text);
-});</code></pre> 
-     <p></p> 
-     <p></p> 
-     <h4>Removing List Data</h4> 
-     <p>If you need to remove list items, simply store the generated reference and use it later to delete the data as follows: </p> 
-     <p></p> 
-     <p></p> 
-     <pre><code><span class="keyword">var</span> listRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/message_list'</span>);
-<span class="keyword">var</span> msgRef = listRef.push();
-msgRef.set({user_id: <span class="string">'wilma'</span>, text: <span class="string">'Hello'</span>});
-
-<span class="comment">// Later ...</span>
-msgRef.remove();</code></pre> 
-     <p></p> 
-     <p></p> 
-     <h3>Queries</h3> 
-     <p>Todo</p> 
+     <p>Roadrunner only distributes the changes to the client that the client has event listeners attached to.</p> 
      <ul></ul> 
     </div> 
    </div> 
