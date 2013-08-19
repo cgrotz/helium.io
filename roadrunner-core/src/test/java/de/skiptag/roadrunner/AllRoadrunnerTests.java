@@ -5,8 +5,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-@SuiteClasses({ PersistenceProcessorTest.class, PersistenceTest.class,
-	RoadrunnerSenderTest.class })
+@SuiteClasses({ PersistenceProcessorTest.class, PersistenceTest.class })
 public class AllRoadrunnerTests {
 
 }
