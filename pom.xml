@@ -14,6 +14,7 @@
 		<module>roadrunner-servlet</module>
 		<module>roadrunner-spring</module>
 		<module>roadrunner-netty</module>
+		<module>roadrunner-vertx</module>
 		<module>roadrunner-examples</module>
 	</modules>
 	<properties>
