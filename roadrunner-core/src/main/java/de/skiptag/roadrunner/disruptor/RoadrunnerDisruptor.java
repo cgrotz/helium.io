@@ -33,148 +33,140 @@ import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Persistence;
 
 public class RoadrunnerDisruptor implements ExceptionHandler {
-    private static final Logger logger = LoggerFactory.getLogger(RoadrunnerDisruptor.class);
-    private static final int RING_SIZE = 256;
-    private EventSourceProcessor eventSourceProcessor;
-    private PersistenceProcessor persistenceProcessor;
-    private DistributionProcessor distributionProcessor;
+	private static final Logger logger = LoggerFactory.getLogger(RoadrunnerDisruptor.class);
+	private static final int RING_SIZE = 256;
+	private EventSourceProcessor eventSourceProcessor;
+	private PersistenceProcessor persistenceProcessor;
+	private DistributionProcessor distributionProcessor;
 
-    private Disruptor<RoadrunnerEvent> disruptor;
+	private Disruptor<RoadrunnerEvent> disruptor;
 
-    public Disruptor<RoadrunnerEvent> getDisruptor() {
-	return disruptor;
-    }
-
-    private AuthorizationProcessor authorizationProcessor;
-    private Persistence persistence;
-
-    private Optional<Journal> snapshotJournal = Optional.absent();
-    private long currentSequence;
-
-    public RoadrunnerDisruptor(File journalDirectory,
-	    Optional<File> snapshotDirectory, Persistence persistence,
-	    Authorization authorization) throws IOException {
-
-	this.persistence = persistence;
-	initDisruptor(journalDirectory, persistence, authorization);
-	if (snapshotDirectory.isPresent()) {
-	    restoreFromSnapshot(snapshotDirectory.get(), persistence);
-	} else {
-	    restoreFromJournal();
+	public Disruptor<RoadrunnerEvent> getDisruptor() {
+		return disruptor;
 	}
-    }
 
-    private void restoreFromJournal() throws ClosedJournalException,
-	    CompactedDataFileException, IOException {
-	eventSourceProcessor.restore();
-    }
+	private AuthorizationProcessor authorizationProcessor;
+	private Persistence persistence;
 
-    private void restoreFromSnapshot(File snapshotDirectory,
-	    Persistence persistence) throws IOException,
-	    ClosedJournalException, CompactedDataFileException {
+	private Optional<Journal> snapshotJournal = Optional.absent();
+	private long currentSequence;
 
-	Journal journal = new Journal();
-	journal.setDirectory(snapshotDirectory);
-	snapshotJournal = Optional.fromNullable(journal);
-	journal.open();
-	Iterator<Location> iterator = journal.undo().iterator();
-	if (iterator.hasNext()) {
-	    Location lastEntryLocation = iterator.next();
-	    byte[] lastEntry = journal.read(lastEntryLocation, ReadType.SYNC);
-	    Node snapshot = new Node(new String(lastEntry));
-	    int pointer = snapshot.getInt("currentEventLogPointer");
-	    int dataFileId = snapshot.getInt("currentEventLogDataFileId");
-	    Node payload = snapshot.getNode(RoadrunnerEvent.PAYLOAD);
-	    Node node = new Node();
-	    node.populate(null, node);
-	    persistence.restoreSnapshot(node);
-	    eventSourceProcessor.setCurrentLocation(new Location(dataFileId,
-		    pointer));
+	public RoadrunnerDisruptor(File journalDirectory, Optional<File> snapshotDirectory,
+			Persistence persistence, Authorization authorization) throws IOException {
+
+		this.persistence = persistence;
+		initDisruptor(journalDirectory, persistence, authorization);
+		if (snapshotDirectory.isPresent()) {
+			restoreFromSnapshot(snapshotDirectory.get(), persistence);
+		} else {
+			restoreFromJournal();
+		}
 	}
-	restoreFromJournal();
-    }
 
-    @SuppressWarnings("unchecked")
-    private void initDisruptor(File journalDirectory, Persistence persistence,
-	    Authorization authorization) throws IOException {
-	ExecutorService executor = Executors.newCachedThreadPool();
-	disruptor = new Disruptor<RoadrunnerEvent>(
-		RoadrunnerEvent.EVENT_FACTORY, RING_SIZE, executor);
-
-	authorizationProcessor = new AuthorizationProcessor(authorization,
-		persistence);
-	eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
-	persistenceProcessor = new PersistenceProcessor(persistence);
-	distributionProcessor = new DistributionProcessor();
-
-	disruptor.handleExceptionsWith(this);
-	disruptor.handleEventsWith(authorizationProcessor)
-		.then(eventSourceProcessor)
-		.then(persistenceProcessor)
-		.then(distributionProcessor);
-
-	disruptor.start();
-    }
-
-    public void handleEvent(final RoadrunnerEvent roadrunnerEvent) {
-	Preconditions.checkArgument(roadrunnerEvent.has(RoadrunnerEvent.TYPE), "No type defined in Event");
-	RoadrunnerEventTranslator eventTranslator = new RoadrunnerEventTranslator(
-		roadrunnerEvent);
-	logger.trace("handling event: " + roadrunnerEvent + "("
-		+ roadrunnerEvent.length() + ")");
-	disruptor.publishEvent(eventTranslator);
-	this.currentSequence = eventTranslator.getSequence();
-    }
-
-    public void snapshot() throws IOException, RuntimeException {
-	Optional<Location> currentLocation = eventSourceProcessor.getCurrentLocation();
-	if (snapshotJournal.isPresent() || currentLocation.isPresent()) {
-	    Location location = currentLocation.get();
-	    Node payload = persistence.dumpSnapshot();
-	    Node snapshot = new Node();
-	    snapshot.put("currentEventLogPointer", location.getPointer());
-	    snapshot.put("currentEventLogDataFileId", location.getDataFileId());
-	    snapshot.put(RoadrunnerEvent.PAYLOAD, payload);
-	    snapshotJournal.get().open();
-	    snapshotJournal.get()
-		    .write(snapshot.toString().getBytes(), WriteType.SYNC);
-	    snapshotJournal.get().close();
+	private void restoreFromJournal() throws ClosedJournalException, CompactedDataFileException,
+			IOException {
+		eventSourceProcessor.restore();
 	}
-    }
 
-    public void shutdown() {
-	disruptor.shutdown();
-    }
+	private void restoreFromSnapshot(File snapshotDirectory, Persistence persistence)
+			throws IOException, ClosedJournalException, CompactedDataFileException {
 
-    public void addEndpoint(RoadrunnerEndpoint handler) {
-	distributionProcessor.addHandler(handler);
-    }
+		Journal journal = new Journal();
+		journal.setDirectory(snapshotDirectory);
+		snapshotJournal = Optional.fromNullable(journal);
+		journal.open();
+		Iterator<Location> iterator = journal.undo().iterator();
+		if (iterator.hasNext()) {
+			Location lastEntryLocation = iterator.next();
+			byte[] lastEntry = journal.read(lastEntryLocation, ReadType.SYNC);
+			Node snapshot = new Node(new String(lastEntry));
+			int pointer = snapshot.getInt("currentEventLogPointer");
+			int dataFileId = snapshot.getInt("currentEventLogDataFileId");
+			Node payload = snapshot.getNode(RoadrunnerEvent.PAYLOAD);
+			Node node = new Node();
+			node.populate(null, node);
+			persistence.restoreSnapshot(node);
+			eventSourceProcessor.setCurrentLocation(new Location(dataFileId, pointer));
+		}
+		restoreFromJournal();
+	}
 
-    public void removeEndpoint(RoadrunnerEndpoint handler) {
-	distributionProcessor.removeHandler(handler);
-    }
+	@SuppressWarnings("unchecked")
+	private void initDisruptor(File journalDirectory, Persistence persistence,
+			Authorization authorization) throws IOException {
+		ExecutorService executor = Executors.newCachedThreadPool();
+		disruptor = new Disruptor<RoadrunnerEvent>(RoadrunnerEvent.EVENT_FACTORY, RING_SIZE,
+				executor);
 
-    public DistributionProcessor getDistributor() {
-	return distributionProcessor;
-    }
+		authorizationProcessor = new AuthorizationProcessor(authorization, persistence);
+		eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
+		persistenceProcessor = new PersistenceProcessor(persistence);
+		distributionProcessor = new DistributionProcessor();
 
-    public boolean hasBacklog() {
-	return currentSequence != distributionProcessor.getSequence();
-    }
+		disruptor.handleExceptionsWith(this);
+		disruptor.handleEventsWith(authorizationProcessor).then(eventSourceProcessor)
+				.then(persistenceProcessor).then(distributionProcessor);
 
-    @Override
-    public void handleEventException(Throwable ex, long sequence, Object event) {
-	logger.error("Event Exception (msg: " + ex.getMessage()
-		+ ", sequence: +" + sequence + ", event: " + event + ")", ex);
-    }
+		disruptor.start();
+	}
 
-    @Override
-    public void handleOnStartException(Throwable ex) {
-	logger.error("OnStart Exception (msg: " + ex.getMessage() + ")", ex);
-    }
+	public void handleEvent(final RoadrunnerEvent roadrunnerEvent) {
+		Preconditions.checkArgument(roadrunnerEvent.has(RoadrunnerEvent.TYPE),
+				"No type defined in Event");
+		RoadrunnerEventTranslator eventTranslator = new RoadrunnerEventTranslator(roadrunnerEvent);
+		logger.trace("handling event: " + roadrunnerEvent + "(" + roadrunnerEvent.length() + ")");
+		disruptor.publishEvent(eventTranslator);
+		this.currentSequence = eventTranslator.getSequence();
+	}
 
-    @Override
-    public void handleOnShutdownException(Throwable ex) {
-	logger.error("OnShutdown Exception (msg: " + ex.getMessage() + ")", ex);
-    }
+	public void snapshot() throws IOException, RuntimeException {
+		Optional<Location> currentLocation = eventSourceProcessor.getCurrentLocation();
+		if (snapshotJournal.isPresent() || currentLocation.isPresent()) {
+			Location location = currentLocation.get();
+			Node payload = persistence.dumpSnapshot();
+			Node snapshot = new Node();
+			snapshot.put("currentEventLogPointer", location.getPointer());
+			snapshot.put("currentEventLogDataFileId", location.getDataFileId());
+			snapshot.put(RoadrunnerEvent.PAYLOAD, payload);
+			snapshotJournal.get().open();
+			snapshotJournal.get().write(snapshot.toString().getBytes(), WriteType.SYNC);
+			snapshotJournal.get().close();
+		}
+	}
+
+	public void shutdown() {
+		disruptor.shutdown();
+	}
+
+	public void addEndpoint(RoadrunnerEndpoint handler) {
+		distributionProcessor.addHandler(handler);
+	}
+
+	public void removeEndpoint(RoadrunnerEndpoint handler) {
+		distributionProcessor.removeHandler(handler);
+	}
+
+	public DistributionProcessor getDistributor() {
+		return distributionProcessor;
+	}
+
+	public boolean hasBacklog() {
+		return currentSequence != distributionProcessor.getSequence();
+	}
+
+	@Override
+	public void handleEventException(Throwable ex, long sequence, Object event) {
+		logger.error("Event Exception (msg: " + ex.getMessage() + ", sequence: +" + sequence
+				+ ", event: " + event + ")", ex);
+	}
+
+	@Override
+	public void handleOnStartException(Throwable ex) {
+		logger.error("OnStart Exception (msg: " + ex.getMessage() + ")", ex);
+	}
+
+	@Override
+	public void handleOnShutdownException(Throwable ex) {
+		logger.error("OnShutdown Exception (msg: " + ex.getMessage() + ")", ex);
+	}
 }

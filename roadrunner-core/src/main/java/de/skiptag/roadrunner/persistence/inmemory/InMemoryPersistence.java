@@ -4,6 +4,7 @@ import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
@@ -18,6 +19,12 @@ public class InMemoryPersistence implements Persistence {
 
 	private Node model = new Node();
 
+	private Roadrunner roadrunner;
+
+	public InMemoryPersistence(Roadrunner roadrunner) {
+		this.roadrunner = roadrunner;
+	}
+
 	@Override
 	public Object get(Path path) {
 		if (path == null || model.getObjectForPath(path) == null) {
@@ -29,21 +36,27 @@ public class InMemoryPersistence implements Persistence {
 
 	@Override
 	public Node getNode(Path path) {
-		return model.getNodeForPath(path);
+		ChangeLog log = new ChangeLog();
+		Node nodeForPath = model.getNodeForPath(log, path);
+		roadrunner.distributeChangeLog(log);
+		return nodeForPath;
 	}
 
 	@Override
 	public void remove(ChangeLog log, Path path) {
 		String nodeName = path.getLastElement();
 		Path parentPath = path.getParent();
-		Node node = model.getNodeForPath(parentPath).getNode(nodeName);
-		model.getNodeForPath(parentPath).remove(nodeName);
+		Node node = model.getNodeForPath(log, parentPath).getNode(nodeName);
+		model.getNodeForPath(log, parentPath).remove(nodeName);
 		log.addChildRemovedLogEntry(parentPath, nodeName, node);
+		roadrunner.distributeChangeLog(log);
 	}
 
 	@Override
 	public void syncPath(Path path, RoadrunnerEndpoint handler) {
-		Node node = model.getNodeForPath(path);
+
+		ChangeLog log = new ChangeLog();
+		Node node = model.getNodeForPath(log, path);
 
 		for (String childNodeKey : node.keys()) {
 			Object object = node.get(childNodeKey);
@@ -55,11 +68,14 @@ public class InMemoryPersistence implements Persistence {
 						numChildren, null, indexOf);
 			}
 		}
+		roadrunner.distributeChangeLog(log);
+
 	}
 
 	public void syncPathWithQuery(Path path, RoadrunnerEndpoint handler,
 			QueryEvaluator queryEvaluator, String query) {
-		Node node = model.getNodeForPath(path);
+		ChangeLog log = new ChangeLog();
+		Node node = model.getNodeForPath(log, path);
 		for (String childNodeKey : node.keys()) {
 			Object object = node.get(childNodeKey);
 			if (queryEvaluator.evaluateQueryOnValue(object, query)) {
@@ -68,11 +84,13 @@ public class InMemoryPersistence implements Persistence {
 				}
 			}
 		}
+		roadrunner.distributeChangeLog(log);
 	}
 
 	@Override
 	public void syncPropertyValue(Path path, RoadrunnerEndpoint handler) {
-		Node node = model.getNodeForPath(path.getParent());
+		ChangeLog log = new ChangeLog();
+		Node node = model.getNodeForPath(log, path.getParent());
 		String childNodeKey = path.getLastElement();
 		if (node.has(path.getLastElement())) {
 			Object object = node.get(path.getLastElement());
@@ -82,6 +100,8 @@ public class InMemoryPersistence implements Persistence {
 			handler.fireValue(childNodeKey, path, path.getParent(), "", "",
 					node.indexOf(childNodeKey));
 		}
+		roadrunner.distributeChangeLog(log);
+
 	}
 
 	@Override
@@ -91,7 +111,7 @@ public class InMemoryPersistence implements Persistence {
 		if (!model.pathExists(path)) {
 			created = true;
 		}
-		Node parent = model.getNodeForPath(path.getParent());
+		Node parent = model.getNodeForPath(log, path.getParent());
 		if (payload instanceof Node) {
 			if (parent.has(path.getLastElement())) {
 				node = parent.getNode(path.getLastElement());
@@ -144,7 +164,7 @@ public class InMemoryPersistence implements Persistence {
 		if (!model.pathExists(path)) {
 			created = true;
 		}
-		Node parent = model.getNodeForPath(path.getParent());
+		Node parent = model.getNodeForPath(log, path.getParent());
 		if (payload instanceof Node) {
 			Node node = new Node();
 			node.populate(new ChangeLogBuilder(log, path, path.getParent(), node), (Node) payload);
@@ -158,17 +178,31 @@ public class InMemoryPersistence implements Persistence {
 					prevChildName(parent, priority(parent, path.getLastElement())),
 					priority(parent, path.getLastElement()));
 		} else {
-			log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
-					.getParent(), payload, false, 0,
-					prevChildName(parent, priority(parent, path.getLastElement())),
-					priority(parent, path.getLastElement()));
+			addChangeEvent(log, path);
 		}
 		logger.trace("Model changed: " + model);
 	}
 
+	private void addChangeEvent(ChangeLog log, Path path) {
+		Object payload = model.getObjectForPath(path);
+		Node parent = model.getNodeForPath(log, path.getParent());
+		log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
+				.getParent(), payload, hasChildren(payload), childCount(payload),
+				prevChildName(parent, priority(parent, path.getLastElement())),
+				priority(parent, path.getLastElement()));
+
+		log.addValueChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
+				.getParent(), payload,
+				prevChildName(parent, priority(parent, path.getLastElement())),
+				priority(parent, path.getLastElement()));
+		if (!path.isEmtpy()) {
+			addChangeEvent(log, path.getParent());
+		}
+	}
+
 	@Override
 	public void setPriority(ChangeLog log, Path path, int priority) {
-		Node parent = model.getNodeForPath(path.getParent());
+		Node parent = model.getNodeForPath(log, path.getParent());
 		parent.setIndexOf(path.getLastElement(), priority);
 	}
 
