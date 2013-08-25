@@ -49,18 +49,15 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	private Node rule;
 
 	@Override
-	protected StreamInbound createWebSocketInbound(String subProtocol,
-			HttpServletRequest request) {
+	protected StreamInbound createWebSocketInbound(String subProtocol, HttpServletRequest request) {
 		String servername;
 		if (request.getScheme().startsWith("ws://")) {
-			servername = "http://" + request.getServerName() + ":"
-					+ request.getServerPort();
+			servername = "http://" + request.getServerName() + ":" + request.getServerPort();
 		} else if (request.getScheme().startsWith("wss://")) {
-			servername = "https://" + request.getServerName() + ":"
-					+ request.getServerPort();
+			servername = "https://" + request.getServerName() + ":" + request.getServerPort();
 		} else {
-			servername = request.getScheme() + "://" + request.getServerName()
-					+ ":" + request.getServerPort();
+			servername = request.getScheme() + "://" + request.getServerName() + ":"
+					+ request.getServerPort();
 		}
 
 		return createInbound(servername);
@@ -74,8 +71,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	 * This only works for tokens. Quoted strings need more sophisticated
 	 * parsing.
 	 */
-	private boolean headerContainsToken(HttpServletRequest req,
-			String headerName, String target) {
+	private boolean headerContainsToken(HttpServletRequest req, String headerName, String target) {
 		Enumeration<String> headers = req.getHeaders(headerName);
 		while (headers.hasMoreElements()) {
 			String header = headers.nextElement();
@@ -111,8 +107,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 			journalDirectoryPath = Preconditions.checkNotNull(
 					config.getInitParameter("journalDirectory"),
 					"JournalDirectory must be configured in web.xml");
-			snapshotDirectoryPath = config
-					.getInitParameter("snapshotDirectory");
+			snapshotDirectoryPath = config.getInitParameter("snapshotDirectory");
 		}
 	}
 
@@ -122,8 +117,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 		if (roadrunner == null) {
 			this.roadrunner = createRoadrunner(req);
 		}
-		if (req.getMethod().equals("GET")
-				&& resourceForURI(req, "roadrunner.js")) {
+		if (req.getMethod().equals("GET") && resourceForURI(req, "/roadrunner.js")) {
 			resp.setContentType("application/javascript");
 			resp.setCharacterEncoding("UTF-8");
 
@@ -142,27 +136,22 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 
 	protected Roadrunner createRoadrunner(HttpServletRequest req) {
 
-		String basePath = req.getScheme() + "://" + req.getServerName() + ":"
-				+ req.getServerPort() + req.getContextPath() + ""
-				+ req.getServletPath();
+		String basePath = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort()
+				+ req.getContextPath() + "" + req.getServletPath();
 		try {
 			if (productiveMode) {
 				Optional<File> snapshotDirectory;
 				if (!Strings.isNullOrEmpty(snapshotDirectoryPath)) {
-					snapshotDirectory = Optional
-							.of(createDirectory(snapshotDirectoryPath));
+					snapshotDirectory = Optional.of(createDirectory(snapshotDirectoryPath));
 				} else {
 					snapshotDirectory = Optional.absent();
 				}
 				return createRoadrunnerInstance(basePath, rule,
-						createDirectory(journalDirectoryPath),
-						snapshotDirectory);
+						createDirectory(journalDirectoryPath), snapshotDirectory);
 			} else {
-				Optional<File> snapshotDirectory = Optional
-						.of(createTempDirectory());
+				Optional<File> snapshotDirectory = Optional.of(createTempDirectory());
 
-				return createRoadrunnerInstance(basePath, rule,
-						createTempDirectory(),
+				return createRoadrunnerInstance(basePath, rule, createTempDirectory(),
 						snapshotDirectory);
 			}
 
@@ -172,51 +161,42 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 		return null;
 	}
 
-	protected Roadrunner createRoadrunnerInstance(String basePath, Node rule,
-			File directory, Optional<File> snapshotDirectory)
-			throws IOException {
+	protected Roadrunner createRoadrunnerInstance(String basePath, Node rule, File directory,
+			Optional<File> snapshotDirectory) throws IOException {
 		return new Roadrunner(basePath, rule, directory, snapshotDirectory);
 	}
 
-	private URL resourceForURI(HttpServletRequest req)
-			throws MalformedURLException {
+	private URL resourceForURI(HttpServletRequest req) throws MalformedURLException {
 		String requestURI = req.getRequestURI();
 		String contextPath = req.getContextPath();
 		String resourcePath = requestURI.replaceFirst(contextPath, "");
 		return req.getServletContext().getResource(resourcePath);
 	}
 
-	private boolean resourceForURI(HttpServletRequest req, String uri)
-			throws MalformedURLException {
+	private boolean resourceForURI(HttpServletRequest req, String uri) throws MalformedURLException {
 		String requestURI = req.getRequestURI();
 		return requestURI.endsWith(uri);
 	}
 
 	private void handleRestCall(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException, RuntimeException {
-		Path nodePath = new Path(RoadrunnerEvent.extractPath(
-				req.getRequestURI(), null));
+		Path nodePath = new Path(RoadrunnerEvent.extractPath(req.getRequestURI(), null));
 		if (req.getMethod().equals("GET")) {
-			resp.getWriter().append(
-					roadrunner.getPersistence().get(nodePath).toString());
-		} else if (req.getMethod().equals("POST")
-				|| req.getMethod().equals("PUT")) {
+			resp.getWriter().append(roadrunner.getPersistence().get(nodePath).toString());
+		} else if (req.getMethod().equals("POST") || req.getMethod().equals("PUT")) {
 			String msg = new String(CharStreams.toString(new InputStreamReader(
 					req.getInputStream(), Charsets.UTF_8)));
-			roadrunner.handleEvent(RoadrunnerEventType.SET,
-					req.getRequestURI(), Optional.fromNullable(msg));
+			roadrunner.handleEvent(RoadrunnerEventType.SET, req.getRequestURI(),
+					Optional.fromNullable(msg));
 		} else if (req.getMethod().equals("DELETE")) {
-			roadrunner.handleEvent(RoadrunnerEventType.SET,
-					req.getRequestURI(), null);
+			roadrunner.handleEvent(RoadrunnerEventType.SET, req.getRequestURI(), null);
 		}
 		resp.setContentType("application/json; charset=UTF-8");
 	}
 
-	public void invalidate(WsHttpServletRequestWrapper wrapper)
-			throws NoSuchMethodException, IllegalAccessException,
-			InvocationTargetException {
-		Method method = WsHttpServletRequestWrapper.class
-				.getDeclaredMethod("invalidate");
+	public void invalidate(WsHttpServletRequestWrapper wrapper) throws NoSuchMethodException,
+			IllegalAccessException, InvocationTargetException {
+		Method method = WsHttpServletRequestWrapper.class.getDeclaredMethod("invalidate");
 		boolean accessible = method.isAccessible();
 		method.setAccessible(true);
 		method.invoke(wrapper);
@@ -235,6 +215,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	 *         reject it. This default implementation always returns
 	 *         <code>true</code>.
 	 */
+	@Override
 	protected boolean verifyOrigin(String origin) {
 		return true;
 	}
@@ -252,6 +233,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	 *         the client. This default implementation always returns
 	 *         <code>null</code>.
 	 */
+	@Override
 	protected String selectSubProtocol(List<String> subProtocols) {
 		return null;
 	}
@@ -264,13 +246,11 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 		final File temp;
 		temp = File.createTempFile("Temp" + System.currentTimeMillis(), "");
 		if (!(temp.delete())) {
-			throw new IOException("Could not delete temp file: "
-					+ temp.getAbsolutePath());
+			throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
 		}
 
 		if (!(temp.mkdir())) {
-			throw new IOException("Could not create temp directory: "
-					+ temp.getAbsolutePath());
+			throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
 		}
 		return temp;
 	}

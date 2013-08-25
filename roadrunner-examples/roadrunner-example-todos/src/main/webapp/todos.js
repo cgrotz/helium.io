@@ -43,7 +43,7 @@ $(function(){
     model: Todo,
 
     // Save all of the todo items in a Roadrunner.
-    roadrunner: new Roadrunner("http://localhost:8080/todos"),
+    roadrunner: new Roadrunner("http://localhost:8080/roadrunner/repo/todos"),
 
     // Filter down the list of all todo items that are finished.
     done: function() {

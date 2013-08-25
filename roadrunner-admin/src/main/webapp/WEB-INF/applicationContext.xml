@@ -6,6 +6,7 @@
           http://www.springframework.org/schema/security/spring-security-3.1.xsd">
 	
 	<sec:http auto-config='true' use-expressions="true">
+    <sec:intercept-url pattern="/roadrunner.js" access="permitAll" />
 		<sec:intercept-url pattern="/css/**" access="permitAll" />
 		<sec:intercept-url pattern="/js/**" access="permitAll" />
 		<sec:intercept-url pattern="/repo/**" access="permitAll" />
