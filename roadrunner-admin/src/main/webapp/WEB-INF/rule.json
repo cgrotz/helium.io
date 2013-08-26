@@ -1,5 +1,26 @@
 {
-	"rules":{
-		
-	}
+    "rules": {
+        ".read": true,
+        ".write": true,
+        "roadrunner": {
+            "repo": {
+                "drawing": {
+                    "points": {
+                        "10:0": {
+                            ".write": false
+                        },
+                        "10:1": {
+                            ".write": false
+                        },
+                        "10:2": {
+                            ".write": false
+                        },
+                        "10:3": {
+                            ".write": false
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

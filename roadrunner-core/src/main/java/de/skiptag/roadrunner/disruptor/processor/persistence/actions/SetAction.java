@@ -20,27 +20,30 @@ public class SetAction {
 		if (event.has(RoadrunnerEvent.PAYLOAD)) {
 			Object obj = event.get(RoadrunnerEvent.PAYLOAD);
 			if (obj == Node.NULL || obj == null) {
-				persistence.remove(event.getChangeLog(), path);
+				persistence.remove(event.getChangeLog(), event.getAuth(), path);
 			} else if (obj instanceof Node) {
 				payload = (Node) obj;
 				if (payload instanceof Node) {
 					if (event.hasPriority()) {
-						persistence.applyNewValue(event.getChangeLog(), path, event.getPriority(), obj);
+						persistence.applyNewValue(event.getChangeLog(), event.getAuth(), path,
+								event.getPriority(), obj);
 					} else {
-						persistence.applyNewValue(event.getChangeLog(), path, -1, obj);
+						persistence.applyNewValue(event.getChangeLog(), event.getAuth(), path, -1,
+								obj);
 					}
 				}
 			} else if (obj == null || obj == Node.NULL) {
-				persistence.remove(event.getChangeLog(), path);
+				persistence.remove(event.getChangeLog(), event.getAuth(), path);
 			} else {
 				if (event.hasPriority()) {
-					persistence.applyNewValue(event.getChangeLog(), path, event.getPriority(), obj);
+					persistence.applyNewValue(event.getChangeLog(), event.getAuth(), path,
+							event.getPriority(), obj);
 				} else {
-					persistence.applyNewValue(event.getChangeLog(), path, -1, obj);
+					persistence.applyNewValue(event.getChangeLog(), event.getAuth(), path, -1, obj);
 				}
 			}
 		} else {
-			persistence.remove(event.getChangeLog(), path);
+			persistence.remove(event.getChangeLog(), event.getAuth(), path);
 		}
 
 	}

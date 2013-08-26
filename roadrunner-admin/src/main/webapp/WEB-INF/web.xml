@@ -16,7 +16,7 @@
 		</init-param>
 		<init-param>
 			<param-name>rule</param-name>
-			<param-value>WEB-INF/rule.json</param-value>
+			<param-value>/WEB-INF/rule.json</param-value>
 		</init-param>
 		<init-param>
 			<param-name>development-mode</param-name>

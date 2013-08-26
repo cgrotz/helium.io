@@ -22,11 +22,12 @@ public class RuleBasedAuthorizator {
 		throw new RuntimeException("RoadrunnerOperation " + key + " not found");
 	}
 
-	public String getExpressionForPathAndOperation(Path path,
-			RoadrunnerOperation op) {
+	public String getExpressionForPathAndOperation(Path path, RoadrunnerOperation op) {
 		Node node = rule.getLastLeafNode(path);
 		if (node != null && node.has(op.getOp()) && node.get(op.getOp()) != null) {
-			return node.getString(op.getOp());
+			Object value = node.get(op.getOp());
+			return value.toString();
+			// return node.getString(op.getOp());
 		} else {
 			return "true";
 		}

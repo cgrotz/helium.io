@@ -24,7 +24,7 @@ public class RoadrunnerSpringServlet extends RoadrunnerWebSocketServlet {
 	public RoadrunnerMessageInbound createInbound(String servername) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		Node auth = convertAuthenticationToAuthNode(authentication);
-		return new RoadrunnerMessageInbound(auth, servername, roadrunner);
+		return new RoadrunnerSpringMessageInbound(auth, servername, roadrunner);
 	}
 
 	@Override
@@ -33,14 +33,17 @@ public class RoadrunnerSpringServlet extends RoadrunnerWebSocketServlet {
 		return super.createRoadrunnerInstance(basePath, rule, directory, snapshotDirectory);
 	}
 
-	protected Node convertAuthenticationToAuthNode(Authentication authentication) {
+	public static Node convertAuthenticationToAuthNode(Authentication authentication) {
 		Node auth = new Node();
-		auth.put("id", authentication.getPrincipal());
-		ArrayList<String> roles = Lists.newArrayList();
-		for (GrantedAuthority autho : authentication.getAuthorities()) {
-			roles.add(autho.getAuthority());
+		if (authentication != null) {
+			auth.put("id", authentication.getPrincipal());
+			ArrayList<String> roles = Lists.newArrayList();
+			for (GrantedAuthority autho : authentication.getAuthorities()) {
+				roles.add(autho.getAuthority());
+			}
+			auth.put("roles", roles.toArray());
 		}
-		auth.put("roles", roles.toArray());
 		return auth;
 	}
+
 }

@@ -4,7 +4,6 @@ import org.json.JSONTokener;
 import org.json.Node;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.lmax.disruptor.EventFactory;
 
@@ -43,8 +42,7 @@ public class RoadrunnerEvent extends Node {
 		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
 	}
 
-	public RoadrunnerEvent(RoadrunnerEventType type, String nodePath,
-			Optional<?> value) {
+	public RoadrunnerEvent(RoadrunnerEventType type, String nodePath, Optional<?> value) {
 		put(RoadrunnerEvent.TYPE, type.toString());
 		put(RoadrunnerEvent.PATH, nodePath);
 		if (value.isPresent()) {
@@ -110,8 +108,7 @@ public class RoadrunnerEvent extends Node {
 		String requestPath = (String) get(RoadrunnerEvent.PATH);
 		if (has(RoadrunnerEvent.NAME)) {
 			if (get(RoadrunnerEvent.NAME) != Node.NULL) {
-				return new Path(
-						extractPath(requestPath, getString(RoadrunnerEvent.NAME)));
+				return new Path(extractPath(requestPath, getString(RoadrunnerEvent.NAME)));
 			}
 		}
 		return new Path(extractPath(requestPath, null));
@@ -185,5 +182,9 @@ public class RoadrunnerEvent extends Node {
 
 	public ChangeLog getChangeLog() {
 		return changeLog;
+	}
+
+	public Node getAuth() {
+		return getNode(AUTH);
 	}
 }

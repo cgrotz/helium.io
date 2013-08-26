@@ -4,6 +4,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.skiptag.roadrunner.authorization.Authorization;
+import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.disruptor.event.builder.RoadrunnerEventBuilder;
@@ -18,7 +20,8 @@ public class PersistenceProcessorTest {
 
 	@Before
 	public void setUp() throws Exception {
-		persistence = new InMemoryPersistence(new Roadrunner(BASE_PATH));
+		persistence = new InMemoryPersistence(new RuleBasedAuthorization(
+				Authorization.ALL_ACCESS_RULE), new Roadrunner(BASE_PATH));
 		persistenceProcessor = new PersistenceProcessor(persistence);
 	}
 

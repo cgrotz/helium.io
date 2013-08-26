@@ -15,7 +15,7 @@ public class SetPriorityAction {
 	public void handle(RoadrunnerEvent event) {
 		Path path = event.extractNodePath();
 		int priority = event.getPriority();
-		persistence.setPriority(event.getChangeLog(), path, priority);
+		persistence.setPriority(event.getChangeLog(), event.getAuth(), path, priority);
 	}
 
 }

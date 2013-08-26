@@ -39,7 +39,7 @@ public class Roadrunner {
 	public Roadrunner(String basePath, Node rule, File journalDirectory,
 			Optional<File> snapshotDirectory) throws IOException {
 		this.authorization = new RuleBasedAuthorization(rule);
-		this.persistence = new InMemoryPersistence(this);
+		this.persistence = new InMemoryPersistence(authorization, this);
 
 		this.disruptor = new RoadrunnerDisruptor(journalDirectory, snapshotDirectory, persistence,
 				authorization);

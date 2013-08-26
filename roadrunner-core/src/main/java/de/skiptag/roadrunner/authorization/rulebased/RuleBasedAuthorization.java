@@ -15,27 +15,27 @@ public class RuleBasedAuthorization implements Authorization {
 	private SandboxedScriptingEnvironment scriptingEnvironment;
 
 	public RuleBasedAuthorization(Node rule) {
-		this.rule = new RuleBasedAuthorizator(rule);
+		this.rule = new RuleBasedAuthorizator(rule.getNode("rules"));
 		this.scriptingEnvironment = new SandboxedScriptingEnvironment();
 	}
 
 	@Override
-	public void authorize(RoadrunnerOperation op, Node auth,
-			RulesDataSnapshot root, Path path, Object data)
-			throws RoadrunnerNotAuthorizedException {
+	public void authorize(RoadrunnerOperation op, Node auth, RulesDataSnapshot root, Path path,
+			Object data) throws RoadrunnerNotAuthorizedException {
 		if (!isAuthorized(op, auth, root, path, data)) {
 			throw new RoadrunnerNotAuthorizedException(op, path);
 		}
 	}
 
 	@Override
-	public boolean isAuthorized(RoadrunnerOperation op, Node auth,
-			RulesDataSnapshot root, Path path, Object data) {
+	public boolean isAuthorized(RoadrunnerOperation op, Node auth, RulesDataSnapshot root,
+			Path path, Object data) {
 		String expression = rule.getExpressionForPathAndOperation(path, op);
 		try {
 			return Boolean.parseBoolean(expression);
 		} catch (Exception e) {
-			scriptingEnvironment.put(RoadrunnerEvent.AUTH, scriptingEnvironment.eval(auth.toString()));
+			scriptingEnvironment.put(RoadrunnerEvent.AUTH,
+					scriptingEnvironment.eval(auth.toString()));
 			Boolean result = (Boolean) scriptingEnvironment.eval(expression);
 			return result.booleanValue();
 		}

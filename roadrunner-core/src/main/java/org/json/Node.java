@@ -1280,7 +1280,7 @@ public class Node {
 					return this;
 				}
 			} else {
-				return getLastLeafNode(path.getSubpath(1));
+				return getNode(path.getFirstElement()).getLastLeafNode(path.getSubpath(1));
 			}
 		} else {
 			return this;

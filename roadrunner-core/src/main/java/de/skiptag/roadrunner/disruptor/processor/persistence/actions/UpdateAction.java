@@ -23,15 +23,16 @@ public class UpdateAction {
 				payload = (Node) obj;
 				if (payload instanceof Node) {
 					if (event.hasPriority()) {
-						persistence.updateValue(event.getChangeLog(), path, event.getPriority(),
-								obj);
+						persistence.updateValue(event.getChangeLog(), event.getAuth(), path,
+								event.getPriority(), obj);
 					} else {
-						persistence.updateValue(event.getChangeLog(), path, -1, obj);
+						persistence.updateValue(event.getChangeLog(), event.getAuth(), path, -1,
+								obj);
 					}
 				}
 			}
 		} else {
-			persistence.remove(event.getChangeLog(), path);
+			persistence.remove(event.getChangeLog(), event.getAuth(), path);
 		}
 
 	}
