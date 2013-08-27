@@ -44,8 +44,6 @@ public class RoadrunnerServerHandler {
 	}
 
 	private final class RoadrunnerFileHttpHandler implements Handler<HttpServerRequest> {
-		private Node auth;
-
 		@Override
 		public void handle(HttpServerRequest request) {
 			String roadrunnerJsFile;

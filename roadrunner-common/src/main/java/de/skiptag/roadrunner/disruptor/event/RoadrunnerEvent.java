@@ -5,7 +5,6 @@ import org.json.Node;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.lmax.disruptor.EventFactory;
 
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
 import de.skiptag.roadrunner.persistence.Path;
@@ -22,14 +21,6 @@ public class RoadrunnerEvent extends Node {
 	public static final String NAME = "name";
 	public static final String PRIORITY = "priority";
 	public static final String PREVCHILDNAME = "prevChildName";
-
-	public static final EventFactory<RoadrunnerEvent> EVENT_FACTORY = new EventFactory<RoadrunnerEvent>() {
-
-		@Override
-		public RoadrunnerEvent newInstance() {
-			return new RoadrunnerEvent();
-		}
-	};
 
 	private ChangeLog changeLog = new ChangeLog();
 

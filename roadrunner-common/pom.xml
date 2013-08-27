@@ -6,9 +6,9 @@
 		<artifactId>roadrunner</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>roadrunner-core</artifactId>
+	<artifactId>roadrunner-common</artifactId>
 	<packaging>jar</packaging>
-	<name>Roadrunner Core</name>
+	<name>Roadrunner Common</name>
 	<build>
 		<resources>
 			<resource>
@@ -17,30 +17,9 @@
 		</resources>
 	</build>
 	<dependencies>
-    <dependency>
-      <groupId>de.skiptag.roadrunner</groupId>
-      <artifactId>roadrunner-common</artifactId>
-    </dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.5</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-httpclient</groupId>
-			<artifactId>commons-httpclient</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.lmax</groupId>
-			<artifactId>disruptor</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.sbtourist</groupId>
-			<artifactId>journalio</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>joda-time</groupId>

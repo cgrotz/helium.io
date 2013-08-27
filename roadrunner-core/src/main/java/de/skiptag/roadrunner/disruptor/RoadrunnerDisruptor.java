@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 
@@ -33,6 +34,14 @@ import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Persistence;
 
 public class RoadrunnerDisruptor implements ExceptionHandler {
+
+	public static final EventFactory<RoadrunnerEvent> EVENT_FACTORY = new EventFactory<RoadrunnerEvent>() {
+
+		@Override
+		public RoadrunnerEvent newInstance() {
+			return new RoadrunnerEvent();
+		}
+	};
 	private static final Logger logger = LoggerFactory.getLogger(RoadrunnerDisruptor.class);
 	private static final int RING_SIZE = 256;
 	private EventSourceProcessor eventSourceProcessor;
@@ -95,7 +104,7 @@ public class RoadrunnerDisruptor implements ExceptionHandler {
 	private void initDisruptor(File journalDirectory, Persistence persistence,
 			Authorization authorization) throws IOException {
 		ExecutorService executor = Executors.newCachedThreadPool();
-		disruptor = new Disruptor<RoadrunnerEvent>(RoadrunnerEvent.EVENT_FACTORY, RING_SIZE,
+		disruptor = new Disruptor<RoadrunnerEvent>(RoadrunnerDisruptor.EVENT_FACTORY, RING_SIZE,
 				executor);
 
 		authorizationProcessor = new AuthorizationProcessor(authorization, persistence);
