@@ -10,7 +10,7 @@
 	</parent>
 	<artifactId>roadrunner-example-helpdesk</artifactId>
 	<packaging>war</packaging>
-	<name>helpdesk</name>
+	<name>Roadrunner Example Helpdesk</name>
 	<build>
 		<finalName>helpdesk</finalName>
 		<plugins>

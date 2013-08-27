@@ -7,7 +7,7 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>roadrunner-client</artifactId>
-	<name>Roadrunner Vertx Client Server</name>
+	<name>Roadrunner Vertx Client</name>
 
 	<build>
 		<resources>

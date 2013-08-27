@@ -10,7 +10,6 @@
 	</parent>
 	<artifactId>roadrunner-admin</artifactId>
 	<packaging>war</packaging>
-	<name>admin</name>
 	<build>
 		<finalName>roadrunner</finalName>
 		<plugins>
@@ -34,4 +33,5 @@
 			<version>${slf4j.version}</version>
 		</dependency>
 	</dependencies>
+	<name>Roadrunner Admin Console</name>
 </project>
