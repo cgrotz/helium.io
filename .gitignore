@@ -1,0 +1,8 @@
+target/
+.externalToolBuilders
+.settings
+.project
+.classpath
+.idea
+*.iml
+*~
