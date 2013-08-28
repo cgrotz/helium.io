@@ -3,7 +3,7 @@
 
 	<groupId>de.skiptag.roadrunner</groupId>
 	<artifactId>roadrunner</artifactId>
-	<version>0.3-SNAPSHOT</version>
+	<version>0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Roadrunner</name>
 	<description>Real-time backend for web apps</description>
