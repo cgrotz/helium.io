@@ -8,6 +8,28 @@
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Roadrunner</name>
+	<description>Real-time backend for web apps</description>
+	<url>http://skiptag.github.io/roadrunner</url>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<connection>scm:git:git@github.com:skiptag/roadrunner.git</connection>
+		<developerConnection>scm:git:git@github.com:skiptag/roadrunner.git</developerConnection>
+		<url>git@github.com:skiptag/roadrunner.git</url>
+	</scm>
+	<developers>
+		<developer>
+			<id>CG</id>
+			<name>Christoph Grotz</name>
+			<email>christophgrotz@gmail.com</email>
+		</developer>
+	</developers>
 
 	<modules>
 		<module>roadrunner-core</module>
@@ -18,7 +40,7 @@
 		<module>roadrunner-vertx</module>
 		<module>roadrunner-client</module>
 		<module>roadrunner-examples</module>
-    <module>roadrunner-admin</module>
+    	<module>roadrunner-admin</module>
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -44,6 +66,28 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 	<dependencyManagement>
 		<dependencies>
