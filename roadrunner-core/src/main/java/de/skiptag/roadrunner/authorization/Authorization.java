@@ -7,7 +7,7 @@ import de.skiptag.roadrunner.persistence.Path;
 
 public interface Authorization {
 	public static final Node ALL_ACCESS_RULE = new Node(
-			"{\".write\": \"true\",\".read\": \"true\",\".validate\":\"true\"}");
+			"{rules:{\".write\": \"true\",\".read\": \"true\"}}");
 
 	void authorize(RoadrunnerOperation op, Node auth, RulesDataSnapshot root, Path path,
 			Object object) throws RoadrunnerNotAuthorizedException;

@@ -178,4 +178,8 @@ public class RoadrunnerEvent extends Node {
 	public Node getAuth() {
 		return getNode(AUTH);
 	}
+
+	public void setAuth(Node auth) {
+		put(AUTH, auth);
+	}
 }
