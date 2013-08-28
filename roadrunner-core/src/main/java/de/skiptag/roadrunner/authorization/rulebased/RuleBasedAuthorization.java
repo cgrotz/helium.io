@@ -15,7 +15,8 @@ public class RuleBasedAuthorization implements Authorization {
 	private SandboxedScriptingEnvironment scriptingEnvironment;
 
 	public RuleBasedAuthorization(Node rule) {
-		this.rule = new RuleBasedAuthorizator(rule.getNode("rules"));
+		this.rule = new RuleBasedAuthorizator(rule.has("rules") ? rule.getNode("rules")
+				: Authorization.ALL_ACCESS_RULE.getNode("rules"));
 		this.scriptingEnvironment = new SandboxedScriptingEnvironment();
 	}
 

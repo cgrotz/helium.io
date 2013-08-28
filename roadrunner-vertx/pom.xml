@@ -13,7 +13,7 @@
 		<commons.cli.version>1.2</commons.cli.version>
 	</properties>
 	<build>
-	  <finalName>roadrunner-standalone</finalName>
+	  <finalName>roadrunner-vertx</finalName>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -28,9 +28,7 @@
 							<mainClass>de.roadrunner.vertx.RoadrunnerServer</mainClass>
 						</manifest>
 					</archive>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
+					<descriptor>runnable.xml</descriptor>
 				</configuration>
         <executions>
           <execution>

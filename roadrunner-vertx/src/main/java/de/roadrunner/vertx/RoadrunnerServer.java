@@ -53,7 +53,7 @@ public class RoadrunnerServer {
 
 		@SuppressWarnings("static-access")
 		Option basePathOption = OptionBuilder.withArgName("basepath").hasArg()
-				.withDescription("basePath of the Roadrunner instance").isRequired().create("b");
+				.withDescription("basePath of the Roadrunner instance").create("b");
 
 		@SuppressWarnings("static-access")
 		Option productiveModeOption = OptionBuilder.withArgName("productionMode").hasArg()
@@ -102,7 +102,7 @@ public class RoadrunnerServer {
 		try {
 			CommandLine cmd = parser.parse(options, args);
 			String directory = cmd.getOptionValue("d");
-			String basePath = cmd.getOptionValue("b");
+			String basePath = cmd.getOptionValue("b", "http://localhost:8080");
 			String snapshotDirectory = cmd.getOptionValue("s");
 			int port = Integer.parseInt(cmd.getOptionValue("p", "8080"));
 			boolean productiveMode = Boolean.parseBoolean(cmd.getOptionValue("prod", "false"));
