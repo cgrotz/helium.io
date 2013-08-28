@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>de.skiptag.roadrunner</groupId>
 		<artifactId>roadrunner</artifactId>
-		<version>0.2-SNAPSHOT</version>
+		<version>0.1</version>
 	</parent>
 	<artifactId>roadrunner-client</artifactId>
 	<name>Roadrunner Vertx Client</name>
