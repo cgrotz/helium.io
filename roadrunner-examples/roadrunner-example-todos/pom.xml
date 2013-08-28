@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>de.skiptag.roadrunner.examples</groupId>
 		<artifactId>roadrunner-examples</artifactId>
-		<version>0.2-SNAPSHOT</version>
+		<version>0.2</version>
 	</parent>
 	<artifactId>roadrunner-example-todos</artifactId>
 	<packaging>war</packaging>
