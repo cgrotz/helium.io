@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>de.skiptag.roadrunner.examples</groupId>
 		<artifactId>roadrunner-examples</artifactId>
-		<version>0.1-SNAPSHOT</version>
+		<version>0.1</version>
 	</parent>
 	<artifactId>roadrunner-example-helpdesk</artifactId>
 	<packaging>war</packaging>
