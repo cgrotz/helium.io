@@ -75,6 +75,11 @@
 		<dependencies>
 			<dependency>
 				<groupId>de.skiptag.roadrunner</groupId>
+				<artifactId>roadrunner</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.skiptag.roadrunner</groupId>
 				<artifactId>roadrunner-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
