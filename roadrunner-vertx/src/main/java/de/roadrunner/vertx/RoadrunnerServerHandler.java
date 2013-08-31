@@ -4,7 +4,6 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 
 import java.io.IOException;
 
-import org.json.Node;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpServerRequest;
@@ -17,14 +16,15 @@ import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryDataSnapshot;
 
 public class RoadrunnerServerHandler {
-	private String basePath;
-	private Roadrunner roadrunner;
+	private String			basePath;
+	private Roadrunner	roadrunner;
 
 	public RoadrunnerServerHandler(String basePath, Roadrunner roadrunner) {
 		this.roadrunner = roadrunner;
@@ -49,8 +49,7 @@ public class RoadrunnerServerHandler {
 			String roadrunnerJsFile;
 			try {
 				roadrunnerJsFile = roadrunner.loadJsFile();
-				request.response().headers()
-						.set(CONTENT_TYPE, "application/javascript; charset=UTF-8");
+				request.response().headers().set(CONTENT_TYPE, "application/javascript; charset=UTF-8");
 				request.response().end(roadrunnerJsFile);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -59,20 +58,19 @@ public class RoadrunnerServerHandler {
 	}
 
 	private final class RoadrunnerRestHttpHandler implements Handler<HttpServerRequest> {
-		private Node auth;
+		private Node	auth;
 
 		@Override
 		public void handle(final HttpServerRequest request) {
 			request.response().headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
 
-			Path nodePath = new Path(RoadrunnerEvent.extractPath(request.uri(), null));
+			Path nodePath = new Path(RoadrunnerEvent.extractPath(request.uri()));
 			if (request.method().equalsIgnoreCase("GET")) {
-				RulesDataSnapshot root = new InMemoryDataSnapshot(roadrunner.getPersistence().get(
-						null));
+				RulesDataSnapshot root = new InMemoryDataSnapshot(roadrunner.getPersistence().get(null));
 				Object node = roadrunner.getPersistence().get(nodePath);
 				Object object = new InMemoryDataSnapshot(node);
-				roadrunner.getAuthorization().authorize(RoadrunnerOperation.READ, auth, root,
-						nodePath, new InMemoryDataSnapshot(node));
+				roadrunner.getAuthorization().authorize(RoadrunnerOperation.READ, auth, root, nodePath,
+						new InMemoryDataSnapshot(node));
 
 				request.response().end(node.toString());
 			} else if (request.method().equalsIgnoreCase("POST")

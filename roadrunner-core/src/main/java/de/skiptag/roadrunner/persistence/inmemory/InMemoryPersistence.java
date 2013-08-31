@@ -1,6 +1,5 @@
 package de.skiptag.roadrunner.persistence.inmemory;
 
-import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +9,7 @@ import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;

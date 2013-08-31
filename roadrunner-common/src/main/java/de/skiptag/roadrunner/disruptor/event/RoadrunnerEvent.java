@@ -1,49 +1,112 @@
 package de.skiptag.roadrunner.disruptor.event;
 
-import org.json.JSONTokener;
-import org.json.Node;
-
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
+import de.skiptag.roadrunner.json.JSONTokener;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.persistence.Path;
 
+/**
+ * 
+ * Abstraction for Roadrunner Events. Has helper methods for accessing the underlying JSON data.
+ * 
+ * 
+ * @author Christoph Grotz
+ * 
+ */
 public class RoadrunnerEvent extends Node {
 
-	public static final String PAYLOAD = "payload";
-	public static final String CREATION_DATE = "creationDate";
-	public static final String TYPE = "type";
-	public static final String NODE_PATH = "nodePath";
-	public static final String PATH = "path";
-	public static final String FROM_HISTORY = "fromHistory";
-	public static final String AUTH = "auth";
-	public static final String NAME = "name";
-	public static final String PRIORITY = "priority";
-	public static final String PREVCHILDNAME = "prevChildName";
+	/**
+	 * Payload of the event
+	 */
+	public static final String	PAYLOAD				= "payload";
 
-	private ChangeLog changeLog = new ChangeLog();
+	/**
+	 * Timestamp when the event was created
+	 */
+	public static final String	CREATION_DATE	= "creationDate";
 
+	/**
+	 * Type of the Event {@link RoadrunnerEventType}
+	 */
+	public static final String	TYPE					= "type";
+
+	/**
+	 * {@link Path} for the event
+	 */
+	public static final String	PATH					= "path";
+
+	/**
+	 * Was this event read from the history
+	 */
+	public static final String	FROM_HISTORY	= "fromHistory";
+
+	/**
+	 * Authentication associated with the event
+	 */
+	public static final String	AUTH					= "auth";
+
+	/**
+	 * Name of the data element
+	 */
+	public static final String	NAME					= "name";
+
+	/**
+	 * Priority to be set on the element at the path
+	 */
+	public static final String	PRIORITY			= "priority";
+
+	/**
+	 * Previous Child name
+	 */
+	public static final String	PREVCHILDNAME	= "prevChildName";
+
+	private ChangeLog						changeLog			= new ChangeLog();
+
+	/**
+	 * Creates an empty event
+	 */
 	public RoadrunnerEvent() {
 		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
 	}
 
-	public RoadrunnerEvent(String string) {
-		super(string);
+	/**
+	 * 
+	 * Creates an Node from the given json string
+	 * 
+	 * @param json
+	 *          data as {@link String}
+	 */
+	public RoadrunnerEvent(String json) {
+		super(json);
 		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
 	}
 
-	public RoadrunnerEvent(RoadrunnerEventType type, String nodePath, Optional<?> value) {
+	/**
+	 * @param type
+	 *          of the event {@link RoadrunnerEventType}
+	 * @param path
+	 *          of the event
+	 * @param payload
+	 *          Optional playload of the event
+	 */
+	public RoadrunnerEvent(RoadrunnerEventType type, String path, Optional<?> payload) {
 		put(RoadrunnerEvent.TYPE, type.toString());
-		put(RoadrunnerEvent.PATH, nodePath);
-		if (value.isPresent()) {
-			put(RoadrunnerEvent.PAYLOAD, value.get());
+		put(RoadrunnerEvent.PATH, path);
+		if (payload.isPresent()) {
+			put(RoadrunnerEvent.PAYLOAD, payload.get());
 		}
 		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
 	}
 
-	public void populate(String obj) {
-		JSONTokener x = new JSONTokener(obj);
+	/**
+	 * Populates the instance with the handed json data
+	 * 
+	 * @param json
+	 */
+	public void populate(String json) {
+		JSONTokener x = new JSONTokener(json);
 		char c;
 		String key;
 
@@ -88,10 +151,6 @@ public class RoadrunnerEvent extends Node {
 		}
 	}
 
-	public RoadrunnerEventType getType() {
-		return RoadrunnerEventType.valueOf(((String) get(RoadrunnerEvent.TYPE)).toUpperCase());
-	}
-
 	public Path extractNodePath() {
 		if (!has(RoadrunnerEvent.PATH)) {
 			return null;
@@ -99,10 +158,10 @@ public class RoadrunnerEvent extends Node {
 		String requestPath = (String) get(RoadrunnerEvent.PATH);
 		if (has(RoadrunnerEvent.NAME)) {
 			if (get(RoadrunnerEvent.NAME) != Node.NULL) {
-				return new Path(extractPath(requestPath, getString(RoadrunnerEvent.NAME)));
+				return new Path(extractPath(requestPath)).append(getString(RoadrunnerEvent.NAME));
 			}
 		}
-		return new Path(extractPath(requestPath, null));
+		return new Path(extractPath(requestPath));
 	}
 
 	public String extractParentPath() {
@@ -112,27 +171,16 @@ public class RoadrunnerEvent extends Node {
 		String parentPath;
 		String requestPath = (String) get(RoadrunnerEvent.PATH);
 		if (has(RoadrunnerEvent.NAME) && get(RoadrunnerEvent.NAME) != Node.NULL) {
-			parentPath = extractPath(requestPath, getString(RoadrunnerEvent.NAME));
+			parentPath = extractPath(requestPath) + "/" + getString(RoadrunnerEvent.NAME);
 		} else {
-			parentPath = extractPath(requestPath, null);
+			parentPath = extractPath(requestPath);
 		}
 		return parentPath.substring(0, parentPath.lastIndexOf("/"));
 
 	}
 
-	public static String extractPath(String requestPath, String name) {
-		String result = requestPath;
-		if (requestPath.startsWith("http://")) {
-			result = requestPath.substring(requestPath.indexOf("/", 7));
-		} else if (requestPath.startsWith("https://")) {
-			result = requestPath.substring(requestPath.indexOf("/", 8));
-		}
-
-		String path = result.startsWith("/") ? result : "/" + result;
-		if (!Strings.isNullOrEmpty(name)) {
-			path = path + "/" + name;
-		}
-		return path;
+	public RoadrunnerEventType getType() {
+		return RoadrunnerEventType.valueOf(((String) get(RoadrunnerEvent.TYPE)).toUpperCase());
 	}
 
 	public boolean isFromHistory() {
@@ -181,5 +229,21 @@ public class RoadrunnerEvent extends Node {
 
 	public void setAuth(Node auth) {
 		put(AUTH, auth);
+	}
+
+	/**
+	 * @param url
+	 *          of the element
+	 * @return the path representation
+	 */
+	public static String extractPath(String url) {
+		String result = url;
+		if (url.startsWith("http://")) {
+			result = url.substring(url.indexOf("/", 7));
+		} else if (url.startsWith("https://")) {
+			result = url.substring(url.indexOf("/", 8));
+		}
+
+		return result.startsWith("/") ? result : "/" + result;
 	}
 }

@@ -1,4 +1,4 @@
-package org.json;
+package de.skiptag.roadrunner.json;
 
 public class Model extends Node {
 

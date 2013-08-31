@@ -3,13 +3,13 @@
  */
 package de.skiptag.roadrunner;
 
-import org.json.Node;
 import org.junit.Before;
 import org.mockito.Mockito;
 
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;

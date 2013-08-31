@@ -4,15 +4,32 @@ import java.util.Objects;
 
 import com.google.common.base.Strings;
 
+/**
+ * 
+ * Representation of a Java based Roadrunner Path Path scheme:
+ * /<element1>/<element2>
+ * 
+ * @author Christoph Grotz
+ * 
+ */
+/**
+ * @author Christoph Grotz
+ * 
+ */
+/**
+ * @author Christoph Grotz
+ * 
+ */
 public final class Path {
 
-	private String[] elements;
-	private boolean empty;
+	private String[]	elements;
 
+	/**
+	 * @param path
+	 *          {@link String} Path as String
+	 */
 	public Path(String path) {
-		if (Strings.isNullOrEmpty(path)) {
-			this.empty = true;
-		} else {
+		if (!Strings.isNullOrEmpty(path)) {
 			this.elements = getPathElements(path);
 		}
 		if (elements == null) {
@@ -21,10 +38,12 @@ public final class Path {
 	}
 
 	private String[] getPathElements(String path) {
-		return path.startsWith("/") ? path.substring(1).split("/")
-				: path.split("/");
+		return path.startsWith("/") ? path.substring(1).split("/") : path.split("/");
 	}
 
+	/**
+	 * @return the first element of the path
+	 */
 	public String getFirstElement() {
 		if (elements == null || elements.length == 0) {
 			return null;
@@ -32,6 +51,24 @@ public final class Path {
 		return elements[0];
 	}
 
+	/**
+	 * @return the last element of the path
+	 */
+	public String getLastElement() {
+		if (elements.length == 0) {
+			return null;
+		}
+		return elements[elements.length - 1];
+	}
+
+	/**
+	 * Path: /element1/element2/element3/element4
+	 * 
+	 * Subpath from offset 2: /element3/element4
+	 * 
+	 * @param offset
+	 * @return returns the subpath at the offset
+	 */
 	public Path getSubpath(int offset) {
 		String output = "";
 		for (int i = offset; i < elements.length; i++) {
@@ -40,26 +77,20 @@ public final class Path {
 		return new Path(output);
 	}
 
-	@Override
-	public String toString() {
-		String output = "";
-		for (int i = 0; i < elements.length; i++) {
-			output += "/" + elements[i];
-		}
-		return output;
-	}
-
+	/**
+	 * @return true if path consists of only one element
+	 */
 	public boolean isSimple() {
 		return elements.length == 1;
 	}
 
-	public String getLastElement() {
-		if (elements.length == 0) {
-			return null;
-		}
-		return elements[elements.length - 1];
-	}
-
+	/**
+	 * Path: /element1/element2/element3/element4
+	 * 
+	 * Parent path: Path: /element1/element2/element3
+	 * 
+	 * @return returns the parent path
+	 */
 	public Path getParent() {
 		String output = "";
 		for (int i = 0; i < elements.length - 1; i++) {
@@ -68,10 +99,20 @@ public final class Path {
 		return new Path(output);
 	}
 
-	public Path append(String nodeName) {
-		return new Path(toString() + "/" + nodeName);
+	/**
+	 * append element to path
+	 * 
+	 * @param element
+	 *          element to append
+	 * @return new Path with appended element
+	 */
+	public Path append(String element) {
+		return new Path(toString() + "/" + element);
 	}
 
+	/**
+	 * @return Path has no elements
+	 */
 	public boolean isEmtpy() {
 		return elements.length <= 0;
 	}
@@ -81,4 +122,12 @@ public final class Path {
 		return Objects.hashCode(toString());
 	}
 
+	@Override
+	public String toString() {
+		String output = "";
+		for (String element : elements) {
+			output += "/" + element;
+		}
+		return output;
+	}
 }

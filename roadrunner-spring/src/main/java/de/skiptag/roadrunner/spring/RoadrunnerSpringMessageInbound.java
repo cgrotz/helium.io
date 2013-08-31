@@ -3,10 +3,10 @@ package de.skiptag.roadrunner.spring;
 import java.io.IOException;
 import java.nio.CharBuffer;
 
-import org.json.Node;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.skiptag.roadrunner.Roadrunner;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.server.RoadrunnerMessageInbound;
 
 public class RoadrunnerSpringMessageInbound extends RoadrunnerMessageInbound {

@@ -1,4 +1,4 @@
-package org.json;
+package de.skiptag.roadrunner.json;
 
 /*
  Copyright (c) 2002 JSON.org

@@ -1,6 +1,6 @@
 package de.skiptag.roadrunner.persistence;
 
-import org.json.Node;
+import de.skiptag.roadrunner.json.Node;
 
 public interface SnapshotProcessor {
 

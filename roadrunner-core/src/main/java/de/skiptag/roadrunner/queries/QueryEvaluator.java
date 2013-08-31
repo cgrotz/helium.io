@@ -3,13 +3,13 @@ package de.skiptag.roadrunner.queries;
 import java.util.Collection;
 import java.util.Map.Entry;
 
-import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.scripting.SandboxedScriptingEnvironment;
 

@@ -6,9 +6,9 @@ import de.skiptag.roadrunner.persistence.Path;
 
 public class ChildRemovedLogEvent implements ChangeLogEvent {
 
-	private Object value;
-	private String name;
-	private Path path;
+	private Object	value;
+	private String	name;
+	private Path		path;
 
 	public ChildRemovedLogEvent(Path path, String name, Object value) {
 		this.path = path;

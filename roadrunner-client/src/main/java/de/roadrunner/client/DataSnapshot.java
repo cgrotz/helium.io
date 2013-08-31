@@ -1,6 +1,6 @@
 package de.roadrunner.client;
 
-import org.json.Node;
+import de.skiptag.roadrunner.json.Node;
 
 public class DataSnapshot {
 

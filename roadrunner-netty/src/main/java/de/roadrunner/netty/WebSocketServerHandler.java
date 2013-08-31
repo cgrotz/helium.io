@@ -47,7 +47,6 @@ import io.netty.util.CharsetUtil;
 import java.io.IOException;
 import java.util.Map;
 
-import org.json.Node;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
@@ -58,6 +57,7 @@ import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 import de.skiptag.roadrunner.persistence.Path;
@@ -67,189 +67,176 @@ import de.skiptag.roadrunner.persistence.inmemory.InMemoryDataSnapshot;
  * Handles handshakes and messages
  */
 public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
-    private static final AttributeKey<Node> AUTH_ATTRIBUTE_KEY = new AttributeKey<Node>(
-	    RoadrunnerEvent.AUTH);
+	private static final AttributeKey<Node>		AUTH_ATTRIBUTE_KEY	= new AttributeKey<Node>(
+																																		RoadrunnerEvent.AUTH);
 
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(WebSocketServerHandler.class.getName());
+	private static final org.slf4j.Logger			logger							= LoggerFactory
+																																		.getLogger(WebSocketServerHandler.class
+																																				.getName());
 
-    private static final String WEBSOCKET_PATH = "/";
+	private static final String								WEBSOCKET_PATH			= "/";
 
-    private WebSocketServerHandshaker handshaker;
+	private WebSocketServerHandshaker					handshaker;
 
-    private Roadrunner roadrunner;
+	private Roadrunner												roadrunner;
 
-    private Map<Channel, RoadrunnerEndpoint> handlers = Maps.newHashMap();
+	private Map<Channel, RoadrunnerEndpoint>	handlers						= Maps.newHashMap();
 
-    public WebSocketServerHandler(Roadrunner roadrunner) {
-	this.roadrunner = roadrunner;
-    }
-
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Object msg)
-	    throws Exception {
-	if (msg instanceof FullHttpRequest) {
-	    try {
-		handleHttpRequest(ctx, (FullHttpRequest) msg);
-	    } catch (IOException e) {
-		logger.error("Error handling HTTP Request", e);
-	    }
-	} else if (msg instanceof WebSocketFrame) {
-	    handleWebSocketFrame(ctx, (WebSocketFrame) msg);
-	}
-    }
-
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-	ctx.flush();
-    }
-
-    private void handleHttpRequest(ChannelHandlerContext ctx,
-	    FullHttpRequest req) throws IOException {
-	// Handle a bad request.
-	if (!req.getDecoderResult().isSuccess()) {
-	    sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1,
-		    BAD_REQUEST));
-	    return;
-	}
-	if ("/favicon.ico".equals(req.getUri())) {
-	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1,
-		    HttpResponseStatus.NOT_FOUND);
-	    sendHttpResponse(ctx, req, res);
-	    return;
+	public WebSocketServerHandler(Roadrunner roadrunner) {
+		this.roadrunner = roadrunner;
 	}
 
-	if (req.getMethod() == GET && req.getUri().endsWith("roadrunner.js")) {
-	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
-	    sendRoadrunnerJsFile(res);
-	    sendHttpResponse(ctx, req, res);
-	    return;
-	}
-
-	if (!req.headers().contains("Upgrade")) {
-	    FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
-	    handleRestCall(ctx, req, res);
-	    sendHttpResponse(ctx, req, res);
-	    return;
-	}
-
-	// Handshake
-	WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
-		getWebSocketLocation(req), null, false);
-	handshaker = wsFactory.newHandshaker(req);
-	if (handshaker == null) {
-	    WebSocketServerHandshakerFactory.sendUnsupportedWebSocketVersionResponse(ctx.channel());
-	} else {
-	    handshaker.handshake(ctx.channel(), req);
-	}
-
-	final Channel channel = ctx.channel();
-	if (!handlers.containsKey(channel)) {
-	    RoadrunnerEndpoint handler = new RoadrunnerEndpoint(
-		    getHttpSocketLocation(req), new Node(),
-		    new RoadrunnerResponseSender() {
-			@Override
-			public void send(String msg) {
-			    logger.trace("Sending Message: " + msg);
-			    channel.writeAndFlush(new TextWebSocketFrame(msg));
+	@Override
+	protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+		if (msg instanceof FullHttpRequest) {
+			try {
+				handleHttpRequest(ctx, (FullHttpRequest) msg);
+			} catch (IOException e) {
+				logger.error("Error handling HTTP Request", e);
 			}
-		    }, roadrunner.getPersistence(),
-		    roadrunner.getAuthorization());
-	    handlers.put(channel, handler);
-	    roadrunner.addEndpoint(handler);
-	}
-    }
-
-    private void handleRestCall(ChannelHandlerContext ctx, FullHttpRequest req,
-	    FullHttpResponse res) {
-
-	Path nodePath = new Path(
-		RoadrunnerEvent.extractPath(req.getUri(), null));
-	if (req.getMethod() == GET) {
-	    RulesDataSnapshot root = new InMemoryDataSnapshot(
-		    roadrunner.getPersistence().get(null));
-	    Object node = roadrunner.getPersistence().get(nodePath);
-	    Object object = new InMemoryDataSnapshot(node);
-	    roadrunner.getAuthorization()
-		    .authorize(RoadrunnerOperation.READ, ctx.attr(WebSocketServerHandler.AUTH_ATTRIBUTE_KEY)
-			    .get(), root, nodePath, new InMemoryDataSnapshot(
-			    node));
-
-	    res.content().writeBytes(node.toString().getBytes());
-	} else if (req.getMethod() == HttpMethod.POST
-		|| req.getMethod() == HttpMethod.PUT) {
-	    String msg = new String(req.content().array());
-	    roadrunner.handleEvent(RoadrunnerEventType.SET, req.getUri(), Optional.fromNullable(msg));
-	} else if (req.getMethod() == HttpMethod.DELETE) {
-	    roadrunner.handleEvent(RoadrunnerEventType.SET, req.getUri(), null);
-	}
-	res.headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
-	setContentLength(res, res.content().readableBytes());
-    }
-
-    private void sendRoadrunnerJsFile(FullHttpResponse res) throws IOException {
-	String roadrunnerJsFile = roadrunner.loadJsFile();
-	res.content().writeBytes(roadrunnerJsFile.getBytes());
-	res.headers()
-		.set(CONTENT_TYPE, "application/javascript; charset=UTF-8");
-	setContentLength(res, res.content().readableBytes());
-    }
-
-    private void handleWebSocketFrame(ChannelHandlerContext ctx,
-	    WebSocketFrame frame) {
-
-	// Check for closing frame
-	if (frame instanceof CloseWebSocketFrame) {
-	    handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
-	    return;
-	}
-	if (frame instanceof PingWebSocketFrame) {
-	    ctx.channel()
-		    .write(new PongWebSocketFrame(frame.content().retain()));
-	    return;
-	}
-	if (!(frame instanceof TextWebSocketFrame)) {
-	    throw new UnsupportedOperationException(
-		    String.format("%s frame types not supported", frame.getClass()
-			    .getName()));
+		} else if (msg instanceof WebSocketFrame) {
+			handleWebSocketFrame(ctx, (WebSocketFrame) msg);
+		}
 	}
 
-	// Send the uppercase string back.
-	String msg = ((TextWebSocketFrame) frame).text();
-	RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
-	Node auth = ctx.channel().attr(AUTH_ATTRIBUTE_KEY).get();
-	roadrunnerEvent.put(RoadrunnerEvent.AUTH, auth);
-	roadrunner.handle(handlers.get(ctx.channel()), roadrunnerEvent);
-
-    }
-
-    private static void sendHttpResponse(ChannelHandlerContext ctx,
-	    FullHttpRequest req, FullHttpResponse res) {
-	// Generate an error page if response getStatus code is not OK (200).
-	if (res.getStatus().code() != 200) {
-	    res.content().writeBytes(Unpooled.copiedBuffer(res.getStatus()
-		    .toString(), CharsetUtil.UTF_8));
-	    setContentLength(res, res.content().readableBytes());
+	@Override
+	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+		ctx.flush();
 	}
 
-	// Send the response and close the connection if necessary.
-	ChannelFuture f = ctx.channel().write(res);
-	if (!isKeepAlive(req) || res.getStatus().code() != 200) {
-	    f.addListener(ChannelFutureListener.CLOSE);
+	private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) throws IOException {
+		// Handle a bad request.
+		if (!req.getDecoderResult().isSuccess()) {
+			sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
+			return;
+		}
+		if ("/favicon.ico".equals(req.getUri())) {
+			FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.NOT_FOUND);
+			sendHttpResponse(ctx, req, res);
+			return;
+		}
+
+		if (req.getMethod() == GET && req.getUri().endsWith("roadrunner.js")) {
+			FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
+			sendRoadrunnerJsFile(res);
+			sendHttpResponse(ctx, req, res);
+			return;
+		}
+
+		if (!req.headers().contains("Upgrade")) {
+			FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
+			handleRestCall(ctx, req, res);
+			sendHttpResponse(ctx, req, res);
+			return;
+		}
+
+		// Handshake
+		WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
+				getWebSocketLocation(req), null, false);
+		handshaker = wsFactory.newHandshaker(req);
+		if (handshaker == null) {
+			WebSocketServerHandshakerFactory.sendUnsupportedWebSocketVersionResponse(ctx.channel());
+		} else {
+			handshaker.handshake(ctx.channel(), req);
+		}
+
+		final Channel channel = ctx.channel();
+		if (!handlers.containsKey(channel)) {
+			RoadrunnerEndpoint handler = new RoadrunnerEndpoint(getHttpSocketLocation(req), new Node(),
+					new RoadrunnerResponseSender() {
+						@Override
+						public void send(String msg) {
+							logger.trace("Sending Message: " + msg);
+							channel.writeAndFlush(new TextWebSocketFrame(msg));
+						}
+					}, roadrunner.getPersistence(), roadrunner.getAuthorization());
+			handlers.put(channel, handler);
+			roadrunner.addEndpoint(handler);
+		}
 	}
-    }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-	cause.printStackTrace();
-	ctx.close();
-    }
+	private void handleRestCall(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
 
-    private static String getWebSocketLocation(FullHttpRequest req) {
-	return "ws://" + req.headers().get(HOST);
-    }
+		Path nodePath = new Path(RoadrunnerEvent.extractPath(req.getUri()));
+		if (req.getMethod() == GET) {
+			RulesDataSnapshot root = new InMemoryDataSnapshot(roadrunner.getPersistence().get(null));
+			Object node = roadrunner.getPersistence().get(nodePath);
+			Object object = new InMemoryDataSnapshot(node);
+			roadrunner.getAuthorization().authorize(RoadrunnerOperation.READ,
+					ctx.attr(WebSocketServerHandler.AUTH_ATTRIBUTE_KEY).get(), root, nodePath,
+					new InMemoryDataSnapshot(node));
 
-    private static String getHttpSocketLocation(FullHttpRequest req) {
+			res.content().writeBytes(node.toString().getBytes());
+		} else if (req.getMethod() == HttpMethod.POST || req.getMethod() == HttpMethod.PUT) {
+			String msg = new String(req.content().array());
+			roadrunner.handleEvent(RoadrunnerEventType.SET, req.getUri(), Optional.fromNullable(msg));
+		} else if (req.getMethod() == HttpMethod.DELETE) {
+			roadrunner.handleEvent(RoadrunnerEventType.SET, req.getUri(), null);
+		}
+		res.headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
+		setContentLength(res, res.content().readableBytes());
+	}
 
-	return "http://" + req.headers().get(HOST) + WEBSOCKET_PATH;
-    }
+	private void sendRoadrunnerJsFile(FullHttpResponse res) throws IOException {
+		String roadrunnerJsFile = roadrunner.loadJsFile();
+		res.content().writeBytes(roadrunnerJsFile.getBytes());
+		res.headers().set(CONTENT_TYPE, "application/javascript; charset=UTF-8");
+		setContentLength(res, res.content().readableBytes());
+	}
+
+	private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
+
+		// Check for closing frame
+		if (frame instanceof CloseWebSocketFrame) {
+			handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
+			return;
+		}
+		if (frame instanceof PingWebSocketFrame) {
+			ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
+			return;
+		}
+		if (!(frame instanceof TextWebSocketFrame)) {
+			throw new UnsupportedOperationException(String.format("%s frame types not supported", frame
+					.getClass().getName()));
+		}
+
+		// Send the uppercase string back.
+		String msg = ((TextWebSocketFrame) frame).text();
+		RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
+		Node auth = ctx.channel().attr(AUTH_ATTRIBUTE_KEY).get();
+		roadrunnerEvent.put(RoadrunnerEvent.AUTH, auth);
+		roadrunner.handle(handlers.get(ctx.channel()), roadrunnerEvent);
+
+	}
+
+	private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req,
+			FullHttpResponse res) {
+		// Generate an error page if response getStatus code is not OK (200).
+		if (res.getStatus().code() != 200) {
+			res.content()
+					.writeBytes(Unpooled.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8));
+			setContentLength(res, res.content().readableBytes());
+		}
+
+		// Send the response and close the connection if necessary.
+		ChannelFuture f = ctx.channel().write(res);
+		if (!isKeepAlive(req) || res.getStatus().code() != 200) {
+			f.addListener(ChannelFutureListener.CLOSE);
+		}
+	}
+
+	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+		cause.printStackTrace();
+		ctx.close();
+	}
+
+	private static String getWebSocketLocation(FullHttpRequest req) {
+		return "ws://" + req.headers().get(HOST);
+	}
+
+	private static String getHttpSocketLocation(FullHttpRequest req) {
+
+		return "http://" + req.headers().get(HOST) + WEBSOCKET_PATH;
+	}
 }

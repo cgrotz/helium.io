@@ -1,8 +1,9 @@
 package de.roadrunner.client;
 
-import org.json.Node;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
+
+import de.skiptag.roadrunner.json.Node;
 
 public class RoadrunnerDataHandler implements Handler<Buffer> {
 

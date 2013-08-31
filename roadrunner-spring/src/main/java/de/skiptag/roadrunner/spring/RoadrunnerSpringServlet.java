@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.json.Node;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,6 +12,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 import de.skiptag.roadrunner.Roadrunner;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.server.RoadrunnerMessageInbound;
 import de.skiptag.roadrunner.server.RoadrunnerWebSocketServlet;
 

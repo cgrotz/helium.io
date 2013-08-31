@@ -16,6 +16,7 @@ var stringify = function(obj, prop) {
 
 // Roadrunner
 var roadrunner_endpoint;
+
 function Snapshot(message, roadrunner_connection) {
 	var payload = message.payload;
 	var name = message.name;

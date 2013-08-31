@@ -13,7 +13,6 @@ import journal.io.api.Journal.ReadType;
 import journal.io.api.Journal.WriteType;
 import journal.io.api.Location;
 
-import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +29,7 @@ import de.skiptag.roadrunner.disruptor.processor.authorization.AuthorizationProc
 import de.skiptag.roadrunner.disruptor.processor.distribution.DistributionProcessor;
 import de.skiptag.roadrunner.disruptor.processor.eventsourcing.EventSourceProcessor;
 import de.skiptag.roadrunner.disruptor.processor.persistence.PersistenceProcessor;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Persistence;
 

@@ -2,14 +2,13 @@ package de.skiptag.roadrunner.disruptor.event.builder;
 
 import java.util.Date;
 
-import org.json.Node;
-
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
+import de.skiptag.roadrunner.json.Node;
 
 public class RoadrunnerEventBuilder {
 
-	private RoadrunnerEvent underConstruction;
+	private RoadrunnerEvent	underConstruction;
 
 	private RoadrunnerEventBuilder() {
 		this.underConstruction = new RoadrunnerEvent();
@@ -44,11 +43,6 @@ public class RoadrunnerEventBuilder {
 
 	public RoadrunnerEventBuilder type(RoadrunnerEventType type) {
 		underConstruction.put(RoadrunnerEvent.TYPE, type.toString());
-		return this;
-	}
-
-	public RoadrunnerEventBuilder nodePath(String nodePath) {
-		underConstruction.put(RoadrunnerEvent.NODE_PATH, nodePath);
 		return this;
 	}
 

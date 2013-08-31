@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.util.Set;
 import java.util.UUID;
 
-import org.json.Node;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.WebSocket;
 
@@ -12,6 +11,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+
+import de.skiptag.roadrunner.json.Node;
 
 public class Roadrunner {
 

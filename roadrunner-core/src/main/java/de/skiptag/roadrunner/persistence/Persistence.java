@@ -1,9 +1,8 @@
 package de.skiptag.roadrunner.persistence;
 
-import org.json.Node;
-
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 
 public interface Persistence extends SnapshotProcessor {

@@ -1,13 +1,12 @@
 package de.skiptag.roadrunner.disruptor.processor.authorization;
 
-import org.json.Node;
-
 import com.lmax.disruptor.EventHandler;
 
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryDataSnapshot;

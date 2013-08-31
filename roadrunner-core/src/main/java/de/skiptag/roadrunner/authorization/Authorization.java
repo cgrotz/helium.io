@@ -1,8 +1,7 @@
 package de.skiptag.roadrunner.authorization;
 
-import org.json.Node;
-
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.persistence.Path;
 
 public interface Authorization {

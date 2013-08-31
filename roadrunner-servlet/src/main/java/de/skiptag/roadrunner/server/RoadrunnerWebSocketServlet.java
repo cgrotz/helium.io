@@ -20,7 +20,6 @@ import org.apache.catalina.websocket.StreamInbound;
 import org.apache.catalina.websocket.WebSocketServlet;
 import org.apache.catalina.websocket.WsHttpServletRequestWrapper;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
-import org.json.Node;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
@@ -32,6 +31,7 @@ import com.google.common.io.CharStreams;
 import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.persistence.Path;
 
 /**
@@ -39,14 +39,15 @@ import de.skiptag.roadrunner.persistence.Path;
  */
 public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 
-	private static final long serialVersionUID = 1L;
-	private static final org.slf4j.Logger logger = LoggerFactory
-			.getLogger(RoadrunnerWebSocketServlet.class.getName());
-	protected Roadrunner roadrunner;
-	private String journalDirectoryPath;
-	private String snapshotDirectoryPath;
-	private boolean productiveMode;
-	private Node rule;
+	private static final long							serialVersionUID	= 1L;
+	private static final org.slf4j.Logger	logger						= LoggerFactory
+																															.getLogger(RoadrunnerWebSocketServlet.class
+																																	.getName());
+	protected Roadrunner									roadrunner;
+	private String												journalDirectoryPath;
+	private String												snapshotDirectoryPath;
+	private boolean												productiveMode;
+	private Node													rule;
 
 	@Override
 	protected StreamInbound createWebSocketInbound(String subProtocol, HttpServletRequest request) {
@@ -68,8 +69,7 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	}
 
 	/*
-	 * This only works for tokens. Quoted strings need more sophisticated
-	 * parsing.
+	 * This only works for tokens. Quoted strings need more sophisticated parsing.
 	 */
 	private boolean headerContainsToken(HttpServletRequest req, String headerName, String target) {
 		Enumeration<String> headers = req.getHeaders(headerName);
@@ -112,8 +112,8 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	}
 
 	@Override
-	protected void service(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
+	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
+			IOException {
 		if (roadrunner == null) {
 			this.roadrunner = createRoadrunner(req);
 		}
@@ -146,13 +146,12 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 				} else {
 					snapshotDirectory = Optional.absent();
 				}
-				return createRoadrunnerInstance(basePath, rule,
-						createDirectory(journalDirectoryPath), snapshotDirectory);
+				return createRoadrunnerInstance(basePath, rule, createDirectory(journalDirectoryPath),
+						snapshotDirectory);
 			} else {
 				Optional<File> snapshotDirectory = Optional.of(createTempDirectory());
 
-				return createRoadrunnerInstance(basePath, rule, createTempDirectory(),
-						snapshotDirectory);
+				return createRoadrunnerInstance(basePath, rule, createTempDirectory(), snapshotDirectory);
 			}
 
 		} catch (IOException e) {
@@ -178,14 +177,14 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 		return requestURI.endsWith(uri);
 	}
 
-	private void handleRestCall(HttpServletRequest req, HttpServletResponse resp)
-			throws IOException, RuntimeException {
-		Path nodePath = new Path(RoadrunnerEvent.extractPath(req.getRequestURI(), null));
+	private void handleRestCall(HttpServletRequest req, HttpServletResponse resp) throws IOException,
+			RuntimeException {
+		Path nodePath = new Path(RoadrunnerEvent.extractPath(req.getRequestURI()));
 		if (req.getMethod().equals("GET")) {
 			resp.getWriter().append(roadrunner.getPersistence().get(nodePath).toString());
 		} else if (req.getMethod().equals("POST") || req.getMethod().equals("PUT")) {
-			String msg = new String(CharStreams.toString(new InputStreamReader(
-					req.getInputStream(), Charsets.UTF_8)));
+			String msg = new String(CharStreams.toString(new InputStreamReader(req.getInputStream(),
+					Charsets.UTF_8)));
 			roadrunner.handleEvent(RoadrunnerEventType.SET, req.getRequestURI(),
 					Optional.fromNullable(msg));
 		} else if (req.getMethod().equals("DELETE")) {
@@ -204,16 +203,14 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	}
 
 	/**
-	 * Intended to be overridden by sub-classes that wish to verify the origin
-	 * of a WebSocket request before processing it.
+	 * Intended to be overridden by sub-classes that wish to verify the origin of a WebSocket request
+	 * before processing it.
 	 * 
 	 * @param origin
-	 *            The value of the origin header from the request which may be
-	 *            <code>null</code>
+	 *          The value of the origin header from the request which may be <code>null</code>
 	 * 
-	 * @return <code>true</code> to accept the request. <code>false</code> to
-	 *         reject it. This default implementation always returns
-	 *         <code>true</code>.
+	 * @return <code>true</code> to accept the request. <code>false</code> to reject it. This default
+	 *         implementation always returns <code>true</code>.
 	 */
 	@Override
 	protected boolean verifyOrigin(String origin) {
@@ -221,17 +218,15 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	}
 
 	/**
-	 * Intended to be overridden by sub-classes that wish to select a
-	 * sub-protocol if the client provides a list of supported protocols.
+	 * Intended to be overridden by sub-classes that wish to select a sub-protocol if the client
+	 * provides a list of supported protocols.
 	 * 
 	 * @param subProtocols
-	 *            The list of sub-protocols supported by the client in client
-	 *            preference order. The server is under no obligation to respect
-	 *            the declared preference
-	 * @return <code>null</code> if no sub-protocol is selected or the name of
-	 *         the protocol which <b>must</b> be one of the protocols listed by
-	 *         the client. This default implementation always returns
-	 *         <code>null</code>.
+	 *          The list of sub-protocols supported by the client in client preference order. The
+	 *          server is under no obligation to respect the declared preference
+	 * @return <code>null</code> if no sub-protocol is selected or the name of the protocol which
+	 *         <b>must</b> be one of the protocols listed by the client. This default implementation
+	 *         always returns <code>null</code>.
 	 */
 	@Override
 	protected String selectSubProtocol(List<String> subProtocols) {

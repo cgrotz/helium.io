@@ -2,7 +2,6 @@ package de.skiptag.roadrunner.messaging;
 
 import java.util.Map.Entry;
 
-import org.json.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +18,7 @@ import de.skiptag.roadrunner.disruptor.event.changelog.ChildAddedLogEvent;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChildChangedLogEvent;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChildRemovedLogEvent;
 import de.skiptag.roadrunner.disruptor.event.changelog.ValueChangedLogEvent;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryDataSnapshot;

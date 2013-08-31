@@ -1,8 +1,7 @@
 package de.skiptag.roadrunner.disruptor.processor.persistence.actions;
 
-import org.json.Node;
-
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 
