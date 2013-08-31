@@ -1,0 +1,29 @@
+.row {
+	padding-bottom: 10px;
+}
+
+.step-play iframe{
+	border: 1px dotted;
+}
+
+.readonlyBackground {
+	background: #ddd;
+}
+
+.CodeMirror {
+  border: 1px solid #eee;
+  height: auto;
+}
+.CodeMirror-scroll {
+  overflow-y: hidden;
+  overflow-x: auto;
+}
+
+.CodeMirror-linebackground {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	z-index: 0;
+}

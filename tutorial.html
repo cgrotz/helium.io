@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+
+    <title>Roadrunner</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/roadrunner.css" rel="stylesheet">
+    <link href="codemirror/lib/codemirror.css" rel="stylesheet">
+    <script src="codemirror/lib/codemirror.js"></script>
+	<link rel="stylesheet" href="codemirror/addon/hint/show-hint.css">
+	<script src="codemirror/lib/codemirror.js"></script>
+	<script src="codemirror/addon/hint/show-hint.js"></script>
+	<script src="codemirror/addon/hint/xml-hint.js"></script>
+	<script src="codemirror/addon/hint/html-hint.js"></script>
+	<script src="codemirror/mode/xml/xml.js"></script>
+	<script src="codemirror/mode/javascript/javascript.js"></script>
+	<script src="codemirror/mode/css/css.js"></script>
+	<script src="codemirror/mode/htmlmixed/htmlmixed.js"></script>
+    <link href="css/tutorial.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-static-top">
+      <div class="container">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Roadrunner</a>
+        <div class="nav-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="index.html">Home</a></li>
+      <li><a href="howItWorks.html">How It Works</a></li> 
+		<li class="active"><a href="tutorial.html">Tutorial</a></li>
+		<li><a href="reference.html">Reference</a></li>
+		<!--<li><a href="javascript.html">Javascript API</a></li>
+		<li><a href="security.html">Security API</a></li>
+		<li><a href="rest.html">REST API</a></li>-->
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+    <div class="container">
+     <div id="step1" class="step">
+      <h1>Installing Roadrunner</h1>
+      <p>As first step, please download the vert.x based Roadrunner distribution <a href="http://repo1.maven.org/maven2/de/skiptag/roadrunner/roadrunner-vertx/0.1/roadrunner-vertx-0.1-standalone.jar">standalone download</a>. You can start it, by simply executing the follwing command
+      <pre>java -jar roadrunner-vertx-0.1-standalone.jar</pre>
+      This will start a standalone vert.x based Roadrunner on port 8080 of your local computer. Now you can start using Roadrunner in your web app for development.</p>
+      <p>
+      To get started add the Roadrunner JavaScript client by adding the following line into the <head>section below:
+      <pre>&lt;script src='http://localhost:8080/roadrunner.js'&gt;&lt;/script&gt;</pre></p>
+      <div class="step1-code">
+      </div>
+     </div>
+     <div id="step2" class="step">
+      <h1>Accessing Data</h1>
+      <p>Roadunner references are created using a URL that specifies which data you want to access.<br>
+      To complete this step, create a reference to the root of your Roadrunner repository as shown below:<br>
+      <pre>var myDataRef = new Roadrunner('http://localhost:8080/');</pre>
+      </p>
+      <div class="step2-code">
+      </div>
+     </div>
+     <div id="step3" class="step">
+      <h1>Writing Data</h1>
+      <p><b>Let's send a chat message</b>
+You can use the Roadrunner reference you just created to write data to Roadrunner using the set() function.<br>
+To make things easy, we've already added input text boxes for the chatter's name and message as well as a keypress handler that will fire whenever someone tries to send a message.<br>
+For this step, write a message to Roadrunner using the set() function as shown:<br>
+      <pre>myDataRef.set('User ' + name + ' says ' + text);</pre>
+      </p>
+      <div class="step3-code">
+      </div>
+     </div>
+     <div id="step4" class="step">
+      <h1>Writing Objects</h1>
+      <p><b>The set() function can also be used to write objects.</b><br>
+      Try changing your code to write an object with text and name properties:<br>
+      <pre>myDataRef.set({name: name, text: text});</pre>
+      </p>
+      <div class="step4-code">
+      </div>
+     </div>
+     <div id="step5" class="step">
+      <h1>Writing Lists</h1>
+      <p>You've already learned how to write data to specific, named locations in Roadrunner, but your chat application will require a list of messages. Roadrunner provides a helper function called push() that makes creating lists easy.<br>
+Modify your code below to use push() instead of set() so that your chat can support a list of messages (rather than just one):<br>
+<pre>myDataRef.push({name: name, text: text});</pre>
+      </p>
+      <div class="step5-code">
+      </div>
+     </div>
+     <div id="step6" class="step">
+      <h1>Reading Data</h1>
+      <p>We need to tell Roadrunner to notify us when chat messages arrive. We do this by adding a callback to the list of chat messages using the on() method, as shown below:<br>
+      <pre>myDataRef.on('child_added', function(snapshot) {
+  //We'll fill this in later.
+});</pre>
+      This method takes two arguments: the event type and the callback function. We'll use the 'child_added' event so that we are notified of the arrival of individual messages.<br>
+      </p>
+      <div class="step6-code">
+      </div>
+     </div>
+     <div id="step7" class="step">
+      <h1>Using Snapshots</h1>
+      <p><b>Now we need to display the chat messages on the page.</b>
+For each chat message, Roadrunner will call your callback with a snapshot containing the message's data.<br>
+Extract the message data from the snapshot by calling the val() function and assign it to a variable. Then, call the displayChatMessage() function to display the message as shown:<br>
+      <pre>var message = snapshot.val();
+displayChatMessage(message.name, message.text);</pre>
+      </p>
+      <div class="step7-code">
+      </div>
+     </div>
+
+     <div id="step8" class="step">
+      <h1>Play with Roadrunner</h1>
+      <p>You can edit and run your app below.</p>
+       <div class="row">
+         <div class="btn-group">
+          <div id="edit" class="btn btn-primary">Edit</div>
+          <div id="play" class="btn btn-success">Play</div>
+        </div>
+       </div>
+       	<div class="row step-play">
+       	</div>
+       	<div class="row step-edit">
+     	  </div>
+    </div>
+    <ul class="pagination">
+      <li id="prevStep" class="disabled"><a href="#">&laquo;</a></li>
+      <li id="step1switch" class="active switch"><a href="#step1">1</a></li>
+      <li id="step2switch" class="switch"><a href="#step2">2</a></li>
+      <li id="step3switch" class="switch"><a href="#step3">3</a></li>
+      <li id="step4switch" class="switch"><a href="#step4">4</a></li>
+      <li id="step5switch" class="switch"><a href="#step5">5</a></li>
+      <li id="step6switch" class="switch"><a href="#step6">6</a></li>
+      <li id="step7switch" class="switch"><a href="#step7">7</a></li>
+      <li id="step8switch" class="switch"><a href="#step8">8</a></li>
+      <li id="nextStep"><a href="#step2" >Next Step &raquo;</a></li>
+    </ul>
+  </div>
+    <!-- JavaScript plugins (requires jQuery) -->
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+    <script src="js/respond.min.js"></script>
+    <script src="js/tutorial.js"></script>
+  </body>
+</html>

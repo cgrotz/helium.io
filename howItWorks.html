@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head> 
+  <meta charset="utf-8" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
+  <meta name="description" content="" /> 
+  <meta name="author" content="" /> 
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" /> 
+  <title>Roadrunner</title> 
+  <!-- Bootstrap core CSS --> 
+  <link href="css/bootstrap.min.css" rel="stylesheet" /> 
+  <!-- Custom styles for this template --> 
+  <link href="css/roadrunner.css" rel="stylesheet" /> 
+ </head> 
+ <body> 
+  <div class="navbar navbar-inverse navbar-static-top"> 
+   <div class="container"> 
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> 
+    <a class="navbar-brand" href="#">Roadrunner</a> 
+    <div class="nav-collapse collapse"> 
+     <ul class="nav navbar-nav"> 
+      <li><a href="index.html">Home</a></li> 
+      <li class="active"><a href="#">How It Works</a></li> 
+      <li><a href="tutorial.html">Tutorial</a></li> 
+      <li><a href="reference.html">Reference</a></li> 
+      <!--<li><a href="javascript.html">Javascript API</a></li>
+		<li><a href="security.html">Security API</a></li>
+		<li><a href="rest.html">REST API</a></li>--> 
+     </ul> 
+    </div> 
+    <!--/.nav-collapse --> 
+   </div> 
+  </div> 
+  <div class="container doc-content"> 
+   <h1>The realtime backend for web apps</h1> 
+   <p><b>Build realtime webapps without the hassle of handling websockets or data synchronisation</b></p> 
+   <h3 style=""></h3> 
+   <h3>The Roadrunner concept</h3> 
+   <p>Todays web applications need to respond fast to user input and allow many users to collaborate on the same data. Roadrunner is a approach on how this can be done with modern and standard technologies. At the moment we rely heavily on the <a href="http://www.w3.org/TR/websockets/" class="">Websockets</a> standard and take advantage of the crowing support by the Java platform.</p> 
+   <p style="">At the moment we support the usage of Roadrunner with:</p> 
+   <ul> 
+    <li>vert.x</li> 
+    <li style="">Netty</li> 
+    <li style="">Tomcat 7.0.x</li> 
+   </ul>The concept is, that the server holds a representation of the data in JSON and allows the alteration of this representation from the client. The changes are then distributed to other clients.
+   <h3>Features</h3> 
+   <h4>Data Accessibility</h4> 
+   <p>Data is stored as standard <b>JSON</b>, and the Roadrunner client libraries and REST API provide easy access to that data.</p> 
+   <h4>Real-time Synchronization</h4> 
+   <p>Roadrunner takes a new approach to the way data is moved around an app. Rather than using a traditional request response model, it works by synchronizing data between devices. Whenever your data changes, all clients are immediately notified. The synchronized data is also persisted, allowing new clients to be immediately updated.</p> 
+   <h4>Real-time Queries</h4> 
+   <p>Roadrunner allows you to define queries that are executed on the server. Whenever the conent of the query result changes (e.g. data changes that add or remove a elements to the query result) the client gets an update.&nbsp;</p> 
+   <p></p> 
+  </div> 
+  <p></p> 
+  <!-- JavaScript plugins (requires jQuery) --> 
+  <script src="http://code.jquery.com/jquery.js"></script> 
+  <!-- Include all compiled plugins (below), or include individual files as needed --> 
+  <script src="js/bootstrap.min.js"></script> 
+  <!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) --> 
+  <script src="js/respond.min.js"></script>  
+ </body>
+</html>
