@@ -1,98 +1,83 @@
-<html>
-<head>
-  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-  <meta charset="utf-8">
-  <script src="http://localhost:8080/roadrunner.js"></script>
-  <script src="js/jquery.js"></script>
-  <script src="js/idle.js"></script>
-</head>
-<body>
-<div id="presenceDiv"></div>
-<script>
-  // Prompt the user for a name to use.
-  var name = prompt("Your name?", "Guest"),
-      currentStatus = "★ online";
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 
-  // Get a reference to the presence data in Roadrunner.
-  var userListRef = new Roadrunner("http://localhost:8080");
+    <title>Roadrunner</title>
 
-  // Generate a reference to a new location for my user with push.
-  var myUserRef = userListRef.push();
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
 
-  // Get a reference to my own presence status.
-  var connectedRef = new RoadrunnerOnlineSwitch('http://localhost:8080', function(isOnline) {
-    if (isOnline) {
-      // If we lose our internet connection, we want ourselves removed from the list.
-      myUserRef.onDisconnect().remove();
+    <!-- Custom styles for this template -->
+    <link href="css/roadrunner.css" rel="stylesheet">
+    <link href="codemirror/lib/codemirror.css" rel="stylesheet">
+    <script src="codemirror/lib/codemirror.js"></script>
+  <link rel="stylesheet" href="codemirror/addon/hint/show-hint.css">
+  <script src="codemirror/lib/codemirror.js"></script>
+  <script src="codemirror/addon/hint/show-hint.js"></script>
+  <script src="codemirror/addon/hint/xml-hint.js"></script>
+  <script src="codemirror/addon/hint/html-hint.js"></script>
+  <script src="codemirror/mode/xml/xml.js"></script>
+  <script src="codemirror/mode/javascript/javascript.js"></script>
+  <script src="codemirror/mode/css/css.js"></script>
+  <script src="codemirror/mode/htmlmixed/htmlmixed.js"></script>
+    <link href="css/presence.css" rel="stylesheet">
+  </head>
 
-      // Set our initial online status.
-      setUserStatus("★ online");
-    } else {
+  <body>
 
-      // We need to catch anytime we are marked as offline and then set the correct status. We
-      // could be marked as offline 1) on page load or 2) when we lose our internet connection
-      // temporarily.
-      setUserStatus(currentStatus);
-    }
-  });
+    <div class="navbar navbar-inverse navbar-static-top">
+      <div class="container">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Roadrunner</a>
+        <div class="nav-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="index.html">Home</a></li>
+          <li><a href="howItWorks.html">How It Works</a></li> 
+          <li class="active dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tutorial <b class="caret"></b></a>
+            <ul class="dropdown-menu">
+              <li><a href="tutorial.html">Tutorial</a></li>
+              <li class="active"><a href="#">Presence</a></li>
+            </ul>
+          </li>
+        <li><a href="reference.html">Reference</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
 
-  // A helper function to let us set our own state.
-  function setUserStatus(status) {
-    // Set our status in the list of online users.
-    currentStatus = status;
-    myUserRef.set({ name: name, status: status });
-  }
+    <div class="container">
+     <div>
+      <h1>Play with Roadrunner</h1>
+      <p>You can edit and run your app below.</p>
+      <div class="row">
+         <div class="btn-group">
+          <div id="edit" class="btn btn-primary">Edit</div>
+          <div id="play" class="btn btn-success">Play</div>
+        </div>
+       </div>
+        <div class="row play">
+        </div>
+        <div class="row edit">
+        </div>
+    </div>
+  </div>
+    <!-- JavaScript plugins (requires jQuery) -->
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
 
-  function getMessageId(snapshot) {
-    return snapshot.name().replace(/[^a-z0-9\-\_]/gi,'');
-  }
-
-  // Update our GUI to show someone"s online status.
-  userListRef.on("child_added", function(snapshot) {
-    var user = snapshot.val();
-    
-    $("<div/>")
-      .attr("id", getMessageId(snapshot))
-      .text(user.name + " is currently " + user.status)
-      .appendTo("#presenceDiv");
-  });
-
-  // Update our GUI to remove the status of a user who has left.
-  userListRef.on("child_removed", function(snapshot) {
-    $("#presenceDiv").children("#" + getMessageId(snapshot))
-      .remove();
-  });
-
-  // Update our GUI to change a user"s status.
-  userListRef.on("child_changed", function(snapshot) {
-    var user = snapshot.val();
-    if( $("#presenceDiv").children("#" + getMessageId(snapshot)).length>0)
-    {
-      $("#presenceDiv").children("#" + getMessageId(snapshot))
-        .text(user.name + " is currently " + user.status);
-    }
-    else
-    {
-      $("<div/>")
-        .attr("id", getMessageId(snapshot))
-        .text(user.name + " is currently " + user.status)
-        .appendTo("#presenceDiv");
-    }
-  });
-
-  // Use idle/away/back events created by idle.js to update our status information.
-  document.onIdle = function () {
-    setUserStatus("☆ idle");
-  }
-  document.onAway = function () {
-    setUserStatus("☄ away");
-  }
-  document.onBack = function (isIdle, isAway) {
-    setUserStatus("★ online");
-  }
-
-  setIdleTimeout(5000);
-  setAwayTimeout(10000);
-</script>
-</body>
+    <!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+    <script src="js/respond.min.js"></script>
+    <script src="js/presence.js"></script>
+  </body>
 </html>
