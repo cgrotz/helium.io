@@ -11,6 +11,22 @@
   <link href="css/bootstrap.min.css" rel="stylesheet" /> 
   <!-- Custom styles for this template --> 
   <link href="css/roadrunner.css" rel="stylesheet" /> 
+  <style type="text/css">
+  .embedded-iframe {
+    border: 0;
+  }
+  .drawing {
+	width: 86%;
+	height: 180px;
+	margin: 0 auto;
+  }
+  .drawing.active{
+	background: url('images/roadrunnerSyncActive.png') no-repeat center center
+  }
+  .drawing.inactive{
+	background: url('images/roadrunnerSyncInactive.png') no-repeat center center
+  }
+  </style>
  </head> 
  <body> 
   <div class="navbar navbar-inverse navbar-static-top"> 
@@ -43,6 +59,12 @@
     <li style="">Netty</li> 
     <li style="">Tomcat 7.0.x</li> 
    </ul>The concept is, that the server holds a representation of the data in JSON and allows the alteration of this representation from the client. The changes are then distributed to other clients.
+   <h3>Roadrunner in action</h3>
+   <p>The canvases below are synced by and stored in Roadrunner. Try drawing in one of them.
+   <div class="drawing inactive">
+   	<iframe class="embedded-iframe" style="float: left;" src="howItWorksDemo.html" width="205" height="190" scrolling="no"></iframe>
+   	<iframe class="embedded-iframe" style="float: right;" src="howItWorksDemo.html" width="205" height="190" scrolling="no"></iframe>
+   </div>
    <h3>Features</h3> 
    <h4>Data Accessibility</h4> 
    <p>Data is stored as standard <b>JSON</b>, and the Roadrunner client libraries and REST API provide easy access to that data.</p> 
@@ -59,5 +81,15 @@
   <script src="js/bootstrap.min.js"></script> 
   <!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) --> 
   <script src="js/respond.min.js"></script>  
+  <script>
+	$(".drawing").find("iframe").one("load", function() {
+	  $(".drawing").find("iframe").contents().mousedown(function() {
+	    $(".drawing").removeClass("inactive").addClass("active");
+	  });
+	  $(".drawing").find("iframe").contents().mouseup(function() {
+	    $(".drawing").removeClass("active").addClass("inactive");
+	  });
+	});
+  </script>
  </body>
 </html>
