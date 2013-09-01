@@ -1,7 +1,9 @@
 package de.skiptag.roadrunner.server;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -52,13 +54,23 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	@Override
 	protected StreamInbound createWebSocketInbound(String subProtocol, HttpServletRequest request) {
 		String servername;
-		if (request.getScheme().startsWith("ws://")) {
-			servername = "http://" + request.getServerName() + ":" + request.getServerPort();
-		} else if (request.getScheme().startsWith("wss://")) {
-			servername = "https://" + request.getServerName() + ":" + request.getServerPort();
+		int serverPort = request.getServerPort();
+		if (serverPort != 80) {
+			if (request.getScheme().startsWith("ws://")) {
+				servername = "http://" + request.getServerName() + ":" + serverPort;
+			} else if (request.getScheme().startsWith("wss://")) {
+				servername = "https://" + request.getServerName() + ":" + serverPort;
+			} else {
+				servername = request.getScheme() + "://" + request.getServerName() + ":" + serverPort;
+			}
 		} else {
-			servername = request.getScheme() + "://" + request.getServerName() + ":"
-					+ request.getServerPort();
+			if (request.getScheme().startsWith("ws://")) {
+				servername = "http://" + request.getServerName();
+			} else if (request.getScheme().startsWith("wss://")) {
+				servername = "https://" + request.getServerName();
+			} else {
+				servername = request.getScheme() + "://" + request.getServerName();
+			}
 		}
 
 		return createInbound(servername);
@@ -127,8 +139,14 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 		} else if (headerContainsToken(req, "upgrade", "websocket")) {
 			super.service(req, resp);
 		} else if (resourceForURI(req) != null) {
-			ServletOutputStream outputStream = resp.getOutputStream();
-			Streams.copy(resourceForURI(req).openStream(), outputStream, true);
+			try {
+				InputStream openStream = resourceForURI(req).openStream();
+				ServletOutputStream outputStream = resp.getOutputStream();
+				Streams.copy(openStream, outputStream, true);
+			} catch (FileNotFoundException e) {
+				logger.error("FileNotFound", e);
+				handleRestCall(req, resp);
+			}
 		} else {
 			handleRestCall(req, resp);
 		}

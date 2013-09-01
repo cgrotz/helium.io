@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import de.skiptag.roadrunner.persistence.Path;
 
 public class ChangeLog {
-	private List<ChangeLogEvent> log = Lists.newArrayList();
+	private List<ChangeLogEvent>	log	= Lists.newArrayList();
 
 	public List<ChangeLogEvent> getLog() {
 		return log;
@@ -19,8 +19,7 @@ public class ChangeLog {
 
 	public void addChildAddedLogEntry(String name, Path path, Path parent, Object value,
 			boolean hasChildren, long numChildren, String prevChildName, int priority) {
-		log.add(new ChildAddedLogEvent(name, path, parent, value, numChildren, prevChildName,
-				priority));
+		log.add(new ChildAddedLogEvent(name, path, parent, value, numChildren, prevChildName, priority));
 	}
 
 	public void addChildChangedLogEntry(String name, Path path, Path parent, Object value,
@@ -36,5 +35,9 @@ public class ChangeLog {
 
 	public void addChildRemovedLogEntry(Path path, String name, Object value) {
 		log.add(new ChildRemovedLogEvent(path, name, value));
+	}
+
+	public void clear() {
+		log.clear();
 	}
 }

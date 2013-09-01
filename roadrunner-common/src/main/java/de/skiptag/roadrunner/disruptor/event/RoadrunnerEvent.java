@@ -246,4 +246,10 @@ public class RoadrunnerEvent extends Node {
 
 		return result.startsWith("/") ? result : "/" + result;
 	}
+
+	@Override
+	public void clear() {
+		super.clear();
+		getChangeLog().clear();
+	}
 }

@@ -15,10 +15,10 @@ import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
 
 public class RoadrunnerMessageInbound extends MessageInbound implements RoadrunnerResponseSender {
-	private static final Logger logger = LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
-	private Roadrunner roadrunner;
-	private RoadrunnerEndpoint endpoint;
-	private Node auth;
+	private static final Logger	logger	= LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
+	private Roadrunner					roadrunner;
+	private RoadrunnerEndpoint	endpoint;
+	private Node								auth;
 
 	public RoadrunnerMessageInbound(Node auth, String basePath, Roadrunner roadrunner) {
 		this.roadrunner = roadrunner;
@@ -54,6 +54,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements Roadrunn
 	@Override
 	public void send(String string) {
 		try {
+			logger.trace("Sending Message: " + string);
 			getWsOutbound().writeTextMessage(CharBuffer.wrap(string));
 		} catch (IOException e) {
 			logger.error("Error sending message", e);

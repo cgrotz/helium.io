@@ -10,6 +10,7 @@ import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
 import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
 import de.skiptag.roadrunner.json.Node;
+import de.skiptag.roadrunner.json.NodeVisitor;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
@@ -17,13 +18,31 @@ import de.skiptag.roadrunner.queries.QueryEvaluator;
 
 public class InMemoryPersistence implements Persistence {
 
-	private static final Logger logger = LoggerFactory.getLogger(InMemoryPersistence.class);
+	private final class ChildRemovedSubTreeVisitor implements NodeVisitor {
+		private ChangeLog	log;
 
-	private Node model = new Node();
+		public ChildRemovedSubTreeVisitor(ChangeLog log) {
+			this.log = log;
+		}
 
-	private Roadrunner roadrunner;
+		@Override
+		public void visitProperty(Path path, Node node, String key, Object value) {
+			log.addChildRemovedLogEntry(path, key, value);
+		}
 
-	private Authorization authorization;
+		@Override
+		public void visitNode(Path path, Node node) {
+			log.addChildRemovedLogEntry(path.getParent(), path.getLastElement(), null);
+		}
+	}
+
+	private static final Logger	logger	= LoggerFactory.getLogger(InMemoryPersistence.class);
+
+	private Node								model		= new Node();
+
+	private Roadrunner					roadrunner;
+
+	private Authorization				authorization;
 
 	public InMemoryPersistence(Authorization authorization, Roadrunner roadrunner) {
 		this.roadrunner = roadrunner;
@@ -53,9 +72,11 @@ public class InMemoryPersistence implements Persistence {
 		Path parentPath = path.getParent();
 		Node node = model.getNodeForPath(log, parentPath).getNode(nodeName);
 
-		if (authorization.isAuthorized(RoadrunnerOperation.WRITE, auth, new InMemoryDataSnapshot(
-				model), path, node)) {
-			model.getNodeForPath(log, parentPath).remove(nodeName);
+		if (authorization.isAuthorized(RoadrunnerOperation.WRITE, auth,
+				new InMemoryDataSnapshot(model), path, node)) {
+			Node parent = model.getNodeForPath(log, parentPath);
+			node.accept(path, new ChildRemovedSubTreeVisitor(log));
+			parent.remove(nodeName);
 			log.addChildRemovedLogEntry(parentPath, nodeName, node);
 			roadrunner.distributeChangeLog(log);
 		}
@@ -106,8 +127,7 @@ public class InMemoryPersistence implements Persistence {
 			handler.fireValue(childNodeKey, path, path.getParent(), object, "",
 					node.indexOf(childNodeKey));
 		} else {
-			handler.fireValue(childNodeKey, path, path.getParent(), "", "",
-					node.indexOf(childNodeKey));
+			handler.fireValue(childNodeKey, path, path.getParent(), "", "", node.indexOf(childNodeKey));
 		}
 		roadrunner.distributeChangeLog(log);
 
@@ -136,8 +156,8 @@ public class InMemoryPersistence implements Persistence {
 						prevChildName(parent, priority(parent, path.getLastElement())),
 						priority(parent, path.getLastElement()));
 			} else {
-				log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path
-						.getParent().getParent(), payload, false, 0,
+				log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
+						.getParent(), payload, false, 0,
 						prevChildName(parent, priority(parent, path.getLastElement())),
 						priority(parent, path.getLastElement()));
 			}
@@ -150,16 +170,16 @@ public class InMemoryPersistence implements Persistence {
 						prevChildName(parent, priority(parent, path.getLastElement())),
 						priority(parent, path.getLastElement()));
 			} else {
-				log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path
-						.getParent().getParent(), payload, false, 0,
+				log.addChildChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
+						.getParent(), payload, false, 0,
 						prevChildName(parent, priority(parent, path.getLastElement())),
 						priority(parent, path.getLastElement()));
 				log.addValueChangedLogEntry(path.getLastElement(), path, path.getParent(), payload,
 						prevChildName(parent, priority(parent, path.getLastElement())),
 						priority(parent, path.getLastElement()));
 			}
-			log.addChildChangedLogEntry(path.getParent().getLastElement(), path.getParent()
-					.getParent(), path.getParent().getParent().getParent(), parent, false, 0,
+			log.addChildChangedLogEntry(path.getParent().getLastElement(), path.getParent().getParent(),
+					path.getParent().getParent().getParent(), parent, false, 0,
 					prevChildName(parent, priority(parent, path.getLastElement())),
 					priority(parent, path.getLastElement()));
 
@@ -173,8 +193,8 @@ public class InMemoryPersistence implements Persistence {
 		if (!model.pathExists(path)) {
 			created = true;
 		}
-		if (authorization.isAuthorized(RoadrunnerOperation.WRITE, auth, new InMemoryDataSnapshot(
-				model), path, payload)) {
+		if (authorization.isAuthorized(RoadrunnerOperation.WRITE, auth,
+				new InMemoryDataSnapshot(model), path, payload)) {
 			Node parent = model.getNodeForPath(log, path.getParent());
 			if (payload instanceof Node) {
 				Node node = new Node();
@@ -201,8 +221,8 @@ public class InMemoryPersistence implements Persistence {
 		for (String key : payload.keys()) {
 			Object value = payload.get(key);
 			if (value instanceof Node) {
-				if (authorization.isAuthorized(RoadrunnerOperation.WRITE, auth,
-						new InMemoryDataSnapshot(model), path.append(key), value)) {
+				if (authorization.isAuthorized(RoadrunnerOperation.WRITE, auth, new InMemoryDataSnapshot(
+						model), path.append(key), value)) {
 					Node childNode = new Node();
 					populate(logBuilder.getChildLogBuilder(key), path.append(key), auth, childNode,
 							(Node) value);
@@ -215,8 +235,8 @@ public class InMemoryPersistence implements Persistence {
 					}
 				}
 			} else {
-				if (authorization.isAuthorized(RoadrunnerOperation.WRITE, auth,
-						new InMemoryDataSnapshot(model), path.append(key), value)) {
+				if (authorization.isAuthorized(RoadrunnerOperation.WRITE, auth, new InMemoryDataSnapshot(
+						model), path.append(key), value)) {
 					if (node.has(key)) {
 					}
 					logBuilder.addChange(key, value);
@@ -240,8 +260,7 @@ public class InMemoryPersistence implements Persistence {
 				priority(parent, path.getLastElement()));
 
 		log.addValueChangedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
-				.getParent(), payload,
-				prevChildName(parent, priority(parent, path.getLastElement())),
+				.getParent(), payload, prevChildName(parent, priority(parent, path.getLastElement())),
 				priority(parent, path.getLastElement()));
 		if (!path.isEmtpy()) {
 			addChangeEvent(log, path.getParent());
@@ -251,8 +270,8 @@ public class InMemoryPersistence implements Persistence {
 	@Override
 	public void setPriority(ChangeLog log, Node auth, Path path, int priority) {
 		Node parent = model.getNodeForPath(log, path.getParent());
-		if (authorization.isAuthorized(RoadrunnerOperation.WRITE, auth, new InMemoryDataSnapshot(
-				model), path, parent)) {
+		if (authorization.isAuthorized(RoadrunnerOperation.WRITE, auth,
+				new InMemoryDataSnapshot(model), path, parent)) {
 			parent.setIndexOf(path.getLastElement(), priority);
 		}
 	}

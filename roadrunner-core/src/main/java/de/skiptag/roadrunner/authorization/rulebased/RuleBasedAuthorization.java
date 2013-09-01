@@ -10,12 +10,16 @@ import de.skiptag.roadrunner.scripting.SandboxedScriptingEnvironment;
 
 public class RuleBasedAuthorization implements Authorization {
 
-	private RuleBasedAuthorizator rule;
-	private SandboxedScriptingEnvironment scriptingEnvironment;
+	private RuleBasedAuthorizator					rule;
+	private SandboxedScriptingEnvironment	scriptingEnvironment;
 
 	public RuleBasedAuthorization(Node rule) {
-		this.rule = new RuleBasedAuthorizator(rule.has("rules") ? rule.getNode("rules")
-				: Authorization.ALL_ACCESS_RULE.getNode("rules"));
+		if (rule != null && rule.has("rules")) {
+			this.rule = new RuleBasedAuthorizator(rule.getNode("rules"));
+		} else {
+			this.rule = new RuleBasedAuthorizator(Authorization.ALL_ACCESS_RULE.getNode("rules"));
+		}
+
 		this.scriptingEnvironment = new SandboxedScriptingEnvironment();
 	}
 
@@ -28,14 +32,13 @@ public class RuleBasedAuthorization implements Authorization {
 	}
 
 	@Override
-	public boolean isAuthorized(RoadrunnerOperation op, Node auth, RulesDataSnapshot root,
-			Path path, Object data) {
+	public boolean isAuthorized(RoadrunnerOperation op, Node auth, RulesDataSnapshot root, Path path,
+			Object data) {
 		String expression = rule.getExpressionForPathAndOperation(path, op);
 		try {
 			return Boolean.parseBoolean(expression);
 		} catch (Exception e) {
-			scriptingEnvironment.put(RoadrunnerEvent.AUTH,
-					scriptingEnvironment.eval(auth.toString()));
+			scriptingEnvironment.put(RoadrunnerEvent.AUTH, scriptingEnvironment.eval(auth.toString()));
 			Boolean result = (Boolean) scriptingEnvironment.eval(expression);
 			return result.booleanValue();
 		}

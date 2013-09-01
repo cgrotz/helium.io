@@ -43,27 +43,23 @@ import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
 import de.skiptag.roadrunner.persistence.Path;
 
 /**
- * A Node is an unordered collection of name/value pairs. Its external form is a
- * string wrapped in curly braces with colons between the names and values, and
- * commas between the values and names. The internal form is an object having
- * <code>get</code> and <code>opt</code> methods for accessing the values by
- * name, and <code>put</code> methods for adding or replacing values by name.
- * The values can be any of these types: <code>Boolean</code>,
- * <code>JSONArray</code>, <code>Node</code>, <code>Number</code>,
- * <code>String</code>, or the <code>Node.NULL</code> object. A Node constructor
- * can be used to convert an external form JSON text into an internal form whose
- * values can be retrieved with the <code>get</code> and <code>opt</code>
- * methods, or to convert values into a JSON text using the <code>put</code> and
- * <code>toString</code> methods. A <code>get</code> method returns a value if
- * one can be found, and throws an exception if one cannot be found. An
- * <code>opt</code> method returns a default value instead of throwing an
- * exception, and so is useful for obtaining optional values.
+ * A Node is an unordered collection of name/value pairs. Its external form is a string wrapped in
+ * curly braces with colons between the names and values, and commas between the values and names.
+ * The internal form is an object having <code>get</code> and <code>opt</code> methods for accessing
+ * the values by name, and <code>put</code> methods for adding or replacing values by name. The
+ * values can be any of these types: <code>Boolean</code>, <code>JSONArray</code>, <code>Node</code>
+ * , <code>Number</code>, <code>String</code>, or the <code>Node.NULL</code> object. A Node
+ * constructor can be used to convert an external form JSON text into an internal form whose values
+ * can be retrieved with the <code>get</code> and <code>opt</code> methods, or to convert values
+ * into a JSON text using the <code>put</code> and <code>toString</code> methods. A <code>get</code>
+ * method returns a value if one can be found, and throws an exception if one cannot be found. An
+ * <code>opt</code> method returns a default value instead of throwing an exception, and so is
+ * useful for obtaining optional values.
  * <p>
- * The generic <code>get()</code> and <code>opt()</code> methods return an
- * object, which you can cast or query for type. There are also typed
- * <code>get</code> and <code>opt</code> methods that do type checking and type
- * coercion for you. The opt methods differ from the get methods in that they do
- * not throw. Instead, they return a specified value, such as null.
+ * The generic <code>get()</code> and <code>opt()</code> methods return an object, which you can
+ * cast or query for type. There are also typed <code>get</code> and <code>opt</code> methods that
+ * do type checking and type coercion for you. The opt methods differ from the get methods in that
+ * they do not throw. Instead, they return a specified value, such as null.
  * <p>
  * The <code>put</code> methods add or replace values in an object. For example,
  * 
@@ -73,20 +69,16 @@ import de.skiptag.roadrunner.persistence.Path;
  * 
  * produces the string <code>{"JSON": "Hello, World"}</code>.
  * <p>
- * The texts produced by the <code>toString</code> methods strictly conform to
- * the JSON syntax rules. The constructors are more forgiving in the texts they
- * will accept:
+ * The texts produced by the <code>toString</code> methods strictly conform to the JSON syntax
+ * rules. The constructors are more forgiving in the texts they will accept:
  * <ul>
- * <li>An extra <code>,</code>&nbsp;<small>(comma)</small> may appear just
- * before the closing brace.</li>
- * <li>Strings may be quoted with <code>'</code>&nbsp;<small>(single
- * quote)</small>.</li>
- * <li>Strings do not need to be quoted at all if they do not begin with a quote
- * or single quote, and if they do not contain leading or trailing spaces, and
- * if they do not contain any of these characters:
- * <code>{ } [ ] / \ : , #</code> and if they do not look like numbers and if
- * they are not the reserved words <code>true</code>, <code>false</code>, or
- * <code>null</code>.</li>
+ * <li>An extra <code>,</code>&nbsp;<small>(comma)</small> may appear just before the closing brace.
+ * </li>
+ * <li>Strings may be quoted with <code>'</code>&nbsp;<small>(single quote)</small>.</li>
+ * <li>Strings do not need to be quoted at all if they do not begin with a quote or single quote,
+ * and if they do not contain leading or trailing spaces, and if they do not contain any of these
+ * characters: <code>{ } [ ] / \ : , #</code> and if they do not look like numbers and if they are
+ * not the reserved words <code>true</code>, <code>false</code>, or <code>null</code>.</li>
  * </ul>
  * 
  * @author JSON.org
@@ -94,14 +86,14 @@ import de.skiptag.roadrunner.persistence.Path;
  */
 public class Node {
 	/**
-	 * Node.NULL is equivalent to the value that JavaScript calls null, whilst
-	 * Java's null is equivalent to the value that JavaScript calls undefined.
+	 * Node.NULL is equivalent to the value that JavaScript calls null, whilst Java's null is
+	 * equivalent to the value that JavaScript calls undefined.
 	 */
 	private static final class Null {
 
 		/**
-		 * There is only intended to be a single instance of the NULL object, so
-		 * the clone method returns itself.
+		 * There is only intended to be a single instance of the NULL object, so the clone method
+		 * returns itself.
 		 * 
 		 * @return NULL.
 		 */
@@ -114,7 +106,7 @@ public class Node {
 		 * A Null object is equal to the null value and to itself.
 		 * 
 		 * @param object
-		 *            An object to test for nullness.
+		 *          An object to test for nullness.
 		 * @return true if the object parameter is the Node.NULL object or null.
 		 */
 		@Override
@@ -136,18 +128,17 @@ public class Node {
 	/**
 	 * The map where the Node's properties are kept.
 	 */
-	private final Map<String, Object> map;
+	private final Map<String, Object>	map;
 
-	private final List<String> key_order = Lists.newArrayList();
+	private final List<String>				key_order	= Lists.newArrayList();
 
-	private RoadrunnerEventBuilder builder;
+	private RoadrunnerEventBuilder		builder;
 	/**
-	 * It is sometimes more convenient and less ambiguous to have a
-	 * <code>NULL</code> object than to use Java's <code>null</code> value.
-	 * <code>Node.NULL.equals(null)</code> returns <code>true</code>.
-	 * <code>Node.NULL.toString()</code> returns <code>"null"</code>.
+	 * It is sometimes more convenient and less ambiguous to have a <code>NULL</code> object than to
+	 * use Java's <code>null</code> value. <code>Node.NULL.equals(null)</code> returns
+	 * <code>true</code>. <code>Node.NULL.toString()</code> returns <code>"null"</code>.
 	 */
-	public static final Object NULL = new Null();
+	public static final Object				NULL			= new Null();
 
 	/**
 	 * Construct an empty Node.
@@ -160,10 +151,9 @@ public class Node {
 	 * Construct a Node from a JSONTokener.
 	 * 
 	 * @param x
-	 *            A JSONTokener object containing the source string.
+	 *          A JSONTokener object containing the source string.
 	 * @throws RuntimeException
-	 *             If there is a syntax error in the source string or a
-	 *             duplicated key.
+	 *           If there is a syntax error in the source string or a duplicated key.
 	 */
 	public Node(JSONTokener x) {
 		this();
@@ -212,16 +202,14 @@ public class Node {
 	}
 
 	/**
-	 * Construct a Node from a source JSON text string. This is the most
-	 * commonly used Node constructor.
+	 * Construct a Node from a source JSON text string. This is the most commonly used Node
+	 * constructor.
 	 * 
 	 * @param source
-	 *            A string beginning with <code>{</code>&nbsp;<small>(left
-	 *            brace)</small> and ending with <code>}</code>
-	 *            &nbsp;<small>(right brace)</small>.
+	 *          A string beginning with <code>{</code>&nbsp;<small>(left brace)</small> and ending
+	 *          with <code>}</code> &nbsp;<small>(right brace)</small>.
 	 * @exception RuntimeException
-	 *                If there is a syntax error in the source string or a
-	 *                duplicated key.
+	 *              If there is a syntax error in the source string or a duplicated key.
 	 */
 	public Node(String source) {
 		this(new JSONTokener(source));
@@ -240,10 +228,10 @@ public class Node {
 	 * Get the value object associated with a key.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return The object associated with the key.
 	 * @throws RuntimeException
-	 *             if the key is not found.
+	 *           if the key is not found.
 	 */
 	public Object get(String key) {
 		if (key == null) {
@@ -260,11 +248,10 @@ public class Node {
 	 * Get the boolean value associated with a key.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return The truth.
 	 * @throws RuntimeException
-	 *             if the value is not a Boolean or the String "true" or
-	 *             "false".
+	 *           if the value is not a Boolean or the String "true" or "false".
 	 */
 	public boolean getBoolean(String key) {
 		Object object = this.get(key);
@@ -282,11 +269,11 @@ public class Node {
 	 * Get the double value associated with a key.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return The numeric value.
 	 * @throws RuntimeException
-	 *             if the key is not found or if the value is not a Number
-	 *             object and cannot be converted to a number.
+	 *           if the key is not found or if the value is not a Number object and cannot be
+	 *           converted to a number.
 	 */
 	public double getDouble(String key) {
 		Object object = this.get(key);
@@ -302,11 +289,10 @@ public class Node {
 	 * Get the int value associated with a key.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return The integer value.
 	 * @throws RuntimeException
-	 *             if the key is not found or if the value cannot be converted
-	 *             to an integer.
+	 *           if the key is not found or if the value cannot be converted to an integer.
 	 */
 	public int getInt(String key) {
 		Object object = this.get(key);
@@ -322,10 +308,10 @@ public class Node {
 	 * Get the Node value associated with a key.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return A Node which is the value.
 	 * @throws RuntimeException
-	 *             if the key is not found or if the value is not a Node.
+	 *           if the key is not found or if the value is not a Node.
 	 */
 	public Node getNode(String key) {
 		Object object = this.get(key);
@@ -339,11 +325,10 @@ public class Node {
 	 * Get the long value associated with a key.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return The long value.
 	 * @throws RuntimeException
-	 *             if the key is not found or if the value cannot be converted
-	 *             to a long.
+	 *           if the key is not found or if the value cannot be converted to a long.
 	 */
 	public long getLong(String key) {
 		Object object = this.get(key);
@@ -379,10 +364,10 @@ public class Node {
 	 * Get the string associated with a key.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return A string which is the value.
 	 * @throws RuntimeException
-	 *             if there is no string value for the key.
+	 *           if there is no string value for the key.
 	 */
 	public String getString(String key) {
 		Object object = this.get(key);
@@ -396,25 +381,23 @@ public class Node {
 	 * Determine if the Node contains a specific key.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return true if the key exists in the Node.
 	 */
 	public boolean has(String key) {
-		return this.map.containsKey(key)
-				&& (this.map.get(key) != null && this.map.get(key) != NULL);
+		return this.map.containsKey(key) && (this.map.get(key) != null && this.map.get(key) != NULL);
 	}
 
 	/**
-	 * Increment a property of a Node. If there is no such property, create one
-	 * with a value of 1. If there is such a property, and if it is an Integer,
-	 * Long, Double, or Float, then add one to it.
+	 * Increment a property of a Node. If there is no such property, create one with a value of 1. If
+	 * there is such a property, and if it is an Integer, Long, Double, or Float, then add one to it.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return this.
 	 * @throws RuntimeException
-	 *             If there is already a property with this name that is not an
-	 *             Integer, Long, Double, or Float.
+	 *           If there is already a property with this name that is not an Integer, Long, Double,
+	 *           or Float.
 	 */
 	public Node increment(String key) {
 		Object value = this.opt(key);
@@ -435,13 +418,12 @@ public class Node {
 	}
 
 	/**
-	 * Determine if the value associated with the key is null or if there is no
-	 * value.
+	 * Determine if the value associated with the key is null or if there is no value.
 	 * 
 	 * @param key
-	 *            A key string.
-	 * @return true if there is no value associated with the key or if the value
-	 *         is the Node.NULL object.
+	 *          A key string.
+	 * @return true if there is no value associated with the key or if the value is the Node.NULL
+	 *         object.
 	 */
 	public boolean isNull(String key) {
 		return Node.NULL.equals(this.opt(key));
@@ -478,10 +460,10 @@ public class Node {
 	 * Produce a string from a Number.
 	 * 
 	 * @param number
-	 *            A Number
+	 *          A Number
 	 * @return A String.
 	 * @throws RuntimeException
-	 *             If n is a non-finite number.
+	 *           If n is a non-finite number.
 	 */
 	public static String numberToString(Number number) {
 		if (number == null) {
@@ -507,7 +489,7 @@ public class Node {
 	 * Get an optional value associated with a key.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return An object which is the value, or null if there is no value.
 	 */
 	public Object opt(String key) {
@@ -515,11 +497,11 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional boolean associated with a key. It returns false if there
-	 * is no such key, or if the value is not Boolean.TRUE or the String "true".
+	 * Get an optional boolean associated with a key. It returns false if there is no such key, or if
+	 * the value is not Boolean.TRUE or the String "true".
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return The truth.
 	 */
 	public boolean optBoolean(String key) {
@@ -527,14 +509,13 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional boolean associated with a key. It returns the
-	 * defaultValue if there is no such key, or if it is not a Boolean or the
-	 * String "true" or "false" (case insensitive).
+	 * Get an optional boolean associated with a key. It returns the defaultValue if there is no such
+	 * key, or if it is not a Boolean or the String "true" or "false" (case insensitive).
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @param defaultValue
-	 *            The default.
+	 *          The default.
 	 * @return The truth.
 	 */
 	public boolean optBoolean(String key, boolean defaultValue) {
@@ -546,12 +527,11 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional double associated with a key, or NaN if there is no such
-	 * key or if its value is not a number. If the value is a string, an attempt
-	 * will be made to evaluate it as a number.
+	 * Get an optional double associated with a key, or NaN if there is no such key or if its value is
+	 * not a number. If the value is a string, an attempt will be made to evaluate it as a number.
 	 * 
 	 * @param key
-	 *            A string which is the key.
+	 *          A string which is the key.
 	 * @return An object which is the value.
 	 */
 	public double optDouble(String key) {
@@ -559,14 +539,14 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional double associated with a key, or the defaultValue if
-	 * there is no such key or if its value is not a number. If the value is a
-	 * string, an attempt will be made to evaluate it as a number.
+	 * Get an optional double associated with a key, or the defaultValue if there is no such key or if
+	 * its value is not a number. If the value is a string, an attempt will be made to evaluate it as
+	 * a number.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @param defaultValue
-	 *            The default.
+	 *          The default.
 	 * @return An object which is the value.
 	 */
 	public double optDouble(String key, double defaultValue) {
@@ -578,12 +558,12 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional int value associated with a key, or zero if there is no
-	 * such key or if the value is not a number. If the value is a string, an
-	 * attempt will be made to evaluate it as a number.
+	 * Get an optional int value associated with a key, or zero if there is no such key or if the
+	 * value is not a number. If the value is a string, an attempt will be made to evaluate it as a
+	 * number.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return An object which is the value.
 	 */
 	public int optInt(String key) {
@@ -591,14 +571,14 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional int value associated with a key, or the default if there
-	 * is no such key or if the value is not a number. If the value is a string,
-	 * an attempt will be made to evaluate it as a number.
+	 * Get an optional int value associated with a key, or the default if there is no such key or if
+	 * the value is not a number. If the value is a string, an attempt will be made to evaluate it as
+	 * a number.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @param defaultValue
-	 *            The default.
+	 *          The default.
 	 * @return An object which is the value.
 	 */
 	public int optInt(String key, int defaultValue) {
@@ -610,11 +590,11 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional Node associated with a key. It returns null if there is
-	 * no such key, or if its value is not a Node.
+	 * Get an optional Node associated with a key. It returns null if there is no such key, or if its
+	 * value is not a Node.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return A Node which is the value.
 	 */
 	public Node optNode(String key) {
@@ -623,12 +603,12 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional long value associated with a key, or zero if there is no
-	 * such key or if the value is not a number. If the value is a string, an
-	 * attempt will be made to evaluate it as a number.
+	 * Get an optional long value associated with a key, or zero if there is no such key or if the
+	 * value is not a number. If the value is a string, an attempt will be made to evaluate it as a
+	 * number.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return An object which is the value.
 	 */
 	public long optLong(String key) {
@@ -636,14 +616,14 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional long value associated with a key, or the default if there
-	 * is no such key or if the value is not a number. If the value is a string,
-	 * an attempt will be made to evaluate it as a number.
+	 * Get an optional long value associated with a key, or the default if there is no such key or if
+	 * the value is not a number. If the value is a string, an attempt will be made to evaluate it as
+	 * a number.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @param defaultValue
-	 *            The default.
+	 *          The default.
 	 * @return An object which is the value.
 	 */
 	public long optLong(String key, long defaultValue) {
@@ -655,12 +635,11 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional string associated with a key. It returns an empty string
-	 * if there is no such key. If the value is not a string and is not null,
-	 * then it is converted to a string.
+	 * Get an optional string associated with a key. It returns an empty string if there is no such
+	 * key. If the value is not a string and is not null, then it is converted to a string.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @return A string which is the value.
 	 */
 	public String optString(String key) {
@@ -668,13 +647,13 @@ public class Node {
 	}
 
 	/**
-	 * Get an optional string associated with a key. It returns the defaultValue
-	 * if there is no such key.
+	 * Get an optional string associated with a key. It returns the defaultValue if there is no such
+	 * key.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @param defaultValue
-	 *            The default.
+	 *          The default.
 	 * @return A string which is the value.
 	 */
 	public String optString(String key, String defaultValue) {
@@ -686,12 +665,12 @@ public class Node {
 	 * Put a key/boolean pair in the Node.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @param value
-	 *            A boolean which is the value.
+	 *          A boolean which is the value.
 	 * @return this.
 	 * @throws RuntimeException
-	 *             If the key is null.
+	 *           If the key is null.
 	 */
 	public Node put(String key, boolean value) {
 		this.put(key, value ? Boolean.TRUE : Boolean.FALSE);
@@ -702,12 +681,12 @@ public class Node {
 	 * Put a key/double pair in the Node.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @param value
-	 *            A double which is the value.
+	 *          A double which is the value.
 	 * @return this.
 	 * @throws RuntimeException
-	 *             If the key is null or if the number is invalid.
+	 *           If the key is null or if the number is invalid.
 	 */
 	public Node put(String key, double value) {
 		this.put(key, new Double(value));
@@ -718,12 +697,12 @@ public class Node {
 	 * Put a key/int pair in the Node.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @param value
-	 *            An int which is the value.
+	 *          An int which is the value.
 	 * @return this.
 	 * @throws RuntimeException
-	 *             If the key is null.
+	 *           If the key is null.
 	 */
 	public Node put(String key, int value) {
 		this.put(key, new Integer(value));
@@ -734,12 +713,12 @@ public class Node {
 	 * Put a key/long pair in the Node.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @param value
-	 *            A long which is the value.
+	 *          A long which is the value.
 	 * @return this.
 	 * @throws RuntimeException
-	 *             If the key is null.
+	 *           If the key is null.
 	 */
 	public Node put(String key, long value) {
 		this.put(key, new Long(value));
@@ -747,18 +726,17 @@ public class Node {
 	}
 
 	/**
-	 * Put a key/value pair in the Node. If the value is null, then the key will
-	 * be removed from the Node if it is present.
+	 * Put a key/value pair in the Node. If the value is null, then the key will be removed from the
+	 * Node if it is present.
 	 * 
 	 * @param key
-	 *            A key string.
+	 *          A key string.
 	 * @param value
-	 *            An object which is the value. It should be of one of these
-	 *            types: Boolean, Double, Integer, JSONArray, Node, Long,
-	 *            String, or the Node.NULL object.
+	 *          An object which is the value. It should be of one of these types: Boolean, Double,
+	 *          Integer, JSONArray, Node, Long, String, or the Node.NULL object.
 	 * @return this.
 	 * @throws RuntimeException
-	 *             If the value is non-finite number or if the key is null.
+	 *           If the value is non-finite number or if the key is null.
 	 */
 	public Node put(String key, Object value) {
 		return putWithIndex(key, value, -1);
@@ -786,14 +764,14 @@ public class Node {
 	}
 
 	/**
-	 * Put a key/value pair in the Node, but only if the key and the value are
-	 * both non-null, and only if there is not already a member with that name.
+	 * Put a key/value pair in the Node, but only if the key and the value are both non-null, and only
+	 * if there is not already a member with that name.
 	 * 
 	 * @param key
 	 * @param value
 	 * @return his.
 	 * @throws RuntimeException
-	 *             if the key is a duplicate
+	 *           if the key is a duplicate
 	 */
 	public Node putOnce(String key, Object value) {
 		if (key != null && value != null) {
@@ -806,13 +784,12 @@ public class Node {
 	}
 
 	/**
-	 * Produce a string in double quotes with backslash sequences in all the
-	 * right places. A backslash will be inserted within </, producing <\/,
-	 * allowing JSON text to be delivered in HTML. In JSON text, a string cannot
-	 * contain a control character or an unescaped quote or backslash.
+	 * Produce a string in double quotes with backslash sequences in all the right places. A backslash
+	 * will be inserted within </, producing <\/, allowing JSON text to be delivered in HTML. In JSON
+	 * text, a string cannot contain a control character or an unescaped quote or backslash.
 	 * 
 	 * @param string
-	 *            A String
+	 *          A String
 	 * @return A String correctly formatted for insertion in a JSON text.
 	 */
 	public static String quote(String string) {
@@ -889,9 +866,8 @@ public class Node {
 	 * Remove a name and its value, if present.
 	 * 
 	 * @param key
-	 *            The name to be removed.
-	 * @return The value that was associated with the name, or null if there was
-	 *         no value.
+	 *          The name to be removed.
+	 * @return The value that was associated with the name, or null if there was no value.
 	 */
 	public Object remove(String key) {
 		this.key_order.remove(key);
@@ -899,11 +875,11 @@ public class Node {
 	}
 
 	/**
-	 * Try to convert a string into a number, boolean, or null. If the string
-	 * can't be converted, return the string.
+	 * Try to convert a string into a number, boolean, or null. If the string can't be converted,
+	 * return the string.
 	 * 
 	 * @param string
-	 *            A String.
+	 *          A String.
 	 * @return A simple JSON value.
 	 */
 	public static Object stringToValue(String string) {
@@ -922,15 +898,14 @@ public class Node {
 		}
 
 		/*
-		 * If it might be a number, try converting it. If a number cannot be
-		 * produced, then the value will just be a string.
+		 * If it might be a number, try converting it. If a number cannot be produced, then the value
+		 * will just be a string.
 		 */
 
 		char b = string.charAt(0);
 		if ((b >= '0' && b <= '9') || b == '-') {
 			try {
-				if (string.indexOf('.') > -1 || string.indexOf('e') > -1
-						|| string.indexOf('E') > -1) {
+				if (string.indexOf('.') > -1 || string.indexOf('e') > -1 || string.indexOf('E') > -1) {
 					d = Double.valueOf(string);
 					if (!d.isInfinite() && !d.isNaN()) {
 						return d;
@@ -955,9 +930,9 @@ public class Node {
 	 * Throw an exception if the object is a NaN or infinite number.
 	 * 
 	 * @param o
-	 *            The object to test.
+	 *          The object to test.
 	 * @throws RuntimeException
-	 *             If o is a non-finite number.
+	 *           If o is a non-finite number.
 	 */
 	public static void testValidity(Object o) {
 		if (o != null) {
@@ -974,16 +949,14 @@ public class Node {
 	}
 
 	/**
-	 * Make a JSON text of this Node. For compactness, no whitespace is added.
-	 * If this would not result in a syntactically correct JSON text, then null
-	 * will be returned instead.
+	 * Make a JSON text of this Node. For compactness, no whitespace is added. If this would not
+	 * result in a syntactically correct JSON text, then null will be returned instead.
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
 	 * 
-	 * @return a printable, displayable, portable, transmittable representation
-	 *         of the object, beginning with <code>{</code>&nbsp;<small>(left
-	 *         brace)</small> and ending with <code>}</code>&nbsp;<small>(right
-	 *         brace)</small>.
+	 * @return a printable, displayable, portable, transmittable representation of the object,
+	 *         beginning with <code>{</code>&nbsp;<small>(left brace)</small> and ending with
+	 *         <code>}</code>&nbsp;<small>(right brace)</small>.
 	 */
 	@Override
 	public String toString() {
@@ -1000,13 +973,12 @@ public class Node {
 	 * Warning: This method assumes that the data structure is acyclical.
 	 * 
 	 * @param indentFactor
-	 *            The number of spaces to add to each level of indentation.
-	 * @return a printable, displayable, portable, transmittable representation
-	 *         of the object, beginning with <code>{</code>&nbsp;<small>(left
-	 *         brace)</small> and ending with <code>}</code>&nbsp;<small>(right
-	 *         brace)</small>.
+	 *          The number of spaces to add to each level of indentation.
+	 * @return a printable, displayable, portable, transmittable representation of the object,
+	 *         beginning with <code>{</code>&nbsp;<small>(left brace)</small> and ending with
+	 *         <code>}</code>&nbsp;<small>(right brace)</small>.
 	 * @throws RuntimeException
-	 *             If the object contains an invalid number.
+	 *           If the object contains an invalid number.
 	 */
 	public String toString(int indentFactor) {
 		StringWriter w = new StringWriter();
@@ -1016,28 +988,24 @@ public class Node {
 	}
 
 	/**
-	 * Make a JSON text of an Object value. If the object has an
-	 * value.toJSONString() method, then that method will be used to produce the
-	 * JSON text. The method is required to produce a strictly conforming text.
-	 * If the object does not contain a toJSONString method (which is the most
-	 * common case), then a text will be produced by other means. If the value
-	 * is an array or Collection, then a JSONArray will be made from it and its
-	 * toJSONString method will be called. If the value is a MAP, then a Node
-	 * will be made from it and its toJSONString method will be called.
-	 * Otherwise, the value's toString method will be called, and the result
-	 * will be quoted.
+	 * Make a JSON text of an Object value. If the object has an value.toJSONString() method, then
+	 * that method will be used to produce the JSON text. The method is required to produce a strictly
+	 * conforming text. If the object does not contain a toJSONString method (which is the most common
+	 * case), then a text will be produced by other means. If the value is an array or Collection,
+	 * then a JSONArray will be made from it and its toJSONString method will be called. If the value
+	 * is a MAP, then a Node will be made from it and its toJSONString method will be called.
+	 * Otherwise, the value's toString method will be called, and the result will be quoted.
 	 * 
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
 	 * 
 	 * @param value
-	 *            The value to be serialized.
-	 * @return a printable, displayable, transmittable representation of the
-	 *         object, beginning with <code>{</code>&nbsp;<small>(left
-	 *         brace)</small> and ending with <code>}</code>&nbsp;<small>(right
-	 *         brace)</small>.
+	 *          The value to be serialized.
+	 * @return a printable, displayable, transmittable representation of the object, beginning with
+	 *         <code>{</code>&nbsp;<small>(left brace)</small> and ending with <code>}</code>
+	 *         &nbsp;<small>(right brace)</small>.
 	 * @throws RuntimeException
-	 *             If the value is or contains an invalid number.
+	 *           If the value is or contains an invalid number.
 	 */
 	public static String valueToString(Object value) {
 		if (value == null || value.equals(null)) {
@@ -1072,8 +1040,8 @@ public class Node {
 	}
 
 	/**
-	 * Write the contents of the Node as JSON text to a writer. For compactness,
-	 * no whitespace is added.
+	 * Write the contents of the Node as JSON text to a writer. For compactness, no whitespace is
+	 * added.
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
 	 * 
@@ -1173,14 +1141,12 @@ public class Node {
 				node = (Node) object;
 			} else {
 				node = new Node();
-				log.addChildAddedLogEntry(firstElement, path, path.getParent(), node, false, 0,
-						null, -1);
+				log.addChildAddedLogEntry(firstElement, path, path.getParent(), node, false, 0, null, -1);
 				put(firstElement, node);
 			}
 		} else {
 			node = new Node();
-			log.addChildAddedLogEntry(firstElement, path, path.getParent(), node, false, 0, null,
-					-1);
+			log.addChildAddedLogEntry(firstElement, path, path.getParent(), node, false, 0, null, -1);
 			put(firstElement, node);
 		}
 		if (path.isSimple()) {
@@ -1190,14 +1156,12 @@ public class Node {
 					node = (Node) object;
 				} else {
 					node = new Node();
-					log.addChildAddedLogEntry(firstElement, path, path.getParent(), node, false, 0,
-							null, -1);
+					log.addChildAddedLogEntry(firstElement, path, path.getParent(), node, false, 0, null, -1);
 					put(firstElement, node);
 				}
 			} else {
 				node = new Node();
-				log.addChildAddedLogEntry(firstElement, path, path.getParent(), node, false, 0,
-						null, -1);
+				log.addChildAddedLogEntry(firstElement, path, path.getParent(), node, false, 0, null, -1);
 				put(firstElement, node);
 			}
 			return node;
@@ -1287,4 +1251,20 @@ public class Node {
 		}
 	}
 
+	public void accept(Path path, NodeVisitor visitor) {
+		visitor.visitNode(path, this);
+		for (String key : keys()) {
+			Object value = get(key);
+			if (value instanceof Node) {
+				((Node) value).accept(path.append(key), visitor);
+			} else {
+				visitor.visitProperty(path, this, key, value);
+			}
+		}
+	}
+
+	public void clear() {
+		map.clear();
+		key_order.clear();
+	}
 }
