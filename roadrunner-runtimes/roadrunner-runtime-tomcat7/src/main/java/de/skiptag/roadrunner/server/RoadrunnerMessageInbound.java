@@ -24,7 +24,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements Roadrunn
 		this.roadrunner = roadrunner;
 		this.auth = auth;
 		this.endpoint = new RoadrunnerEndpoint(basePath, auth, this, roadrunner.getPersistence(),
-				roadrunner.getAuthorization());
+				roadrunner.getAuthorization(), roadrunner);
 		this.roadrunner.addEndpoint(endpoint);
 	}
 
@@ -40,6 +40,8 @@ public class RoadrunnerMessageInbound extends MessageInbound implements Roadrunn
 	@Override
 	protected void onClose(int status) {
 		super.onClose(status);
+		endpoint.setOpen(false);
+		endpoint.executeDisconnectEvents();
 		roadrunner.removeEndpoint(endpoint);
 	}
 

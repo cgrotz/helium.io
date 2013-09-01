@@ -1,13 +1,16 @@
 package de.skiptag.roadrunner.messaging;
 
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
+import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
@@ -26,60 +29,71 @@ import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 import de.skiptag.roadrunner.queries.QueryEvaluator;
 
 public class RoadrunnerEndpoint implements DataListener {
-	private static final String QUERY_CHILD_REMOVED = "query_child_removed";
+	private static final String				QUERY_CHILD_REMOVED	= "query_child_removed";
 
-	private static final String QUERY_CHILD_CHANGED = "query_child_changed";
+	private static final String				QUERY_CHILD_CHANGED	= "query_child_changed";
 
-	private static final String QUERY_CHILD_ADDED = "query_child_added";
+	private static final String				QUERY_CHILD_ADDED		= "query_child_added";
 
-	private static final String CHILD_REMOVED = "child_removed";
+	private static final String				CHILD_REMOVED				= "child_removed";
 
-	private static final String CHILD_MOVED = "child_moved";
+	private static final String				CHILD_MOVED					= "child_moved";
 
-	private static final String VALUE = "value";
+	private static final String				VALUE								= "value";
 
-	private static final String CHILD_CHANGED = "child_changed";
+	private static final String				CHILD_CHANGED				= "child_changed";
 
-	private static final String CHILD_ADDED = "child_added";
+	private static final String				CHILD_ADDED					= "child_added";
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(RoadrunnerEndpoint.class);
+	private static final Logger				LOGGER							= LoggerFactory
+																														.getLogger(RoadrunnerEndpoint.class);
 
-	private Multimap<String, String> attached_listeners = HashMultimap.create();
-	private RoadrunnerResponseSender sender;
-	private String basePath;
-	private Node auth;
-	private Authorization authorization;
-	private Persistence persistence;
-	private QueryEvaluator queryEvaluator;
+	private Multimap<String, String>	attached_listeners	= HashMultimap.create();
+	private RoadrunnerResponseSender	sender;
+	private String										basePath;
+	private Node											auth;
+	private Authorization							authorization;
+	private Persistence								persistence;
+	private QueryEvaluator						queryEvaluator;
+
+	private List<RoadrunnerEvent>			disconnectEvents		= Lists.newArrayList();
+
+	private Roadrunner								roadrunner;
+
+	private boolean										open								= true;
 
 	public RoadrunnerEndpoint(String basePath, Node auth,
 			RoadrunnerResponseSender roadrunnerResponseSender, Persistence persistence,
-			Authorization authorization) {
+			Authorization authorization, Roadrunner roadrunner) {
 		this.sender = roadrunnerResponseSender;
 		this.persistence = persistence;
 		this.authorization = authorization;
 		this.auth = auth;
 		this.basePath = basePath;
 		this.queryEvaluator = new QueryEvaluator();
+		this.roadrunner = roadrunner;
 	}
 
 	@Override
 	public void distribute(RoadrunnerEvent event) {
-		if (event.getType() == RoadrunnerEventType.EVENT) {
-			Node jsonObject;
-			Object object = event.get(RoadrunnerEvent.PAYLOAD);
-			if (object instanceof Node) {
-				jsonObject = event.getNode(RoadrunnerEvent.PAYLOAD);
-				distributeEvent(event.extractNodePath(), jsonObject);
-			} else if (object instanceof String) {
-				jsonObject = new Node(RoadrunnerEvent.PAYLOAD);
-				distributeEvent(event.extractNodePath(), new Node((String) object));
+		if (open) {
+			if (event.getType() == RoadrunnerEventType.EVENT) {
+				Node jsonObject;
+				Object object = event.get(RoadrunnerEvent.PAYLOAD);
+				if (object instanceof Node) {
+					jsonObject = event.getNode(RoadrunnerEvent.PAYLOAD);
+					distributeEvent(event.extractNodePath(), jsonObject);
+				} else if (object instanceof String) {
+					jsonObject = new Node(RoadrunnerEvent.PAYLOAD);
+					distributeEvent(event.extractNodePath(), new Node((String) object));
+				}
+			} else if (event.getType() == RoadrunnerEventType.ONDISCONNECT) {
+				// TODO: No need to distribute?
+			} else {
+				processQuery(event);
+				ChangeLog changeLog = event.getChangeLog();
+				distributeChangeLog(changeLog);
 			}
-		} else {
-			processQuery(event);
-
-			ChangeLog changeLog = event.getChangeLog();
-			distributeChangeLog(changeLog);
 		}
 	}
 
@@ -89,26 +103,23 @@ public class RoadrunnerEndpoint implements DataListener {
 				ChildAddedLogEvent logEvent = (ChildAddedLogEvent) logE;
 				if (hasListener(logEvent.getPath(), CHILD_ADDED)) {
 					fireChildAdded(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
-							logEvent.getValue(), logEvent.getHasChildren(),
-							logEvent.getNumChildren(), logEvent.getPrevChildName(),
-							logEvent.getPriority());
+							logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren(),
+							logEvent.getPrevChildName(), logEvent.getPriority());
 				}
 			}
 			if (logE instanceof ChildChangedLogEvent) {
 				ChildChangedLogEvent logEvent = (ChildChangedLogEvent) logE;
 				if (hasListener(logEvent.getPath(), CHILD_CHANGED)) {
 					fireChildChanged(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
-							logEvent.getValue(), logEvent.getHasChildren(),
-							logEvent.getNumChildren(), logEvent.getPrevChildName(),
-							logEvent.getPriority());
+							logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren(),
+							logEvent.getPrevChildName(), logEvent.getPriority());
 				}
 			}
 			if (logE instanceof ValueChangedLogEvent) {
 				ValueChangedLogEvent logEvent = (ValueChangedLogEvent) logE;
 				if (hasListener(logEvent.getPath(), VALUE)) {
 					fireValue(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
-							logEvent.getValue(), logEvent.getPrevChildName(),
-							logEvent.getPriority());
+							logEvent.getValue(), logEvent.getPrevChildName(), logEvent.getPriority());
 				}
 			}
 			if (logE instanceof ChildRemovedLogEvent) {
@@ -131,35 +142,32 @@ public class RoadrunnerEndpoint implements DataListener {
 				if (event.getPayload() != null) {
 					Node value = persistence.getNode(nodePath);
 					Node parent = persistence.getNode(nodePath.getParent());
-					boolean matches = queryEvaluator.evaluateQueryOnValue(value,
-							queryEntry.getValue());
-					boolean containsNode = queryEvaluator.queryContainsNode(
-							new Path(queryEntry.getKey()), queryEntry.getValue(), nodePath);
+					boolean matches = queryEvaluator.evaluateQueryOnValue(value, queryEntry.getValue());
+					boolean containsNode = queryEvaluator.queryContainsNode(new Path(queryEntry.getKey()),
+							queryEntry.getValue(), nodePath);
 
 					if (matches) {
 						if (!containsNode) {
 							fireQueryChildAdded(nodePath, parent, value);
-							queryEvaluator.addNodeToQuery(nodePath.getParent(),
-									queryEntry.getValue(), nodePath);
+							queryEvaluator.addNodeToQuery(nodePath.getParent(), queryEntry.getValue(), nodePath);
 						} else {
 							fireQueryChildChanged(nodePath, parent, value);
 						}
 					} else if (containsNode) {
 						fireQueryChildRemoved(nodePath, value);
-						queryEvaluator.removeNodeFromQuery(nodePath.getParent(),
-								queryEntry.getValue(), nodePath);
+						queryEvaluator.removeNodeFromQuery(nodePath.getParent(), queryEntry.getValue(),
+								nodePath);
 					}
 				} else {
 					fireQueryChildRemoved(nodePath, null);
-					queryEvaluator.removeNodeFromQuery(nodePath.getParent(), queryEntry.getValue(),
-							nodePath);
+					queryEvaluator.removeNodeFromQuery(nodePath.getParent(), queryEntry.getValue(), nodePath);
 				}
 			}
 		}
 	}
 
-	public void fireChildAdded(String name, Path path, Path parent, Object node,
-			boolean hasChildren, long numChildren, String prevChildName, int priority) {
+	public void fireChildAdded(String name, Path path, Path parent, Object node, boolean hasChildren,
+			long numChildren, String prevChildName, int priority) {
 		if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path,
 				new InMemoryDataSnapshot(node))) {
 			Node broadcast = new Node();
@@ -178,8 +186,8 @@ public class RoadrunnerEndpoint implements DataListener {
 	public void fireChildChanged(String name, Path path, Path parent, Object node,
 			boolean hasChildren, long numChildren, String prevChildName, int priority) {
 		if (node != null && node != Node.NULL) {
-			if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(),
-					path, new InMemoryDataSnapshot(node))) {
+			if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path,
+					new InMemoryDataSnapshot(node))) {
 				Node broadcast = new Node();
 				broadcast.put(RoadrunnerEvent.TYPE, CHILD_CHANGED);
 				broadcast.put("name", name);
@@ -248,8 +256,8 @@ public class RoadrunnerEndpoint implements DataListener {
 
 	public void fireQueryChildChanged(Path path, Node parent, Object value) {
 		if (value != null && value != Node.NULL) {
-			if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(),
-					path, new InMemoryDataSnapshot(value))) {
+			if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(), path,
+					new InMemoryDataSnapshot(value))) {
 				Node broadcast = new Node();
 				broadcast.put(RoadrunnerEvent.TYPE, QUERY_CHILD_CHANGED);
 				broadcast.put("name", path.getLastElement());
@@ -258,8 +266,7 @@ public class RoadrunnerEndpoint implements DataListener {
 				broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, value));
 				broadcast.put("hasChildren", InMemoryPersistence.hasChildren(value));
 				broadcast.put("numChildren", InMemoryPersistence.childCount(value));
-				broadcast.put("priority",
-						InMemoryPersistence.priority(parent, path.getLastElement()));
+				broadcast.put("priority", InMemoryPersistence.priority(parent, path.getLastElement()));
 				sender.send(broadcast.toString());
 			}
 		}
@@ -284,8 +291,8 @@ public class RoadrunnerEndpoint implements DataListener {
 
 			broadcast.put(RoadrunnerEvent.PATH, createPath(path));
 			broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
-			LOGGER.trace("Distributing Message (basePath: '" + basePath + "',path: '" + path
-					+ "') : " + broadcast.toString());
+			LOGGER.trace("Distributing Message (basePath: '" + basePath + "',path: '" + path + "') : "
+					+ broadcast.toString());
 			sender.send(broadcast.toString());
 		}
 	}
@@ -295,9 +302,8 @@ public class RoadrunnerEndpoint implements DataListener {
 			Node org = (Node) value;
 			Node node = new Node();
 			for (String key : org.keys()) {
-				if (authorization.isAuthorized(RoadrunnerOperation.READ, auth,
-						persistence.getRoot(), path.append(key),
-						new InMemoryDataSnapshot(org.get(key)))) {
+				if (authorization.isAuthorized(RoadrunnerOperation.READ, auth, persistence.getRoot(),
+						path.append(key), new InMemoryDataSnapshot(org.get(key)))) {
 					node.put(key, checkPayload(path.append(key), org.get(key)));
 				}
 			}
@@ -328,8 +334,12 @@ public class RoadrunnerEndpoint implements DataListener {
 	}
 
 	private boolean hasListener(Path path, String type) {
-		return attached_listeners.containsKey(path.toString())
-				&& attached_listeners.get(path.toString()).contains(type);
+		if (path.isEmtpy()) {
+			return attached_listeners.containsKey("/") && attached_listeners.get("/").contains(type);
+		} else {
+			return attached_listeners.containsKey(path.toString())
+					&& attached_listeners.get(path.toString()).contains(type);
+		}
 	}
 
 	public void addQuery(Path path, String query) {
@@ -342,5 +352,24 @@ public class RoadrunnerEndpoint implements DataListener {
 
 	public boolean hasQuery(Path path) {
 		return queryEvaluator.hasQuery(path);
+	}
+
+	public void registerDisconnectEvent(RoadrunnerEvent roadrunnerEvent) {
+		disconnectEvents.add(roadrunnerEvent.copy());
+	}
+
+	public void executeDisconnectEvents() {
+		for (RoadrunnerEvent event : disconnectEvents) {
+			event.put(RoadrunnerEvent.TYPE, event.get("handler"));
+			roadrunner.handle(this, event);
+		}
+	}
+
+	public boolean isOpen() {
+		return open;
+	}
+
+	public void setOpen(boolean open) {
+		this.open = open;
 	}
 }

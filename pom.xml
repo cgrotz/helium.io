@@ -38,10 +38,7 @@
 	<modules>
 		<module>roadrunner-core</module>
 		<module>roadrunner-common</module>
-		<module>roadrunner-servlet</module>
-    <module>roadrunner-standalone</module>
-		<module>roadrunner-netty</module>
-		<module>roadrunner-vertx</module>
+		<module>roadrunner-runtimes</module>
 		<module>roadrunner-client</module>
 		<module>roadrunner-examples</module>
 	</modules>
@@ -95,12 +92,27 @@
 			</dependency>
 			<dependency>
 				<groupId>de.skiptag.roadrunner</groupId>
-				<artifactId>roadrunner-servlet</artifactId>
+				<artifactId>roadrunner-client</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>de.skiptag.roadrunner</groupId>
-				<artifactId>roadrunner-netty</artifactId>
+				<artifactId>roadrunner-runtime-tomcat7</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.skiptag.roadrunner</groupId>
+				<artifactId>roadrunner-runtime-netty</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.skiptag.roadrunner</groupId>
+				<artifactId>roadrunner-runtime-vertx</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.skiptag.roadrunner</groupId>
+				<artifactId>roadrunner-runtime-standalone</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

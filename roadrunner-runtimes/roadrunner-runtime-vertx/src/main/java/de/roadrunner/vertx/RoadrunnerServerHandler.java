@@ -100,7 +100,7 @@ public class RoadrunnerServerHandler {
 						public void send(String string) {
 							socket.writeTextFrame(string);
 						}
-					}, roadrunner.getPersistence(), roadrunner.getAuthorization());
+					}, roadrunner.getPersistence(), roadrunner.getAuthorization(), roadrunner);
 			roadrunner.addEndpoint(endpoint);
 
 			socket.dataHandler(new Handler<Buffer>() {
@@ -119,6 +119,8 @@ public class RoadrunnerServerHandler {
 
 				@Override
 				public void handle(Void arg0) {
+					endpoint.setOpen(false);
+					endpoint.executeDisconnectEvents();
 					roadrunner.removeEndpoint(endpoint);
 				}
 			});

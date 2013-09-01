@@ -26,15 +26,15 @@ import de.skiptag.roadrunner.queries.QueryEvaluator;
 
 public class Roadrunner {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(Roadrunner.class);
+	private static final Logger			LOGGER		= LoggerFactory.getLogger(Roadrunner.class);
 
-	private InMemoryPersistence persistence;
+	private InMemoryPersistence			persistence;
 
-	private RoadrunnerDisruptor disruptor;
+	private RoadrunnerDisruptor			disruptor;
 
-	private RuleBasedAuthorization authorization;
+	private RuleBasedAuthorization	authorization;
 
-	private Set<RoadrunnerEndpoint> endpoints = Sets.newHashSet();
+	private Set<RoadrunnerEndpoint>	endpoints	= Sets.newHashSet();
 
 	public Roadrunner(String basePath, Node rule, File journalDirectory,
 			Optional<File> snapshotDirectory) throws IOException {
@@ -61,9 +61,8 @@ public class Roadrunner {
 		if (roadrunnerEvent.getType() == RoadrunnerEventType.ATTACH_QUERY) {
 			roadrunnerEventHandler.addQuery(roadrunnerEvent.extractNodePath(),
 					((Node) roadrunnerEvent.getPayload()).getString("query"));
-			persistence.syncPathWithQuery(roadrunnerEvent.extractNodePath(),
-					roadrunnerEventHandler, new QueryEvaluator(),
-					((Node) roadrunnerEvent.getPayload()).getString("query"));
+			persistence.syncPathWithQuery(roadrunnerEvent.extractNodePath(), roadrunnerEventHandler,
+					new QueryEvaluator(), ((Node) roadrunnerEvent.getPayload()).getString("query"));
 		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACH_QUERY) {
 			roadrunnerEventHandler.removeQuery(roadrunnerEvent.extractNodePath(),
 					((Node) roadrunnerEvent.getPayload()).getString("query"));
@@ -74,8 +73,7 @@ public class Roadrunner {
 			if ("child_added".equals(((Node) roadrunnerEvent.getPayload()).get("type"))) {
 				persistence.syncPath(roadrunnerEvent.extractNodePath(), roadrunnerEventHandler);
 			} else if ("value".equals(((Node) roadrunnerEvent.getPayload()).get("type"))) {
-				persistence.syncPropertyValue(roadrunnerEvent.extractNodePath(),
-						roadrunnerEventHandler);
+				persistence.syncPropertyValue(roadrunnerEvent.extractNodePath(), roadrunnerEventHandler);
 			}
 		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.DETACHED_LISTENER) {
 			roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath(),
@@ -83,6 +81,8 @@ public class Roadrunner {
 		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.EVENT) {
 			LOGGER.trace("Recevived Message: " + roadrunnerEvent.toString());
 			disruptor.getDistributor().distribute(roadrunnerEvent);
+		} else if (roadrunnerEvent.getType() == RoadrunnerEventType.ONDISCONNECT) {
+			roadrunnerEventHandler.registerDisconnectEvent(roadrunnerEvent);
 		} else {
 			roadrunnerEvent.setFromHistory(false);
 			disruptor.handleEvent(roadrunnerEvent);
@@ -107,14 +107,12 @@ public class Roadrunner {
 		URL uuid = Thread.currentThread().getContextClassLoader().getResource("uuid.js");
 		URL reconnectingwebsocket = Thread.currentThread().getContextClassLoader()
 				.getResource("reconnecting-websocket.min.js");
-		URL roadrunner = Thread.currentThread().getContextClassLoader()
-				.getResource("roadrunner.js");
+		URL roadrunner = Thread.currentThread().getContextClassLoader().getResource("roadrunner.js");
 
 		String uuidContent = com.google.common.io.Resources.toString(uuid, Charsets.UTF_8);
 		String reconnectingWebsocketContent = com.google.common.io.Resources.toString(
 				reconnectingwebsocket, Charsets.UTF_8);
-		String roadrunnerContent = com.google.common.io.Resources.toString(roadrunner,
-				Charsets.UTF_8);
+		String roadrunnerContent = com.google.common.io.Resources.toString(roadrunner, Charsets.UTF_8);
 
 		return uuidContent + "\r\n" + reconnectingWebsocketContent + "\r\n" + roadrunnerContent;
 	}

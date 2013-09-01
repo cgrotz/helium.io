@@ -2,12 +2,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>de.skiptag.roadrunner</groupId>
-		<artifactId>roadrunner</artifactId>
+		<artifactId>roadrunner-runtimes</artifactId>
 		<version>0.2-SNAPSHOT</version>
 	</parent>
-	<artifactId>roadrunner-servlet</artifactId>
+	<artifactId>roadrunner-runtime-tomcat7</artifactId>
 	<packaging>jar</packaging>
-	<name>Roadrunner Servlet</name>
+	<name>Roadrunner Runtime for Tomcat7</name>
 
 	<dependencies>
 		<dependency>

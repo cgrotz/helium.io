@@ -24,8 +24,10 @@ public class ChangeLog {
 
 	public void addChildChangedLogEntry(String name, Path path, Path parent, Object value,
 			boolean hasChildren, long numChildren, String prevChildName, int priority) {
-		log.add(new ChildChangedLogEvent(name, path, parent, value, numChildren, prevChildName,
-				priority));
+		if (name != null) {
+			log.add(new ChildChangedLogEvent(name, path, parent, value, numChildren, prevChildName,
+					priority));
+		}
 	}
 
 	public void addValueChangedLogEntry(String name, Path path, Path parent, Object value,

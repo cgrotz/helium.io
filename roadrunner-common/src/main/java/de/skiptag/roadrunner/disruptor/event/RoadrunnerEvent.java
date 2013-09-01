@@ -239,9 +239,17 @@ public class RoadrunnerEvent extends Node {
 	public static String extractPath(String url) {
 		String result = url;
 		if (url.startsWith("http://")) {
-			result = url.substring(url.indexOf("/", 7));
+			if (url.indexOf("/", 7) != -1) {
+				result = url.substring(url.indexOf("/", 7));
+			} else {
+				result = "";
+			}
 		} else if (url.startsWith("https://")) {
-			result = url.substring(url.indexOf("/", 8));
+			if (url.indexOf("/", 8) != -1) {
+				result = url.substring(url.indexOf("/", 8));
+			} else {
+				result = "";
+			}
 		}
 
 		return result.startsWith("/") ? result : "/" + result;
@@ -251,5 +259,9 @@ public class RoadrunnerEvent extends Node {
 	public void clear() {
 		super.clear();
 		getChangeLog().clear();
+	}
+
+	public RoadrunnerEvent copy() {
+		return new RoadrunnerEvent(toString());
 	}
 }

@@ -5,14 +5,14 @@
 		<artifactId>roadrunner</artifactId>
 		<version>0.2-SNAPSHOT</version>
 	</parent>
-	<groupId>de.skiptag.roadrunner.examples</groupId>
-	<artifactId>roadrunner-examples</artifactId>
+	<artifactId>roadrunner-runtimes</artifactId>
 	<packaging>pom</packaging>
-	<name>Roadrunner Examples</name>
+	<name>Roadrunner Runtimes</name>
 
 	<modules>
-		<module>roadrunner-example-drawing</module>
-		<module>roadrunner-example-todos</module>
-		<module>roadrunner-example-helpdesk</module>
+		<module>roadrunner-runtime-netty</module>
+		<module>roadrunner-runtime-vertx</module>
+		<module>roadrunner-runtime-tomcat7</module>
+		<module>roadrunner-runtime-standalone</module>
 	</modules>
 </project>

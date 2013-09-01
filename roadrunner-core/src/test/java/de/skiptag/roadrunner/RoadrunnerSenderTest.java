@@ -20,9 +20,9 @@ import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
  */
 public class RoadrunnerSenderTest {
 
-	private static final String BASE_PATH = "http://localhot:8080";
-	private RoadrunnerResponseSender sender;
-	private RoadrunnerEndpoint endpoint;
+	private static final String				BASE_PATH	= "http://localhot:8080";
+	private RoadrunnerResponseSender	sender;
+	private RoadrunnerEndpoint				endpoint;
 
 	/**
 	 * @throws java.lang.Exception
@@ -30,9 +30,9 @@ public class RoadrunnerSenderTest {
 	@Before
 	public void setUp() throws Exception {
 		this.sender = Mockito.mock(RoadrunnerResponseSender.class);
-		this.endpoint = new RoadrunnerEndpoint(BASE_PATH, new Node(), sender,
-				new InMemoryPersistence(new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE),
-						new Roadrunner(BASE_PATH)), new RuleBasedAuthorization(new Node()));
+		this.endpoint = new RoadrunnerEndpoint(BASE_PATH, new Node(), sender, new InMemoryPersistence(
+				new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE), new Roadrunner(BASE_PATH)),
+				new RuleBasedAuthorization(new Node()), null);
 	}
 
 	// @Test

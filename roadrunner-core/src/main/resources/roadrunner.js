@@ -72,15 +72,22 @@ function RoadrunnerConnection(url) {
 		}
 		roadrunner_endpoint = new ReconnectingWebSocket(wsurl);
 		roadrunner_endpoint.messages = [];
+		roadrunner_endpoint.connectionHandlers = [];
 		roadrunner_endpoint.onopen = function(event) {
 			console.debug("Connection established resyncing");
 			for ( var i = 0; i < this.messages.length; i++) {
 				roadrunner_endpoint.send(stringify(this.messages[i]));
 			}
 			this.messages = [];
+			for ( var i = 0; i < this.connectionHandlers.length; i++) {
+				this.connectionHandlers[i](true);
+			}
 		};
 		roadrunner_endpoint.onclose = function(event) {
 			console.debug("Connection lost trying reconnecting");
+			for ( var i = 0; i < this.connectionHandlers.length; i++) {
+				this.connectionHandlers[i](false);
+			}
 		};
 
 		roadrunner_endpoint.eventhandlers = [];
@@ -102,6 +109,17 @@ function RoadrunnerConnection(url) {
 			self.handleMessage(message);
 		}
 	});
+	this.connectionHandler = function(connectionHandler) {
+		roadrunner_endpoint.connectionHandlers.push(connectionHandler);
+	};
+	this.send = function(message) {
+		console.debug('Sending Message to Server: ', message);
+		if (roadrunner_endpoint.readyState == window.WebSocket.OPEN) {
+			roadrunner_endpoint.send(stringify(message));
+		} else {
+			roadrunner_endpoint.messages.push(message);
+		}
+	};
 
 	this.sendMessage = function(type, path, payload, name) {
 		var message = {
@@ -153,6 +171,72 @@ function RoadrunnerConnection(url) {
 			messages.push(message);
 		}
 	};
+}
+
+function RoadrunnerOnDisconnect(path, con)
+{
+	var self = this;
+	self.con = con;
+	self.path = path;
+	
+	this.push = function(payload) {
+		var name = UUID.generate();
+		var message = {
+			type: 'onDisconnect',
+			handler: 'push',
+			name: name,
+			path: self.path,
+			payload: payload
+		};
+		self.con.send(message);
+	};
+
+	this.set = function(payload) {
+		var message = {
+			type: 'onDisconnect',
+			handler: 'set',
+			path: self.path,
+			payload: payload
+		};
+		self.con.send(message);
+	};
+
+	this.update = function(payload) {
+		var message = {
+			type: 'onDisconnect',
+			handler: 'update',
+			path: self.path,
+			payload: payload
+		};
+		self.con.send(message);
+	};
+
+	this.setWithPriority = function(payload, priority) {
+		var message = {
+			type: 'onDisconnect',
+			handler: 'set',
+			path: self.path,
+			payload: payload,
+			priority: priority
+		};
+		self.con.send(message);
+	};
+	this.remove = function() {
+		var message = {
+			type: 'onDisconnect',
+			handler: 'remove',
+			path: self.path
+		};
+		self.con.send(message);
+	};
+}
+
+function RoadrunnerOnlineSwitch(path, connectionHandler) {
+	var con = new RoadrunnerConnection(path);
+	con.handleMessage = function(message) {
+		
+	};
+	con.connectionHandler(connectionHandler);
 }
 
 function Roadrunner(path) {
@@ -221,14 +305,14 @@ function Roadrunner(path) {
 		});
 	};
 
+	this.send = function(data) {
+		roadrunner_connection.sendMessage('event', path, data, null);
+	};
+
 	this.push = function(data) {
 		var name = UUID.generate();
 		roadrunner_connection.sendMessage('push', path, data, name);
 		return new Roadrunner(path + "/" + name);
-	};
-
-	this.send = function(data) {
-		roadrunner_connection.sendMessage('event', path, data, null);
 	};
 
 	this.set = function(data) {
@@ -282,5 +366,9 @@ function Roadrunner(path) {
 
 	this.ref = function() {
 		return self;
+	};
+	
+	this.onDisconnect = function() {
+		return new RoadrunnerOnDisconnect(path,roadrunner_connection);
 	};
 };
