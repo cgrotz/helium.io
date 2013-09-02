@@ -18,11 +18,18 @@ import org.slf4j.LoggerFactory;
 
 import de.skiptag.roadrunner.queries.QueryEvaluator;
 
+/**
+ * 
+ * With security manager secured ScriptingEnvironment
+ * 
+ * @author Christoph Grotz
+ * 
+ */
 public class SandboxedScriptingEnvironment {
-	private static final Logger LOGGER = LoggerFactory.getLogger(QueryEvaluator.class);
-	private ScriptEngineManager mgr = new ScriptEngineManager();
-	private ScriptEngine engine = mgr.getEngineByName("JavaScript");
-	private AccessControlContext accessControlContext;
+	private static final Logger		LOGGER	= LoggerFactory.getLogger(QueryEvaluator.class);
+	private ScriptEngineManager		mgr			= new ScriptEngineManager();
+	private ScriptEngine					engine	= mgr.getEngineByName("JavaScript");
+	private AccessControlContext	accessControlContext;
 
 	public SandboxedScriptingEnvironment() {
 		Permissions perms = new Permissions();

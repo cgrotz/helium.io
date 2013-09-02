@@ -6,17 +6,8 @@ import com.google.common.base.Strings;
 
 /**
  * 
- * Representation of a Java based Roadrunner Path Path scheme:
- * /<element1>/<element2>
+ * Representation of a Java based Roadrunner Path Path scheme: /<element1>/<element2>
  * 
- * @author Christoph Grotz
- * 
- */
-/**
- * @author Christoph Grotz
- * 
- */
-/**
  * @author Christoph Grotz
  * 
  */
