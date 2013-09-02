@@ -102,11 +102,6 @@
 			</dependency>
 			<dependency>
 				<groupId>de.skiptag.roadrunner</groupId>
-				<artifactId>roadrunner-runtime-netty</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>de.skiptag.roadrunner</groupId>
 				<artifactId>roadrunner-runtime-vertx</artifactId>
 				<version>${project.version}</version>
 			</dependency>

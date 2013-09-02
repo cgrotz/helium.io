@@ -10,7 +10,6 @@
 	<name>Roadrunner Runtimes</name>
 
 	<modules>
-		<module>roadrunner-runtime-netty</module>
 		<module>roadrunner-runtime-vertx</module>
 		<module>roadrunner-runtime-tomcat7</module>
 		<module>roadrunner-runtime-standalone</module>
