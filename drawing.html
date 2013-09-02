@@ -14,6 +14,18 @@
 
     <!-- Custom styles for this template -->
     <link href="css/roadrunner.css" rel="stylesheet">
+    <link href="codemirror/lib/codemirror.css" rel="stylesheet">
+    <script src="codemirror/lib/codemirror.js"></script>
+  <link rel="stylesheet" href="codemirror/addon/hint/show-hint.css">
+  <script src="codemirror/lib/codemirror.js"></script>
+  <script src="codemirror/addon/hint/show-hint.js"></script>
+  <script src="codemirror/addon/hint/xml-hint.js"></script>
+  <script src="codemirror/addon/hint/html-hint.js"></script>
+  <script src="codemirror/mode/xml/xml.js"></script>
+  <script src="codemirror/mode/javascript/javascript.js"></script>
+  <script src="codemirror/mode/css/css.js"></script>
+  <script src="codemirror/mode/htmlmixed/htmlmixed.js"></script>
+    <link href="css/drawing.css" rel="stylesheet">
   </head>
 
   <body>
@@ -28,13 +40,13 @@
         <a class="navbar-brand" href="#">Roadrunner</a>
         <div class="nav-collapse collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
+            <li><a href="index.html">Home</a></li>
           <li><a href="howItWorks.html">How It Works</a></li> 
-          <li class="dropdown">
+          <li class="active dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tutorial <b class="caret"></b></a>
             <ul class="dropdown-menu">
               <li><a href="tutorial.html">Tutorial</a></li>
-              <li><a href="drawing.html">Drawing</a></li>
+              <li class="active"><a href="#">Drawing</a></li>
               <li><a href="presence.html">Presence</a></li>
             </ul>
           </li>
@@ -45,47 +57,21 @@
     </div>
 
     <div class="container">
-      <div id="logo" style="text-align: center; padding-bottom: 20px;">
-        <a href="https://github.com/skiptag/roadrunner"><img src="images/roadrunner_512.png" border="0" style="max-width:512px;width:60%;"></a>
-      </div>
-      <div class="row centered" style="text-align: center;">
-        <h2>Real-time backend for the web</h2>
-      </div>
-      <div class="row centered" >
-        <div class="col-lg-4 box">
-          <p class="boxtitle">
-            <img src="images/icons/octocat50x50.png">
-            <strong >Github</strong>
-          </p>
-          <p class="description">
-            <a href="https://github.com/skiptag/roadrunner">roadrunner</a> repository is open for contribution and evaluation. Please support us with your contribution!
-          </p>
+     <div>
+      <h1>Play with Roadrunner</h1>
+      <p>You can edit and run your app below.</p>
+      <div class="row">
+         <div class="btn-group">
+          <div id="edit" class="btn btn-primary">Edit</div>
+          <div id="play" class="btn btn-success">Play</div>
         </div>
-      
-        <div class="col-lg-4 box">
-          <p class="boxtitle">
-            <img src="images/icons/googlegroups50x50.png">
-            <strong >dev mailing list</strong>
-          </p>
-          <p>Subscribe our <a href="http://groups.google.com/group/roadrunner-dev">mailing list</a> and join us for technical discussions and suggestions. We appreciate feedback very much.</p>
+       </div>
+        <div class="row play">
         </div>
-      
-        <div class="col-lg-4 box">
-          <p class="boxtitle">
-            <img src="images/icons/cloudbees101x50.png">
-            <strong >CloudBees</strong>
-          </p>
-          <p>Our <a href="http://skiptag.ci.cloudbees.com">continuous integration (CI) server</a> is hosted by <a href="http://www.cloudbees.com/">CloudBees</a>, a nice cloud-hosted version of the Jenkins tooling to spare as a lot of manual work.</p>
+        <div class="row edit">
         </div>
-      
-      </div>
-      <footer>
-        <p>
-          <b>©skiptag.de 2013</b>
-        </p>
-      </footer>
     </div>
-
+  </div>
     <!-- JavaScript plugins (requires jQuery) -->
     <script src="http://code.jquery.com/jquery.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
@@ -93,6 +79,6 @@
 
     <!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
     <script src="js/respond.min.js"></script>
-
+    <script src="js/drawing.js"></script>
   </body>
 </html>
