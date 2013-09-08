@@ -23,12 +23,12 @@ import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 
 import de.skiptag.roadrunner.authorization.Authorization;
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventTranslator;
 import de.skiptag.roadrunner.disruptor.processor.authorization.AuthorizationProcessor;
 import de.skiptag.roadrunner.disruptor.processor.distribution.DistributionProcessor;
 import de.skiptag.roadrunner.disruptor.processor.eventsourcing.EventSourceProcessor;
 import de.skiptag.roadrunner.disruptor.processor.persistence.PersistenceProcessor;
+import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Persistence;

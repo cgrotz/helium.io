@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Sets;
 import com.lmax.disruptor.EventHandler;
 
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.messaging.DataListener;
 
 public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {

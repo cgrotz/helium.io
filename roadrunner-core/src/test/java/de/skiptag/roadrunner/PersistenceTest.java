@@ -6,9 +6,9 @@ import org.junit.Test;
 
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
-import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
+import de.skiptag.roadrunner.common.Path;
+import de.skiptag.roadrunner.event.changelog.ChangeLog;
 import de.skiptag.roadrunner.json.Node;
-import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
 public class PersistenceTest {

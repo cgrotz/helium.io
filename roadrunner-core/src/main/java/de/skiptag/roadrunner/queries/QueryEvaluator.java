@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import de.skiptag.roadrunner.common.Path;
 import de.skiptag.roadrunner.json.Node;
-import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.scripting.SandboxedScriptingEnvironment;
 
 /**

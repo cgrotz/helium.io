@@ -18,7 +18,7 @@ import com.google.common.base.Preconditions;
 import com.lmax.disruptor.EventHandler;
 
 import de.skiptag.roadrunner.disruptor.RoadrunnerDisruptor;
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.event.RoadrunnerEvent;
 
 public class EventSourceProcessor implements EventHandler<RoadrunnerEvent> {
     private static final Logger logger = LoggerFactory.getLogger(EventSourceProcessor.class);

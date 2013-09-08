@@ -1,10 +1,10 @@
-package de.skiptag.roadrunner.disruptor.event.changelog;
+package de.skiptag.roadrunner.event.changelog;
 
 import com.google.common.base.Objects;
 
-import de.skiptag.roadrunner.persistence.Path;
+import de.skiptag.roadrunner.common.Path;
 
-public class ChildAddedLogEvent implements ChangeLogEvent {
+public class ChildChangedLogEvent implements ChangeLogEvent {
 	private String name;
 	private Path path;
 	private Path parent;
@@ -13,8 +13,8 @@ public class ChildAddedLogEvent implements ChangeLogEvent {
 	private int priority;
 	private long numChildren;
 
-	public ChildAddedLogEvent(String name, Path path, Path parent, Object value, long numChildren,
-			String prevChildName, int priority) {
+	public ChildChangedLogEvent(String name, Path path, Path parent, Object value,
+			long numChildren, String prevChildName, int priority) {
 		this.name = name;
 		this.path = path;
 		this.parent = parent;
@@ -62,4 +62,5 @@ public class ChildAddedLogEvent implements ChangeLogEvent {
 				.add("parent", parent).add("value", value).add("prevChildName", prevChildName)
 				.add("priority", priority).add("numChildren", numChildren).toString();
 	}
+
 }

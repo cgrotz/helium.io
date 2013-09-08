@@ -1,8 +1,8 @@
 package de.skiptag.roadrunner.authorization;
 
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
+import de.skiptag.roadrunner.common.Path;
 import de.skiptag.roadrunner.json.Node;
-import de.skiptag.roadrunner.persistence.Path;
 
 public interface Authorization {
 	public static final Node ALL_ACCESS_RULE = new Node(

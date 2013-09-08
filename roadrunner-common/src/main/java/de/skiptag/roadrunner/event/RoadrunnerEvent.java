@@ -1,11 +1,11 @@
-package de.skiptag.roadrunner.disruptor.event;
+package de.skiptag.roadrunner.event;
 
 import com.google.common.base.Optional;
 
-import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
+import de.skiptag.roadrunner.common.Path;
+import de.skiptag.roadrunner.event.changelog.ChangeLog;
 import de.skiptag.roadrunner.json.JSONTokener;
 import de.skiptag.roadrunner.json.Node;
-import de.skiptag.roadrunner.persistence.Path;
 
 /**
  * 

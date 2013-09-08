@@ -1,7 +1,8 @@
 package de.skiptag.roadrunner.persistence;
 
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
-import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
+import de.skiptag.roadrunner.common.Path;
+import de.skiptag.roadrunner.event.changelog.ChangeLog;
 import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 

@@ -37,10 +37,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import de.skiptag.roadrunner.disruptor.event.builder.RoadrunnerEventBuilder;
-import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
-import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
-import de.skiptag.roadrunner.persistence.Path;
+import de.skiptag.roadrunner.common.Path;
+import de.skiptag.roadrunner.event.builder.RoadrunnerEventBuilder;
+import de.skiptag.roadrunner.event.changelog.ChangeLog;
+import de.skiptag.roadrunner.event.changelog.ChangeLogBuilder;
 
 /**
  * A Node is an unordered collection of name/value pairs. Its external form is a string wrapped in

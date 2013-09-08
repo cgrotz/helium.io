@@ -1,8 +1,8 @@
 package de.skiptag.roadrunner.authorization.rulebased;
 
 import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
+import de.skiptag.roadrunner.common.Path;
 import de.skiptag.roadrunner.json.Node;
-import de.skiptag.roadrunner.persistence.Path;
 
 public class RuleBasedAuthorizator {
 

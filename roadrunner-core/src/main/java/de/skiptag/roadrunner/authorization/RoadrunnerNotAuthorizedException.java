@@ -1,6 +1,6 @@
 package de.skiptag.roadrunner.authorization;
 
-import de.skiptag.roadrunner.persistence.Path;
+import de.skiptag.roadrunner.common.Path;
 
 public class RoadrunnerNotAuthorizedException extends RuntimeException {
 

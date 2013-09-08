@@ -31,10 +31,10 @@ import com.google.common.base.Strings;
 import com.google.common.io.CharStreams;
 
 import de.skiptag.roadrunner.Roadrunner;
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
+import de.skiptag.roadrunner.common.Path;
+import de.skiptag.roadrunner.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.json.Node;
-import de.skiptag.roadrunner.persistence.Path;
 
 /**
  * Servlet implementation class ChatServlet

@@ -6,11 +6,11 @@ import org.junit.Test;
 
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
-import de.skiptag.roadrunner.disruptor.event.builder.RoadrunnerEventBuilder;
+import de.skiptag.roadrunner.common.Path;
 import de.skiptag.roadrunner.disruptor.processor.persistence.PersistenceProcessor;
-import de.skiptag.roadrunner.persistence.Path;
+import de.skiptag.roadrunner.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.event.RoadrunnerEventType;
+import de.skiptag.roadrunner.event.builder.RoadrunnerEventBuilder;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
 public class PersistenceProcessorTest {

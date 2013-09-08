@@ -1,8 +1,8 @@
-package de.skiptag.roadrunner.disruptor.event.changelog;
+package de.skiptag.roadrunner.event.changelog;
 
 import com.google.common.base.Objects;
 
-import de.skiptag.roadrunner.persistence.Path;
+import de.skiptag.roadrunner.common.Path;
 
 public class ValueChangedLogEvent implements ChangeLogEvent {
 	private String	name;

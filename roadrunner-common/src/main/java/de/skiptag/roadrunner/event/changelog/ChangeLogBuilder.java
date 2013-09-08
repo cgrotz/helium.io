@@ -1,7 +1,7 @@
-package de.skiptag.roadrunner.disruptor.event.changelog;
+package de.skiptag.roadrunner.event.changelog;
 
+import de.skiptag.roadrunner.common.Path;
 import de.skiptag.roadrunner.json.Node;
-import de.skiptag.roadrunner.persistence.Path;
 
 public class ChangeLogBuilder {
 	private Node node;

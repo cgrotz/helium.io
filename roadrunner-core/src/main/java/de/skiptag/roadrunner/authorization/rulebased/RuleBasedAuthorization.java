@@ -3,9 +3,9 @@ package de.skiptag.roadrunner.authorization.rulebased;
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.RoadrunnerNotAuthorizedException;
 import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.common.Path;
+import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.json.Node;
-import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.scripting.SandboxedScriptingEnvironment;
 
 public class RuleBasedAuthorization implements Authorization {

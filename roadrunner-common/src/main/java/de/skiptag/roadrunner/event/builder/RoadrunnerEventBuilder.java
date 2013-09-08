@@ -1,9 +1,9 @@
-package de.skiptag.roadrunner.disruptor.event.builder;
+package de.skiptag.roadrunner.event.builder;
 
 import java.util.Date;
 
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventType;
+import de.skiptag.roadrunner.event.RoadrunnerEvent;
+import de.skiptag.roadrunner.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.json.Node;
 
 public class RoadrunnerEventBuilder {

@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.persistence;
+package de.skiptag.roadrunner.common;
 
 import java.util.Objects;
 

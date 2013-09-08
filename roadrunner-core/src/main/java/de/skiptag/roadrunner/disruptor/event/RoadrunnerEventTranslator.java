@@ -2,6 +2,8 @@ package de.skiptag.roadrunner.disruptor.event;
 
 import com.lmax.disruptor.EventTranslator;
 
+import de.skiptag.roadrunner.event.RoadrunnerEvent;
+
 public class RoadrunnerEventTranslator implements EventTranslator<RoadrunnerEvent> {
 	private RoadrunnerEvent	roadrunnerEvent;
 	private long						sequence;

@@ -1,10 +1,10 @@
-package de.skiptag.roadrunner.disruptor.event.changelog;
+package de.skiptag.roadrunner.event.changelog;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import de.skiptag.roadrunner.persistence.Path;
+import de.skiptag.roadrunner.common.Path;
 
 public class ChangeLog {
 	private List<ChangeLogEvent>	log	= Lists.newArrayList();

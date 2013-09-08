@@ -2,12 +2,12 @@ package de.skiptag.roadrunner.disruptor.processor.persistence;
 
 import com.lmax.disruptor.EventHandler;
 
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.disruptor.processor.persistence.actions.PushAction;
 import de.skiptag.roadrunner.disruptor.processor.persistence.actions.RemoveAction;
 import de.skiptag.roadrunner.disruptor.processor.persistence.actions.SetAction;
 import de.skiptag.roadrunner.disruptor.processor.persistence.actions.SetPriorityAction;
 import de.skiptag.roadrunner.disruptor.processor.persistence.actions.UpdateAction;
+import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.persistence.Persistence;
 
 public class PersistenceProcessor implements EventHandler<RoadrunnerEvent> {

@@ -2,7 +2,7 @@ package de.skiptag.roadrunner.queries;
 
 import com.google.common.base.Objects;
 
-import de.skiptag.roadrunner.persistence.Path;
+import de.skiptag.roadrunner.common.Path;
 
 public class QueryEntry {
 

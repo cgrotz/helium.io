@@ -7,12 +7,12 @@ import de.skiptag.roadrunner.Roadrunner;
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
-import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLog;
-import de.skiptag.roadrunner.disruptor.event.changelog.ChangeLogBuilder;
+import de.skiptag.roadrunner.common.Path;
+import de.skiptag.roadrunner.event.changelog.ChangeLog;
+import de.skiptag.roadrunner.event.changelog.ChangeLogBuilder;
 import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.json.NodeVisitor;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
-import de.skiptag.roadrunner.persistence.Path;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.queries.QueryEvaluator;
 

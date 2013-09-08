@@ -1,6 +1,6 @@
 package de.skiptag.roadrunner.json;
 
-import de.skiptag.roadrunner.persistence.Path;
+import de.skiptag.roadrunner.common.Path;
 
 public interface NodeVisitor {
 	public void visitNode(Path path, Node node);
