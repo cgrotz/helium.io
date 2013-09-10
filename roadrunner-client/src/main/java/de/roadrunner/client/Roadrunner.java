@@ -16,11 +16,11 @@ import de.skiptag.roadrunner.json.Node;
 
 public class Roadrunner {
 
-	protected WebSocket ws;
-	private String path;
-	private Multimap<Tuple<String, String>, RoadrunnerCallback> callbacks = ArrayListMultimap
-			.create();
-	private Set<String> msgCache = Sets.newHashSet();
+	protected WebSocket																					ws;
+	private String																							path;
+	private Multimap<Tuple<String, String>, RoadrunnerCallback>	callbacks	= ArrayListMultimap
+																																						.create();
+	private Set<String>																					msgCache	= Sets.newHashSet();
 
 	public Roadrunner(String path) {
 		this.path = Preconditions.checkNotNull(path);
@@ -42,12 +42,14 @@ public class Roadrunner {
 	}
 
 	public void handleEvent(Node event) {
-		String type = event.getString("type");
-		String path = event.getString("path");
-		Tuple<String, String> tuple = new Tuple<String, String>(type, path);
-		for (RoadrunnerCallback callback : callbacks.get(tuple)) {
-			DataSnapshot snapshot = new DataSnapshot(event);
-			callback.handle(snapshot, null);
+		if (!"rpc".equalsIgnoreCase(event.getString("type"))) {
+			String type = event.getString("type");
+			String path = event.getString("path");
+			Tuple<String, String> tuple = new Tuple<String, String>(type, path);
+			for (RoadrunnerCallback callback : callbacks.get(tuple)) {
+				DataSnapshot snapshot = new DataSnapshot(event);
+				callback.handle(snapshot, null);
+			}
 		}
 	}
 
@@ -68,6 +70,14 @@ public class Roadrunner {
 		send(node.toString());
 	}
 
+	private void sendRpc(String method, Node args) {
+		Node node = new Node();
+		node.put("id", UUID.randomUUID().toString());
+		node.put("method", method);
+		node.put("args", args);
+		send(node.toString());
+	}
+
 	public Roadrunner child(String child) {
 		Preconditions.checkNotNull(child);
 		return new Roadrunner(path + "/" + child);
@@ -79,38 +89,34 @@ public class Roadrunner {
 
 	public Roadrunner push(Object value) {
 		String name = UUID.randomUUID().toString();
-		send("push", value, name);
+		sendRpc("push", new Node().put("path", path).put("name", name).put("data", value));
 		return new Roadrunner(path + "/" + name);
 	}
 
 	public void set(Object data) {
-		send("set", data, null);
+		sendRpc("set", new Node().put("path", path).put("data", data));
 	}
 
 	public void set(String name, Object data) {
-		send("set", data, name);
+		sendRpc("set", new Node().put("path", path).put("name", name).put("data", data));
 	}
 
 	public void update(Object data) {
-		send("update", data, null);
+		sendRpc("update", new Node().put("path", path).put("data", data));
 	}
 
 	public void on(String event_type, RoadrunnerCallback callback) {
 		callbacks.put(new Tuple<String, String>(event_type, path), callback);
-		Node node = new Node();
-		node.put("type", event_type);
-		send("attached_listener", node, null);
+		sendRpc("attachListener", new Node().put("path", path).put("event_type", event_type));
 	}
 
 	public void off(String event_type, RoadrunnerCallback callback) {
 		callbacks.remove(event_type, callback);
-		Node node = new Node();
-		node.put("type", event_type);
-		send("detached_listener", node, null);
+		sendRpc("detachListener", new Node().put("path", path).put("event_type", event_type));
 	}
 
 	public static void main(String args[]) {
-		Roadrunner ref = new Roadrunner("http://localhost:8080/roadrunner/repo/drawing/points");
+		Roadrunner ref = new Roadrunner("http://localhost:8080/drawing/points");
 		RoadrunnerCallback callback = new RoadrunnerCallback() {
 			@Override
 			public void handle(DataSnapshot data, String prevChildName) {
