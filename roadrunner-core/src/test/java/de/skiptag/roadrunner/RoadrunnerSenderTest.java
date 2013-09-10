@@ -11,7 +11,7 @@ import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
 import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
-import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
+import de.skiptag.roadrunner.messaging.RoadrunnerSocket;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 
 /**
@@ -21,7 +21,7 @@ import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 public class RoadrunnerSenderTest {
 
 	private static final String				BASE_PATH	= "http://localhot:8080";
-	private RoadrunnerResponseSender	sender;
+	private RoadrunnerSocket	sender;
 	private RoadrunnerEndpoint				endpoint;
 
 	/**
@@ -29,7 +29,7 @@ public class RoadrunnerSenderTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		this.sender = Mockito.mock(RoadrunnerResponseSender.class);
+		this.sender = Mockito.mock(RoadrunnerSocket.class);
 		this.endpoint = new RoadrunnerEndpoint(BASE_PATH, new Node(), sender, new InMemoryPersistence(
 				new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE), new Roadrunner(BASE_PATH)),
 				new RuleBasedAuthorization(new Node()), null);

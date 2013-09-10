@@ -9,12 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.skiptag.roadrunner.Roadrunner;
+import de.skiptag.roadrunner.common.Path;
 import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
-import de.skiptag.roadrunner.messaging.RoadrunnerResponseSender;
+import de.skiptag.roadrunner.messaging.RoadrunnerSocket;
 
-public class RoadrunnerMessageInbound extends MessageInbound implements RoadrunnerResponseSender {
+public class RoadrunnerMessageInbound extends MessageInbound implements RoadrunnerSocket {
 	private static final Logger	logger	= LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
 	private Roadrunner					roadrunner;
 	private RoadrunnerEndpoint	endpoint;
@@ -48,9 +49,7 @@ public class RoadrunnerMessageInbound extends MessageInbound implements Roadrunn
 	@Override()
 	protected void onTextMessage(CharBuffer message) throws IOException {
 		String msg = message.toString();
-		RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(msg);
-		roadrunnerEvent.put(RoadrunnerEvent.AUTH, auth);
-		roadrunner.handle(endpoint, roadrunnerEvent);
+		endpoint.handle(msg, new Node());
 	}
 
 	@Override
@@ -61,5 +60,17 @@ public class RoadrunnerMessageInbound extends MessageInbound implements Roadrunn
 		} catch (IOException e) {
 			logger.error("Error sending message", e);
 		}
+	}
+
+	@Override
+	public void distribute(RoadrunnerEvent event) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void distributeEvent(Path path, Node payload) {
+		// TODO Auto-generated method stub
+
 	}
 }

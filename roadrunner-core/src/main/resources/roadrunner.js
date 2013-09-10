@@ -14,6 +14,13 @@ var stringify = function(obj, prop) {
 	});
 	return json;
 };
+
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
 	
 (function(window) {
 	var Snapshot = (function() {
@@ -60,131 +67,95 @@ var stringify = function(obj, prop) {
 		return Snapshot;
 	})();
 
-	var RoadrunnerConnection = (function() {
-		function RoadrunnerConnection(url) {
-			this.url = url;
-			this.messageHandlers = [];
-			if (window.roadrunnerEndpoint == null) {
-				var wsurl;
-				if (url.indexOf("http://") == 0) {
-					wsurl = url.replace('http://', 'ws://');
-				} else if (url.indexOf("https://") == 0) {
-					wsurl = url.replace('https://', 'wss://');
-				} else {
-					throw "Illegal URL Schema";
-				}
-				var endpoint = new ReconnectingWebSocket(wsurl);
-				endpoint.messages = [];
-				endpoint.connectionHandlers = [];
-				endpoint.onopen = function(event) {
-					console.debug("Connection established resyncing");
-					for ( var i = 0; i < this.messages.length; i++) {
-						endpoint.send(stringify(this.messages[i]));
-					}
-					this.messages = [];
-					for ( var i = 0; i < this.connectionHandlers.length; i++) {
-						this.connectionHandlers[i](true);
-					}
-				};
-				endpoint.onclose = function(event) {
-					console.debug("Connection lost trying reconnecting");
-					for ( var i = 0; i < this.connectionHandlers.length; i++) {
-						this.connectionHandlers[i](false);
-					}
-				};
-				endpoint.onmessage = function(event) {
-					var message = JSON.parse(event.data);
-					console.debug('Receiving Message from Server: ', message);
-					for ( var i = 0; i < endpoint.eventhandlers.length; i++) {
-						var handler = endpoint.eventhandlers[i];
-						handler(message);
-					}
-				};
-				window.roadrunnerEndpoint = endpoint;
-			}
-		}
-		RoadrunnerConnection.prototype.addMessageHandler = function(messageHandler) {
-			if(window.roadrunnerEndpoint.eventhandlers == undefined)
-			{
-				window.roadrunnerEndpoint.eventhandlers = [];
-			}
-			window.roadrunnerEndpoint.eventhandlers.push(function(message) {
-				if (Object.prototype.toString.call(message) === '[object Array]') {
-					for ( var i = 0; i < message.length; i++) {
-						messageHandler(message[i]);
-					}
-				} else {
-					messageHandler(message);
-				}
-			});
-		};
-		RoadrunnerConnection.prototype.connectionHandler = function(connectionHandler) {
-			window.roadrunnerEndpoint.connectionHandlers.push(connectionHandler);
-		};
-		RoadrunnerConnection.prototype.send = function(message) {
-			console.debug('Sending Message to Server: ', message);
-			if (window.roadrunnerEndpoint.readyState == window.WebSocket.OPEN) {
-				window.roadrunnerEndpoint.send(stringify(message));
-			} else {
-				window.roadrunnerEndpoint.messages.push(message);
-			}
-		};
-
-		RoadrunnerConnection.prototype.sendMessage = function(type, path,
-				payload, name) {
-			var message = {
-				type : type,
-				name : name,
-				path : path,
-				payload : payload
-			};
-			console.debug('Sending Message to Server: ', message);
-			if (window.roadrunnerEndpoint.readyState == window.WebSocket.OPEN) {
-				window.roadrunnerEndpoint.send(stringify(message));
-			} else {
-				window.roadrunnerEndpoint.messages.push(message);
-			}
-		};
-		RoadrunnerConnection.prototype.sendMessageWithPriority = function(type,
-				path, payload, priority) {
-			var message = {
-				type : type,
-				path : path,
-				payload : payload,
-				priority : priority
-			};
-			console.debug('Sending Message to Server: ', message);
-			if (window.roadrunnerEndpoint.readyState == window.WebSocket.OPEN) {
-				window.roadrunnerEndpoint.send(stringify(message));
-			} else {
-				window.roadrunnerEndpoint.messages.push(message);
-			}
-		};
-		RoadrunnerConnection.prototype.sendPriorityChange = function(type,
-				path, priority) {
-			var message = {
-				type : type,
-				path : path,
-				priority : priority
-			};
-			console.debug('Sending Message to Server: ', message);
-			if (window.roadrunnerEndpoint.readyState == window.WebSocket.OPEN) {
-				window.roadrunnerEndpoint.send(stringify(message));
-			} else {
-				window.roadrunnerEndpoint.messages.push(message);
-			}
-		};
-
-		RoadrunnerConnection.prototype.sendSimpleMessage = function(message) {
-			console.debug('Sending Message to Server: ', message);
-			if (window.roadrunnerEndpoint.readyState == window.WebSocket.OPEN) {
-				window.roadrunnerEndpoint.send(stringify(message));
-			} else {
-				messages.push(message);
-			}
-		};
-		return RoadrunnerConnection;
-	})();
+	var RoadrunnerRPC = (function (_super) {
+	    __extends(RoadrunnerRPC, _super);
+	    function RoadrunnerRPC(uri) {
+	        _super.call(this, uri);
+	    }
+	    RoadrunnerRPC.prototype.attachListener = function (path, event_type) {
+	        _super.prototype.sendRpc.call(this, 'attachListener', {
+	    		path: path,
+	    		event_type: event_type
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.detachListener = function (path, event_type) {
+	        _super.prototype.sendRpc.call(this, 'detachListener', {
+	    		path: path,
+	    		event_type: event_type
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.attachQuery = function (path, query) {
+	        _super.prototype.sendRpc.call(this, 'attachQuery', {
+	    		path: path,
+	    		"query" : stringify(query)
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.detachQuery = function (path, query) {
+	        _super.prototype.sendRpc.call(this, 'detachQuery', {
+	    		path: path,
+	    		"query" : stringify(query)
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.send = function (path, data) {
+	        _super.prototype.sendRpc.call(this, 'event', {
+	    		path: path,
+	    		data: data
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.push = function (path, name, data) {
+	        _super.prototype.sendRpc.call(this, 'push', {
+	    		path: path,
+	    		name: name,
+	    		data: data
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.set = function (path, data, priority) {
+	        _super.prototype.sendRpc.call(this, 'set', {
+	    		path: path,
+	    		data: data,
+	    		priority: priority
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.update = function (path, data) {
+	        _super.prototype.sendRpc.call(this, 'update', {
+	    		path: path,
+	    		data: data
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.setPriority = function (path, priority) {
+	        _super.prototype.sendRpc.call(this, 'setPriority', {
+	    		path: path,
+	    		priority: priority
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.pushOnDisconnect = function (path, name, payload) {
+	        _super.prototype.sendRpc.call(this, 'pushOnDisconnect', {
+	    		path: path,
+	    		name: name,
+	    		payload: payload
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.setOnDisconnect = function (path, data,priority) {
+	        _super.prototype.sendRpc.call(this, 'setOnDisconnect', {
+	    		path: path,
+	    		data: data,
+	    		priority: priority
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.updateOnDisconnect = function (path, data) {
+	        _super.prototype.sendRpc.call(this, 'updateOnDisconnect', {
+	    		path: path,
+	    		data: data
+	    	});
+	    };
+	    RoadrunnerRPC.prototype.removeOnDisconnect = function (path) {
+	        _super.prototype.sendRpc.call(this, 'removeOnDisconnect', {
+	    		path: path
+	    	});
+	    };
+	    
+	    return RoadrunnerRPC;
+	})(RPC);
 
 	var RoadrunnerOnDisconnect = (function() {
 		function RoadrunnerOnDisconnect(path, con) {
@@ -194,53 +165,22 @@ var stringify = function(obj, prop) {
 
 		RoadrunnerOnDisconnect.prototype.push = function(payload) {
 			var name = UUID.generate();
-			var message = {
-				type : 'onDisconnect',
-				handler : 'push',
-				name : name,
-				path : this.path,
-				payload : payload
-			};
-			this.con.send(message);
+			this.con.pushOnDisconnect(this.path, name, payload);
 		};
 
 		RoadrunnerOnDisconnect.prototype.set = function(payload) {
-			var message = {
-				type : 'onDisconnect',
-				handler : 'set',
-				path : this.path,
-				payload : payload
-			};
-			this.con.send(message);
+			this.con.setOnDisconnect(this.path, payload);
 		};
 
 		RoadrunnerOnDisconnect.prototype.update = function(payload) {
-			var message = {
-				type : 'onDisconnect',
-				handler : 'update',
-				path : this.path,
-				payload : payload
-			};
-			this.con.send(message);
+			this.con.updateOnDisconnect(this.path, payload);
 		};
 
 		RoadrunnerOnDisconnect.prototype.setWithPriority = function(payload, priority) {
-			var message = {
-				type : 'onDisconnect',
-				handler : 'set',
-				path : this.path,
-				payload : payload,
-				priority : priority
-			};
-			this.con.send(message);
+			this.con.setOnDisconnect(this.path, payload, priority);
 		};
 		RoadrunnerOnDisconnect.prototype.remove = function() {
-			var message = {
-				type : 'onDisconnect',
-				handler : 'remove',
-				path : this.path
-			};
-			this.con.send(message);
+			this.con.removeOnDisconnect(this.path);
 		};
 		return RoadrunnerOnDisconnect;
 	})();
@@ -264,8 +204,8 @@ var stringify = function(obj, prop) {
 			this.path = path;
 			this.rootPath;
 			this.parentPath;
-			this.roadrunner_connection = new RoadrunnerConnection(path);
-			this.roadrunner_connection.addMessageHandler(function(message) {
+			this.rpc = new RoadrunnerRPC(path);
+			this.rpc.addMessageHandler(function(message) {
 				if (self.events[message.type] != null) {
 					var snapshot = new Snapshot(message);
 					var workpath = self.path;
@@ -291,9 +231,7 @@ var stringify = function(obj, prop) {
 
 		Roadrunner.prototype.on = function(event_type, callback) {
 			this.events[event_type] = callback;
-			this.roadrunner_connection.sendMessage("attached_listener", this.path, {
-				"type" : event_type
-			});
+			this.rpc.attachListener(this.path, event_type);
 		};
 
 		Roadrunner.prototype.once = function(event_type, callback) {
@@ -303,38 +241,32 @@ var stringify = function(obj, prop) {
 		Roadrunner.prototype.off = function(event_type, callback) {
 			this.events[event_type] = null;
 			this.events_once[event_type] = null;
-			this.roadrunner_connection.sendMessage("detached_listener", this.path, {
-				"type" : event_type
-			});
+			this.rpc.detachListener(this.path, event_type);
 		};
 
 		Roadrunner.prototype.query = function(query, child_added, child_changed, child_removed) {
 			this.events['query_child_added'] = child_added;
 			this.events['query_child_changed'] = child_changed;
 			this.events['query_child_removed'] = child_removed;
-			this.roadrunner_connection.sendMessage("attach_query", this.path, {
-				"query" : stringify(query)
-			});
+			this.rpc.attachQuery(this.path, stringify(query));
 		};
 
 		Roadrunner.prototype.remove_query = function(query) {
-			this.roadrunner_connection.sendMessage("detach_query", this.path, {
-				"query" : stringify(query)
-			});
+			this.rpc.detachQuery(this.path, stringify(query));
 		};
 
 		Roadrunner.prototype.send = function(data) {
-			this.roadrunner_connection.sendMessage('event', this.path, data, null);
+			this.rpc.send(this.path, data);
 		};
 
 		Roadrunner.prototype.push = function(data) {
 			var name = UUID.generate();
-			this.roadrunner_connection.sendMessage('push', this.path, data, name);
+			this.rpc.push(this.path, data, name);
 			return new Roadrunner(this.path + "/" + name);
 		};
 
 		Roadrunner.prototype.set = function(data) {
-			this.roadrunner_connection.sendMessage('set', this.path, data);
+			this.rpc.set(this.path, data);
 			if (data != null) {
 				return new Roadrunner(this.path);
 			} else {
@@ -343,7 +275,7 @@ var stringify = function(obj, prop) {
 		};
 
 		Roadrunner.prototype.update = function(content) {
-			this.roadrunner_connection.sendMessage('update', this.path, content);
+			this.rpc.update(this.path, data);
 			if (content != null) {
 				return new Roadrunner(this.path);
 			} else {
@@ -352,8 +284,7 @@ var stringify = function(obj, prop) {
 		};
 
 		Roadrunner.prototype.setWithPriority = function(data, priority) {
-			this.roadrunner_connection.sendMessageWithPriority('set', this.path, data,
-					priority);
+			this.rpc.set(this.path, data, priority);
 			if (data != null) {
 				return new Roadrunner(this.path);
 			} else {
@@ -362,7 +293,7 @@ var stringify = function(obj, prop) {
 		};
 
 		Roadrunner.prototype.setPriority = function(priority) {
-			this.roadrunner_connection.sendPriorityChange('setPriority', this.path, priority);
+			this.rpc.setPriority(this.path, priority);
 			return new Roadrunner(this.path);
 		};
 
@@ -384,7 +315,7 @@ var stringify = function(obj, prop) {
 		};
 
 		Roadrunner.prototype.onDisconnect = function() {
-			return new RoadrunnerOnDisconnect(this.path, this.roadrunner_connection);
+			return new RoadrunnerOnDisconnect(this.path, this.rpc);
 		};
 
 		return Roadrunner;

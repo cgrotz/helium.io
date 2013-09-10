@@ -5,6 +5,7 @@ import de.skiptag.roadrunner.common.Path;
 import de.skiptag.roadrunner.event.changelog.ChangeLog;
 import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
+import de.skiptag.roadrunner.queries.QueryEvaluator;
 
 public interface Persistence extends SnapshotProcessor {
 
@@ -25,5 +26,8 @@ public interface Persistence extends SnapshotProcessor {
 	void syncPropertyValue(Path path, RoadrunnerEndpoint roadrunnerEventHandler);
 
 	RulesDataSnapshot getRoot();
+
+	public void syncPathWithQuery(Path path, RoadrunnerEndpoint handler,
+			QueryEvaluator queryEvaluator, String query);
 
 }

@@ -102,6 +102,7 @@ public class InMemoryPersistence implements Persistence {
 
 	}
 
+	@Override
 	public void syncPathWithQuery(Path path, RoadrunnerEndpoint handler,
 			QueryEvaluator queryEvaluator, String query) {
 		ChangeLog log = new ChangeLog();

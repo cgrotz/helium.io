@@ -27,8 +27,9 @@ import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryDataSnapshot;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 import de.skiptag.roadrunner.queries.QueryEvaluator;
+import de.skiptag.roadrunner.rpc.Rpc;
 
-public class RoadrunnerEndpoint implements DataListener {
+public class RoadrunnerEndpoint implements RoadrunnerSocket {
 	private static final String				QUERY_CHILD_REMOVED	= "query_child_removed";
 
 	private static final String				QUERY_CHILD_CHANGED	= "query_child_changed";
@@ -49,7 +50,7 @@ public class RoadrunnerEndpoint implements DataListener {
 																														.getLogger(RoadrunnerEndpoint.class);
 
 	private Multimap<String, String>	attached_listeners	= HashMultimap.create();
-	private RoadrunnerResponseSender	sender;
+	private RoadrunnerSocket					roadrunnerSocket;
 	private String										basePath;
 	private Node											auth;
 	private Authorization							authorization;
@@ -62,16 +63,20 @@ public class RoadrunnerEndpoint implements DataListener {
 
 	private boolean										open								= true;
 
-	public RoadrunnerEndpoint(String basePath, Node auth,
-			RoadrunnerResponseSender roadrunnerResponseSender, Persistence persistence,
-			Authorization authorization, Roadrunner roadrunner) {
-		this.sender = roadrunnerResponseSender;
+	private Rpc												rpc;
+
+	public RoadrunnerEndpoint(String basePath, Node auth, RoadrunnerSocket roadrunnerSocket,
+			Persistence persistence, Authorization authorization, Roadrunner roadrunner) {
+		this.roadrunnerSocket = roadrunnerSocket;
 		this.persistence = persistence;
 		this.authorization = authorization;
 		this.auth = auth;
 		this.basePath = basePath;
 		this.queryEvaluator = new QueryEvaluator();
 		this.roadrunner = roadrunner;
+
+		this.rpc = new Rpc();
+		this.rpc.register(this);
 	}
 
 	@Override
@@ -179,7 +184,7 @@ public class RoadrunnerEndpoint implements DataListener {
 			broadcast.put("hasChildren", hasChildren);
 			broadcast.put("numChildren", numChildren);
 			broadcast.put("priority", priority);
-			sender.send(broadcast.toString());
+			roadrunnerSocket.send(broadcast.toString());
 		}
 	}
 
@@ -197,7 +202,7 @@ public class RoadrunnerEndpoint implements DataListener {
 				broadcast.put("hasChildren", hasChildren);
 				broadcast.put("numChildren", numChildren);
 				broadcast.put("priority", priority);
-				sender.send(broadcast.toString());
+				roadrunnerSocket.send(broadcast.toString());
 			}
 		}
 	}
@@ -210,7 +215,7 @@ public class RoadrunnerEndpoint implements DataListener {
 			broadcast.put(RoadrunnerEvent.NAME, name);
 			broadcast.put(RoadrunnerEvent.PATH, createPath(path));
 			broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, payload));
-			sender.send(broadcast.toString());
+			roadrunnerSocket.send(broadcast.toString());
 		}
 	}
 
@@ -225,7 +230,7 @@ public class RoadrunnerEndpoint implements DataListener {
 			broadcast.put("parent", createPath(parent));
 			broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, value));
 			broadcast.put("priority", priority);
-			sender.send(broadcast.toString());
+			roadrunnerSocket.send(broadcast.toString());
 		}
 	}
 
@@ -235,7 +240,7 @@ public class RoadrunnerEndpoint implements DataListener {
 		broadcast.put(RoadrunnerEvent.PAYLOAD, childSnapshot);
 		broadcast.put("hasChildren", hasChildren);
 		broadcast.put("numChildren", numChildren);
-		sender.send(broadcast.toString());
+		roadrunnerSocket.send(broadcast.toString());
 	}
 
 	public void fireQueryChildAdded(Path path, Node parent, Object value) {
@@ -250,7 +255,7 @@ public class RoadrunnerEndpoint implements DataListener {
 			broadcast.put("hasChildren", InMemoryPersistence.hasChildren(value));
 			broadcast.put("numChildren", InMemoryPersistence.childCount(value));
 			broadcast.put("priority", InMemoryPersistence.priority(parent, path.getLastElement()));
-			sender.send(broadcast.toString());
+			roadrunnerSocket.send(broadcast.toString());
 		}
 	}
 
@@ -267,7 +272,7 @@ public class RoadrunnerEndpoint implements DataListener {
 				broadcast.put("hasChildren", InMemoryPersistence.hasChildren(value));
 				broadcast.put("numChildren", InMemoryPersistence.childCount(value));
 				broadcast.put("priority", InMemoryPersistence.priority(parent, path.getLastElement()));
-				sender.send(broadcast.toString());
+				roadrunnerSocket.send(broadcast.toString());
 			}
 		}
 	}
@@ -280,10 +285,11 @@ public class RoadrunnerEndpoint implements DataListener {
 			broadcast.put(RoadrunnerEvent.NAME, path.getLastElement());
 			broadcast.put(RoadrunnerEvent.PATH, createPath(path.getParent()));
 			broadcast.put(RoadrunnerEvent.PAYLOAD, checkPayload(path, payload));
-			sender.send(broadcast.toString());
+			roadrunnerSocket.send(broadcast.toString());
 		}
 	}
 
+	@Override
 	public void distributeEvent(Path path, Node payload) {
 		if (hasListener(path, "event")) {
 			Node broadcast = new Node();
@@ -293,7 +299,7 @@ public class RoadrunnerEndpoint implements DataListener {
 			broadcast.put(RoadrunnerEvent.PAYLOAD, payload);
 			LOGGER.trace("Distributing Message (basePath: '" + basePath + "',path: '" + path + "') : "
 					+ broadcast.toString());
-			sender.send(broadcast.toString());
+			roadrunnerSocket.send(broadcast.toString());
 		}
 	}
 
@@ -360,8 +366,7 @@ public class RoadrunnerEndpoint implements DataListener {
 
 	public void executeDisconnectEvents() {
 		for (RoadrunnerEvent event : disconnectEvents) {
-			event.put(RoadrunnerEvent.TYPE, event.get("handler"));
-			roadrunner.handle(this, event);
+			roadrunner.handle(event);
 		}
 	}
 
@@ -371,5 +376,114 @@ public class RoadrunnerEndpoint implements DataListener {
 
 	public void setOpen(boolean open) {
 		this.open = open;
+	}
+
+	@Override
+	public void send(String msg) {
+		roadrunnerSocket.send(msg);
+	}
+
+	@Rpc.Method
+	public void attachListener(@Rpc.Param("path") String path,
+			@Rpc.Param("event_type") String eventType) {
+		LOGGER.trace("attachListener");
+		addListener(new Path(RoadrunnerEvent.extractPath(path)), eventType);
+		if ("child_added".equals(eventType)) {
+			this.persistence.syncPath(new Path(RoadrunnerEvent.extractPath(path)), this);
+		} else if ("value".equals(eventType)) {
+			this.persistence.syncPropertyValue(new Path(RoadrunnerEvent.extractPath(path)), this);
+		}
+	}
+
+	@Rpc.Method
+	public void detachListener(@Rpc.Param("path") String path,
+			@Rpc.Param("event_type") String eventType) {
+		LOGGER.trace("detachListener");
+		removeListener(new Path(RoadrunnerEvent.extractPath(path)), eventType);
+	}
+
+	@Rpc.Method
+	public void attachQuery(@Rpc.Param("path") String path, @Rpc.Param("query") String query) {
+		LOGGER.trace("attachQuery");
+		addQuery(new Path(RoadrunnerEvent.extractPath(path)), query);
+		this.persistence.syncPathWithQuery(new Path(RoadrunnerEvent.extractPath(path)), this,
+				new QueryEvaluator(), query);
+	}
+
+	@Rpc.Method
+	public void detachQuery(@Rpc.Param("path") String path, @Rpc.Param("query") String query) {
+		LOGGER.trace("detachQuery");
+		removeQuery(new Path(RoadrunnerEvent.extractPath(path)), query);
+	}
+
+	@Rpc.Method
+	public void event(@Rpc.Param("path") String path, @Rpc.Param("data") Node data) {
+		LOGGER.trace("event");
+		this.roadrunner.getDistributor().distribute(path, data);
+	}
+
+	@Rpc.Method
+	public void push(@Rpc.Param("path") String path, @Rpc.Param("name") String name,
+			@Rpc.Param("data") Node data) {
+		LOGGER.trace("push");
+		RoadrunnerEvent event = new RoadrunnerEvent(RoadrunnerEventType.PUSH, path + "/" + name, data);
+		this.roadrunner.handle(event);
+	}
+
+	@Rpc.Method
+	public void set(@Rpc.Param("path") String path, @Rpc.Param("data") Object data,
+			@Rpc.Param(value = "priority", defaultValue = "-1") Integer priority) {
+		LOGGER.trace("set");
+		RoadrunnerEvent event = new RoadrunnerEvent(RoadrunnerEventType.SET, path, data, priority);
+		this.roadrunner.handle(event);
+	}
+
+	@Rpc.Method
+	public void update(@Rpc.Param("path") String path, @Rpc.Param("data") Node data) {
+		LOGGER.trace("update");
+		RoadrunnerEvent event = new RoadrunnerEvent(RoadrunnerEventType.UPDATE, path, data);
+		this.roadrunner.handle(event);
+	}
+
+	@Rpc.Method
+	public void setPriority(@Rpc.Param("path") String path, @Rpc.Param("priority") Integer priority) {
+		LOGGER.trace("setPriority");
+		RoadrunnerEvent event = new RoadrunnerEvent(RoadrunnerEventType.SETPRIORITY, path, priority);
+		this.roadrunner.handle(event);
+	}
+
+	@Rpc.Method
+	public void pushOnDisconnect(@Rpc.Param("path") String path, @Rpc.Param("name") String name,
+			@Rpc.Param("payload") Node payload) {
+		LOGGER.trace("pushOnDisconnect");
+		RoadrunnerEvent event = new RoadrunnerEvent(RoadrunnerEventType.PUSH, path + "/" + name,
+				payload);
+		this.disconnectEvents.add(event);
+	}
+
+	@Rpc.Method
+	public void setOnDisconnect(@Rpc.Param("path") String path, @Rpc.Param("data") Node data,
+			@Rpc.Param(value = "priority", defaultValue = "-1") Integer priority) {
+		LOGGER.trace("setOnDisconnect");
+		RoadrunnerEvent event = new RoadrunnerEvent(RoadrunnerEventType.SET, path, data, priority);
+		this.disconnectEvents.add(event);
+	}
+
+	@Rpc.Method
+	public void updateOnDisconnect(@Rpc.Param("path") String path, @Rpc.Param("data") Node data) {
+		LOGGER.trace("updateOnDisconnect");
+		RoadrunnerEvent event = new RoadrunnerEvent(RoadrunnerEventType.UPDATE, path, data);
+		this.disconnectEvents.add(event);
+	}
+
+	@Rpc.Method
+	public void removeOnDisconnect(@Rpc.Param("path") String path) {
+		LOGGER.trace("removeOnDisconnect");
+		RoadrunnerEvent event = new RoadrunnerEvent(RoadrunnerEventType.REMOVE, path);
+		this.disconnectEvents.add(event);
+	}
+
+	public void handle(String msg, Node auth) {
+		rpc.handle(msg, this);
 	}
 }

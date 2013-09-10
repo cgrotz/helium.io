@@ -17,6 +17,7 @@ import com.google.common.collect.Sets;
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
 import de.skiptag.roadrunner.disruptor.RoadrunnerDisruptor;
+import de.skiptag.roadrunner.disruptor.processor.distribution.DistributionProcessor;
 import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.event.changelog.ChangeLog;
@@ -24,7 +25,6 @@ import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
 import de.skiptag.roadrunner.persistence.Persistence;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
-import de.skiptag.roadrunner.queries.QueryEvaluator;
 
 /**
  * 
@@ -55,7 +55,6 @@ public class Roadrunner {
 
 		this.disruptor = new RoadrunnerDisruptor(journalDirectory, snapshotDirectory, this.persistence,
 				this.authorization);
-
 	}
 
 	public Roadrunner(String basePath, File journalDirectory, Optional<File> snapshotDirectory)
@@ -69,82 +68,14 @@ public class Roadrunner {
 				createTempDirectory());
 	}
 
-	public void handle(RoadrunnerEndpoint roadrunnerEventHandler, RoadrunnerEvent roadrunnerEvent) {
-		switch (roadrunnerEvent.getType())
-			{
-			case ATTACH_QUERY:
-				handleAttachQuery(roadrunnerEventHandler, roadrunnerEvent);
-				break;
-			case DETACH_QUERY:
-				handleDetachQuery(roadrunnerEventHandler, roadrunnerEvent);
-				break;
-			case ATTACHED_LISTENER:
-				handleAttachedListener(roadrunnerEventHandler, roadrunnerEvent);
-				break;
-			case DETACHED_LISTENER:
-				handleDetachedListener(roadrunnerEventHandler, roadrunnerEvent);
-				break;
-			case EVENT:
-				handleEvent(roadrunnerEvent);
-				break;
-			case ONDISCONNECT:
-				handleOnDisconnect(roadrunnerEventHandler, roadrunnerEvent);
-				break;
-			default:
-				handleDefault(roadrunnerEvent);
-				break;
-			}
-	}
-
-	private void handleDefault(RoadrunnerEvent roadrunnerEvent) {
+	public void handle(RoadrunnerEvent roadrunnerEvent) {
 		roadrunnerEvent.setFromHistory(false);
 		this.disruptor.handleEvent(roadrunnerEvent);
 	}
 
-	private void handleOnDisconnect(RoadrunnerEndpoint roadrunnerEventHandler,
-			RoadrunnerEvent roadrunnerEvent) {
-		roadrunnerEventHandler.registerDisconnectEvent(roadrunnerEvent);
-	}
-
-	private void handleEvent(RoadrunnerEvent roadrunnerEvent) {
-		LOGGER.trace("Recevived Message: " + roadrunnerEvent.toString());
-		this.disruptor.getDistributor().distribute(roadrunnerEvent);
-	}
-
-	private void handleDetachedListener(RoadrunnerEndpoint roadrunnerEventHandler,
-			RoadrunnerEvent roadrunnerEvent) {
-		roadrunnerEventHandler.removeListener(roadrunnerEvent.extractNodePath(),
-				((Node) roadrunnerEvent.getPayload()).getString("type"));
-	}
-
-	private void handleAttachedListener(RoadrunnerEndpoint roadrunnerEventHandler,
-			RoadrunnerEvent roadrunnerEvent) {
-		roadrunnerEventHandler.addListener(roadrunnerEvent.extractNodePath(),
-				((Node) roadrunnerEvent.getPayload()).getString("type"));
-		if ("child_added".equals(((Node) roadrunnerEvent.getPayload()).get("type"))) {
-			this.persistence.syncPath(roadrunnerEvent.extractNodePath(), roadrunnerEventHandler);
-		} else if ("value".equals(((Node) roadrunnerEvent.getPayload()).get("type"))) {
-			this.persistence.syncPropertyValue(roadrunnerEvent.extractNodePath(), roadrunnerEventHandler);
-		}
-	}
-
-	private void handleDetachQuery(RoadrunnerEndpoint roadrunnerEventHandler,
-			RoadrunnerEvent roadrunnerEvent) {
-		roadrunnerEventHandler.removeQuery(roadrunnerEvent.extractNodePath(),
-				((Node) roadrunnerEvent.getPayload()).getString("query"));
-	}
-
-	private void handleAttachQuery(RoadrunnerEndpoint roadrunnerEventHandler,
-			RoadrunnerEvent roadrunnerEvent) {
-		roadrunnerEventHandler.addQuery(roadrunnerEvent.extractNodePath(),
-				((Node) roadrunnerEvent.getPayload()).getString("query"));
-		this.persistence.syncPathWithQuery(roadrunnerEvent.extractNodePath(), roadrunnerEventHandler,
-				new QueryEvaluator(), ((Node) roadrunnerEvent.getPayload()).getString("query"));
-	}
-
 	public void handleEvent(RoadrunnerEventType type, String nodePath, Optional<?> value) {
 		RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(type, nodePath, value);
-		handleDefault(roadrunnerEvent);
+		handle(roadrunnerEvent);
 	}
 
 	public Persistence getPersistence() {
@@ -173,6 +104,7 @@ public class Roadrunner {
 
 	public static String loadJsFile() throws IOException {
 		URL uuid = Thread.currentThread().getContextClassLoader().getResource("uuid.js");
+		URL rpc = Thread.currentThread().getContextClassLoader().getResource("rpc.js");
 		URL reconnectingwebsocket = Thread.currentThread().getContextClassLoader()
 				.getResource("reconnecting-websocket.min.js");
 		URL roadrunner = Thread.currentThread().getContextClassLoader().getResource("roadrunner.js");
@@ -180,9 +112,11 @@ public class Roadrunner {
 		String uuidContent = com.google.common.io.Resources.toString(uuid, Charsets.UTF_8);
 		String reconnectingWebsocketContent = com.google.common.io.Resources.toString(
 				reconnectingwebsocket, Charsets.UTF_8);
+		String rpcContent = com.google.common.io.Resources.toString(rpc, Charsets.UTF_8);
 		String roadrunnerContent = com.google.common.io.Resources.toString(roadrunner, Charsets.UTF_8);
 
-		return uuidContent + "\r\n" + reconnectingWebsocketContent + "\r\n" + roadrunnerContent;
+		return uuidContent + "\r\n" + reconnectingWebsocketContent + "\r\n" + rpcContent + "\r\n"
+				+ roadrunnerContent;
 	}
 
 	private static Optional<File> createTempDirectory() throws IOException {
@@ -197,4 +131,9 @@ public class Roadrunner {
 		}
 		return Optional.fromNullable(temp);
 	}
+
+	public DistributionProcessor getDistributor() {
+		return this.disruptor.getDistributor();
+	}
+
 }

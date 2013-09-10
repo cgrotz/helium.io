@@ -83,6 +83,13 @@ public class RoadrunnerEvent extends Node {
 		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
 	}
 
+	public RoadrunnerEvent(RoadrunnerEventType type, String path, Object payload) {
+		put(RoadrunnerEvent.TYPE, type.toString());
+		put(RoadrunnerEvent.PATH, path);
+		put(RoadrunnerEvent.PAYLOAD, payload);
+		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
+	}
+
 	/**
 	 * @param type
 	 *          of the event {@link RoadrunnerEventType}
@@ -97,6 +104,27 @@ public class RoadrunnerEvent extends Node {
 		if (payload.isPresent()) {
 			put(RoadrunnerEvent.PAYLOAD, payload.get());
 		}
+		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
+	}
+
+	public RoadrunnerEvent(RoadrunnerEventType type, String path, Object data, Integer priority) {
+		put(RoadrunnerEvent.TYPE, type.toString());
+		put(RoadrunnerEvent.PATH, path);
+		put(RoadrunnerEvent.PAYLOAD, data);
+		put(RoadrunnerEvent.PRIORITY, priority);
+		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
+	}
+
+	public RoadrunnerEvent(RoadrunnerEventType type, String path, Integer priority) {
+		put(RoadrunnerEvent.TYPE, type.toString());
+		put(RoadrunnerEvent.PATH, path);
+		put(RoadrunnerEvent.PRIORITY, priority);
+		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
+	}
+
+	public RoadrunnerEvent(RoadrunnerEventType type, String path) {
+		put(RoadrunnerEvent.TYPE, type.toString());
+		put(RoadrunnerEvent.PATH, path);
 		put(RoadrunnerEvent.CREATION_DATE, System.currentTimeMillis());
 	}
 
@@ -115,15 +143,16 @@ public class RoadrunnerEvent extends Node {
 		}
 		for (;;) {
 			c = x.nextClean();
-			switch (c) {
-			case 0:
-				throw x.syntaxError("A JSONObject text must end with '}'");
-			case '}':
-				return;
-			default:
-				x.back();
-				key = x.nextValue().toString();
-			}
+			switch (c)
+				{
+				case 0:
+					throw x.syntaxError("A JSONObject text must end with '}'");
+				case '}':
+					return;
+				default:
+					x.back();
+					key = x.nextValue().toString();
+				}
 
 			// The key is followed by ':'.
 
@@ -135,19 +164,20 @@ public class RoadrunnerEvent extends Node {
 
 			// Pairs are separated by ','.
 
-			switch (x.nextClean()) {
-			case ';':
-			case ',':
-				if (x.nextClean() == '}') {
+			switch (x.nextClean())
+				{
+				case ';':
+				case ',':
+					if (x.nextClean() == '}') {
+						return;
+					}
+					x.back();
+					break;
+				case '}':
 					return;
+				default:
+					throw x.syntaxError("Expected a ',' or '}'");
 				}
-				x.back();
-				break;
-			case '}':
-				return;
-			default:
-				throw x.syntaxError("Expected a ',' or '}'");
-			}
 		}
 	}
 
@@ -224,6 +254,9 @@ public class RoadrunnerEvent extends Node {
 	}
 
 	public Node getAuth() {
+		if (!has(AUTH)) {
+			return new Node();
+		}
 		return getNode(AUTH);
 	}
 

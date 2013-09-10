@@ -8,17 +8,18 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Sets;
 import com.lmax.disruptor.EventHandler;
 
+import de.skiptag.roadrunner.common.Path;
 import de.skiptag.roadrunner.event.RoadrunnerEvent;
-import de.skiptag.roadrunner.messaging.DataListener;
+import de.skiptag.roadrunner.json.Node;
+import de.skiptag.roadrunner.messaging.RoadrunnerSocket;
 
 public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(DistributionProcessor.class);
+	private static final Logger		logger		= LoggerFactory.getLogger(DistributionProcessor.class);
 
-	private Set<DataListener> handlers = Sets.newHashSet();
+	private Set<RoadrunnerSocket>	handlers	= Sets.newHashSet();
 
-	private long sequence;
+	private long									sequence;
 
 	@Override
 	public void onEvent(RoadrunnerEvent event, long sequence, boolean endOfBatch) {
@@ -29,17 +30,23 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 	public void distribute(RoadrunnerEvent event) {
 		logger.trace("distributing event: " + event);
 		if (!event.isFromHistory()) {
-			for (DataListener handler : Sets.newHashSet(handlers)) {
+			for (RoadrunnerSocket handler : Sets.newHashSet(handlers)) {
 				handler.distribute(event);
 			}
 		}
 	}
 
-	public void addHandler(DataListener handler) {
+	public void distribute(String path, Node data) {
+		for (RoadrunnerSocket handler : Sets.newHashSet(handlers)) {
+			handler.distributeEvent(new Path(RoadrunnerEvent.extractPath(path)), data);
+		}
+	}
+
+	public void addHandler(RoadrunnerSocket handler) {
 		handlers.add(handler);
 	}
 
-	public void removeHandler(DataListener handler) {
+	public void removeHandler(RoadrunnerSocket handler) {
 		handlers.remove(handler);
 	}
 
