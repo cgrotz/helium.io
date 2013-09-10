@@ -19,7 +19,7 @@ import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
-import de.skiptag.roadrunner.messaging.RoadrunnerSocket;
+import de.skiptag.roadrunner.messaging.RoadrunnerOutboundSocket;
 import de.skiptag.roadrunner.persistence.inmemory.InMemoryDataSnapshot;
 
 public class RoadrunnerServerHandler {
@@ -94,19 +94,11 @@ public class RoadrunnerServerHandler {
 		@Override
 		public void handle(final ServerWebSocket socket) {
 			final RoadrunnerEndpoint endpoint = new RoadrunnerEndpoint(basePath, new Node(),
-					new RoadrunnerSocket() {
+					new RoadrunnerOutboundSocket() {
 
 						@Override
 						public void send(String string) {
 							socket.writeTextFrame(string);
-						}
-
-						@Override
-						public void distribute(RoadrunnerEvent event) {
-						}
-
-						@Override
-						public void distributeEvent(Path path, Node payload) {
 						}
 					}, roadrunner.getPersistence(), roadrunner.getAuthorization(), roadrunner);
 			roadrunner.addEndpoint(endpoint);

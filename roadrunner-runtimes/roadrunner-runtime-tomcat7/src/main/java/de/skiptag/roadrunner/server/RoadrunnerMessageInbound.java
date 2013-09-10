@@ -9,13 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.skiptag.roadrunner.Roadrunner;
-import de.skiptag.roadrunner.common.Path;
-import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
-import de.skiptag.roadrunner.messaging.RoadrunnerSocket;
+import de.skiptag.roadrunner.messaging.RoadrunnerOutboundSocket;
 
-public class RoadrunnerMessageInbound extends MessageInbound implements RoadrunnerSocket {
+public class RoadrunnerMessageInbound extends MessageInbound implements RoadrunnerOutboundSocket {
 	private static final Logger	logger	= LoggerFactory.getLogger(RoadrunnerMessageInbound.class);
 	private Roadrunner					roadrunner;
 	private RoadrunnerEndpoint	endpoint;
@@ -62,15 +60,4 @@ public class RoadrunnerMessageInbound extends MessageInbound implements Roadrunn
 		}
 	}
 
-	@Override
-	public void distribute(RoadrunnerEvent event) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void distributeEvent(Path path, Node payload) {
-		// TODO Auto-generated method stub
-
-	}
 }

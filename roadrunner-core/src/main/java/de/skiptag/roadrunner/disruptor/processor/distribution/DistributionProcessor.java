@@ -11,13 +11,14 @@ import com.lmax.disruptor.EventHandler;
 import de.skiptag.roadrunner.common.Path;
 import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.json.Node;
-import de.skiptag.roadrunner.messaging.RoadrunnerSocket;
+import de.skiptag.roadrunner.messaging.RoadrunnerOutboundSocket;
+import de.skiptag.roadrunner.messaging.RoadrunnerEventDistributor;
 
 public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 
 	private static final Logger		logger		= LoggerFactory.getLogger(DistributionProcessor.class);
 
-	private Set<RoadrunnerSocket>	handlers	= Sets.newHashSet();
+	private Set<RoadrunnerEventDistributor>	handlers	= Sets.newHashSet();
 
 	private long									sequence;
 
@@ -30,23 +31,23 @@ public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
 	public void distribute(RoadrunnerEvent event) {
 		logger.trace("distributing event: " + event);
 		if (!event.isFromHistory()) {
-			for (RoadrunnerSocket handler : Sets.newHashSet(handlers)) {
+			for (RoadrunnerEventDistributor handler : Sets.newHashSet(handlers)) {
 				handler.distribute(event);
 			}
 		}
 	}
 
 	public void distribute(String path, Node data) {
-		for (RoadrunnerSocket handler : Sets.newHashSet(handlers)) {
+		for (RoadrunnerEventDistributor handler : Sets.newHashSet(handlers)) {
 			handler.distributeEvent(new Path(RoadrunnerEvent.extractPath(path)), data);
 		}
 	}
 
-	public void addHandler(RoadrunnerSocket handler) {
+	public void addHandler(RoadrunnerEventDistributor handler) {
 		handlers.add(handler);
 	}
 
-	public void removeHandler(RoadrunnerSocket handler) {
+	public void removeHandler(RoadrunnerOutboundSocket handler) {
 		handlers.remove(handler);
 	}
 

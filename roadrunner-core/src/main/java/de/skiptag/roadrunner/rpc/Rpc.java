@@ -16,7 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import de.skiptag.roadrunner.json.Node;
-import de.skiptag.roadrunner.messaging.RoadrunnerSocket;
+import de.skiptag.roadrunner.messaging.RoadrunnerOutboundSocket;
 
 public class Rpc {
 
@@ -98,7 +98,7 @@ public class Rpc {
 		}
 	}
 
-	public void handle(String message, RoadrunnerSocket socket) {
+	public void handle(String message, RoadrunnerOutboundSocket socket) {
 		Node json = new Node(message);
 		String id = checkNotNull(json.getString("id"));
 		String method = checkNotNull(json.getString("method"));

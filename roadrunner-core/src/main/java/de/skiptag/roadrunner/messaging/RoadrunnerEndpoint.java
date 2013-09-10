@@ -29,7 +29,7 @@ import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
 import de.skiptag.roadrunner.queries.QueryEvaluator;
 import de.skiptag.roadrunner.rpc.Rpc;
 
-public class RoadrunnerEndpoint implements RoadrunnerSocket {
+public class RoadrunnerEndpoint implements RoadrunnerEventDistributor, RoadrunnerOutboundSocket {
 	private static final String				QUERY_CHILD_REMOVED	= "query_child_removed";
 
 	private static final String				QUERY_CHILD_CHANGED	= "query_child_changed";
@@ -50,7 +50,7 @@ public class RoadrunnerEndpoint implements RoadrunnerSocket {
 																														.getLogger(RoadrunnerEndpoint.class);
 
 	private Multimap<String, String>	attached_listeners	= HashMultimap.create();
-	private RoadrunnerSocket					roadrunnerSocket;
+	private RoadrunnerOutboundSocket	roadrunnerSocket;
 	private String										basePath;
 	private Node											auth;
 	private Authorization							authorization;
@@ -65,7 +65,7 @@ public class RoadrunnerEndpoint implements RoadrunnerSocket {
 
 	private Rpc												rpc;
 
-	public RoadrunnerEndpoint(String basePath, Node auth, RoadrunnerSocket roadrunnerSocket,
+	public RoadrunnerEndpoint(String basePath, Node auth, RoadrunnerOutboundSocket roadrunnerSocket,
 			Persistence persistence, Authorization authorization, Roadrunner roadrunner) {
 		this.roadrunnerSocket = roadrunnerSocket;
 		this.persistence = persistence;
