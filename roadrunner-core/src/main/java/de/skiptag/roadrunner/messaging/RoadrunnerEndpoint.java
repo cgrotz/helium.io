@@ -92,8 +92,6 @@ public class RoadrunnerEndpoint implements RoadrunnerEventDistributor, Roadrunne
 					jsonObject = new Node(RoadrunnerEvent.PAYLOAD);
 					distributeEvent(event.extractNodePath(), new Node((String) object));
 				}
-			} else if (event.getType() == RoadrunnerEventType.ONDISCONNECT) {
-				// TODO: No need to distribute?
 			} else {
 				processQuery(event);
 				ChangeLog changeLog = event.getChangeLog();

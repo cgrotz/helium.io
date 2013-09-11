@@ -7,9 +7,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
@@ -17,7 +14,7 @@ import com.google.common.collect.Sets;
 import de.skiptag.roadrunner.authorization.Authorization;
 import de.skiptag.roadrunner.authorization.rulebased.RuleBasedAuthorization;
 import de.skiptag.roadrunner.disruptor.RoadrunnerDisruptor;
-import de.skiptag.roadrunner.disruptor.processor.distribution.DistributionProcessor;
+import de.skiptag.roadrunner.disruptor.processor.distribution.Distributor;
 import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.event.RoadrunnerEventType;
 import de.skiptag.roadrunner.event.changelog.ChangeLog;
@@ -34,8 +31,6 @@ import de.skiptag.roadrunner.persistence.inmemory.InMemoryPersistence;
  * 
  */
 public class Roadrunner {
-
-	private static final Logger			LOGGER		= LoggerFactory.getLogger(Roadrunner.class);
 
 	private InMemoryPersistence			persistence;
 
@@ -76,14 +71,6 @@ public class Roadrunner {
 	public void handleEvent(RoadrunnerEventType type, String nodePath, Optional<?> value) {
 		RoadrunnerEvent roadrunnerEvent = new RoadrunnerEvent(type, nodePath, value);
 		handle(roadrunnerEvent);
-	}
-
-	public Persistence getPersistence() {
-		return this.persistence;
-	}
-
-	public Authorization getAuthorization() {
-		return this.authorization;
 	}
 
 	public void distributeChangeLog(ChangeLog changeLog) {
@@ -132,8 +119,16 @@ public class Roadrunner {
 		return Optional.fromNullable(temp);
 	}
 
-	public DistributionProcessor getDistributor() {
+	public Distributor getDistributor() {
 		return this.disruptor.getDistributor();
+	}
+
+	public Persistence getPersistence() {
+		return this.persistence;
+	}
+
+	public Authorization getAuthorization() {
+		return this.authorization;
 	}
 
 }

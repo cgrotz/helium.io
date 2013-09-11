@@ -122,6 +122,11 @@ var __extends = this.__extends || function (d, b) {
 	    		data: data
 	    	});
 	    };
+	    RoadrunnerRPC.prototype.remove = function (path) {
+	        _super.prototype.sendRpc.call(this, 'remove', {
+	    		path: path
+	    	});
+	    };
 	    RoadrunnerRPC.prototype.setPriority = function (path, priority) {
 	        _super.prototype.sendRpc.call(this, 'setPriority', {
 	    		path: path,
@@ -195,7 +200,7 @@ var __extends = this.__extends || function (d, b) {
 		}
 		return RoadrunnerOnlineSwitch;
 	})();
-
+	
 	var Roadrunner = (function() {
 		function Roadrunner(path) {
 			var self = this;
@@ -228,43 +233,35 @@ var __extends = this.__extends || function (d, b) {
 		Roadrunner.prototype.child = function(childname) {
 			return new Roadrunner(this.path + "/" + childname);
 		};
-
 		Roadrunner.prototype.on = function(event_type, callback) {
 			this.events[event_type] = callback;
 			this.rpc.attachListener(this.path, event_type);
 		};
-
 		Roadrunner.prototype.once = function(event_type, callback) {
 			this.events_once[event_type] = callback;
 		};
-
 		Roadrunner.prototype.off = function(event_type, callback) {
 			this.events[event_type] = null;
 			this.events_once[event_type] = null;
 			this.rpc.detachListener(this.path, event_type);
 		};
-
 		Roadrunner.prototype.query = function(query, child_added, child_changed, child_removed) {
 			this.events['query_child_added'] = child_added;
 			this.events['query_child_changed'] = child_changed;
 			this.events['query_child_removed'] = child_removed;
 			this.rpc.attachQuery(this.path, stringify(query));
 		};
-
 		Roadrunner.prototype.remove_query = function(query) {
 			this.rpc.detachQuery(this.path, stringify(query));
 		};
-
 		Roadrunner.prototype.send = function(data) {
 			this.rpc.send(this.path, data);
 		};
-
 		Roadrunner.prototype.push = function(data) {
 			var name = UUID.generate();
 			this.rpc.push(this.path, data, name);
 			return new Roadrunner(this.path + "/" + name);
 		};
-
 		Roadrunner.prototype.set = function(data) {
 			this.rpc.set(this.path, data);
 			if (data != null) {
@@ -273,7 +270,6 @@ var __extends = this.__extends || function (d, b) {
 				return null;
 			}
 		};
-
 		Roadrunner.prototype.update = function(content) {
 			this.rpc.update(this.path, data);
 			if (content != null) {
@@ -282,7 +278,6 @@ var __extends = this.__extends || function (d, b) {
 				return null;
 			}
 		};
-
 		Roadrunner.prototype.setWithPriority = function(data, priority) {
 			this.rpc.set(this.path, data, priority);
 			if (data != null) {
@@ -291,12 +286,13 @@ var __extends = this.__extends || function (d, b) {
 				return null;
 			}
 		};
-
+		Roadrunner.prototype.remove = function() {
+			this.rpc.remove(this.path);
+		};
 		Roadrunner.prototype.setPriority = function(priority) {
 			this.rpc.setPriority(this.path, priority);
 			return new Roadrunner(this.path);
 		};
-
 		Roadrunner.prototype.parent = function() {
 			new Roadrunner(this.parentPath);
 		};
@@ -304,20 +300,16 @@ var __extends = this.__extends || function (d, b) {
 		Roadrunner.prototype.root = function() {
 			new Roadrunner(this.rootPath);
 		};
-
 		Roadrunner.prototype.name = function() {
 			var name = this.path.substring(this.path.lastIndexOf('/') + 1, this.path.length);
 			return name;
 		};
-
 		Roadrunner.prototype.ref = function() {
 			return this;
 		};
-
 		Roadrunner.prototype.onDisconnect = function() {
 			return new RoadrunnerOnDisconnect(this.path, this.rpc);
 		};
-
 		return Roadrunner;
 	})();
 

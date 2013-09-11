@@ -1,4 +1,4 @@
-package de.skiptag.roadrunner.disruptor.event;
+package de.skiptag.roadrunner.disruptor.translator;
 
 import com.lmax.disruptor.EventTranslator;
 

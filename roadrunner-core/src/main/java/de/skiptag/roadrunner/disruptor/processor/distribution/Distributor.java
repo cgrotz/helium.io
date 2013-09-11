@@ -14,9 +14,9 @@ import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerOutboundSocket;
 import de.skiptag.roadrunner.messaging.RoadrunnerEventDistributor;
 
-public class DistributionProcessor implements EventHandler<RoadrunnerEvent> {
+public class Distributor implements EventHandler<RoadrunnerEvent> {
 
-	private static final Logger		logger		= LoggerFactory.getLogger(DistributionProcessor.class);
+	private static final Logger		logger		= LoggerFactory.getLogger(Distributor.class);
 
 	private Set<RoadrunnerEventDistributor>	handlers	= Sets.newHashSet();
 

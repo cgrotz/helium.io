@@ -23,11 +23,11 @@ import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 
 import de.skiptag.roadrunner.authorization.Authorization;
-import de.skiptag.roadrunner.disruptor.event.RoadrunnerEventTranslator;
 import de.skiptag.roadrunner.disruptor.processor.authorization.AuthorizationProcessor;
-import de.skiptag.roadrunner.disruptor.processor.distribution.DistributionProcessor;
+import de.skiptag.roadrunner.disruptor.processor.distribution.Distributor;
 import de.skiptag.roadrunner.disruptor.processor.eventsourcing.EventSourceProcessor;
 import de.skiptag.roadrunner.disruptor.processor.persistence.PersistenceProcessor;
+import de.skiptag.roadrunner.disruptor.translator.RoadrunnerEventTranslator;
 import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.json.Node;
 import de.skiptag.roadrunner.messaging.RoadrunnerEndpoint;
@@ -35,30 +35,31 @@ import de.skiptag.roadrunner.persistence.Persistence;
 
 public class RoadrunnerDisruptor implements ExceptionHandler {
 
-	public static final EventFactory<RoadrunnerEvent> EVENT_FACTORY = new EventFactory<RoadrunnerEvent>() {
+	public static final EventFactory<RoadrunnerEvent>	EVENT_FACTORY	= new EventFactory<RoadrunnerEvent>() {
 
-		@Override
-		public RoadrunnerEvent newInstance() {
-			return new RoadrunnerEvent();
-		}
-	};
-	private static final Logger logger = LoggerFactory.getLogger(RoadrunnerDisruptor.class);
-	private static final int RING_SIZE = 256;
-	private EventSourceProcessor eventSourceProcessor;
-	private PersistenceProcessor persistenceProcessor;
-	private DistributionProcessor distributionProcessor;
+																																		@Override
+																																		public RoadrunnerEvent newInstance() {
+																																			return new RoadrunnerEvent();
+																																		}
+																																	};
+	private static final Logger												logger				= LoggerFactory
+																																			.getLogger(RoadrunnerDisruptor.class);
+	private static final int													RING_SIZE			= 256;
+	private EventSourceProcessor											eventSourceProcessor;
+	private PersistenceProcessor											persistenceProcessor;
+	private Distributor																distributionProcessor;
 
-	private Disruptor<RoadrunnerEvent> disruptor;
+	private Disruptor<RoadrunnerEvent>								disruptor;
 
 	public Disruptor<RoadrunnerEvent> getDisruptor() {
 		return disruptor;
 	}
 
-	private AuthorizationProcessor authorizationProcessor;
-	private Persistence persistence;
+	private AuthorizationProcessor	authorizationProcessor;
+	private Persistence							persistence;
 
-	private Optional<Journal> snapshotJournal = Optional.absent();
-	private long currentSequence;
+	private Optional<Journal>				snapshotJournal	= Optional.absent();
+	private long										currentSequence;
 
 	public RoadrunnerDisruptor(File journalDirectory, Optional<File> snapshotDirectory,
 			Persistence persistence, Authorization authorization) throws IOException {
@@ -91,7 +92,6 @@ public class RoadrunnerDisruptor implements ExceptionHandler {
 			Node snapshot = new Node(new String(lastEntry));
 			int pointer = snapshot.getInt("currentEventLogPointer");
 			int dataFileId = snapshot.getInt("currentEventLogDataFileId");
-			Node payload = snapshot.getNode(RoadrunnerEvent.PAYLOAD);
 			Node node = new Node();
 			node.populate(null, node);
 			persistence.restoreSnapshot(node);
@@ -110,7 +110,7 @@ public class RoadrunnerDisruptor implements ExceptionHandler {
 		authorizationProcessor = new AuthorizationProcessor(authorization, persistence);
 		eventSourceProcessor = new EventSourceProcessor(journalDirectory, this);
 		persistenceProcessor = new PersistenceProcessor(persistence);
-		distributionProcessor = new DistributionProcessor();
+		distributionProcessor = new Distributor();
 
 		disruptor.handleExceptionsWith(this);
 		disruptor.handleEventsWith(authorizationProcessor).then(eventSourceProcessor)
@@ -155,7 +155,7 @@ public class RoadrunnerDisruptor implements ExceptionHandler {
 		distributionProcessor.removeHandler(handler);
 	}
 
-	public DistributionProcessor getDistributor() {
+	public Distributor getDistributor() {
 		return distributionProcessor;
 	}
 
