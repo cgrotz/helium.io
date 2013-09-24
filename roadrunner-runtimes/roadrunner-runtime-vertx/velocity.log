@@ -1,0 +1,163 @@
+2013-09-15 20:19:59,036 - Initializing Velocity, Calling init()...
+2013-09-15 20:19:59,037 - *******************************************************************
+2013-09-15 20:19:59,037 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2013-09-15 20:19:59,037 - RuntimeInstance initializing.
+2013-09-15 20:19:59,037 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2013-09-15 20:19:59,037 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2013-09-15 20:19:59,037 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2013-09-15 20:19:59,037 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2013-09-15 20:19:59,037 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2013-09-15 20:19:59,067 - Default ResourceManager initializing. (class org.apache.velocity.runtime.resource.ResourceManagerImpl)
+2013-09-15 20:19:59,067 - ResourceManager : No configuration information found for resource loader named 'class' (id is class.resource.loader). Skipping it...
+2013-09-15 20:19:59,218 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2013-09-15 20:19:59,219 - Default ResourceManager initialization complete.
+2013-09-15 20:19:59,221 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2013-09-15 20:19:59,222 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2013-09-15 20:19:59,223 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2013-09-15 20:19:59,224 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2013-09-15 20:19:59,225 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2013-09-15 20:19:59,227 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2013-09-15 20:19:59,229 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2013-09-15 20:19:59,230 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2013-09-15 20:19:59,231 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2013-09-15 20:19:59,380 - Created '20' parsers.
+2013-09-15 20:19:59,388 - Velocimacro : initialization starting.
+2013-09-15 20:19:59,388 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2013-09-15 20:19:59,388 - Velocimacro : Default library not found.
+2013-09-15 20:19:59,388 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2013-09-15 20:19:59,388 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2013-09-15 20:19:59,388 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2013-09-15 20:19:59,388 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2013-09-15 20:19:59,388 - Velocimacro : Velocimacro : initialization complete.
+2013-09-15 20:19:59,389 - RuntimeInstance successfully initialized.
+2013-09-24 21:23:35,251 - Log4JLogChute initialized using file 'velocity.log'
+2013-09-24 21:23:35,269 - Initializing Velocity, Calling init()...
+2013-09-24 21:23:35,269 - *******************************************************************
+2013-09-24 21:23:35,269 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2013-09-24 21:23:35,269 - RuntimeInstance initializing.
+2013-09-24 21:23:35,269 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2013-09-24 21:23:35,269 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2013-09-24 21:23:35,269 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2013-09-24 21:23:35,269 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2013-09-24 21:23:35,269 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2013-09-24 21:23:35,272 - Default ResourceManager initializing. (class org.apache.velocity.runtime.resource.ResourceManagerImpl)
+2013-09-24 21:23:35,272 - ResourceManager : No configuration information found for resource loader named 'class' (id is class.resource.loader). Skipping it...
+2013-09-24 21:23:35,349 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2013-09-24 21:23:35,349 - Default ResourceManager initialization complete.
+2013-09-24 21:23:35,351 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2013-09-24 21:23:35,353 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2013-09-24 21:23:35,354 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2013-09-24 21:23:35,355 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2013-09-24 21:23:35,356 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2013-09-24 21:23:35,357 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2013-09-24 21:23:35,359 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2013-09-24 21:23:35,360 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2013-09-24 21:23:35,362 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2013-09-24 21:23:35,402 - Created '20' parsers.
+2013-09-24 21:23:35,410 - Velocimacro : initialization starting.
+2013-09-24 21:23:35,410 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2013-09-24 21:23:35,411 - Velocimacro : Default library not found.
+2013-09-24 21:23:35,411 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2013-09-24 21:23:35,411 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2013-09-24 21:23:35,411 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2013-09-24 21:23:35,411 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2013-09-24 21:23:35,411 - Velocimacro : Velocimacro : initialization complete.
+2013-09-24 21:23:35,411 - RuntimeInstance successfully initialized.
+2013-09-24 21:23:36,812 - Log4JLogChute initialized using file 'velocity.log'
+2013-09-24 21:23:36,812 - Log4JLogChute initialized using file 'velocity.log'
+2013-09-24 21:23:36,812 - Initializing Velocity, Calling init()...
+2013-09-24 21:23:36,812 - Initializing Velocity, Calling init()...
+2013-09-24 21:23:36,813 - *******************************************************************
+2013-09-24 21:23:36,813 - *******************************************************************
+2013-09-24 21:23:36,813 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2013-09-24 21:23:36,813 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2013-09-24 21:23:36,814 - RuntimeInstance initializing.
+2013-09-24 21:23:36,814 - RuntimeInstance initializing.
+2013-09-24 21:23:36,815 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2013-09-24 21:23:36,815 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2013-09-24 21:23:36,815 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2013-09-24 21:23:36,815 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2013-09-24 21:23:36,816 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2013-09-24 21:23:36,816 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2013-09-24 21:23:36,816 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2013-09-24 21:23:36,816 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2013-09-24 21:23:36,816 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2013-09-24 21:23:36,816 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2013-09-24 21:23:36,817 - Default ResourceManager initializing. (class org.apache.velocity.runtime.resource.ResourceManagerImpl)
+2013-09-24 21:23:36,817 - Default ResourceManager initializing. (class org.apache.velocity.runtime.resource.ResourceManagerImpl)
+2013-09-24 21:23:36,824 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2013-09-24 21:23:36,824 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2013-09-24 21:23:36,825 - FileResourceLoader : initialization starting.
+2013-09-24 21:23:36,825 - FileResourceLoader : initialization starting.
+2013-09-24 21:23:36,825 - Do unicode file recognition:  false
+2013-09-24 21:23:36,825 - Do unicode file recognition:  false
+2013-09-24 21:23:36,825 - FileResourceLoader : adding path '.'
+2013-09-24 21:23:36,825 - FileResourceLoader : adding path '.'
+2013-09-24 21:23:36,825 - FileResourceLoader : initialization complete.
+2013-09-24 21:23:36,825 - FileResourceLoader : initialization complete.
+2013-09-24 21:23:36,825 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2013-09-24 21:23:36,825 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2013-09-24 21:23:36,826 - Default ResourceManager initialization complete.
+2013-09-24 21:23:36,826 - Default ResourceManager initialization complete.
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2013-09-24 21:23:36,827 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2013-09-24 21:23:36,828 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2013-09-24 21:23:36,828 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2013-09-24 21:23:36,828 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2013-09-24 21:23:36,828 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2013-09-24 21:23:36,828 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2013-09-24 21:23:36,828 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2013-09-24 21:23:36,830 - Created '20' parsers.
+2013-09-24 21:23:36,830 - Created '20' parsers.
+2013-09-24 21:23:36,830 - Velocimacro : initialization starting.
+2013-09-24 21:23:36,830 - Velocimacro : initialization starting.
+2013-09-24 21:23:36,830 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2013-09-24 21:23:36,830 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2013-09-24 21:23:36,831 - Velocimacro : Default library not found.
+2013-09-24 21:23:36,831 - Velocimacro : Default library not found.
+2013-09-24 21:23:36,831 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2013-09-24 21:23:36,831 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2013-09-24 21:23:36,831 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2013-09-24 21:23:36,831 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2013-09-24 21:23:36,831 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2013-09-24 21:23:36,831 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2013-09-24 21:23:36,831 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2013-09-24 21:23:36,831 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2013-09-24 21:23:36,832 - Velocimacro : Velocimacro : initialization complete.
+2013-09-24 21:23:36,832 - Velocimacro : Velocimacro : initialization complete.
+2013-09-24 21:23:36,832 - RuntimeInstance successfully initialized.
+2013-09-24 21:23:36,832 - RuntimeInstance successfully initialized.
+2013-09-24 21:23:36,869 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:36,869 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:36,869 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:36,869 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:38,354 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:38,354 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:38,354 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:38,354 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:39,696 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:39,696 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:39,696 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:39,696 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:40,095 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:40,095 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:40,095 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:40,095 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:41,479 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:41,479 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:41,480 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:41,480 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:41,813 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:41,813 - Null reference [template 'Template name', line 86, column 59] : $id cannot be resolved.
+2013-09-24 21:23:41,814 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.
+2013-09-24 21:23:41,814 - Null reference [template 'Template name', line 88, column 76] : $id cannot be resolved.

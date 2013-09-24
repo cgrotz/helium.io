@@ -37,10 +37,11 @@ import de.skiptag.roadrunner.Roadrunner;
 
 public class RoadrunnerServer {
 
-	private static Options options = new Options();
-	private final int port;
-	private Roadrunner roadrunner;
-	private String basePath;
+	private static Options	options	= new Options();
+	private final int				port;
+	private Roadrunner			roadrunner;
+	private String					basePath;
+	private String					host;
 
 	static {
 		@SuppressWarnings("static-access")
@@ -57,8 +58,7 @@ public class RoadrunnerServer {
 
 		@SuppressWarnings("static-access")
 		Option productiveModeOption = OptionBuilder.withArgName("productionMode").hasArg()
-				.withDescription("set to true if the application runs in productive mode")
-				.create("prod");
+				.withDescription("set to true if the application runs in productive mode").create("prod");
 
 		options.addOption(directoryOption);
 		options.addOption(snaphshotOption);
@@ -68,10 +68,11 @@ public class RoadrunnerServer {
 		options.addOption("p", true, "Port for the webserver");
 	}
 
-	public RoadrunnerServer(String basePath, boolean productiveMode, int port, String journalDir,
-			String snapshotDir) throws IOException {
+	public RoadrunnerServer(String basePath, boolean productiveMode, String host, int port,
+			String journalDir, String snapshotDir) throws IOException {
 		this.port = port;
 		this.basePath = basePath;
+		this.host = host;
 		if (productiveMode) {
 			Optional<File> snapshotDirectory = Optional.of(new File(snapshotDir));
 			this.roadrunner = new Roadrunner(basePath, new File(journalDir), snapshotDirectory);
@@ -87,13 +88,14 @@ public class RoadrunnerServer {
 		HttpServer server = vertx.createHttpServer();
 		server.requestHandler(createRoutMatcher(rsh));
 		server.websocketHandler(rsh.getWebsocketHandler());
-		server.listen(8080);
+		server.listen(8080, host);
 	}
 
 	private RouteMatcher createRoutMatcher(RoadrunnerServerHandler rsh) {
 		RouteMatcher rm = new RouteMatcher();
 		rm.getWithRegEx("(.)*roadrunner.js", rsh.getRoadrunnerFileHttpHandler());
-		rm.noMatch(rsh.getRestHttpHandler());
+		rm.allWithRegEx("(.)*.json", rsh.getRestHttpHandler());
+		rm.noMatch(rsh.getAdminHttpHandler());
 		return rm;
 	}
 
@@ -103,10 +105,11 @@ public class RoadrunnerServer {
 			CommandLine cmd = parser.parse(options, args);
 			String directory = cmd.getOptionValue("d");
 			String basePath = cmd.getOptionValue("b", "http://localhost:8080");
+			String host = cmd.getOptionValue("h", "localhost");
 			String snapshotDirectory = cmd.getOptionValue("s");
 			int port = Integer.parseInt(cmd.getOptionValue("p", "8080"));
 			boolean productiveMode = Boolean.parseBoolean(cmd.getOptionValue("prod", "false"));
-			new RoadrunnerServer(basePath, productiveMode, port, directory, snapshotDirectory)
+			new RoadrunnerServer(basePath, productiveMode, host, port, directory, snapshotDirectory)
 					.run();
 		} catch (ParseException e) {
 			System.out.println(e.getLocalizedMessage());

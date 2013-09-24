@@ -43,7 +43,6 @@ public class Roadrunner {
 	public Roadrunner(String basePath, Node rule, File journalDirectory,
 			Optional<File> snapshotDirectory) throws IOException {
 		checkNotNull(basePath);
-		checkNotNull(rule);
 		checkNotNull(journalDirectory);
 		this.authorization = new RuleBasedAuthorization(rule);
 		this.persistence = new InMemoryPersistence(this.authorization, this);

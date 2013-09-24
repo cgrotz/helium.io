@@ -121,4 +121,8 @@ public final class Path {
 		}
 		return output;
 	}
+
+	public String[] toArray() {
+		return this.elements;
+	}
 }

@@ -79,5 +79,9 @@
 			<groupId>de.skiptag.roadrunner</groupId>
 			<artifactId>roadrunner-core</artifactId>
 		</dependency>
+    <dependency>
+      <groupId>de.skiptag.roadrunner</groupId>
+      <artifactId>roadrunner-admin</artifactId>
+    </dependency>
 	</dependencies>
 </project>

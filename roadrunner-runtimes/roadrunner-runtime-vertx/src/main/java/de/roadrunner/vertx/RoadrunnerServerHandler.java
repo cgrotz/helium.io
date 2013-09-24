@@ -12,6 +12,7 @@ import org.vertx.java.core.http.ServerWebSocket;
 import com.google.common.base.Optional;
 
 import de.skiptag.roadrunner.Roadrunner;
+import de.skiptag.roadrunner.admin.RoadrunnerAdmin;
 import de.skiptag.roadrunner.authorization.RoadrunnerOperation;
 import de.skiptag.roadrunner.authorization.rulebased.RulesDataSnapshot;
 import de.skiptag.roadrunner.common.Path;
@@ -33,6 +34,10 @@ public class RoadrunnerServerHandler {
 
 	public Handler<HttpServerRequest> getRestHttpHandler() {
 		return new RoadrunnerRestHttpHandler();
+	}
+
+	public Handler<HttpServerRequest> getAdminHttpHandler() {
+		return new RoadrunnerAdminHttpHandler(basePath);
 	}
 
 	public Handler<ServerWebSocket> getWebsocketHandler() {
@@ -87,6 +92,22 @@ public class RoadrunnerServerHandler {
 			} else if (request.method().equalsIgnoreCase("DELETE")) {
 				roadrunner.handleEvent(RoadrunnerEventType.SET, request.uri(), null);
 			}
+		}
+	}
+
+	private final class RoadrunnerAdminHttpHandler implements Handler<HttpServerRequest> {
+		private RoadrunnerAdmin	roadrunnerAdmin	= new RoadrunnerAdmin(roadrunner);
+		private String					basePath;
+
+		public RoadrunnerAdminHttpHandler(String basePath) {
+			this.basePath = basePath;
+		}
+
+		@Override
+		public void handle(final HttpServerRequest request) {
+			request.response().end(
+					roadrunnerAdmin.servePath("", basePath, request.absoluteURI().toString(), new Path(
+							RoadrunnerEvent.extractPath(request.absoluteURI().toString())), request.uri()));
 		}
 	}
 

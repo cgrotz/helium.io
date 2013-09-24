@@ -31,6 +31,7 @@ import com.google.common.base.Strings;
 import com.google.common.io.CharStreams;
 
 import de.skiptag.roadrunner.Roadrunner;
+import de.skiptag.roadrunner.admin.RoadrunnerAdmin;
 import de.skiptag.roadrunner.common.Path;
 import de.skiptag.roadrunner.event.RoadrunnerEvent;
 import de.skiptag.roadrunner.event.RoadrunnerEventType;
@@ -50,9 +51,14 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 	private String												snapshotDirectoryPath;
 	private boolean												productiveMode;
 	private Node													rule;
+	private RoadrunnerAdmin								roadrunnerAdmin;
 
 	@Override
 	protected StreamInbound createWebSocketInbound(String subProtocol, HttpServletRequest request) {
+		return createInbound(extractBasePath(request));
+	}
+
+	private String extractBasePath(HttpServletRequest request) {
 		String servername;
 		int serverPort = request.getServerPort();
 		if (serverPort != 80) {
@@ -72,8 +78,13 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 				servername = request.getScheme() + "://" + request.getServerName();
 			}
 		}
+		String contextPath = request.getServletContext().getContextPath();
+		if (Strings.isNullOrEmpty(contextPath) && !("/".equals(contextPath))) {
 
-		return createInbound(servername);
+			servername += !(servername.endsWith("/") || contextPath.startsWith("/")) ? contextPath : "/"
+					+ contextPath;
+		}
+		return servername;
 	}
 
 	public RoadrunnerMessageInbound createInbound(String servername) {
@@ -128,6 +139,8 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 			IOException {
 		if (roadrunner == null) {
 			this.roadrunner = createRoadrunner(req);
+
+			this.roadrunnerAdmin = new RoadrunnerAdmin(roadrunner);
 		}
 		if (req.getMethod().equals("GET") && resourceForURI(req, "/roadrunner.js")) {
 			resp.setContentType("application/javascript");
@@ -145,10 +158,21 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 				Streams.copy(openStream, outputStream, true);
 			} catch (FileNotFoundException e) {
 				logger.error("FileNotFound", e);
-				handleRestCall(req, resp);
 			}
-		} else {
+		} else if (req.getRequestURI().endsWith(".json")) {
 			handleRestCall(req, resp);
+		} else {
+			handleHttpCall(req, resp);
+		}
+	}
+
+	private void handleHttpCall(HttpServletRequest req, HttpServletResponse resp) {
+		try {
+			resp.getWriter().append(
+					roadrunnerAdmin.servePath(req.getContextPath(), extractBasePath(req), req.getRequestURL()
+							.toString(), new Path(req.getRequestURI()), req.getRequestURI()));
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 

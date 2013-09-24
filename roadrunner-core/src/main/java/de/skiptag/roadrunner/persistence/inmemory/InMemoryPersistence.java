@@ -214,6 +214,14 @@ public class InMemoryPersistence implements Persistence {
 			} else {
 				addChangeEvent(log, path);
 			}
+			{
+				Path currentPath = path;
+				while (!currentPath.isSimple()) {
+					log.addValueChangedLogEntry(currentPath.getLastElement(), currentPath,
+							currentPath.getParent(), model.getObjectForPath(currentPath), null, -1);
+					currentPath = currentPath.getParent();
+				}
+			}
 		}
 		logger.trace("Model changed: " + model);
 	}

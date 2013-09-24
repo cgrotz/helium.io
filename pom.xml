@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -36,6 +37,7 @@
 	</developers>
 
 	<modules>
+		<module>roadrunner-admin</module>
 		<module>roadrunner-core</module>
 		<module>roadrunner-common</module>
 		<module>roadrunner-runtimes</module>
@@ -76,37 +78,42 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>de.skiptag.roadrunner</groupId>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>roadrunner</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>de.skiptag.roadrunner</groupId>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>roadrunner-admin</artifactId>
+        <version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>roadrunner-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>de.skiptag.roadrunner</groupId>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>roadrunner-common</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>de.skiptag.roadrunner</groupId>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>roadrunner-client</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>de.skiptag.roadrunner</groupId>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>roadrunner-runtime-tomcat7</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>de.skiptag.roadrunner</groupId>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>roadrunner-runtime-vertx</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>de.skiptag.roadrunner</groupId>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>roadrunner-runtime-standalone</artifactId>
 				<version>${project.version}</version>
 			</dependency>
