@@ -3,7 +3,7 @@
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
 <!--[if gt IE 8]><!-->
-<html class="no-js" ng-app="admin">
+<html class="no-js">
 <!--<![endif]-->
 <head>
 <meta charset="utf-8">
@@ -12,94 +12,90 @@
 <meta name="description" content="">
 <meta name="viewport" content="width=device-width">
 
-<link rel="stylesheet" href="${contextPath}/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/bootstrap.min.css">
 <style>
 body {
-	padding-top: 60px;
-	padding-bottom: 40px;
+  padding-top: 60px;
+  padding-bottom: 40px;
 }
 </style>
-<link rel="stylesheet" href="${contextPath}/css/bootstrap-responsive.min.css">
-<link rel="stylesheet" href="${contextPath}/css/main.css">
-<link rel="stylesheet" href="${contextPath}/css/tree.css">
+<link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/tree.css">
 
-<script src="${contextPath}/js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
-<script src="${contextPath}/js/vendor/jquery.min.js"></script>
+<script src="/js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+<script src="/js/vendor/jquery.min.js"></script>
 
-<script src="${contextPath}/repo/roadrunner.js"></script>
-
-<script src="${contextPath}/js/angular.min.js"></script>
-<script src="${contextPath}/js/angularRoadrunner.js"></script>
-
-<script src="${contextPath}/js/tree.js"></script>
+<script src="/repo/roadrunner.js"></script>
+<script src="/js/tree.js"></script>
 <script type="text/javascript">
 var roadrunnerUrl = "${roadrunnerUrl}";
 </script>
-#if( $simple )
-
-#else
-<script src="${contextPath}/js/index.js"></script>
-#end
+<script src="/js/index.js"></script>
 </head>
-<body ng-controller="AdminCtrl">
-	<!--[if lt IE 7]>
+<body>
+  <!--[if lt IE 7]>
             <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
         <![endif]-->
 
-	<!-- This code is taken from http://twitter.github.com/bootstrap/examples/hero.html -->
+  <!-- This code is taken from http://twitter.github.com/bootstrap/examples/hero.html -->
 
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<div class="container">
-				<a class="btn btn-navbar" data-toggle="collapse"
-					data-target=".nav-collapse"> <span class="icon-bar"></span> <span
-					class="icon-bar"></span> <span class="icon-bar"></span>
-				</a> <a class="brand" href="#">Roadrunner Admin</a>
-			</div>
-		</div>
-	</div>
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="btn btn-navbar" data-toggle="collapse"
+          data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+          class="icon-bar"></span> <span class="icon-bar"></span>
+        </a> <a class="brand" href="#">Roadrunner Admin</a>
+      </div>
+    </div>
+  </div>
 
-	<div class="container">
+  <div class="container">
     <ol class="breadcrumb">
       #foreach( $path in $pathElements )
       #if( $path.active )
         <li class="active"><a href="$path.url">$path.name</a></li>
-			#else
-        <li><a href="$path.url">$path.name</a></li>
-			#end
-			#end
-    </ol>
-		<div class="row">
-			<div class="span12">
-			#if( $simple )
-			 <form class="form-horizontal" role="form">
-				  <div class="form-group">
-				    <label for="inputElement" class="col-lg-2 control-label">$name</label>
-				    <div class="col-lg-10">
-				      <input type="text" class="form-control" id="inputElement" placeholder="$name" value="$value">
-				    </div>
-				  </div>
-				</form>
       #else
-       <form class="form-horizontal" role="form" id="form">
-          <div class="form-group" ng-repeat="field in fields">
-            <label class="col-lg-2 control-label">{{field.$id}}</label>
+        <li><a href="$path.url">$path.name</a></li>
+      #end
+      #end
+    </ol>
+    <div class="row">
+      <div class="span12">
+      #if( $simple )
+       <form class="form-horizontal" role="form">
+          <div class="form-group">
+            <label for="inputElement" class="col-lg-2 control-label">$name</label>
             <div class="col-lg-10">
-              <input type="text" class="form-control" placeholder="{{field.$id}}" ng-model="field.val)">
+              <input type="text" class="form-control" id="inputElement" placeholder="$name" value="$value">
             </div>
           </div>
         </form>
+      #else
+       <form class="form-horizontal" role="form" id="form">
+          #foreach( $element in $elements )
+          <div class="form-group" id="$element.name">
+            <label for="inputElement$velocityCount" class="col-lg-2 control-label">$element.name</label>
+            <div class="col-lg-10">
+              <input type="text" class="form-control" id="inputElement$velocityCount" placeholder="$name" value="$element.value">
+            </div>
+          </div>
+          #end
+        </form>
         <ul class="list-group" id="linklist">
-				  <li class="list-group-item" ng-repeat="link in links">
-				    <a href="{{todo.url}}">{{todo.name}}</a>
-				  </li>
+        #foreach( $sub in $subs )
+          <li class="list-group-item" id="$element.name">
+            <a href="$sub.url">$sub.name</a>
+          </li>
+        #end
         </ul>
       #end
-			</div>
-		</div>
-	</div>
-	<!-- /container -->
+      </div>
+    </div>
+  </div>
+  <!-- /container -->
 
-	<script src="${contextPath}/js/vendor/bootstrap.min.js"></script>
+  <script src="/js/vendor/bootstrap.min.js"></script>
 </body>
 </html>

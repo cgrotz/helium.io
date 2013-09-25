@@ -221,7 +221,8 @@ public class RoadrunnerWebSocketServlet extends WebSocketServlet {
 
 	private void handleRestCall(HttpServletRequest req, HttpServletResponse resp) throws IOException,
 			RuntimeException {
-		Path nodePath = new Path(RoadrunnerEvent.extractPath(req.getRequestURI()));
+		Path nodePath = new Path(RoadrunnerEvent.extractPath(req.getRequestURI().replaceAll("\\.json",
+				"")));
 		if (req.getMethod().equals("GET")) {
 			resp.getWriter().append(roadrunner.getPersistence().get(nodePath).toString());
 		} else if (req.getMethod().equals("POST") || req.getMethod().equals("PUT")) {

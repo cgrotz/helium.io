@@ -69,7 +69,7 @@ public class RoadrunnerServerHandler {
 		public void handle(final HttpServerRequest request) {
 			request.response().headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
 
-			Path nodePath = new Path(RoadrunnerEvent.extractPath(request.uri()));
+			Path nodePath = new Path(RoadrunnerEvent.extractPath(request.uri().replaceAll("\\.json", "")));
 			if (request.method().equalsIgnoreCase("GET")) {
 				RulesDataSnapshot root = new InMemoryDataSnapshot(roadrunner.getPersistence().get(null));
 				Object node = roadrunner.getPersistence().get(nodePath);
