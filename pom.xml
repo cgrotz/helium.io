@@ -8,13 +8,13 @@
 		<version>7</version>
 	</parent>
 
-	<groupId>de.skiptag.roadrunner</groupId>
-	<artifactId>roadrunner</artifactId>
+	<groupId>io.helium</groupId>
+	<artifactId>helium</artifactId>
 	<version>0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>Roadrunner</name>
+	<name>Helium</name>
 	<description>Real-time backend for web apps</description>
-	<url>http://skiptag.github.io/roadrunner</url>
+	<url>http://christophgrotz.github.io/helium</url>
 	<licenses>
 		<license>
 			<name>Apache License, Version 2.0</name>
@@ -24,9 +24,9 @@
 	</licenses>
 
 	<scm>
-		<connection>scm:git:git@github.com:skiptag/roadrunner.git</connection>
-		<developerConnection>scm:git:git@github.com:skiptag/roadrunner.git</developerConnection>
-		<url>git@github.com:skiptag/roadrunner.git</url>
+		<connection>scm:git:git@github.com:christophgrotz/helium.git</connection>
+		<developerConnection>scm:git:git@github.com:christophgrotz/helium.git</developerConnection>
+		<url>git@github.com:skiptag/helium.git</url>
 	</scm>
 	<developers>
 		<developer>
@@ -37,12 +37,12 @@
 	</developers>
 
 	<modules>
-		<module>roadrunner-admin</module>
-		<module>roadrunner-core</module>
-		<module>roadrunner-common</module>
-		<module>roadrunner-runtimes</module>
-		<module>roadrunner-client</module>
-		<module>roadrunner-examples</module>
+		<module>helium-admin</module>
+		<module>helium-core</module>
+		<module>helium-common</module>
+		<module>helium-runtimes</module>
+		<module>helium-client</module>
+		<module>helium-examples</module>
 	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -79,42 +79,42 @@
 		<dependencies>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>roadrunner</artifactId>
+				<artifactId>helium</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
         <groupId>${project.groupId}</groupId>
-        <artifactId>roadrunner-admin</artifactId>
+        <artifactId>helium-admin</artifactId>
         <version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>roadrunner-core</artifactId>
+				<artifactId>helium-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>roadrunner-common</artifactId>
+				<artifactId>helium-common</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>roadrunner-client</artifactId>
+				<artifactId>helium-client</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>roadrunner-runtime-tomcat7</artifactId>
+				<artifactId>helium-runtime-tomcat7</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>roadrunner-runtime-vertx</artifactId>
+				<artifactId>helium-runtime-vertx</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>roadrunner-runtime-standalone</artifactId>
+				<artifactId>helium-runtime-standalone</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
