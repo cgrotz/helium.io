@@ -53,13 +53,12 @@
     </developers>
 
     <modules>
-        <module>helium-admin</module>
-        <module>helium-core</module>
         <module>helium-common</module>
-        <module>helium-runtimes</module>
+        <module>helium-runtime</module>
         <module>helium-client</module>
         <module>helium-examples</module>
     </modules>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.6</maven.compiler.source>
@@ -100,16 +99,6 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>helium-admin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>helium-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>helium-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -120,17 +109,7 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>helium-runtime-tomcat7</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>helium-runtime-vertx</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>helium-runtime-standalone</artifactId>
+                <artifactId>helium-runtime</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
