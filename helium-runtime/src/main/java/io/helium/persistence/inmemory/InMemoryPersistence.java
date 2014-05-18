@@ -64,7 +64,7 @@ public class InMemoryPersistence implements Persistence {
 
     @Override
     public Object get(Path path) {
-        if (path == null || model.getObjectForPath(path) == null) {
+        if (path == null || path.isEmtpy() || model.getObjectForPath(path) == null) {
             return model;
         } else {
             return model.getObjectForPath(path);

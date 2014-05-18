@@ -121,8 +121,9 @@ public final class Path {
 	 * @return Path has no elements
 	 */
 	public boolean isEmtpy() {
-		return elements.length <= 0;
-	}
+
+        return elements.length <= 0 || (elements.length == 1 && Strings.isNullOrEmpty(elements[0]));
+    }
 
 	@Override
 	public int hashCode() {

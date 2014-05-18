@@ -16,6 +16,7 @@
 
 package io.helium.json;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -539,7 +540,7 @@ public class Node {
      * @return true if the key exists in the Node.
      */
     public boolean has(String key) {
-        return this.map.containsKey(key) && (this.map.get(key) != null && this.map.get(key) != NULL);
+        return !Strings.isNullOrEmpty(key) && this.map.containsKey(key) && (this.map.get(key) != null && this.map.get(key) != NULL);
     }
 
     /**

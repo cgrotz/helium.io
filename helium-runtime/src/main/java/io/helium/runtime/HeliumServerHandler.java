@@ -120,7 +120,7 @@ public class HeliumServerHandler extends SimpleChannelInboundHandler<Object> {
             return;
         }
 
-        if (req.getMethod() == GET && !req.headers().contains("Upgrade", "websocket", true) && (req.getUri().equals("/") || req.getUri().endsWith(".js") || req.getUri().endsWith(".css") || req.getUri().endsWith(".html") || req.getUri().endsWith(".png"))) {
+        if (req.getMethod() == GET && !req.headers().contains("Upgrade", "websocket", true) && (req.getUri().endsWith(".js") || req.getUri().endsWith(".css") || req.getUri().endsWith(".html") || req.getUri().endsWith(".png"))) {
             String admin = heliumAdmin.servePath("", basePath, req.getUri(), new Path(HeliumEvent.extractPath(req.getUri())), req.getUri());
             ByteBuf content = Unpooled.copiedBuffer(admin.getBytes());
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, content);
