@@ -1,75 +1,91 @@
-<web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-	version="3.0">
+<!--
+  ~ Copyright 2012 The Helium Project
+  ~
+  ~ The Helium Project licenses this file to you under the Apache License,
+  ~ version 2.0 (the "License"); you may not use this file except in compliance
+  ~ with the License. You may obtain a copy of the License at:
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
 
-	<display-name>helpdesk</display-name>
-	<servlet>
-		<servlet-name>HeliumServlet</servlet-name>
-		<servlet-class>io.helium.server.HeliumWebSocketServlet</servlet-class>
-		<init-param>
-			<param-name>journalDirectory</param-name>
-			<param-value>helpdesk-journal</param-value>
-		</init-param>
-		<init-param>
-			<param-name>snapshotDirectory</param-name>
-			<param-value>helpdesk-snapshots</param-value>
-		</init-param>
-		<init-param>
-			<param-name>rule</param-name>
-			<param-value>WEB-INF/rule.json</param-value>
-		</init-param>
-	</servlet>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
 
-	<servlet-mapping>
-		<servlet-name>HeliumServlet</servlet-name>
-		<url-pattern>/repo/*</url-pattern>
-	</servlet-mapping>
-	<servlet>
-		<servlet-name>index.jsp</servlet-name>
-		<jsp-file>/index.jsp</jsp-file>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>index.jsp</servlet-name>
-		<url-pattern>/index.html</url-pattern>
-	</servlet-mapping>
+    <display-name>helpdesk</display-name>
+    <servlet>
+        <servlet-name>HeliumServlet</servlet-name>
+        <servlet-class>io.helium.server.HeliumWebSocketServlet</servlet-class>
+        <init-param>
+            <param-name>journalDirectory</param-name>
+            <param-value>helpdesk-journal</param-value>
+        </init-param>
+        <init-param>
+            <param-name>snapshotDirectory</param-name>
+            <param-value>helpdesk-snapshots</param-value>
+        </init-param>
+        <init-param>
+            <param-name>rule</param-name>
+            <param-value>WEB-INF/rule.json</param-value>
+        </init-param>
+    </servlet>
 
-	<servlet>
-		<servlet-name>support.jsp</servlet-name>
-		<jsp-file>/support.jsp</jsp-file>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>support.jsp</servlet-name>
-		<url-pattern>/support.html</url-pattern>
-	</servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>HeliumServlet</servlet-name>
+        <url-pattern>/repo/*</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>index.jsp</servlet-name>
+        <jsp-file>/index.jsp</jsp-file>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>index.jsp</servlet-name>
+        <url-pattern>/index.html</url-pattern>
+    </servlet-mapping>
 
-	<welcome-file-list>
-		<welcome-file>index.html</welcome-file>
-	</welcome-file-list>
+    <servlet>
+        <servlet-name>support.jsp</servlet-name>
+        <jsp-file>/support.jsp</jsp-file>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>support.jsp</servlet-name>
+        <url-pattern>/support.html</url-pattern>
+    </servlet-mapping>
 
-	<context-param>
-		<param-name>contextConfigLocation</param-name>
-		<param-value>/WEB-INF/applicationContext.xml</param-value>
-	</context-param>
-	<listener>
-		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-	</listener>
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
 
-	<filter>
-		<filter-name>springSecurityFilterChain</filter-name>
-		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
-	</filter>
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>/WEB-INF/applicationContext.xml</param-value>
+    </context-param>
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
 
-	<filter-mapping>
-		<filter-name>springSecurityFilterChain</filter-name>
-		<url-pattern>/*</url-pattern>
-	</filter-mapping>
+    <filter>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    </filter>
 
-	<error-page>
-		<error-code>500</error-code>
-		<location>/error.html</location>
-	</error-page>
-	<error-page>
-		<error-code>403</error-code>
-		<location>/unauthorized.html</location>
-	</error-page>
+    <filter-mapping>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error.html</location>
+    </error-page>
+    <error-page>
+        <error-code>403</error-code>
+        <location>/unauthorized.html</location>
+    </error-page>
 </web-app>

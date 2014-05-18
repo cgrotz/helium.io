@@ -1,26 +1,42 @@
-<beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:sec="http://www.springframework.org/schema/security" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
+<!--
+  ~ Copyright 2012 The Helium Project
+  ~
+  ~ The Helium Project licenses this file to you under the Apache License,
+  ~ version 2.0 (the "License"); you may not use this file except in compliance
+  ~ with the License. You may obtain a copy of the License at:
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<beans xmlns:sec="http://www.springframework.org/schema/security"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
           http://www.springframework.org/schema/security
           http://www.springframework.org/schema/security/spring-security-3.1.xsd">
-	
-	<sec:http auto-config='true' use-expressions="true">
-		<sec:intercept-url pattern="/client/**" access="permitAll" />
-		<sec:intercept-url pattern="/login.html" access="permitAll" />
-		<sec:intercept-url pattern="/support.html" access="hasRole('ROLE_ADMIN')" />
-		<sec:intercept-url pattern="/**" access="hasRole('ROLE_USER')" />
-    	<sec:form-login login-page='/login.html' />
-	</sec:http>
 
-	<sec:authentication-manager>
-		<sec:authentication-provider>
-			<sec:user-service>
-				<sec:user name="user" password="user" authorities="ROLE_USER" />
-				<sec:user name="admin" password="admin" authorities="ROLE_USER,ROLE_ADMIN" />
-			</sec:user-service>
-		</sec:authentication-provider>
-	</sec:authentication-manager>
+    <sec:http auto-config='true' use-expressions="true">
+        <sec:intercept-url pattern="/client/**" access="permitAll"/>
+        <sec:intercept-url pattern="/login.html" access="permitAll"/>
+        <sec:intercept-url pattern="/support.html" access="hasRole('ROLE_ADMIN')"/>
+        <sec:intercept-url pattern="/**" access="hasRole('ROLE_USER')"/>
+        <sec:form-login login-page='/login.html'/>
+    </sec:http>
+
+    <sec:authentication-manager>
+        <sec:authentication-provider>
+            <sec:user-service>
+                <sec:user name="user" password="user" authorities="ROLE_USER"/>
+                <sec:user name="admin" password="admin" authorities="ROLE_USER,ROLE_ADMIN"/>
+            </sec:user-service>
+        </sec:authentication-provider>
+    </sec:authentication-manager>
 
 </beans>
   

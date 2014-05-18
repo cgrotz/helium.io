@@ -1,70 +1,87 @@
 <!DOCTYPE html>
+<!--
+  ~ Copyright 2012 The Helium Project
+  ~
+  ~ The Helium Project licenses this file to you under the Apache License,
+  ~ version 2.0 (the "License"); you may not use this file except in compliance
+  ~ with the License. You may obtain a copy of the License at:
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <title>Backbone.js Todos</title>
-  <link rel="stylesheet" href="todos.css"/>
+    <meta charset="utf-8">
+    <title>Backbone.js Todos</title>
+    <link rel="stylesheet" href="todos.css"/>
 </head>
 
 <body>
 
-  <div id="todoapp">
+<div id="todoapp">
 
     <header>
-      <h1>Todos</h1>
-      <input id="new-todo" type="text" placeholder="What needs to be done?">
+        <h1>Todos</h1>
+        <input id="new-todo" type="text" placeholder="What needs to be done?">
     </header>
 
     <section id="main">
-      <input id="toggle-all" type="checkbox">
-      <label for="toggle-all">Mark all as complete</label>
-      <ul id="todo-list"></ul>
+        <input id="toggle-all" type="checkbox">
+        <label for="toggle-all">Mark all as complete</label>
+        <ul id="todo-list"></ul>
     </section>
 
     <footer>
-      <a id="clear-completed">Clear completed</a>
-      <div id="todo-count"></div>
+        <a id="clear-completed">Clear completed</a>
+
+        <div id="todo-count"></div>
     </footer>
 
-  </div>
+</div>
 
-  <div id="instructions">
+<div id="instructions">
     Double-click to edit a todo.
-  </div>
+</div>
 
-  <div id="credits">
+<div id="credits">
     Created by
-    <br />
+    <br/>
     <a href="http://jgn.me/">J&eacute;r&ocirc;me Gravel-Niquet</a>.
-    <br />Rewritten by: <a href="http://addyosmani.github.com/todomvc">TodoMVC</a>.
-  </div>
+    <br/>Rewritten by: <a href="http://addyosmani.github.com/todomvc">TodoMVC</a>.
+</div>
 
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/json2/20121008/json2.js"></script>
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
-  <script src="/helium/repo/helium.js"></script>
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/0.9.10/backbone-min.js"></script>
-  <script src="backbone-helium.js"></script>
-  <script src="todos.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/json2/20121008/json2.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
+<script src="/helium/repo/helium.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/0.9.10/backbone-min.js"></script>
+<script src="backbone-helium.js"></script>
+<script src="todos.js"></script>
 
-  <!-- Templates -->
+<!-- Templates -->
 
-  <script type="text/template" id="item-template">
+<script type="text/template" id="item-template">
     <div class="view">
-      <input class="toggle" type="checkbox" <%= done ? 'checked="checked"' : '' %> />
-      <label><%- title %></label>
-      <a class="destroy"></a>
+        <input class="toggle" type="checkbox" <%= done ? 'checked="checked"' : '' %> />
+        <label><%- title %></label>
+        <a class="destroy"></a>
     </div>
-    <input class="edit" type="text" value="<%- title %>" />
-  </script>
+    <input class="edit" type="text" value="<%- title %>"/>
+</script>
 
-  <script type="text/template" id="stats-template">
+<script type="text/template" id="stats-template">
     <% if (done) { %>
-      <a id="clear-completed">Clear <%= done %> completed <%= done == 1 ? 'item' : 'items' %></a>
+    <a id="clear-completed">Clear <%= done %> completed <%= done == 1 ? 'item' : 'items' %></a>
     <% } %>
     <div class="todo-count"><b><%= remaining %></b> <%= remaining == 1 ? 'item' : 'items' %> left</div>
-  </script>
+</script>
 
-  </body>
+</body>
 </html>
