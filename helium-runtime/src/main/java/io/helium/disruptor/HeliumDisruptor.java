@@ -21,28 +21,23 @@ import com.google.common.base.Preconditions;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.dsl.Disruptor;
-import io.helium.authorization.Authorization;
+import io.helium.connectivity.messaging.HeliumEndpoint;
 import io.helium.disruptor.processor.authorization.AuthorizationProcessor;
 import io.helium.disruptor.processor.distribution.Distributor;
 import io.helium.disruptor.processor.eventsourcing.EventSourceProcessor;
 import io.helium.disruptor.processor.persistence.PersistenceProcessor;
 import io.helium.disruptor.translator.HeliumEventTranslator;
 import io.helium.event.HeliumEvent;
-import io.helium.json.Node;
-import io.helium.messaging.HeliumEndpoint;
 import io.helium.persistence.Persistence;
+import io.helium.persistence.authorization.Authorization;
 import journal.io.api.ClosedJournalException;
 import journal.io.api.CompactedDataFileException;
 import journal.io.api.Journal;
-import journal.io.api.Journal.ReadType;
-import journal.io.api.Journal.WriteType;
-import journal.io.api.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -68,16 +63,11 @@ public class HeliumDisruptor implements ExceptionHandler {
     private Optional<Journal> snapshotJournal = Optional.absent();
     private long currentSequence;
 
-    public HeliumDisruptor(File journalDirectory, Optional<File> snapshotDirectory,
-                           Persistence persistence, Authorization authorization) throws IOException {
+    public HeliumDisruptor(File journalDirectory, Persistence persistence, Authorization authorization) throws IOException {
 
         this.persistence = persistence;
         initDisruptor(journalDirectory, persistence, authorization);
-        if (snapshotDirectory.isPresent()) {
-            restoreFromSnapshot(snapshotDirectory.get(), persistence);
-        } else {
-            restoreFromJournal();
-        }
+        restoreFromJournal();
     }
 
     public Disruptor<HeliumEvent> getDisruptor() {
@@ -87,28 +77,6 @@ public class HeliumDisruptor implements ExceptionHandler {
     private void restoreFromJournal() throws ClosedJournalException, CompactedDataFileException,
             IOException {
         eventSourceProcessor.restore();
-    }
-
-    private void restoreFromSnapshot(File snapshotDirectory, Persistence persistence)
-            throws IOException, ClosedJournalException, CompactedDataFileException {
-
-        Journal journal = new Journal();
-        journal.setDirectory(snapshotDirectory);
-        snapshotJournal = Optional.fromNullable(journal);
-        journal.open();
-        Iterator<Location> iterator = journal.undo().iterator();
-        if (iterator.hasNext()) {
-            Location lastEntryLocation = iterator.next();
-            byte[] lastEntry = journal.read(lastEntryLocation, ReadType.SYNC);
-            Node snapshot = new Node(new String(lastEntry));
-            int pointer = snapshot.getInt("currentEventLogPointer");
-            int dataFileId = snapshot.getInt("currentEventLogDataFileId");
-            Node node = new Node();
-            node.populate(null, node);
-            persistence.restoreSnapshot(node);
-            eventSourceProcessor.setCurrentLocation(new Location(dataFileId, pointer));
-        }
-        restoreFromJournal();
     }
 
     @SuppressWarnings("unchecked")
@@ -137,21 +105,6 @@ public class HeliumDisruptor implements ExceptionHandler {
         logger.trace("handling event: " + heliumEvent + "(" + heliumEvent.length() + ")");
         disruptor.publishEvent(eventTranslator);
         this.currentSequence = eventTranslator.getSequence();
-    }
-
-    public void snapshot() throws IOException, RuntimeException {
-        Optional<Location> currentLocation = eventSourceProcessor.getCurrentLocation();
-        if (snapshotJournal.isPresent() || currentLocation.isPresent()) {
-            Location location = currentLocation.get();
-            Node payload = persistence.dumpSnapshot();
-            Node snapshot = new Node();
-            snapshot.put("currentEventLogPointer", location.getPointer());
-            snapshot.put("currentEventLogDataFileId", location.getDataFileId());
-            snapshot.put(HeliumEvent.PAYLOAD, payload);
-            snapshotJournal.get().open();
-            snapshotJournal.get().write(snapshot.toString().getBytes(), WriteType.SYNC);
-            snapshotJournal.get().close();
-        }
     }
 
     public void shutdown() {

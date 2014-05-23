@@ -14,18 +14,14 @@
  * under the License.
  */
 
-package io.helium.authorization;
+package io.helium.connectivity.messaging;
 
-public enum HeliumOperation {
-    READ(".read"), WRITE(".write");
+import io.helium.common.Path;
+import io.helium.event.HeliumEvent;
+import io.helium.json.Node;
 
-    private String op;
+public interface HeliumEventDistributor {
+    void distribute(HeliumEvent event);
 
-    HeliumOperation(String op) {
-        this.op = op;
-    }
-
-    public String getOp() {
-        return this.op;
-    }
+    void distributeEvent(Path path, Node payload);
 }

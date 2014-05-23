@@ -14,17 +14,17 @@
  * under the License.
  */
 
-package io.helium.authorization.rulebased;
+package io.helium.persistence.authorization.rulebased;
 
 /**
  * <p>
- * A RulesDataSnapshot contains data from a Firebase location. It is akin to a
+ * A RulesDataSnapshot contains data from a Helium location. It is akin to a
  * DataSnapshot but is available for use within Security Rule Expressions.
  * </p>
  * <p/>
  * <p>
  * The data, newData, and root variables each return a RulesDataSnapshot,
- * allowing your rules to operate on the data in Firebase or the new data being
+ * allowing your rules to operate on the data in Helium or the new data being
  * written.
  * </p>
  */

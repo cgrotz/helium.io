@@ -1,4 +1,5 @@
 target/
+db/
 .externalToolBuilders
 .settings
 .project

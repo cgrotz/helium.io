@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package io.helium.authorization.rulebased;
+package io.helium.persistence.authorization.rulebased;
 
-import io.helium.authorization.HeliumOperation;
 import io.helium.common.Path;
 import io.helium.json.Node;
+import io.helium.persistence.authorization.HeliumOperation;
 
 public class RuleBasedAuthorizator {
 

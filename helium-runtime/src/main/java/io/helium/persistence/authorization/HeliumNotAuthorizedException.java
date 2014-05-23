@@ -14,21 +14,16 @@
  * under the License.
  */
 
-package io.helium.rpc;
+package io.helium.persistence.authorization;
 
-public class ObjectConverter {
+import io.helium.common.Path;
 
-    public Object convert(Object value, Class<?> clazz) {
-        if (value == null) {
-            return null;
-        }
-        if (clazz.isAssignableFrom(value.getClass())) {
-            return clazz.cast(value);
-        }
-        if (clazz.isAssignableFrom(Integer.class) && value.getClass().isAssignableFrom(String.class)) {
-            return Integer.valueOf((String) value);
-        }
-        throw new RuntimeException("Not convertable " + value.getClass().getSimpleName() + " to "
-                + clazz.getSimpleName());
+public class HeliumNotAuthorizedException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
+    public HeliumNotAuthorizedException(HeliumOperation op, Path path) {
+        super(op.toString() + " not allowed on " + path);
     }
+
 }

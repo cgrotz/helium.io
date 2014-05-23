@@ -16,11 +16,11 @@
 
 package io.helium;
 
-import io.helium.authorization.Authorization;
-import io.helium.authorization.rulebased.RuleBasedAuthorization;
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
+import io.helium.persistence.authorization.Authorization;
+import io.helium.persistence.authorization.rulebased.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import org.junit.Assert;
 import org.junit.Before;

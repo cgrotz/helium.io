@@ -16,14 +16,14 @@
 
 package io.helium.persistence;
 
-import io.helium.authorization.rulebased.RulesDataSnapshot;
 import io.helium.common.Path;
+import io.helium.connectivity.messaging.HeliumEndpoint;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
-import io.helium.messaging.HeliumEndpoint;
-import io.helium.queries.QueryEvaluator;
+import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
+import io.helium.persistence.queries.QueryEvaluator;
 
-public interface Persistence extends SnapshotProcessor {
+public interface Persistence {
 
     Object get(Path path);
 

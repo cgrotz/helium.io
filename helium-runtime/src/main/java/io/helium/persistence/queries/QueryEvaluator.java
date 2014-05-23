@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package io.helium.queries;
+package io.helium.persistence.queries;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import io.helium.common.Path;
 import io.helium.json.Node;
-import io.helium.scripting.SandboxedScriptingEnvironment;
+import io.helium.persistence.SandboxedScriptingEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

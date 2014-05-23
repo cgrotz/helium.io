@@ -14,14 +14,19 @@
  * under the License.
  */
 
-package io.helium.admin;
+package io.helium.connectivity.admin;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import io.helium.Helium;
 import io.helium.common.Path;
+import io.helium.connectivity.HeliumServerHandler;
 import io.helium.json.Node;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -36,6 +41,9 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
+
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class HeliumAdmin {
     private VelocityEngine engine;
@@ -133,5 +141,11 @@ public class HeliumAdmin {
             path = path.getParent();
         }
         return Lists.reverse(paths);
+    }
+
+    public void servePath(ChannelHandlerContext ctx, FullHttpRequest req) {
+
+        FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
+        HeliumServerHandler.sendHttpResponse(ctx, req, res);
     }
 }

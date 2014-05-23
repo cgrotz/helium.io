@@ -17,13 +17,13 @@
 package io.helium.disruptor.processor.authorization;
 
 import com.lmax.disruptor.EventHandler;
-import io.helium.authorization.Authorization;
-import io.helium.authorization.HeliumOperation;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
+import io.helium.persistence.authorization.Authorization;
+import io.helium.persistence.authorization.HeliumOperation;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
 
 public class AuthorizationProcessor implements EventHandler<HeliumEvent> {

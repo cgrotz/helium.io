@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.queries;
+package io.helium.persistence.queries;
 
 import com.google.common.base.Objects;
 import io.helium.common.Path;

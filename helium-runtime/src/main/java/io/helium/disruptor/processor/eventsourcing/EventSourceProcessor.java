@@ -41,10 +41,6 @@ public class EventSourceProcessor implements EventHandler<HeliumEvent> {
 
     private Optional<Location> currentLocation = Optional.absent();
 
-    private int snapshotCount = 100;
-
-    private int messageCount = 0;
-
     public EventSourceProcessor(File journal_dir, HeliumDisruptor helium)
             throws IOException {
         journal.setDirectory(journal_dir);
@@ -60,11 +56,6 @@ public class EventSourceProcessor implements EventHandler<HeliumEvent> {
             Location write = journal.write(event.toString().getBytes(), WriteType.SYNC);
             journal.sync();
             currentLocation = Optional.of(write);
-            messageCount++;
-            if (messageCount > snapshotCount) {
-                helium.snapshot();
-                messageCount = 0;
-            }
         }
     }
 

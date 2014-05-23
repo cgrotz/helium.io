@@ -19,11 +19,11 @@
  */
 package io.helium;
 
-import io.helium.authorization.Authorization;
-import io.helium.authorization.rulebased.RuleBasedAuthorization;
+import io.helium.connectivity.messaging.HeliumEndpoint;
 import io.helium.event.HeliumEvent;
 import io.helium.json.Node;
-import io.helium.messaging.HeliumEndpoint;
+import io.helium.persistence.authorization.Authorization;
+import io.helium.persistence.authorization.rulebased.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import io.netty.channel.Channel;
 import org.junit.Before;

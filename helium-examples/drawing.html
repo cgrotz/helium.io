@@ -2,7 +2,7 @@
 <head>
     <script src="http://localhost:8080/helium.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://www.firebase.com/css/example.css">
+    <link rel="stylesheet" type="text/css" href="https://www.helium.com/css/example.css">
 </head>
 <body>
 <div>
@@ -59,7 +59,7 @@
       var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
       var sx = (x0 < x1) ? 1 : -1, sy = (y0 < y1) ? 1 : -1, err = dx - dy;
       while (true) {
-        //write the pixel into Firebase, or if we are drawing white, remove the pixel
+        //write the pixel into Helium, or if we are drawing white, remove the pixel
         pixelDataRef.child(x0 + ":" + y0).set(currentColor === "fff" ? null : currentColor);
 
         if (x0 == x1 && y0 == y1) break;
@@ -93,6 +93,7 @@
     pixelDataRef.on('child_changed', drawPixel);
     pixelDataRef.on('child_removed', clearPixel);
   });
+
 
 </script>
 </body>

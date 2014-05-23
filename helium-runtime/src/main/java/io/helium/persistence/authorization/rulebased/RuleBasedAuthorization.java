@@ -14,15 +14,15 @@
  * under the License.
  */
 
-package io.helium.authorization.rulebased;
+package io.helium.persistence.authorization.rulebased;
 
-import io.helium.authorization.Authorization;
-import io.helium.authorization.HeliumNotAuthorizedException;
-import io.helium.authorization.HeliumOperation;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.json.Node;
-import io.helium.scripting.SandboxedScriptingEnvironment;
+import io.helium.persistence.SandboxedScriptingEnvironment;
+import io.helium.persistence.authorization.Authorization;
+import io.helium.persistence.authorization.HeliumNotAuthorizedException;
+import io.helium.persistence.authorization.HeliumOperation;
 
 public class RuleBasedAuthorization implements Authorization {
 

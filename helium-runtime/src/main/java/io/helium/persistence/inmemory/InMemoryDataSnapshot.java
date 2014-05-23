@@ -16,8 +16,8 @@
 
 package io.helium.persistence.inmemory;
 
-import io.helium.authorization.rulebased.RulesDataSnapshot;
 import io.helium.json.Node;
+import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 
 public class InMemoryDataSnapshot implements RulesDataSnapshot {
 

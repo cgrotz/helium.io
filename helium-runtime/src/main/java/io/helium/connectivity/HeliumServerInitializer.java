@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.runtime;
+package io.helium.connectivity;
 
 import io.helium.Helium;
 import io.netty.channel.ChannelInitializer;

@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package io.helium.rpc;
+package io.helium.connectivity.rpc;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.helium.connectivity.messaging.HeliumEndpoint;
 import io.helium.json.Node;
-import io.helium.messaging.HeliumOutboundSocket;
 
 import java.lang.annotation.*;
 import java.util.List;
@@ -44,7 +44,7 @@ public class Rpc {
         }
     }
 
-    public void handle(String message, HeliumOutboundSocket socket) {
+    public void handle(String message, HeliumEndpoint socket) {
         Node json = new Node(message);
         String id = checkNotNull(json.getString("id"));
         String method = checkNotNull(json.getString("method"));

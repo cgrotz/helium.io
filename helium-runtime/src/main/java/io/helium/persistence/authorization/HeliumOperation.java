@@ -14,23 +14,18 @@
  * under the License.
  */
 
-package io.helium.admin;
+package io.helium.persistence.authorization;
 
-public class AdminElement {
-    private String name;
-    private Object value;
+public enum HeliumOperation {
+    READ(".read"), WRITE(".write");
 
-    public AdminElement(String name, Object value) {
-        super();
-        this.name = name;
-        this.value = value;
+    private String op;
+
+    HeliumOperation(String op) {
+        this.op = op;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public Object getValue() {
-        return value;
+    public String getOp() {
+        return this.op;
     }
 }

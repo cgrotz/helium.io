@@ -42,7 +42,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.helium.runtime.HeliumServer</mainClass>
+                            <mainClass>io.helium.connectivity.HeliumServer</mainClass>
                         </manifest>
                     </archive>
                     <descriptor>runnable.xml</descriptor>
@@ -80,8 +80,8 @@
                         <Embed-Dependency>*</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Bundle-ClassPath>.,{maven-dependencies}</Bundle-ClassPath>
-                        <Export-Package>io.helium.runtime</Export-Package>
-                        <Bundle-SymbolicName>io.helium.runtime</Bundle-SymbolicName>
+                        <Export-Package>io.helium.connectivity</Export-Package>
+                        <Bundle-SymbolicName>io.helium.connectivity</Bundle-SymbolicName>
                         <Bundle-Activator>${pom.artifactId}.HeliumServer</Bundle-Activator>
                         <!--<Export-Service>org.osgi.service.log.LogService,org.osgi.service.log.LogReaderService</Export-Service> -->
                     </instructions>
@@ -136,10 +136,6 @@
             <artifactId>helium-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helium</groupId>
-            <artifactId>helium-admin</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
@@ -170,6 +166,10 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j</artifactId>
+            <version>2.1.0-M02</version>
+        </dependency>
     </dependencies>
 </project>

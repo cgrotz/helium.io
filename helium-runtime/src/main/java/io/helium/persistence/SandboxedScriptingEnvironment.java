@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package io.helium.scripting;
+package io.helium.persistence;
 
-import io.helium.queries.QueryEvaluator;
+import io.helium.persistence.queries.QueryEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

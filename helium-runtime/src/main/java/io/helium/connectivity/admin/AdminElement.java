@@ -14,14 +14,23 @@
  * under the License.
  */
 
-package io.helium.persistence;
+package io.helium.connectivity.admin;
 
-import io.helium.json.Node;
+public class AdminElement {
+    private String name;
+    private Object value;
 
-public interface SnapshotProcessor {
+    public AdminElement(String name, Object value) {
+        super();
+        this.name = name;
+        this.value = value;
+    }
 
-    Node dumpSnapshot();
+    public String getName() {
+        return name;
+    }
 
-    void restoreSnapshot(Node node);
-
+    public Object getValue() {
+        return value;
+    }
 }

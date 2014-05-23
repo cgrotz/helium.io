@@ -14,31 +14,21 @@
  * under the License.
  */
 
-package io.helium.admin;
+package io.helium.connectivity.rpc;
 
-import io.helium.common.Path;
+public class ObjectConverter {
 
-public class AdminPath {
-
-    private String url;
-    private String name;
-    private boolean active;
-
-    public AdminPath(String basePath, Path path) {
-        this.url = basePath + path.toString();
-        this.name = path.getLastElement();
-        this.active = path.isSimple();
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isActive() {
-        return active;
+    public Object convert(Object value, Class<?> clazz) {
+        if (value == null) {
+            return null;
+        }
+        if (clazz.isAssignableFrom(value.getClass())) {
+            return clazz.cast(value);
+        }
+        if (clazz.isAssignableFrom(Integer.class) && value.getClass().isAssignableFrom(String.class)) {
+            return Integer.valueOf((String) value);
+        }
+        throw new RuntimeException("Not convertable " + value.getClass().getSimpleName() + " to "
+                + clazz.getSimpleName());
     }
 }

@@ -14,14 +14,19 @@
  * under the License.
  */
 
-package io.helium.messaging;
+package io.helium.persistence.authorization;
 
 import io.helium.common.Path;
-import io.helium.event.HeliumEvent;
 import io.helium.json.Node;
+import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 
-public interface HeliumEventDistributor {
-    void distribute(HeliumEvent event);
+public interface Authorization {
+    public static final Node ALL_ACCESS_RULE = new Node(
+            "{rules:{\".write\": \"true\",\".read\": \"true\"}}");
 
-    void distributeEvent(Path path, Node payload);
+    void authorize(HeliumOperation op, Node auth, RulesDataSnapshot root, Path path,
+                   Object object) throws HeliumNotAuthorizedException;
+
+    boolean isAuthorized(HeliumOperation op, Node auth, RulesDataSnapshot root, Path path,
+                         Object object);
 }

@@ -17,17 +17,17 @@
 package io.helium.persistence.inmemory;
 
 import io.helium.Helium;
-import io.helium.authorization.Authorization;
-import io.helium.authorization.HeliumOperation;
-import io.helium.authorization.rulebased.RulesDataSnapshot;
 import io.helium.common.Path;
+import io.helium.connectivity.messaging.HeliumEndpoint;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.json.Node;
 import io.helium.json.NodeVisitor;
-import io.helium.messaging.HeliumEndpoint;
 import io.helium.persistence.Persistence;
-import io.helium.queries.QueryEvaluator;
+import io.helium.persistence.authorization.Authorization;
+import io.helium.persistence.authorization.HeliumOperation;
+import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
+import io.helium.persistence.queries.QueryEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -303,16 +303,6 @@ public class InMemoryPersistence implements Persistence {
                 new InMemoryDataSnapshot(model), path, parent)) {
             parent.setIndexOf(path.getLastElement(), priority);
         }
-    }
-
-    @Override
-    public Node dumpSnapshot() {
-        return model;
-    }
-
-    @Override
-    public void restoreSnapshot(Node node) {
-        model.populate(null, node);
     }
 
     @Override

@@ -14,19 +14,20 @@
  * under the License.
  */
 
-package io.helium.runtime;
+package io.helium.connectivity;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import io.helium.Helium;
-import io.helium.admin.HeliumAdmin;
-import io.helium.authorization.HeliumOperation;
-import io.helium.authorization.rulebased.RulesDataSnapshot;
 import io.helium.common.Path;
+import io.helium.connectivity.admin.HeliumAdmin;
+import io.helium.connectivity.messaging.HeliumEndpoint;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.json.Node;
-import io.helium.messaging.HeliumEndpoint;
+import io.helium.persistence.authorization.HeliumOperation;
+import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -39,6 +40,8 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 
 import javax.activation.MimetypesFileTypeMap;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -89,6 +92,23 @@ public class HeliumServerHandler extends SimpleChannelInboundHandler<Object> {
         return "ws://" + req.headers().get(HOST) + WEBSOCKET_PATH;
     }
 
+    public static String loadJsFile() throws IOException {
+        URL uuid = Thread.currentThread().getContextClassLoader().getResource("uuid.js");
+        URL rpc = Thread.currentThread().getContextClassLoader().getResource("rpc.js");
+        URL reconnectingwebsocket = Thread.currentThread().getContextClassLoader()
+                .getResource("reconnecting-websocket.min.js");
+        URL helium = Thread.currentThread().getContextClassLoader().getResource("helium.js");
+
+        String uuidContent = com.google.common.io.Resources.toString(uuid, Charsets.UTF_8);
+        String reconnectingWebsocketContent = com.google.common.io.Resources.toString(
+                reconnectingwebsocket, Charsets.UTF_8);
+        String rpcContent = com.google.common.io.Resources.toString(rpc, Charsets.UTF_8);
+        String heliumContent = com.google.common.io.Resources.toString(helium, Charsets.UTF_8);
+
+        return uuidContent + "\r\n" + reconnectingWebsocketContent + "\r\n" + rpcContent + "\r\n"
+                + heliumContent;
+    }
+
     @Override
     public void messageReceived(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof FullHttpRequest) {
@@ -111,7 +131,7 @@ public class HeliumServerHandler extends SimpleChannelInboundHandler<Object> {
         }
 
         if (req.getMethod() == GET && req.getUri().endsWith("helium.js")) {
-            String heliumJsFile = helium.loadJsFile();
+            String heliumJsFile = loadJsFile();
             ByteBuf content = Unpooled.copiedBuffer(heliumJsFile.getBytes());
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, content);
             res.headers().set(CONTENT_TYPE, "application/javascript; charset=UTF-8");
@@ -138,7 +158,17 @@ public class HeliumServerHandler extends SimpleChannelInboundHandler<Object> {
             return;
         }
 
-        if (!req.headers().contains("Upgrade", "websocket", true)) {
+        if (!req.headers().contains("Upgrade", "websocket", true)
+                && (req.getUri().endsWith(".html") ||
+                req.getUri().endsWith(".js") ||
+                req.getUri().endsWith(".css") ||
+                req.getUri().endsWith(".png")
+        )) {
+            heliumAdmin.servePath(ctx, req);
+            return;
+        }
+
+        if (!req.headers().contains("Upgrade", "websocket", true) && req.getUri().endsWith(".json")) {
             Path nodePath = new Path(HeliumEvent.extractPath(req.getUri().replaceAll("\\.json", "")));
             if (req.getMethod() == HttpMethod.GET) {
                 RulesDataSnapshot root = new InMemoryDataSnapshot(helium.getPersistence().get(null));
@@ -167,7 +197,7 @@ public class HeliumServerHandler extends SimpleChannelInboundHandler<Object> {
                 return;
             }
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
-            HeliumServerHandler.sendHttpResponse(ctx, req, res);
+            sendHttpResponse(ctx, req, res);
             return;
         }
 

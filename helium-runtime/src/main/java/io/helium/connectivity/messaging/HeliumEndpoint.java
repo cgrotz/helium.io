@@ -14,24 +14,24 @@
  * under the License.
  */
 
-package io.helium.messaging;
+package io.helium.connectivity.messaging;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import io.helium.Helium;
-import io.helium.authorization.Authorization;
-import io.helium.authorization.HeliumOperation;
 import io.helium.common.Path;
+import io.helium.connectivity.rpc.Rpc;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.*;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
+import io.helium.persistence.authorization.Authorization;
+import io.helium.persistence.authorization.HeliumOperation;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
 import io.helium.persistence.inmemory.InMemoryPersistence;
-import io.helium.queries.QueryEvaluator;
-import io.helium.rpc.Rpc;
+import io.helium.persistence.queries.QueryEvaluator;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map.Entry;
 
-public class HeliumEndpoint implements HeliumEventDistributor, HeliumOutboundSocket {
+public class HeliumEndpoint implements HeliumEventDistributor {
     private static final String QUERY_CHILD_REMOVED = "query_child_removed";
 
     private static final String QUERY_CHILD_CHANGED = "query_child_changed";
@@ -387,7 +387,6 @@ public class HeliumEndpoint implements HeliumEventDistributor, HeliumOutboundSoc
         this.open = open;
     }
 
-    @Override
     public void send(String msg) {
         channel.writeAndFlush(new TextWebSocketFrame(msg));
     }
