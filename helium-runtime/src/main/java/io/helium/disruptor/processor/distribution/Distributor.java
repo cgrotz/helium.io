@@ -19,9 +19,9 @@ package io.helium.disruptor.processor.distribution;
 import com.google.common.collect.Sets;
 import com.lmax.disruptor.EventHandler;
 import io.helium.common.Path;
-import io.helium.connectivity.messaging.HeliumEventDistributor;
 import io.helium.event.HeliumEvent;
 import io.helium.json.Node;
+import io.helium.web.messaging.HeliumEventDistributor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

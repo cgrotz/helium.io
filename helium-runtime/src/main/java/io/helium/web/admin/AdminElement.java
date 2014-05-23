@@ -14,31 +14,23 @@
  * under the License.
  */
 
-package io.helium.connectivity.admin;
+package io.helium.web.admin;
 
-import io.helium.common.Path;
-
-public class AdminPath {
-
-    private String url;
+public class AdminElement {
     private String name;
-    private boolean active;
+    private Object value;
 
-    public AdminPath(String basePath, Path path) {
-        this.url = basePath + path.toString();
-        this.name = path.getLastElement();
-        this.active = path.isSimple();
-    }
-
-    public String getUrl() {
-        return url;
+    public AdminElement(String name, Object value) {
+        super();
+        this.name = name;
+        this.value = value;
     }
 
     public String getName() {
         return name;
     }
 
-    public boolean isActive() {
-        return active;
+    public Object getValue() {
+        return value;
     }
 }

@@ -18,7 +18,6 @@ package io.helium.persistence.inmemory;
 
 import io.helium.Helium;
 import io.helium.common.Path;
-import io.helium.connectivity.messaging.HeliumEndpoint;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.json.Node;
@@ -28,6 +27,7 @@ import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.HeliumOperation;
 import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.queries.QueryEvaluator;
+import io.helium.web.messaging.HeliumEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

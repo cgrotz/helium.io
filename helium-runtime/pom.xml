@@ -42,7 +42,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.helium.connectivity.HeliumServer</mainClass>
+                            <mainClass>io.helium.web.HeliumServer</mainClass>
                         </manifest>
                     </archive>
                     <descriptor>runnable.xml</descriptor>
@@ -80,8 +80,8 @@
                         <Embed-Dependency>*</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Bundle-ClassPath>.,{maven-dependencies}</Bundle-ClassPath>
-                        <Export-Package>io.helium.connectivity</Export-Package>
-                        <Bundle-SymbolicName>io.helium.connectivity</Bundle-SymbolicName>
+                        <Export-Package>io.helium.web</Export-Package>
+                        <Bundle-SymbolicName>io.helium.web</Bundle-SymbolicName>
                         <Bundle-Activator>${pom.artifactId}.HeliumServer</Bundle-Activator>
                         <!--<Export-Service>org.osgi.service.log.LogService,org.osgi.service.log.LogReaderService</Export-Service> -->
                     </instructions>

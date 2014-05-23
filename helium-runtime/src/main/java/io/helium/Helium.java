@@ -18,8 +18,6 @@ package io.helium;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
-import io.helium.connectivity.HeliumServer;
-import io.helium.connectivity.messaging.HeliumEndpoint;
 import io.helium.disruptor.HeliumDisruptor;
 import io.helium.disruptor.processor.distribution.Distributor;
 import io.helium.event.HeliumEvent;
@@ -30,6 +28,8 @@ import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.rulebased.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
+import io.helium.web.HeliumServer;
+import io.helium.web.messaging.HeliumEndpoint;
 import org.apache.commons.cli.*;
 
 import java.io.File;

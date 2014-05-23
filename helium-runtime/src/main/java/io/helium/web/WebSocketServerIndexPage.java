@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.connectivity;
+package io.helium.web;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

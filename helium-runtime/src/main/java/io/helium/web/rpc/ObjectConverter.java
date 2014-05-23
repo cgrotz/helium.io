@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.connectivity.rpc;
+package io.helium.web.rpc;
 
 public class ObjectConverter {
 

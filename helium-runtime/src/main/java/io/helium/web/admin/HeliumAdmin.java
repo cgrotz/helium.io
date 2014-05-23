@@ -14,15 +14,15 @@
  * under the License.
  */
 
-package io.helium.connectivity.admin;
+package io.helium.web.admin;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import io.helium.Helium;
 import io.helium.common.Path;
-import io.helium.connectivity.HeliumServerHandler;
 import io.helium.json.Node;
+import io.helium.web.HeliumServerHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;

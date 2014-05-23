@@ -14,14 +14,13 @@
  * under the License.
  */
 
-package io.helium.connectivity.messaging;
+package io.helium.web.messaging;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import io.helium.Helium;
 import io.helium.common.Path;
-import io.helium.connectivity.rpc.Rpc;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.*;
@@ -32,6 +31,7 @@ import io.helium.persistence.authorization.HeliumOperation;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import io.helium.persistence.queries.QueryEvaluator;
+import io.helium.web.rpc.Rpc;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;

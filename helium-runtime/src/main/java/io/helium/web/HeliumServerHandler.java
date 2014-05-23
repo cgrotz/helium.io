@@ -14,21 +14,21 @@
  * under the License.
  */
 
-package io.helium.connectivity;
+package io.helium.web;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import io.helium.Helium;
 import io.helium.common.Path;
-import io.helium.connectivity.admin.HeliumAdmin;
-import io.helium.connectivity.messaging.HeliumEndpoint;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.json.Node;
 import io.helium.persistence.authorization.HeliumOperation;
 import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
+import io.helium.web.admin.HeliumAdmin;
+import io.helium.web.messaging.HeliumEndpoint;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;

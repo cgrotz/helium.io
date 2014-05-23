@@ -14,23 +14,14 @@
  * under the License.
  */
 
-package io.helium.connectivity.admin;
+package io.helium.web.messaging;
 
-public class AdminElement {
-    private String name;
-    private Object value;
+import io.helium.common.Path;
+import io.helium.event.HeliumEvent;
+import io.helium.json.Node;
 
-    public AdminElement(String name, Object value) {
-        super();
-        this.name = name;
-        this.value = value;
-    }
+public interface HeliumEventDistributor {
+    void distribute(HeliumEvent event);
 
-    public String getName() {
-        return name;
-    }
-
-    public Object getValue() {
-        return value;
-    }
+    void distributeEvent(Path path, Node payload);
 }

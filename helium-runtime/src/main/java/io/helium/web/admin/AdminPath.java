@@ -14,14 +14,31 @@
  * under the License.
  */
 
-package io.helium.connectivity.messaging;
+package io.helium.web.admin;
 
 import io.helium.common.Path;
-import io.helium.event.HeliumEvent;
-import io.helium.json.Node;
 
-public interface HeliumEventDistributor {
-    void distribute(HeliumEvent event);
+public class AdminPath {
 
-    void distributeEvent(Path path, Node payload);
+    private String url;
+    private String name;
+    private boolean active;
+
+    public AdminPath(String basePath, Path path) {
+        this.url = basePath + path.toString();
+        this.name = path.getLastElement();
+        this.active = path.isSimple();
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
 }

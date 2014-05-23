@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package io.helium.connectivity.rpc;
+package io.helium.web.rpc;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import io.helium.connectivity.messaging.HeliumEndpoint;
 import io.helium.json.Node;
+import io.helium.web.messaging.HeliumEndpoint;
 
 import java.lang.annotation.*;
 import java.util.List;
