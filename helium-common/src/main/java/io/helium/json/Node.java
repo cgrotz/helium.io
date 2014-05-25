@@ -43,20 +43,20 @@ import java.util.*;
  * method returns a value if one can be found, and throws an exception if one cannot be found. An
  * <code>opt</code> method returns a default value instead of throwing an exception, and so is
  * useful for obtaining optional values.
- * <p/>
+ * <p>
  * The generic <code>get()</code> and <code>opt()</code> methods return an object, which you can
  * cast or query for type. There are also typed <code>get</code> and <code>opt</code> methods that
  * do type checking and type coercion for you. The opt methods differ from the get methods in that
  * they do not throw. Instead, they return a specified value, such as null.
- * <p/>
+ * <p>
  * The <code>put</code> methods add or replace values in an object. For example,
- * <p/>
+ * <p>
  * <pre>
  * myString = new Node().put(&quot;JSON&quot;, &quot;Hello, World!&quot;).toString();
  * </pre>
- * <p/>
+ * <p>
  * produces the string <code>{"JSON": "Hello, World"}</code>.
- * <p/>
+ * <p>
  * The texts produced by the <code>toString</code> methods strictly conform to the JSON syntax
  * rules. The constructors are more forgiving in the texts they will accept:
  * <ul>
@@ -368,8 +368,8 @@ public class Node {
      * then a JSONArray will be made from it and its toJSONString method will be called. If the value
      * is a MAP, then a Node will be made from it and its toJSONString method will be called.
      * Otherwise, the value's toString method will be called, and the result will be quoted.
-     * <p/>
-     * <p/>
+     * <p>
+     * <p>
      * Warning: This method assumes that the data structure is acyclical.
      *
      * @param value The value to be serialized.
@@ -887,7 +887,7 @@ public class Node {
     /**
      * Make a JSON text of this Node. For compactness, no whitespace is added. If this would not
      * result in a syntactically correct JSON text, then null will be returned instead.
-     * <p/>
+     * <p>
      * Warning: This method assumes that the data structure is acyclical.
      *
      * @return a printable, displayable, portable, transmittable representation of the object,
@@ -905,7 +905,7 @@ public class Node {
 
     /**
      * Make a prettyprinted JSON text of this Node.
-     * <p/>
+     * <p>
      * Warning: This method assumes that the data structure is acyclical.
      *
      * @param indentFactor The number of spaces to add to each level of indentation.
@@ -924,7 +924,7 @@ public class Node {
     /**
      * Write the contents of the Node as JSON text to a writer. For compactness, no whitespace is
      * added.
-     * <p/>
+     * <p>
      * Warning: This method assumes that the data structure is acyclical.
      *
      * @return The writer.
@@ -1014,7 +1014,7 @@ public class Node {
     public Node getNodeForPath(ChangeLog log, Path path) {
         Node node;
         String firstElement = path.getFirstElement();
-        if (firstElement == null) {
+        if (Strings.isNullOrEmpty(firstElement)) {
             return this;
         }
         if (has(firstElement)) {

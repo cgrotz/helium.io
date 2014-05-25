@@ -33,7 +33,7 @@ public class PersistenceTest {
     @Before
     public void setUp() throws Exception {
         persistence = new InMemoryPersistence(new RuleBasedAuthorization(
-                Authorization.ALL_ACCESS_RULE), new Helium(PersistenceProcessorTest.BASE_PATH));
+                Authorization.ALL_ACCESS_RULE));
     }
 
     @Test

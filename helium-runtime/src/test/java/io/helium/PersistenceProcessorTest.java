@@ -17,7 +17,7 @@
 package io.helium;
 
 import io.helium.common.Path;
-import io.helium.disruptor.processor.persistence.PersistenceProcessor;
+import io.helium.core.processor.persistence.PersistenceProcessor;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.builder.HeliumEventBuilder;
@@ -36,7 +36,7 @@ public class PersistenceProcessorTest {
     @Before
     public void setUp() throws Exception {
         persistence = new InMemoryPersistence(new RuleBasedAuthorization(
-                Authorization.ALL_ACCESS_RULE), new Helium(BASE_PATH));
+                Authorization.ALL_ACCESS_RULE));
         persistenceProcessor = new PersistenceProcessor(persistence);
     }
 

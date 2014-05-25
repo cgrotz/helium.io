@@ -16,8 +16,8 @@
 
 package io.helium.persistence.inmemory;
 
-import io.helium.Helium;
 import io.helium.common.Path;
+import io.helium.core.Core;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.json.Node;
@@ -27,7 +27,7 @@ import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.HeliumOperation;
 import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.queries.QueryEvaluator;
-import io.helium.web.messaging.HeliumEndpoint;
+import io.helium.server.protocols.http.HeliumHttpEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,11 +35,10 @@ public class InMemoryPersistence implements Persistence {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemoryPersistence.class);
     private Node model = new Node();
-    private Helium helium;
+    private Core core;
     private Authorization authorization;
 
-    public InMemoryPersistence(Authorization authorization, Helium helium) {
-        this.helium = helium;
+    public InMemoryPersistence(Authorization authorization) {
         this.authorization = authorization;
     }
 
@@ -75,7 +74,7 @@ public class InMemoryPersistence implements Persistence {
     public Node getNode(Path path) {
         ChangeLog log = new ChangeLog();
         Node nodeForPath = model.getNodeForPath(log, path);
-        helium.distributeChangeLog(log);
+        core.distributeChangeLog(log);
         return nodeForPath;
     }
 
@@ -91,12 +90,12 @@ public class InMemoryPersistence implements Persistence {
             node.accept(path, new ChildRemovedSubTreeVisitor(log));
             parent.remove(nodeName);
             log.addChildRemovedLogEntry(parentPath, nodeName, node);
-            helium.distributeChangeLog(log);
+            core.distributeChangeLog(log);
         }
     }
 
     @Override
-    public void syncPath(Path path, HeliumEndpoint handler) {
+    public void syncPath(Path path, HeliumHttpEndpoint handler) {
 
         ChangeLog log = new ChangeLog();
         Node node = model.getNodeForPath(log, path);
@@ -111,12 +110,12 @@ public class InMemoryPersistence implements Persistence {
                         numChildren, null, indexOf);
             }
         }
-        helium.distributeChangeLog(log);
+        core.distributeChangeLog(log);
 
     }
 
     @Override
-    public void syncPathWithQuery(Path path, HeliumEndpoint handler,
+    public void syncPathWithQuery(Path path, HeliumHttpEndpoint handler,
                                   QueryEvaluator queryEvaluator, String query) {
         ChangeLog log = new ChangeLog();
         Node node = model.getNodeForPath(log, path);
@@ -128,11 +127,11 @@ public class InMemoryPersistence implements Persistence {
                 }
             }
         }
-        helium.distributeChangeLog(log);
+        core.distributeChangeLog(log);
     }
 
     @Override
-    public void syncPropertyValue(Path path, HeliumEndpoint handler) {
+    public void syncPropertyValue(Path path, HeliumHttpEndpoint handler) {
         ChangeLog log = new ChangeLog();
         Node node = model.getNodeForPath(log, path.getParent());
         String childNodeKey = path.getLastElement();
@@ -143,7 +142,7 @@ public class InMemoryPersistence implements Persistence {
         } else {
             handler.fireValue(childNodeKey, path, path.getParent(), "", "", node.indexOf(childNodeKey));
         }
-        helium.distributeChangeLog(log);
+        core.distributeChangeLog(log);
 
     }
 
@@ -308,6 +307,10 @@ public class InMemoryPersistence implements Persistence {
     @Override
     public RulesDataSnapshot getRoot() {
         return new InMemoryDataSnapshot(model);
+    }
+
+    public void setCore(Core core) {
+        this.core = core;
     }
 
     private final class ChildRemovedSubTreeVisitor implements NodeVisitor {

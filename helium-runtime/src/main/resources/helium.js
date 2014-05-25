@@ -215,7 +215,8 @@ var __extends = this.__extends || function (d, b) {
 					var snapshot = new Snapshot(message);
 					var workpath = self.path;
 					// if (workpath.indexOf(snapshot.path()) == 0) {
-					if (workpath === snapshot.path()) {
+					if (workpath === snapshot.path() ||
+					    (snapshot.path().endsWith("/") && workpath === snapshot.path().substring(0, snapshot.path().length-1))) {
 						var callback = self.events[message.type];
 						if (callback != null) {
 							callback(snapshot, message.prevChildName);

@@ -21,7 +21,7 @@ import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
 import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.queries.QueryEvaluator;
-import io.helium.web.messaging.HeliumEndpoint;
+import io.helium.server.protocols.http.HeliumHttpEndpoint;
 
 public interface Persistence {
 
@@ -37,13 +37,13 @@ public interface Persistence {
 
     void setPriority(ChangeLog log, Node auth, Path path, int priority);
 
-    void syncPath(Path path, HeliumEndpoint handler);
+    void syncPath(Path path, HeliumHttpEndpoint handler);
 
-    void syncPropertyValue(Path path, HeliumEndpoint heliumEventHandler);
+    void syncPropertyValue(Path path, HeliumHttpEndpoint heliumEventHandler);
 
     RulesDataSnapshot getRoot();
 
-    public void syncPathWithQuery(Path path, HeliumEndpoint handler,
+    public void syncPathWithQuery(Path path, HeliumHttpEndpoint handler,
                                   QueryEvaluator queryEvaluator, String query);
 
 }
