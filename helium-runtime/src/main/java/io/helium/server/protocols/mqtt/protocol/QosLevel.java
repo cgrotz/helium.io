@@ -62,7 +62,7 @@ public enum QosLevel {
      */
     R3(3);
 
-    private int value;
+    public int value;
 
     private QosLevel(int value) {
         this.value = value;
