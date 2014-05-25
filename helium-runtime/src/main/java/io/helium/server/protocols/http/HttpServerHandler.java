@@ -105,7 +105,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, Object msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof FullHttpRequest) {
             handleHttpRequest(ctx, (FullHttpRequest) msg);
         } else if (msg instanceof WebSocketFrame) {
@@ -141,7 +141,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
             return;
         }
 
-        if (!req.headers().contains("Upgrade", "websocket", true)) {
+        if (!req.headers().contains("Upgrade")) {
             Path nodePath = new Path(HeliumEvent.extractPath(req.getUri().replaceAll("\\.json", "")));
             if (req.getMethod() == HttpMethod.GET) {
                 RulesDataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));

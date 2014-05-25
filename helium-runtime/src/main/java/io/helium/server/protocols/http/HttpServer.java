@@ -27,7 +27,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import java.io.IOException;
 
-public class HttpServer {
+public class HttpServer implements Runnable {
 
     private final int port;
     private final Authorization authorization;
@@ -45,7 +45,8 @@ public class HttpServer {
         this.authorization = authorization;
     }
 
-    public void run() throws InterruptedException {
+    @Override
+    public void run() {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
@@ -61,6 +62,8 @@ public class HttpServer {
             //System.out.println("Connect via CoAP to coap://localhost/");
 
             ch.closeFuture().sync();
+        } catch (InterruptedException e) {
+
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();

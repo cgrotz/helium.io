@@ -22,10 +22,13 @@ import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.rulebased.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import io.helium.server.protocols.http.HttpServer;
+import io.helium.server.protocols.mqtt.MqttServer;
 import org.apache.commons.cli.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -59,10 +62,13 @@ public class Helium {
     }
 
     private final HttpServer httpServer;
+    private final MqttServer mqttServer;
 
     private InMemoryPersistence persistence;
     private Core core;
     private RuleBasedAuthorization authorization;
+
+    private ExecutorService executor = Executors.newCachedThreadPool();
 
     public Helium(String basePath, Node rule, File journalDirectory, String host, int port) throws IOException {
         checkNotNull(basePath);
@@ -72,6 +78,7 @@ public class Helium {
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
         httpServer = new HttpServer(port, basePath, host, core, persistence, authorization);
+        mqttServer = new MqttServer(core, persistence, authorization);
     }
 
     public Helium(String basePath, File journalDirectory, String host, int port) throws IOException {
@@ -82,6 +89,7 @@ public class Helium {
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
         httpServer = new HttpServer(port, basePath, host, core, persistence, authorization);
+        mqttServer = new MqttServer(core, persistence, authorization);
     }
 
     public Helium(String basePath, String host, int port) throws IOException {
@@ -94,6 +102,7 @@ public class Helium {
                 authorization);
         persistence.setCore(core);
         httpServer = new HttpServer(port, basePath, host, core, persistence, authorization);
+        mqttServer = new MqttServer(core, persistence, authorization);
     }
 
     public static void main(String[] args) {
@@ -124,7 +133,8 @@ public class Helium {
     }
 
     private void start() throws InterruptedException {
-        httpServer.run();
+        executor.submit(httpServer);
+        executor.submit(mqttServer);
     }
 
     public static File createTempDirectory() throws IOException {
