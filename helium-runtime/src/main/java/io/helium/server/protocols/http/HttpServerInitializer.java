@@ -28,14 +28,14 @@ import io.netty.handler.codec.http.HttpServerCodec;
 /**
  * Created by balu on 18.05.14.
  */
-public class HeliumHttpServerInitializer extends ChannelInitializer<SocketChannel> {
+public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
 
     private final Core core;
     private final Persistence persistence;
     private final Authorization authorization;
     private String basePath;
 
-    public HeliumHttpServerInitializer(String basePath, Persistence persistence, Authorization authorization, Core core) {
+    public HttpServerInitializer(String basePath, Persistence persistence, Authorization authorization, Core core) {
         this.persistence = persistence;
         this.authorization = authorization;
         this.core = core;
@@ -47,6 +47,6 @@ public class HeliumHttpServerInitializer extends ChannelInitializer<SocketChanne
         ChannelPipeline pipeline = ch.pipeline();
         pipeline.addLast("codec-http", new HttpServerCodec());
         pipeline.addLast("aggregator", new HttpObjectAggregator(65536));
-        pipeline.addLast("handler", new HeliumHttpServerHandler(basePath, persistence, authorization, core));
+        pipeline.addLast("handler", new HttpServerHandler(basePath, persistence, authorization, core));
     }
 }

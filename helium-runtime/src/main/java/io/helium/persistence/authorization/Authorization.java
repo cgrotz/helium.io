@@ -24,9 +24,9 @@ public interface Authorization {
     public static final Node ALL_ACCESS_RULE = new Node(
             "{rules:{\".write\": \"true\",\".read\": \"true\"}}");
 
-    void authorize(HeliumOperation op, Node auth, RulesDataSnapshot root, Path path,
-                   Object object) throws HeliumNotAuthorizedException;
+    void authorize(Operation op, Node auth, RulesDataSnapshot root, Path path,
+                   Object object) throws NotAuthorizedException;
 
-    boolean isAuthorized(HeliumOperation op, Node auth, RulesDataSnapshot root, Path path,
+    boolean isAuthorized(Operation op, Node auth, RulesDataSnapshot root, Path path,
                          Object object);
 }

@@ -14,18 +14,21 @@
  * under the License.
  */
 
-package io.helium.persistence.authorization;
+package io.helium.server.protocols.http.rpc;
 
-public enum HeliumOperation {
-    READ(".read"), WRITE(".write");
+public class ObjectConverter {
 
-    private String op;
-
-    HeliumOperation(String op) {
-        this.op = op;
-    }
-
-    public String getOp() {
-        return this.op;
+    public Object convert(Object value, Class<?> clazz) {
+        if (value == null) {
+            return null;
+        }
+        if (clazz.isAssignableFrom(value.getClass())) {
+            return clazz.cast(value);
+        }
+        if (clazz.isAssignableFrom(Integer.class) && value.getClass().isAssignableFrom(String.class)) {
+            return Integer.valueOf((String) value);
+        }
+        throw new RuntimeException("Not convertable " + value.getClass().getSimpleName() + " to "
+                + clazz.getSimpleName());
     }
 }

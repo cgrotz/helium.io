@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package io.helium.server.rpc;
+package io.helium.server.protocols.http.rpc;
 
 import com.google.common.collect.Maps;
 import io.helium.json.Node;
-import io.helium.server.protocols.http.HeliumHttpEndpoint;
+import io.helium.server.protocols.http.HttpEndpoint;
 
 import java.lang.annotation.*;
 import java.util.Map;
@@ -41,7 +41,7 @@ public class Rpc {
         }
     }
 
-    public void handle(String message, HeliumHttpEndpoint socket) {
+    public void handle(String message, HttpEndpoint socket) {
         Node json = new Node(message);
         String id = checkNotNull(json.getString("id"));
         String method = checkNotNull(json.getString("method"));

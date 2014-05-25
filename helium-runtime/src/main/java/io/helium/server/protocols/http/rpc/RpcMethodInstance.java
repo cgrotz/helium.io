@@ -1,4 +1,4 @@
-package io.helium.server.rpc;
+package io.helium.server.protocols.http.rpc;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;

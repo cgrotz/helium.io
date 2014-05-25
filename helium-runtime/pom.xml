@@ -42,7 +42,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.helium.server.HeliumServer</mainClass>
+                            <mainClass>io.helium.server.protocols.http.HttpServer</mainClass>
                         </manifest>
                     </archive>
                     <descriptor>runnable.xml</descriptor>

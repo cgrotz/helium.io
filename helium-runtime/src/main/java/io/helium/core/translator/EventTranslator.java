@@ -16,14 +16,13 @@
 
 package io.helium.core.translator;
 
-import com.lmax.disruptor.EventTranslator;
 import io.helium.event.HeliumEvent;
 
-public class HeliumEventTranslator implements EventTranslator<HeliumEvent> {
+public class EventTranslator implements com.lmax.disruptor.EventTranslator<HeliumEvent> {
     private HeliumEvent heliumEvent;
     private long sequence;
 
-    public HeliumEventTranslator(HeliumEvent heliumEvent) {
+    public EventTranslator(HeliumEvent heliumEvent) {
         this.heliumEvent = heliumEvent;
     }
 

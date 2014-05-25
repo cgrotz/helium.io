@@ -16,14 +16,16 @@
 
 package io.helium.persistence.authorization;
 
-import io.helium.common.Path;
+public enum Operation {
+    READ(".read"), WRITE(".write");
 
-public class HeliumNotAuthorizedException extends RuntimeException {
+    private String op;
 
-    private static final long serialVersionUID = 1L;
-
-    public HeliumNotAuthorizedException(HeliumOperation op, Path path) {
-        super(op.toString() + " not allowed on " + path);
+    Operation(String op) {
+        this.op = op;
     }
 
+    public String getOp() {
+        return this.op;
+    }
 }

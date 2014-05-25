@@ -22,7 +22,7 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
-import io.helium.server.protocols.http.HeliumHttpEndpoint;
+import io.helium.server.protocols.http.HttpEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ public class Distributor implements EventHandler<HeliumEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(Distributor.class);
 
-    private Set<HeliumHttpEndpoint> endpoints = Sets.newHashSet();
+    private Set<HttpEndpoint> endpoints = Sets.newHashSet();
 
     private long sequence;
 
@@ -45,23 +45,23 @@ public class Distributor implements EventHandler<HeliumEvent> {
     public void distribute(HeliumEvent event) {
         logger.trace("distributing event: " + event);
         if (!event.isFromHistory()) {
-            for (HeliumHttpEndpoint handler : Sets.newHashSet(endpoints)) {
+            for (HttpEndpoint handler : Sets.newHashSet(endpoints)) {
                 handler.distribute(event);
             }
         }
     }
 
     public void distribute(String path, Node data) {
-        for (HeliumHttpEndpoint handler : Sets.newHashSet(endpoints)) {
+        for (HttpEndpoint handler : Sets.newHashSet(endpoints)) {
             handler.distributeEvent(new Path(HeliumEvent.extractPath(path)), data);
         }
     }
 
-    public void addHandler(HeliumHttpEndpoint handler) {
+    public void addHandler(HttpEndpoint handler) {
         endpoints.add(handler);
     }
 
-    public void removeHandler(HeliumHttpEndpoint handler) {
+    public void removeHandler(HttpEndpoint handler) {
         endpoints.remove(handler);
     }
 
@@ -70,7 +70,7 @@ public class Distributor implements EventHandler<HeliumEvent> {
     }
 
     public void distributeChangeLog(ChangeLog changeLog) {
-        for (HeliumHttpEndpoint endpoint : this.endpoints) {
+        for (HttpEndpoint endpoint : this.endpoints) {
             endpoint.distributeChangeLog(changeLog);
         }
     }

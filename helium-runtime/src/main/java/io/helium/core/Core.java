@@ -25,13 +25,13 @@ import io.helium.core.processor.authorization.AuthorizationProcessor;
 import io.helium.core.processor.distribution.Distributor;
 import io.helium.core.processor.eventsourcing.EventSourceProcessor;
 import io.helium.core.processor.persistence.PersistenceProcessor;
-import io.helium.core.translator.HeliumEventTranslator;
+import io.helium.core.translator.EventTranslator;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.server.protocols.http.HeliumHttpEndpoint;
+import io.helium.server.protocols.http.HttpEndpoint;
 import journal.io.api.ClosedJournalException;
 import journal.io.api.CompactedDataFileException;
 import journal.io.api.Journal;
@@ -103,7 +103,7 @@ public class Core implements ExceptionHandler {
     public void handleEvent(final HeliumEvent heliumEvent) {
         Preconditions.checkArgument(heliumEvent.has(HeliumEvent.TYPE),
                 "No type defined in Event");
-        HeliumEventTranslator eventTranslator = new HeliumEventTranslator(heliumEvent);
+        EventTranslator eventTranslator = new EventTranslator(heliumEvent);
         logger.trace("handling event: " + heliumEvent + "(" + heliumEvent.length() + ")");
         disruptor.publishEvent(eventTranslator);
         this.currentSequence = eventTranslator.getSequence();
@@ -113,11 +113,11 @@ public class Core implements ExceptionHandler {
         disruptor.shutdown();
     }
 
-    public void addEndpoint(HeliumHttpEndpoint endpoint) {
+    public void addEndpoint(HttpEndpoint endpoint) {
         distributionProcessor.addHandler(endpoint);
     }
 
-    public void removeEndpoint(HeliumHttpEndpoint endpoint) {
+    public void removeEndpoint(HttpEndpoint endpoint) {
         distributionProcessor.removeHandler(endpoint);
     }
 

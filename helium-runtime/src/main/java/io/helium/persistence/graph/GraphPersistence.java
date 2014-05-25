@@ -8,7 +8,7 @@ import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.queries.QueryEvaluator;
-import io.helium.server.protocols.http.HeliumHttpEndpoint;
+import io.helium.server.protocols.http.HttpEndpoint;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.graphdb.Transaction;
@@ -114,12 +114,12 @@ public class GraphPersistence implements Persistence {
     }
 
     @Override
-    public void syncPath(Path path, HeliumHttpEndpoint handler) {
+    public void syncPath(Path path, HttpEndpoint handler) {
 
     }
 
     @Override
-    public void syncPropertyValue(Path path, HeliumHttpEndpoint heliumEventHandler) {
+    public void syncPropertyValue(Path path, HttpEndpoint heliumEventHandler) {
 
     }
 
@@ -129,7 +129,7 @@ public class GraphPersistence implements Persistence {
     }
 
     @Override
-    public void syncPathWithQuery(Path path, HeliumHttpEndpoint handler, QueryEvaluator queryEvaluator, String query) {
+    public void syncPathWithQuery(Path path, HttpEndpoint handler, QueryEvaluator queryEvaluator, String query) {
 
     }
 

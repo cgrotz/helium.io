@@ -26,7 +26,7 @@ import io.helium.event.HeliumEventType;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.persistence.authorization.HeliumOperation;
+import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
 import io.netty.buffer.ByteBuf;
@@ -52,8 +52,8 @@ import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-public class HeliumHttpServerHandler extends SimpleChannelInboundHandler<Object> {
-    private static final Logger logger = Logger.getLogger(HeliumHttpServerHandler.class.getName());
+public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
+    private static final Logger logger = Logger.getLogger(HttpServerHandler.class.getName());
     private final Authorization authorization;
     private final Core core;
     private final Persistence persistence;
@@ -61,9 +61,9 @@ public class HeliumHttpServerHandler extends SimpleChannelInboundHandler<Object>
     private WebSocketServerHandshaker handshaker;
 
     private String basePath;
-    private Map<Channel, HeliumHttpEndpoint> endpoints = Maps.newHashMap();
+    private Map<Channel, HttpEndpoint> endpoints = Maps.newHashMap();
 
-    public HeliumHttpServerHandler(String basePath, Persistence persistence, Authorization authorization, Core core) {
+    public HttpServerHandler(String basePath, Persistence persistence, Authorization authorization, Core core) {
         this.core = core;
         this.persistence = persistence;
         this.authorization = authorization;
@@ -147,7 +147,7 @@ public class HeliumHttpServerHandler extends SimpleChannelInboundHandler<Object>
                 RulesDataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));
                 Object node = persistence.get(nodePath);
                 Object object = new InMemoryDataSnapshot(node);
-                authorization.authorize(HeliumOperation.READ, new Node(), root, nodePath,
+                authorization.authorize(Operation.READ, new Node(), root, nodePath,
                         new InMemoryDataSnapshot(node));
 
                 ByteBuf content = Unpooled.copiedBuffer(node.toString().getBytes());
@@ -189,7 +189,7 @@ public class HeliumHttpServerHandler extends SimpleChannelInboundHandler<Object>
 
         // Check for closing frame
         if (frame instanceof CloseWebSocketFrame) {
-            HeliumHttpEndpoint endpoint = endpoints.get(ctx.channel());
+            HttpEndpoint endpoint = endpoints.get(ctx.channel());
             endpoint.setOpen(false);
             endpoint.executeDisconnectEvents();
             core.removeEndpoint(endpoint);
@@ -205,7 +205,7 @@ public class HeliumHttpServerHandler extends SimpleChannelInboundHandler<Object>
                     .getName()));
         }
         if (!endpoints.containsKey(ctx.channel())) {
-            final HeliumHttpEndpoint endpoint = new HeliumHttpEndpoint(
+            final HttpEndpoint endpoint = new HttpEndpoint(
                     basePath,
                     new Node(),
                     ctx.channel(),

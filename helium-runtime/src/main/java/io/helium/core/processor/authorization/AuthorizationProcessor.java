@@ -23,7 +23,7 @@ import io.helium.event.HeliumEventType;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.persistence.authorization.HeliumOperation;
+import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
 
 public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
@@ -48,7 +48,7 @@ public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
                     event.has(HeliumEvent.PAYLOAD) ? event.get(HeliumEvent.PAYLOAD)
                             : null
             );
-            authorization.authorize(HeliumOperation.WRITE, getAuth(event), root, path, data);
+            authorization.authorize(Operation.WRITE, getAuth(event), root, path, data);
         } else if (event.getType() == HeliumEventType.SET) {
             if (event.has(HeliumEvent.PAYLOAD)
                     && event.get(HeliumEvent.PAYLOAD) == Node.NULL) {
@@ -56,11 +56,11 @@ public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
                         persistence.get(null));
                 InMemoryDataSnapshot data = new InMemoryDataSnapshot(
                         event.get(HeliumEvent.PAYLOAD));
-                authorization.authorize(HeliumOperation.WRITE, getAuth(event), root, path, data);
+                authorization.authorize(Operation.WRITE, getAuth(event), root, path, data);
             } else {
                 InMemoryDataSnapshot root = new InMemoryDataSnapshot(
                         persistence.get(null));
-                authorization.authorize(HeliumOperation.WRITE, getAuth(event), root, path, null);
+                authorization.authorize(Operation.WRITE, getAuth(event), root, path, null);
             }
         }
     }

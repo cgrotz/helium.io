@@ -21,8 +21,8 @@ import io.helium.event.HeliumEvent;
 import io.helium.json.Node;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.persistence.authorization.HeliumNotAuthorizedException;
-import io.helium.persistence.authorization.HeliumOperation;
+import io.helium.persistence.authorization.NotAuthorizedException;
+import io.helium.persistence.authorization.Operation;
 
 public class RuleBasedAuthorization implements Authorization {
 
@@ -40,15 +40,15 @@ public class RuleBasedAuthorization implements Authorization {
     }
 
     @Override
-    public void authorize(HeliumOperation op, Node auth, RulesDataSnapshot root, Path path,
-                          Object data) throws HeliumNotAuthorizedException {
+    public void authorize(Operation op, Node auth, RulesDataSnapshot root, Path path,
+                          Object data) throws NotAuthorizedException {
         if (!isAuthorized(op, auth, root, path, data)) {
-            throw new HeliumNotAuthorizedException(op, path);
+            throw new NotAuthorizedException(op, path);
         }
     }
 
     @Override
-    public boolean isAuthorized(HeliumOperation op, Node auth, RulesDataSnapshot root, Path path,
+    public boolean isAuthorized(Operation op, Node auth, RulesDataSnapshot root, Path path,
                                 Object data) {
         String expression = rule.getExpressionForPathAndOperation(path, op);
         try {

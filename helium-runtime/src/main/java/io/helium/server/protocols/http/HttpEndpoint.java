@@ -27,11 +27,11 @@ import io.helium.event.changelog.*;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.persistence.authorization.HeliumOperation;
+import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import io.helium.persistence.queries.QueryEvaluator;
-import io.helium.server.rpc.Rpc;
+import io.helium.server.protocols.http.rpc.Rpc;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map.Entry;
 
-public class HeliumHttpEndpoint {
+public class HttpEndpoint {
     private static final String QUERY_CHILD_REMOVED = "query_child_removed";
 
     private static final String QUERY_CHILD_CHANGED = "query_child_changed";
@@ -58,7 +58,7 @@ public class HeliumHttpEndpoint {
     private static final String CHILD_ADDED = "child_added";
 
     private static final Logger LOGGER = LoggerFactory
-            .getLogger(HeliumHttpEndpoint.class);
+            .getLogger(HttpEndpoint.class);
 
     private final Channel channel;
 
@@ -77,12 +77,12 @@ public class HeliumHttpEndpoint {
 
     private Rpc rpc;
 
-    public HeliumHttpEndpoint(String basePath,
-                              Node auth,
-                              Channel channel,
-                              Persistence persistence,
-                              Authorization authorization,
-                              Core core) {
+    public HttpEndpoint(String basePath,
+                        Node auth,
+                        Channel channel,
+                        Persistence persistence,
+                        Authorization authorization,
+                        Core core) {
         this.channel = channel;
         this.persistence = persistence;
         this.authorization = authorization;
@@ -291,7 +291,7 @@ public class HeliumHttpEndpoint {
 
     public void fireChildAdded(String name, Path path, Path parent, Object node, boolean hasChildren,
                                long numChildren, String prevChildName, int priority) {
-        if (authorization.isAuthorized(HeliumOperation.READ, auth, persistence.getRoot(), path,
+        if (authorization.isAuthorized(Operation.READ, auth, persistence.getRoot(), path,
                 new InMemoryDataSnapshot(node))) {
             Node broadcast = new Node();
             broadcast.put(HeliumEvent.TYPE, CHILD_ADDED);
@@ -309,7 +309,7 @@ public class HeliumHttpEndpoint {
     public void fireChildChanged(String name, Path path, Path parent, Object node,
                                  boolean hasChildren, long numChildren, String prevChildName, int priority) {
         if (node != null && node != Node.NULL) {
-            if (authorization.isAuthorized(HeliumOperation.READ, auth, persistence.getRoot(), path,
+            if (authorization.isAuthorized(Operation.READ, auth, persistence.getRoot(), path,
                     new InMemoryDataSnapshot(node))) {
                 Node broadcast = new Node();
                 broadcast.put(HeliumEvent.TYPE, CHILD_CHANGED);
@@ -326,7 +326,7 @@ public class HeliumHttpEndpoint {
     }
 
     public void fireChildRemoved(Path path, String name, Object payload) {
-        if (authorization.isAuthorized(HeliumOperation.READ, auth, persistence.getRoot(), path,
+        if (authorization.isAuthorized(Operation.READ, auth, persistence.getRoot(), path,
                 new InMemoryDataSnapshot(payload))) {
             Node broadcast = new Node();
             broadcast.put(HeliumEvent.TYPE, CHILD_REMOVED);
@@ -339,7 +339,7 @@ public class HeliumHttpEndpoint {
 
     public void fireValue(String name, Path path, Path parent, Object value, String prevChildName,
                           int priority) {
-        if (authorization.isAuthorized(HeliumOperation.READ, auth, persistence.getRoot(), path,
+        if (authorization.isAuthorized(Operation.READ, auth, persistence.getRoot(), path,
                 new InMemoryDataSnapshot(value))) {
             Node broadcast = new Node();
             broadcast.put(HeliumEvent.TYPE, VALUE);
@@ -362,7 +362,7 @@ public class HeliumHttpEndpoint {
     }
 
     public void fireQueryChildAdded(Path path, Node parent, Object value) {
-        if (authorization.isAuthorized(HeliumOperation.READ, auth, persistence.getRoot(), path,
+        if (authorization.isAuthorized(Operation.READ, auth, persistence.getRoot(), path,
                 new InMemoryDataSnapshot(value))) {
             Node broadcast = new Node();
             broadcast.put(HeliumEvent.TYPE, QUERY_CHILD_ADDED);
@@ -379,7 +379,7 @@ public class HeliumHttpEndpoint {
 
     public void fireQueryChildChanged(Path path, Node parent, Object value) {
         if (value != null && value != Node.NULL) {
-            if (authorization.isAuthorized(HeliumOperation.READ, auth, persistence.getRoot(), path,
+            if (authorization.isAuthorized(Operation.READ, auth, persistence.getRoot(), path,
                     new InMemoryDataSnapshot(value))) {
                 Node broadcast = new Node();
                 broadcast.put(HeliumEvent.TYPE, QUERY_CHILD_CHANGED);
@@ -396,7 +396,7 @@ public class HeliumHttpEndpoint {
     }
 
     public void fireQueryChildRemoved(Path path, Object payload) {
-        if (authorization.isAuthorized(HeliumOperation.READ, auth, persistence.getRoot(), path,
+        if (authorization.isAuthorized(Operation.READ, auth, persistence.getRoot(), path,
                 new InMemoryDataSnapshot(payload))) {
             Node broadcast = new Node();
             broadcast.put(HeliumEvent.TYPE, QUERY_CHILD_REMOVED);
@@ -425,7 +425,7 @@ public class HeliumHttpEndpoint {
             Node org = (Node) value;
             Node node = new Node();
             for (String key : org.keys()) {
-                if (authorization.isAuthorized(HeliumOperation.READ, auth, persistence.getRoot(),
+                if (authorization.isAuthorized(Operation.READ, auth, persistence.getRoot(),
                         path.append(key), new InMemoryDataSnapshot(org.get(key)))) {
                     node.put(key, checkPayload(path.append(key), org.get(key)));
                 }

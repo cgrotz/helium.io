@@ -24,10 +24,10 @@ import io.helium.json.Node;
 import io.helium.json.NodeVisitor;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.persistence.authorization.HeliumOperation;
+import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.queries.QueryEvaluator;
-import io.helium.server.protocols.http.HeliumHttpEndpoint;
+import io.helium.server.protocols.http.HttpEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +84,7 @@ public class InMemoryPersistence implements Persistence {
         Path parentPath = path.getParent();
         Node node = model.getNodeForPath(log, parentPath).getNode(nodeName);
 
-        if (authorization.isAuthorized(HeliumOperation.WRITE, auth,
+        if (authorization.isAuthorized(Operation.WRITE, auth,
                 new InMemoryDataSnapshot(model), path, node)) {
             Node parent = model.getNodeForPath(log, parentPath);
             node.accept(path, new ChildRemovedSubTreeVisitor(log));
@@ -95,7 +95,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void syncPath(Path path, HeliumHttpEndpoint handler) {
+    public void syncPath(Path path, HttpEndpoint handler) {
 
         ChangeLog log = new ChangeLog();
         Node node = model.getNodeForPath(log, path);
@@ -115,7 +115,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void syncPathWithQuery(Path path, HeliumHttpEndpoint handler,
+    public void syncPathWithQuery(Path path, HttpEndpoint handler,
                                   QueryEvaluator queryEvaluator, String query) {
         ChangeLog log = new ChangeLog();
         Node node = model.getNodeForPath(log, path);
@@ -131,7 +131,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void syncPropertyValue(Path path, HeliumHttpEndpoint handler) {
+    public void syncPropertyValue(Path path, HttpEndpoint handler) {
         ChangeLog log = new ChangeLog();
         Node node = model.getNodeForPath(log, path.getParent());
         String childNodeKey = path.getLastElement();
@@ -210,7 +210,7 @@ public class InMemoryPersistence implements Persistence {
         if (!model.pathExists(path)) {
             created = true;
         }
-        if (authorization.isAuthorized(HeliumOperation.WRITE, auth,
+        if (authorization.isAuthorized(Operation.WRITE, auth,
                 new InMemoryDataSnapshot(model), path, payload)) {
             Node parent = model.getNodeForPath(log, path.getParent());
             if (payload instanceof Node) {
@@ -247,7 +247,7 @@ public class InMemoryPersistence implements Persistence {
         for (String key : payload.keys()) {
             Object value = payload.get(key);
             if (value instanceof Node) {
-                if (authorization.isAuthorized(HeliumOperation.WRITE, auth, new InMemoryDataSnapshot(
+                if (authorization.isAuthorized(Operation.WRITE, auth, new InMemoryDataSnapshot(
                         model), path.append(key), value)) {
                     Node childNode = new Node();
                     populate(logBuilder.getChildLogBuilder(key), path.append(key), auth, childNode,
@@ -261,7 +261,7 @@ public class InMemoryPersistence implements Persistence {
                     }
                 }
             } else {
-                if (authorization.isAuthorized(HeliumOperation.WRITE, auth, new InMemoryDataSnapshot(
+                if (authorization.isAuthorized(Operation.WRITE, auth, new InMemoryDataSnapshot(
                         model), path.append(key), value)) {
                     if (node.has(key)) {
                     }
@@ -298,7 +298,7 @@ public class InMemoryPersistence implements Persistence {
     @Override
     public void setPriority(ChangeLog log, Node auth, Path path, int priority) {
         Node parent = model.getNodeForPath(log, path.getParent());
-        if (authorization.isAuthorized(HeliumOperation.WRITE, auth,
+        if (authorization.isAuthorized(Operation.WRITE, auth,
                 new InMemoryDataSnapshot(model), path, parent)) {
             parent.setIndexOf(path.getLastElement(), priority);
         }

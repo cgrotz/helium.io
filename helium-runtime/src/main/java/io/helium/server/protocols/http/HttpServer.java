@@ -14,12 +14,11 @@
  * under the License.
  */
 
-package io.helium.server;
+package io.helium.server.protocols.http;
 
 import io.helium.core.Core;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.server.protocols.http.HeliumHttpServerInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
@@ -28,7 +27,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import java.io.IOException;
 
-public class HeliumServer {
+public class HttpServer {
 
     private final int port;
     private final Authorization authorization;
@@ -37,7 +36,7 @@ public class HeliumServer {
     private final String basePath;
     private final String host;
 
-    public HeliumServer(int port, String basePath, String host, Core core, Persistence persistence, Authorization authorization) throws IOException {
+    public HttpServer(int port, String basePath, String host, Core core, Persistence persistence, Authorization authorization) throws IOException {
         this.port = port;
         this.basePath = basePath;
         this.host = host;
@@ -53,7 +52,7 @@ public class HeliumServer {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .childHandler(new HeliumHttpServerInitializer(basePath, persistence, authorization, core));
+                    .childHandler(new HttpServerInitializer(basePath, persistence, authorization, core));
 
             Channel ch = b.bind(host, port).sync().channel();
             System.out.println("Helium server started");

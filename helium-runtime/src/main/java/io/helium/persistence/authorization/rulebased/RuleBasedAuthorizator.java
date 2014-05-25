@@ -18,7 +18,7 @@ package io.helium.persistence.authorization.rulebased;
 
 import io.helium.common.Path;
 import io.helium.json.Node;
-import io.helium.persistence.authorization.HeliumOperation;
+import io.helium.persistence.authorization.Operation;
 
 public class RuleBasedAuthorizator {
 
@@ -37,7 +37,7 @@ public class RuleBasedAuthorizator {
     // throw new RuntimeException("HeliumOperation " + key + " not found");
     // }
 
-    public String getExpressionForPathAndOperation(Path path, HeliumOperation op) {
+    public String getExpressionForPathAndOperation(Path path, Operation op) {
         Node node = rule.getLastLeafNode(path);
         if (node != null && node.has(op.getOp()) && node.get(op.getOp()) != null) {
             Object value = node.get(op.getOp());

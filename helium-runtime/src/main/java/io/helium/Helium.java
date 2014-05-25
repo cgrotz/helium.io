@@ -21,7 +21,7 @@ import io.helium.json.Node;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.rulebased.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
-import io.helium.server.HeliumServer;
+import io.helium.server.protocols.http.HttpServer;
 import org.apache.commons.cli.*;
 
 import java.io.File;
@@ -58,7 +58,7 @@ public class Helium {
         options.addOption("p", true, "Port for the webserver");
     }
 
-    private final HeliumServer server;
+    private final HttpServer httpServer;
 
     private InMemoryPersistence persistence;
     private Core core;
@@ -71,7 +71,7 @@ public class Helium {
         persistence = new InMemoryPersistence(authorization);
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
-        server = new HeliumServer(port, basePath, host, core, persistence, authorization);
+        httpServer = new HttpServer(port, basePath, host, core, persistence, authorization);
     }
 
     public Helium(String basePath, File journalDirectory, String host, int port) throws IOException {
@@ -81,7 +81,7 @@ public class Helium {
         persistence = new InMemoryPersistence(authorization);
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
-        server = new HeliumServer(port, basePath, host, core, persistence, authorization);
+        httpServer = new HttpServer(port, basePath, host, core, persistence, authorization);
     }
 
     public Helium(String basePath, String host, int port) throws IOException {
@@ -93,7 +93,7 @@ public class Helium {
                 persistence,
                 authorization);
         persistence.setCore(core);
-        server = new HeliumServer(port, basePath, host, core, persistence, authorization);
+        httpServer = new HttpServer(port, basePath, host, core, persistence, authorization);
     }
 
     public static void main(String[] args) {
@@ -123,6 +123,10 @@ public class Helium {
         }
     }
 
+    private void start() throws InterruptedException {
+        httpServer.run();
+    }
+
     public static File createTempDirectory() throws IOException {
         final File temp;
         temp = File.createTempFile("Temp" + System.currentTimeMillis(), "");
@@ -134,9 +138,5 @@ public class Helium {
             throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
         }
         return temp;
-    }
-
-    private void start() throws InterruptedException {
-        server.run();
     }
 }
