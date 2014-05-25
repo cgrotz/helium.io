@@ -43,7 +43,6 @@ public interface Persistence {
 
     RulesDataSnapshot getRoot();
 
-    public void syncPathWithQuery(Path path, HeliumHttpEndpoint handler,
+    void syncPathWithQuery(Path path, HeliumHttpEndpoint handler,
                                   QueryEvaluator queryEvaluator, String query);
-
 }

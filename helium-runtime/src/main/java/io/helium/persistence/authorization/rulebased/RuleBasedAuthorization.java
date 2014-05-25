@@ -19,7 +19,7 @@ package io.helium.persistence.authorization.rulebased;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.json.Node;
-import io.helium.persistence.SandboxedScriptingEnvironment;
+import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.HeliumNotAuthorizedException;
 import io.helium.persistence.authorization.HeliumOperation;
@@ -27,7 +27,7 @@ import io.helium.persistence.authorization.HeliumOperation;
 public class RuleBasedAuthorization implements Authorization {
 
     private RuleBasedAuthorizator rule;
-    private SandboxedScriptingEnvironment scriptingEnvironment;
+    private SandBoxedScriptingEnvironment scriptingEnvironment;
 
     public RuleBasedAuthorization(Node rule) {
         if (rule != null && rule.has("rules")) {
@@ -36,7 +36,7 @@ public class RuleBasedAuthorization implements Authorization {
             this.rule = new RuleBasedAuthorizator(Authorization.ALL_ACCESS_RULE.getNode("rules"));
         }
 
-        this.scriptingEnvironment = new SandboxedScriptingEnvironment();
+        this.scriptingEnvironment = new SandBoxedScriptingEnvironment();
     }
 
     @Override

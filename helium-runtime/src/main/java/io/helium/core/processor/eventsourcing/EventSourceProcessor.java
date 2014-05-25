@@ -21,8 +21,6 @@ import com.google.common.base.Preconditions;
 import com.lmax.disruptor.EventHandler;
 import io.helium.core.Core;
 import io.helium.event.HeliumEvent;
-import journal.io.api.ClosedJournalException;
-import journal.io.api.CompactedDataFileException;
 import journal.io.api.Journal;
 import journal.io.api.Journal.ReadType;
 import journal.io.api.Journal.WriteType;
@@ -50,7 +48,7 @@ public class EventSourceProcessor implements EventHandler<HeliumEvent> {
 
     @Override
     public void onEvent(HeliumEvent event, long sequence, boolean endOfBatch)
-            throws ClosedJournalException, IOException {
+            throws IOException {
         if (!event.isFromHistory()) {
             logger.trace("storing event: " + event);
             Location write = journal.write(event.toString().getBytes(), WriteType.SYNC);
@@ -59,8 +57,7 @@ public class EventSourceProcessor implements EventHandler<HeliumEvent> {
         }
     }
 
-    public void restore() throws ClosedJournalException,
-            CompactedDataFileException, IOException, RuntimeException {
+    public void restore() throws IOException, RuntimeException {
         Iterable<Location> redo;
         if (currentLocation.isPresent()) {
             redo = journal.redo(currentLocation.get());
@@ -76,14 +73,4 @@ public class EventSourceProcessor implements EventHandler<HeliumEvent> {
             helium.handleEvent(heliumEvent);
         }
     }
-
-    public Optional<Location> getCurrentLocation() {
-        return currentLocation;
-    }
-
-    public void setCurrentLocation(Location currentLocation) {
-        this.currentLocation = Optional.fromNullable(currentLocation);
-
-    }
-
 }

@@ -16,14 +16,11 @@
 
 package io.helium.server.rpc;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.helium.json.Node;
 import io.helium.server.protocols.http.HeliumHttpEndpoint;
 
 import java.lang.annotation.*;
-import java.util.List;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -86,54 +83,5 @@ public class Rpc {
         String value();
 
         String defaultValue() default "";
-    }
-
-    private class RpcMethodInstance {
-        private Object instance;
-        private java.lang.reflect.Method method;
-        private ObjectConverter objectConverter = new ObjectConverter();
-
-        public RpcMethodInstance(Object instance, java.lang.reflect.Method method) {
-            this.instance = instance;
-            this.method = method;
-        }
-
-        public Object call(Node passedArgs) {
-            try {
-                List<Object> args = Lists.newArrayList();
-                for (Annotation[] annotations : method.getParameterAnnotations()) {
-                    for (Annotation annotation : annotations) {
-                        if (annotation instanceof Param) {
-                            if (passedArgs != null) {
-                                Param param = (Param) annotation;
-                                if (passedArgs.has(param.value())) {
-                                    args.add(passedArgs.get(param.value()));
-                                } else {
-                                    if (!Strings.isNullOrEmpty(param.defaultValue())) {
-                                        args.add(param.defaultValue());
-                                    } else {
-                                        args.add(null);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Object[] argArray = createArray(method, args);
-                return method.invoke(instance, argArray);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        private Object[] createArray(java.lang.reflect.Method method, List<Object> args) {
-            Object[] array = args.toArray();
-            Class<?>[] parameterTypes = method.getParameterTypes();
-            for (int i = 0; i < parameterTypes.length; i++) {
-                array[i] = objectConverter.convert(array[i], parameterTypes[i]);
-            }
-            return array;
-        }
     }
 }

@@ -32,13 +32,13 @@ import java.security.cert.Certificate;
  *
  * @author Christoph Grotz
  */
-public class SandboxedScriptingEnvironment {
+public class SandBoxedScriptingEnvironment {
     private static final Logger LOGGER = LoggerFactory.getLogger(QueryEvaluator.class);
     private ScriptEngineManager mgr = new ScriptEngineManager();
     private ScriptEngine engine = mgr.getEngineByName("JavaScript");
     private AccessControlContext accessControlContext;
 
-    public SandboxedScriptingEnvironment() {
+    public SandBoxedScriptingEnvironment() {
         Permissions perms = new Permissions();
         perms.add(new RuntimePermission("accessDeclaredMembers"));
         // Cast to Certificate[] required because of ambiguity:

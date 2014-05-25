@@ -20,7 +20,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import io.helium.common.Path;
 import io.helium.json.Node;
-import io.helium.persistence.SandboxedScriptingEnvironment;
+import io.helium.persistence.SandBoxedScriptingEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public class QueryEvaluator {
     private Multimap<String, String> attached_queries = HashMultimap.create();
     private Multimap<String, String> nodesForQuery = HashMultimap.create();
 
-    private SandboxedScriptingEnvironment scriptingEnvironment = new SandboxedScriptingEnvironment();
+    private SandBoxedScriptingEnvironment scriptingEnvironment = new SandBoxedScriptingEnvironment();
 
     public boolean appliesToQuery(Path path, Object value) {
         for (String queryStr : attached_queries.get(path.toString())) {
