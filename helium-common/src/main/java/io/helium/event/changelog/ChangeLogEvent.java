@@ -16,6 +16,9 @@
 
 package io.helium.event.changelog;
 
+import io.helium.common.Path;
+
 public interface ChangeLogEvent {
 
+    Path getPath();
 }

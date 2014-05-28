@@ -31,7 +31,7 @@ import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.server.protocols.http.HttpEndpoint;
+import io.helium.server.Endpoint;
 import journal.io.api.ClosedJournalException;
 import journal.io.api.CompactedDataFileException;
 import journal.io.api.Journal;
@@ -113,11 +113,11 @@ public class Core implements ExceptionHandler {
         disruptor.shutdown();
     }
 
-    public void addEndpoint(HttpEndpoint endpoint) {
+    public void addEndpoint(Endpoint endpoint) {
         distributionProcessor.addHandler(endpoint);
     }
 
-    public void removeEndpoint(HttpEndpoint endpoint) {
+    public void removeEndpoint(Endpoint endpoint) {
         distributionProcessor.removeHandler(endpoint);
     }
 

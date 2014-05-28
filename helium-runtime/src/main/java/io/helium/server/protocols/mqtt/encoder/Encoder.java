@@ -1,11 +1,16 @@
 package io.helium.server.protocols.mqtt.encoder;
 
-import com.google.common.base.Charsets;
 import io.helium.server.protocols.mqtt.protocol.ConnackCode;
 import io.helium.server.protocols.mqtt.protocol.QosLevel;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
+import org.dna.mqtt.moquette.proto.messages.AbstractMessage;
+import org.dna.mqtt.moquette.proto.messages.PublishMessage;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -124,7 +129,7 @@ public class Encoder {
         // --------+-----+-----+-----+-----+-----+-----+-----+------+
         // bit     |  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0   |
         // --------+-----+-----+-----+-----+-----+-----+-----+------+
-        // byte 1  |  1     0     0     1  |  x  |  x     x  |  x   |
+        // byte 1  |  1     1     0     1  |  x  |  x     x  |  x   |
         // --------+-----------------------+-----+-----------+------+
         // byte 2  |              Remaining Length                  |
         //---------+------------------------------------------------+
@@ -132,8 +137,8 @@ public class Encoder {
         // MQTT V3.1 Protocol Specification - sections 3.9
 
         ByteBuf header = Unpooled.buffer(2);
-        // byte 1: 0b_1101_0000 = 0x90
-        header.writeByte(0xD0);
+        // byte 1: 0b_1101_0000 = 0xD0
+         header.writeByte(0xD0);
         // byte 2: remaining length = 2 => 0x02
         header.writeByte(0x00);
 
@@ -167,7 +172,15 @@ public class Encoder {
         return buffer;
     }
 
-    public ByteBuf encodePublish(int messageId, String topic, byte[] payload) {
+    public void encodePublish(ChannelHandlerContext ctx, ByteBuf out, int messageId, String topic, String payload) throws UnsupportedEncodingException {
+        PublishMessage publishMessage = new PublishMessage();
+        publishMessage.setQos(AbstractMessage.QOSType.MOST_ONE);
+        publishMessage.setMessageID(messageId);
+        publishMessage.setTopicName(topic);
+        publishMessage.setPayload(ByteBuffer.wrap(payload.getBytes("UTF-8")));
+
+        PublishEncoder publishEncoder = new PublishEncoder();
+        publishEncoder.encode(ctx, publishMessage,out );
         //
         // --------+-----+-----+-----+-----+-----+-----+-----+------+
         // bit     |  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0   |
@@ -178,25 +191,24 @@ public class Encoder {
         //---------+------------------------------------------------+
         // The DUP, QoS and RETAIN flags are not used in the PUBLISH message.
         // MQTT V3.1 Protocol Specification - sections 3.5
+/*
+        ByteBuf content = Unpooled.buffer(1);
 
-        ByteBuf content = Unpooled.buffer();
-
-        content.writeShort((messageId & 0xFFFF));
-        content.writeBytes(topic.getBytes(Charsets.UTF_8));
-        content.writeBytes(payload);
-
+        encodeUTF8(content, topic);
+        //content.writeShort((messageId & 0xFFFF));
+        content.writeBytes(payload.getBytes("UTF-8"));
         long len = content.capacity();
 
         ByteBuf header = Unpooled.buffer(2);
-        // byte 1: 0b_0011_0000 = 0x90
+        // byte 1: 0b_0011_0000 = 0x30
         header.writeByte(0x30);
 
         encodeRemainingLength(len, header);
 
-        ByteBuf buffer = Unpooled.buffer();
+        ByteBuf buffer = Unpooled.buffer(1);
         buffer.writeBytes(header);
         buffer.writeBytes(content);
-        return buffer;
+        return buffer;*/
     }
 
     public void encodeRemainingLength(long x, ByteBuf buffer) {
@@ -207,6 +219,29 @@ public class Encoder {
             encodeRemainingLength(newX, buffer);
         } else {
             buffer.writeByte(digit);
+        }
+    }
+
+    /**
+     * Encodes a String given into UTF-8, before writing this to the DataOutputStream the length of the
+     * encoded string is encoded into two bytes and then written to the DataOutputStream. @link{DataOutputStream#writeUFT(String)}
+     * should be no longer used. @link{DataOutputStream#writeUFT(String)} does not correctly encode UTF-16 surrogate characters.
+     *
+     * @param buffer The stream to write the encoded UTF-8 String to.
+     * @param stringToEncode The String to be encoded
+     * @throws RuntimeException Thrown when an error occurs with either the encoding or writing the data to the stream
+     */
+    protected void encodeUTF8(ByteBuf buffer, String stringToEncode) throws RuntimeException
+    {
+        try {
+            byte[] encodedString = stringToEncode.getBytes("UTF-8");
+            buffer.writeShort((encodedString.length & 0xFFFF));
+            buffer.writeBytes(encodedString);
+        }
+        catch(UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
     }
 }

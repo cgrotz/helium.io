@@ -190,10 +190,12 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
         // Check for closing frame
         if (frame instanceof CloseWebSocketFrame) {
             HttpEndpoint endpoint = endpoints.get(ctx.channel());
-            endpoint.setOpen(false);
-            endpoint.executeDisconnectEvents();
-            core.removeEndpoint(endpoint);
-            handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
+            if(endpoint != null) {
+                endpoint.setOpen(false);
+                endpoint.executeDisconnectEvents();
+                core.removeEndpoint(endpoint);
+                handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
+            }
             return;
         }
         if (frame instanceof PingWebSocketFrame) {

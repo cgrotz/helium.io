@@ -40,23 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map.Entry;
 
-public class HttpEndpoint {
-    private static final String QUERY_CHILD_REMOVED = "query_child_removed";
-
-    private static final String QUERY_CHILD_CHANGED = "query_child_changed";
-
-    private static final String QUERY_CHILD_ADDED = "query_child_added";
-
-    private static final String CHILD_REMOVED = "child_removed";
-
-    private static final String CHILD_MOVED = "child_moved";
-
-    private static final String VALUE = "value";
-
-    private static final String CHILD_CHANGED = "child_changed";
-
-    private static final String CHILD_ADDED = "child_added";
-
+public class HttpEndpoint implements io.helium.server.Endpoint {
     private static final Logger LOGGER = LoggerFactory
             .getLogger(HttpEndpoint.class);
 
