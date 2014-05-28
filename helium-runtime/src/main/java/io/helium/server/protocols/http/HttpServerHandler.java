@@ -17,7 +17,6 @@
 package io.helium.server.protocols.http;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import io.helium.common.Path;
 import io.helium.core.Core;
@@ -42,6 +41,7 @@ import io.netty.util.CharsetUtil;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
@@ -159,7 +159,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
             } else if (req.getMethod() == HttpMethod.POST
                     || req.getMethod() == HttpMethod.PUT) {
                 String msg = new String(req.content().array());
-                core.handleEvent(HeliumEventType.SET, req.getUri(), Optional.fromNullable(msg));
+                core.handleEvent(HeliumEventType.SET, req.getUri(), Optional.ofNullable(msg));
                 FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
                 sendHttpResponse(ctx, req, res);
                 return;

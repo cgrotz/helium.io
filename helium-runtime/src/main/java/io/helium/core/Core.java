@@ -16,7 +16,6 @@
 
 package io.helium.core;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.ExceptionHandler;
@@ -40,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -62,7 +62,7 @@ public class Core implements ExceptionHandler {
     private Disruptor<HeliumEvent> disruptor;
     private AuthorizationProcessor authorizationProcessor;
     private Persistence persistence;
-    private Optional<Journal> snapshotJournal = Optional.absent();
+    private Optional<Journal> snapshotJournal = Optional.empty();
     private long currentSequence;
 
     public Core(File journalDirectory, Persistence persistence, Authorization authorization) throws IOException {

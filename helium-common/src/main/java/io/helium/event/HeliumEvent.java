@@ -16,11 +16,12 @@
 
 package io.helium.event;
 
-import com.google.common.base.Optional;
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.JSONTokener;
 import io.helium.json.Node;
+
+import java.util.Optional;
 
 /**
  * Abstraction for Helium Events. Has helper methods for accessing the underlying JSON data.

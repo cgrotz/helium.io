@@ -16,7 +16,6 @@
 
 package io.helium.core.processor.eventsourcing;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.lmax.disruptor.EventHandler;
 import io.helium.core.Core;
@@ -30,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 public class EventSourceProcessor implements EventHandler<HeliumEvent> {
     private static final Logger logger = LoggerFactory.getLogger(EventSourceProcessor.class);
@@ -37,7 +37,7 @@ public class EventSourceProcessor implements EventHandler<HeliumEvent> {
     private Journal journal = new Journal();
     private Core helium;
 
-    private Optional<Location> currentLocation = Optional.absent();
+    private Optional<Location> currentLocation = Optional.empty();
 
     public EventSourceProcessor(File journal_dir, Core helium)
             throws IOException {
