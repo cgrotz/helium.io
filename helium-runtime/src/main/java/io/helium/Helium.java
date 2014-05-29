@@ -21,6 +21,8 @@ import com.google.common.io.Files;
 import io.helium.core.Core;
 import io.helium.json.Node;
 import io.helium.persistence.authorization.Authorization;
+import io.helium.persistence.authorization.chained.ChainedAuthorization;
+import io.helium.persistence.authorization.path.PathBasedAuthorization;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import io.helium.server.protocols.http.HttpServer;
@@ -63,14 +65,14 @@ public class Helium {
 
     private InMemoryPersistence persistence;
     private Core core;
-    private RuleBasedAuthorization authorization;
+    private ChainedAuthorization authorization;
 
     private ExecutorService executor = Executors.newCachedThreadPool();
 
     public Helium(String basePath, Node rule, File journalDirectory, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
         checkNotNull(journalDirectory);
-        authorization = new RuleBasedAuthorization(rule);
+        authorization = new ChainedAuthorization(new PathBasedAuthorization(persistence), new RuleBasedAuthorization(rule));
         persistence = new InMemoryPersistence(authorization);
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
@@ -81,7 +83,7 @@ public class Helium {
     public Helium(String basePath, File journalDirectory, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
         checkNotNull(journalDirectory);
-        authorization = new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE);
+        authorization = new ChainedAuthorization(new PathBasedAuthorization(persistence), new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE));
         persistence = new InMemoryPersistence(authorization);
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
@@ -91,7 +93,7 @@ public class Helium {
 
     public Helium(String basePath, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
-        authorization = new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE);
+        authorization = new ChainedAuthorization(new PathBasedAuthorization(persistence), new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE));
         persistence = new InMemoryPersistence(authorization);
 
         core = new Core(File.createTempFile("Temp" + System.currentTimeMillis(), ""),
