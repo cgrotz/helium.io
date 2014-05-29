@@ -16,8 +16,10 @@ public class MqttServer implements Runnable {
     private final Core core;
     private final Persistence persistence;
     private final Authorization authorization;
+    private final int port;
 
-    public MqttServer(Core core, Persistence persistence, Authorization authorization) {
+    public MqttServer(int port, Core core, Persistence persistence, Authorization authorization) {
+        this.port = port;
         this.core = core;
         this.persistence = persistence;
         this.authorization = authorization;
@@ -33,7 +35,7 @@ public class MqttServer implements Runnable {
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new MqttServerInitializer(persistence, authorization, core));
 
-            Channel ch = b.bind(1883).sync().channel();
+            Channel ch = b.bind(port).sync().channel();
             System.out.println("Connect via MQTT to mqtt://localhost/");
 
             ch.closeFuture().sync();

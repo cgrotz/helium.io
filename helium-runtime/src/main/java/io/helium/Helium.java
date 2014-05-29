@@ -16,6 +16,8 @@
 
 package io.helium;
 
+import com.google.common.base.Strings;
+import com.google.common.io.Files;
 import io.helium.core.Core;
 import io.helium.json.Node;
 import io.helium.persistence.authorization.Authorization;
@@ -50,13 +52,8 @@ public class Helium {
         Option basePathOption = OptionBuilder.withArgName("basepath").hasArg()
                 .withDescription("basePath of the Helium instance").create("b");
 
-        @SuppressWarnings("static-access")
-        Option productiveModeOption = OptionBuilder.withArgName("productionMode").hasArg()
-                .withDescription("set to true if the application runs in productive mode").create("prod");
-
         options.addOption(directoryOption);
         options.addOption(basePathOption);
-        options.addOption(productiveModeOption);
 
         options.addOption("p", true, "Port for the webserver");
     }
@@ -70,29 +67,29 @@ public class Helium {
 
     private ExecutorService executor = Executors.newCachedThreadPool();
 
-    public Helium(String basePath, Node rule, File journalDirectory, String host, int port) throws IOException {
+    public Helium(String basePath, Node rule, File journalDirectory, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
         checkNotNull(journalDirectory);
         authorization = new RuleBasedAuthorization(rule);
         persistence = new InMemoryPersistence(authorization);
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
-        httpServer = new HttpServer(port, basePath, host, core, persistence, authorization);
-        mqttServer = new MqttServer(core, persistence, authorization);
+        httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
+        mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
     }
 
-    public Helium(String basePath, File journalDirectory, String host, int port) throws IOException {
+    public Helium(String basePath, File journalDirectory, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
         checkNotNull(journalDirectory);
         authorization = new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE);
         persistence = new InMemoryPersistence(authorization);
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
-        httpServer = new HttpServer(port, basePath, host, core, persistence, authorization);
-        mqttServer = new MqttServer(core, persistence, authorization);
+        httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
+        mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
     }
 
-    public Helium(String basePath, String host, int port) throws IOException {
+    public Helium(String basePath, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
         authorization = new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE);
         persistence = new InMemoryPersistence(authorization);
@@ -101,8 +98,8 @@ public class Helium {
                 persistence,
                 authorization);
         persistence.setCore(core);
-        httpServer = new HttpServer(port, basePath, host, core, persistence, authorization);
-        mqttServer = new MqttServer(core, persistence, authorization);
+        httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
+        mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
     }
 
     public static void main(String[] args) {
@@ -113,16 +110,13 @@ public class Helium {
             String directory = cmd.getOptionValue("d");
             String basePath = cmd.getOptionValue("b", "http://localhost:8080");
             String host = cmd.getOptionValue("h", "localhost");
-            int port = Integer.parseInt(cmd.getOptionValue("p", "8080"));
-            boolean productiveMode = Boolean.parseBoolean(cmd.getOptionValue("prod", "false"));
-            if (productiveMode) {
-                Helium helium = new Helium(basePath, new File(directory), host, port);
-                helium.start();
-            } else {
-                Helium helium = new Helium(basePath, createTempDirectory(), host, port);
-                helium.start();
-            }
+            int httpPort = Integer.parseInt(cmd.getOptionValue("p", "8080"));
+            int mqttPort = Integer.parseInt(cmd.getOptionValue("m", "1883"));
+            File file = new File(Strings.isNullOrEmpty(directory)?"helium":directory);
+            Files.createParentDirs(new File(file,".helium"));
 
+            Helium helium = new Helium( basePath, file, host, httpPort, mqttPort );
+            helium.start();
         } catch (ParseException e) {
             System.out.println(e.getLocalizedMessage());
             HelpFormatter formatter = new HelpFormatter();

@@ -72,5 +72,6 @@ public class EventSourceProcessor implements EventHandler<HeliumEvent> {
             Preconditions.checkArgument(heliumEvent.has(HeliumEvent.TYPE), "No type defined in Event");
             helium.handleEvent(heliumEvent);
         }
+        logger.info("Done restoring from journal");
     }
 }
