@@ -142,4 +142,8 @@ public final class Path {
 	public String[] toArray() {
 		return this.elements;
 	}
+
+    public static Path of(String key) {
+        return new Path(key);
+    }
 }

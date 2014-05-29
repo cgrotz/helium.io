@@ -21,11 +21,17 @@ public class PathBasedAuthorization implements Authorization {
 
     @Override
     public void authorize(Operation op, Node auth, DataSnapshot root, Path path, Object object) throws NotAuthorizedException {
-
+        if(!isAuthorized(op,auth, root, path, object)){
+            throw new NotAuthorizedException(op, path);
+        }
     }
 
     @Override
     public boolean isAuthorized(Operation op, Node auth, DataSnapshot root, Path path, Object object) {
-        return false;
+        auth.getNode("permissions").keys().forEach(key -> {
+            Path permission = Path.of(key);
+
+        });
+        return true;
     }
 }

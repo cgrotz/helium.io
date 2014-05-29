@@ -6,6 +6,7 @@ import io.helium.core.Core;
 import io.helium.event.HeliumEventType;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
+import io.helium.server.DataTypeConverter;
 import io.helium.server.protocols.mqtt.decoder.MqttDecoder;
 import io.helium.server.protocols.mqtt.encoder.Encoder;
 import io.helium.server.protocols.mqtt.protocol.*;
@@ -15,7 +16,7 @@ import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import org.mapdb.DB;
-import scala.NotImplementedError;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
 import java.util.Map;
@@ -86,8 +87,7 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
                 }
                 case PUBLISH: {
                     Publish publish = (Publish) command.get();
-                    String payload = new String(publish.getArray());
-                    Optional<?> optional = Optional.of(payload);
+                    Optional<?> optional = Optional.ofNullable(DataTypeConverter.convert(publish.getArray()));
                     if(publish.isRetainFlag()) {
                         core.handleEvent(HeliumEventType.SET, publish.getTopic(), optional);
                     }
@@ -129,7 +129,7 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
                             break;
                         }
                         case R3 : {
-                            throw new NotImplementedError("QoS Level R3 not implemented yet");
+                            throw new NotImplementedException();//"QoS Level R3 not implemented yet");
                         }
                     }
                 }

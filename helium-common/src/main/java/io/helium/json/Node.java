@@ -776,6 +776,9 @@ public class Node {
      * @throws RuntimeException If the key is null.
      */
     public Node put(String key, boolean value) {
+        if(Strings.isNullOrEmpty(key)) {
+            return this;
+        }
         this.put(key, value ? Boolean.TRUE : Boolean.FALSE);
         return this;
     }
@@ -789,6 +792,9 @@ public class Node {
      * @throws RuntimeException If the key is null or if the number is invalid.
      */
     public Node put(String key, double value) {
+        if(Strings.isNullOrEmpty(key)) {
+            return this;
+        }
         this.put(key, new Double(value));
         return this;
     }
@@ -802,6 +808,9 @@ public class Node {
      * @throws RuntimeException If the key is null.
      */
     public Node put(String key, int value) {
+        if(Strings.isNullOrEmpty(key)) {
+            return this;
+        }
         this.put(key, new Integer(value));
         return this;
     }
@@ -815,6 +824,9 @@ public class Node {
      * @throws RuntimeException If the key is null.
      */
     public Node put(String key, long value) {
+        if(Strings.isNullOrEmpty(key)) {
+            return this;
+        }
         this.put(key, new Long(value));
         return this;
     }
@@ -830,10 +842,15 @@ public class Node {
      * @throws RuntimeException If the value is non-finite number or if the key is null.
      */
     public Node put(String key, Object value) {
-        return putWithIndex(key, value, -1);
+        if(Strings.isNullOrEmpty(key)) {
+            return this;
+        }return putWithIndex(key, value, -1);
     }
 
     public Node putWithIndex(String key, Object value, int index) {
+        if(Strings.isNullOrEmpty(key)) {
+            return this;
+        }
         if (key == null) {
             throw new NullPointerException("Null key.");
         }
@@ -864,6 +881,9 @@ public class Node {
      * @throws RuntimeException if the key is a duplicate
      */
     public Node putOnce(String key, Object value) {
+        if(Strings.isNullOrEmpty(key)) {
+            return this;
+        }
         if (key != null && value != null) {
             if (this.opt(key) != null) {
                 throw new RuntimeException("Duplicate key \"" + key + "\"");

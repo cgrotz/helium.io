@@ -28,13 +28,11 @@ import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
+import io.helium.server.DataTypeConverter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 
@@ -42,6 +40,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
@@ -156,16 +155,37 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
                 setContentLength(res, content.readableBytes());
                 sendHttpResponse(ctx, req, res);
                 return;
-            } else if (req.getMethod() == HttpMethod.POST
-                    || req.getMethod() == HttpMethod.PUT) {
-                String msg = new String(req.content().array());
-                core.handleEvent(HeliumEventType.SET, req.getUri(), Optional.ofNullable(msg));
-                FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
+            } else if (req.getMethod() == HttpMethod.POST) {
+                ByteBuf content = Unpooled.buffer(req.content().readableBytes());
+                req.content().readBytes(content);
+                String uri;
+                String uuid = UUID.randomUUID().toString().replaceAll("-","");
+                if(req.getUri().endsWith("/")) {
+                    uri = req.getUri()+ uuid;
+                }
+                else {
+                    uri = req.getUri()+"/"+ uuid;
+                }
+                core.handleEvent(HeliumEventType.PUSH, uri, Optional.ofNullable(DataTypeConverter.convert(content.array())));
+                FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
+                res.headers().set(HttpHeaders.Names.LOCATION, uri);
+                setContentLength(res, 0);
+                sendHttpResponse(ctx, req, res);
+                return;
+            }
+            else if( req.getMethod() == HttpMethod.PUT) {
+                ByteBuf content = Unpooled.buffer(req.content().readableBytes());
+                req.content().readBytes(content);
+                core.handleEvent(HeliumEventType.SET, req.getUri(), Optional.ofNullable(DataTypeConverter.convert(content.array())));
+                FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
+                res.headers().set(HttpHeaders.Names.LOCATION, req.getUri());
+                setContentLength(res, 0);
                 sendHttpResponse(ctx, req, res);
                 return;
             } else if (req.getMethod() == HttpMethod.DELETE) {
-                core.handleEvent(HeliumEventType.SET, req.getUri(), null);
-                FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
+                core.handleEvent(HeliumEventType.REMOVE, req.getUri(), Optional.empty());
+                FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
+                setContentLength(res, 0);
                 sendHttpResponse(ctx, req, res);
                 return;
             }
