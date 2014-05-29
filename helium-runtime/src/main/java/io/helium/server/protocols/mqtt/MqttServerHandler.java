@@ -3,6 +3,7 @@ package io.helium.server.protocols.mqtt;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.helium.core.Core;
+import io.helium.event.HeliumEventType;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.server.protocols.mqtt.decoder.MqttDecoder;
@@ -85,6 +86,15 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
                 }
                 case PUBLISH: {
                     Publish publish = (Publish) command.get();
+                    String payload = new String(publish.getArray());
+                    Optional<?> optional = Optional.of(payload);
+                    if(publish.isRetainFlag()) {
+                        core.handleEvent(HeliumEventType.SET, publish.getTopic(), optional);
+                    }
+                    else {
+                        core.handleEvent(HeliumEventType.EVENT, publish.getTopic(), optional);
+                    }
+
                     switch(publish.getQosLevel()) {
                         case AtMostOnce: {
                             break;
