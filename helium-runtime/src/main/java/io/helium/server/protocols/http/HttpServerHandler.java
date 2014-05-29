@@ -18,29 +18,22 @@ package io.helium.server.protocols.http;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
-import io.helium.common.Path;
 import io.helium.core.Core;
-import io.helium.event.HeliumEvent;
-import io.helium.event.HeliumEventType;
 import io.helium.json.Node;
-import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.persistence.authorization.Operation;
-import io.helium.persistence.inmemory.InMemoryDataSnapshot;
-import io.helium.server.DataTypeConverter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
@@ -61,11 +54,13 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
 
     private String basePath;
     private Map<Channel, HttpEndpoint> endpoints = Maps.newHashMap();
+    private RestHandler restHandler;
 
     public HttpServerHandler(String basePath, Persistence persistence, Authorization authorization, Core core) {
         this.core = core;
         this.persistence = persistence;
         this.authorization = authorization;
+        this.restHandler = new RestHandler(basePath, core, persistence, authorization);
         this.basePath = basePath;
     }
 
@@ -141,56 +136,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
         }
 
         if (!req.headers().contains("Upgrade")) {
-            Path nodePath = new Path(HeliumEvent.extractPath(req.getUri().replaceAll("\\.json", "")));
-            if (req.getMethod() == HttpMethod.GET) {
-                DataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));
-                Object node = persistence.get(nodePath);
-                Object object = new InMemoryDataSnapshot(node);
-                authorization.authorize(Operation.READ, new Node(), root, nodePath,
-                        new InMemoryDataSnapshot(node));
-
-                ByteBuf content = Unpooled.copiedBuffer(node.toString().getBytes());
-                FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, content);
-                res.headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
-                setContentLength(res, content.readableBytes());
-                sendHttpResponse(ctx, req, res);
-                return;
-            } else if (req.getMethod() == HttpMethod.POST) {
-                ByteBuf content = Unpooled.buffer(req.content().readableBytes());
-                req.content().readBytes(content);
-                String uri;
-                String uuid = UUID.randomUUID().toString().replaceAll("-","");
-                if(req.getUri().endsWith("/")) {
-                    uri = req.getUri()+ uuid;
-                }
-                else {
-                    uri = req.getUri()+"/"+ uuid;
-                }
-                core.handleEvent(HeliumEventType.PUSH, uri, Optional.ofNullable(DataTypeConverter.convert(content.array())));
-                FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
-                res.headers().set(HttpHeaders.Names.LOCATION, uri);
-                setContentLength(res, 0);
-                sendHttpResponse(ctx, req, res);
-                return;
-            }
-            else if( req.getMethod() == HttpMethod.PUT) {
-                ByteBuf content = Unpooled.buffer(req.content().readableBytes());
-                req.content().readBytes(content);
-                core.handleEvent(HeliumEventType.SET, req.getUri(), Optional.ofNullable(DataTypeConverter.convert(content.array())));
-                FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
-                res.headers().set(HttpHeaders.Names.LOCATION, req.getUri());
-                setContentLength(res, 0);
-                sendHttpResponse(ctx, req, res);
-                return;
-            } else if (req.getMethod() == HttpMethod.DELETE) {
-                core.handleEvent(HeliumEventType.REMOVE, req.getUri(), Optional.empty());
-                FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
-                setContentLength(res, 0);
-                sendHttpResponse(ctx, req, res);
-                return;
-            }
-            FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK);
-            sendHttpResponse(ctx, req, res);
+            restHandler.handle(ctx, req);
             return;
         }
 
