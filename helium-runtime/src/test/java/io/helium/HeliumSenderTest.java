@@ -22,7 +22,7 @@ package io.helium;
 import io.helium.event.HeliumEvent;
 import io.helium.json.Node;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.persistence.authorization.rulebased.RuleBasedAuthorization;
+import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import io.helium.server.protocols.http.HttpEndpoint;
 import io.netty.channel.Channel;

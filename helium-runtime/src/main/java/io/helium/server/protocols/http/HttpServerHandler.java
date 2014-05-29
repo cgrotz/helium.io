@@ -23,10 +23,10 @@ import io.helium.core.Core;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.json.Node;
+import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.Operation;
-import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -144,7 +144,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
         if (!req.headers().contains("Upgrade")) {
             Path nodePath = new Path(HeliumEvent.extractPath(req.getUri().replaceAll("\\.json", "")));
             if (req.getMethod() == HttpMethod.GET) {
-                RulesDataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));
+                DataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));
                 Object node = persistence.get(nodePath);
                 Object object = new InMemoryDataSnapshot(node);
                 authorization.authorize(Operation.READ, new Node(), root, nodePath,

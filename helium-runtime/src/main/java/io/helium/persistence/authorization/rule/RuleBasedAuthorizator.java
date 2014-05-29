@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.persistence.authorization.rulebased;
+package io.helium.persistence.authorization.rule;
 
 import io.helium.common.Path;
 import io.helium.json.Node;

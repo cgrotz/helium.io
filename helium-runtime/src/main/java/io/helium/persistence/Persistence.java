@@ -19,7 +19,6 @@ package io.helium.persistence;
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
-import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.queries.QueryEvaluator;
 import io.helium.server.protocols.http.HttpEndpoint;
 
@@ -41,7 +40,7 @@ public interface Persistence {
 
     void syncPropertyValue(Path path, HttpEndpoint heliumEventHandler);
 
-    RulesDataSnapshot getRoot();
+    DataSnapshot getRoot();
 
     void syncPathWithQuery(Path path, HttpEndpoint handler,
                            QueryEvaluator queryEvaluator, String query);

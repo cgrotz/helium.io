@@ -14,11 +14,12 @@
  * under the License.
  */
 
-package io.helium.persistence.authorization.rulebased;
+package io.helium.persistence.authorization.rule;
 
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.json.Node;
+import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.NotAuthorizedException;
@@ -40,7 +41,7 @@ public class RuleBasedAuthorization implements Authorization {
     }
 
     @Override
-    public void authorize(Operation op, Node auth, RulesDataSnapshot root, Path path,
+    public void authorize(Operation op, Node auth, DataSnapshot root, Path path,
                           Object data) throws NotAuthorizedException {
         if (!isAuthorized(op, auth, root, path, data)) {
             throw new NotAuthorizedException(op, path);
@@ -48,7 +49,7 @@ public class RuleBasedAuthorization implements Authorization {
     }
 
     @Override
-    public boolean isAuthorized(Operation op, Node auth, RulesDataSnapshot root, Path path,
+    public boolean isAuthorized(Operation op, Node auth, DataSnapshot root, Path path,
                                 Object data) {
         String expression = rule.getExpressionForPathAndOperation(path, op);
         try {

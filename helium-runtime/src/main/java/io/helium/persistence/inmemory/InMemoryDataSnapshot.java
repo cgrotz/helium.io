@@ -17,9 +17,9 @@
 package io.helium.persistence.inmemory;
 
 import io.helium.json.Node;
-import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
+import io.helium.persistence.DataSnapshot;
 
-public class InMemoryDataSnapshot implements RulesDataSnapshot {
+public class InMemoryDataSnapshot implements DataSnapshot {
 
     Object val;
     private Node node;
@@ -37,7 +37,7 @@ public class InMemoryDataSnapshot implements RulesDataSnapshot {
     }
 
     @Override
-    public RulesDataSnapshot child(String childPath) {
+    public DataSnapshot child(String childPath) {
         return new InMemoryDataSnapshot(node.get(childPath));
     }
 

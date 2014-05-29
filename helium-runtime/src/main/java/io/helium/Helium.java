@@ -19,7 +19,7 @@ package io.helium;
 import io.helium.core.Core;
 import io.helium.json.Node;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.persistence.authorization.rulebased.RuleBasedAuthorization;
+import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import io.helium.server.protocols.http.HttpServer;
 import io.helium.server.protocols.mqtt.MqttServer;

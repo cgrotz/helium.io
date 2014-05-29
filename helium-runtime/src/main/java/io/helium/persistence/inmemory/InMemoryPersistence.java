@@ -22,10 +22,10 @@ import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.json.Node;
 import io.helium.json.NodeVisitor;
+import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.Operation;
-import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
 import io.helium.persistence.queries.QueryEvaluator;
 import io.helium.server.protocols.http.HttpEndpoint;
 import org.slf4j.Logger;
@@ -305,7 +305,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public RulesDataSnapshot getRoot() {
+    public DataSnapshot getRoot() {
         return new InMemoryDataSnapshot(model);
     }
 

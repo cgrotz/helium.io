@@ -22,7 +22,7 @@ import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.persistence.authorization.rulebased.RuleBasedAuthorization;
+import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import org.junit.Assert;
 import org.junit.Before;

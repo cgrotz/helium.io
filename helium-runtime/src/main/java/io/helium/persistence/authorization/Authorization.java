@@ -18,15 +18,15 @@ package io.helium.persistence.authorization;
 
 import io.helium.common.Path;
 import io.helium.json.Node;
-import io.helium.persistence.authorization.rulebased.RulesDataSnapshot;
+import io.helium.persistence.DataSnapshot;
 
 public interface Authorization {
     public static final Node ALL_ACCESS_RULE = new Node(
             "{rules:{\".write\": \"true\",\".read\": \"true\"}}");
 
-    void authorize(Operation op, Node auth, RulesDataSnapshot root, Path path,
+    void authorize(Operation op, Node auth, DataSnapshot root, Path path,
                    Object object) throws NotAuthorizedException;
 
-    boolean isAuthorized(Operation op, Node auth, RulesDataSnapshot root, Path path,
+    boolean isAuthorized(Operation op, Node auth, DataSnapshot root, Path path,
                          Object object);
 }
