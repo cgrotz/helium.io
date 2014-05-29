@@ -26,6 +26,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Optional;
+
 public class PersistenceTest {
 
     private InMemoryPersistence persistence;
@@ -41,7 +43,7 @@ public class PersistenceTest {
         Path path = new Path("/test/test");
         Assert.assertNotNull(persistence.get(path));
         Assert.assertNotNull(persistence.getNode(path));
-        persistence.applyNewValue(new ChangeLog(), new Node(), path.append("msg"), 1, "HalloWelt");
+        persistence.applyNewValue(new ChangeLog(), Optional.empty(), path.append("msg"), 1, "HalloWelt");
         Assert.assertEquals(persistence.get(path.append("msg")), "HalloWelt");
     }
 
@@ -50,10 +52,10 @@ public class PersistenceTest {
         Path path = new Path("/test/test");
         Assert.assertNotNull(persistence.get(path));
         Assert.assertNotNull(persistence.getNode(path));
-        persistence.applyNewValue(new ChangeLog(), new Node(), path, 2,
+        persistence.applyNewValue(new ChangeLog(), Optional.empty(), path, 2,
                 new Node().put("msg", "HalloWelt"));
         Assert.assertEquals(persistence.get(path.append("msg")), "HalloWelt");
-        persistence.applyNewValue(new ChangeLog(), new Node(), path.append("msg"), 1, "HalloWelt2");
+        persistence.applyNewValue(new ChangeLog(), Optional.empty(), path.append("msg"), 1, "HalloWelt2");
         Assert.assertEquals(persistence.get(path.append("msg")), "HalloWelt2");
     }
 }

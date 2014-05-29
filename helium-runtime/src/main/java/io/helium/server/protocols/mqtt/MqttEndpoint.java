@@ -15,6 +15,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.mapdb.DB;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -29,6 +30,7 @@ public class MqttEndpoint implements Endpoint {
     private final Encoder encoder = new Encoder();
     private final PathMatcher pathMatcher = new PathMatcher();
     private long sequence = 0L;
+    private Optional<Node> auth = Optional.empty();
 
     public MqttEndpoint(String clientId, ChannelHandlerContext channel, DB db) {
         this.clientId = clientId;
@@ -160,6 +162,16 @@ public class MqttEndpoint implements Endpoint {
         }
     }
 
+    @Override
+    public void fireChildAdded(String childNodeKey, Path path, Path parent, Object object, boolean hasChildren, int numChildren, Object o, int indexOf) {
+
+    }
+
+    @Override
+    public void fireValue(String childNodeKey, Path path, Path parent, Object s, Object s1, int i) {
+
+    }
+
     public void subscribeToTopics(List<Topic> topics) {
         this.topics.addAll(topics);
     }
@@ -176,5 +188,13 @@ public class MqttEndpoint implements Endpoint {
             }
         }
         return false;
+    }
+
+    public Optional<Node> getAuth() {
+        return auth;
+    }
+
+    public void setAuth(Node auth) {
+        this.auth = Optional.ofNullable(auth);
     }
 }

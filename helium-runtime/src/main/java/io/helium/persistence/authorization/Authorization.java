@@ -20,13 +20,23 @@ import io.helium.common.Path;
 import io.helium.json.Node;
 import io.helium.persistence.DataSnapshot;
 
+import java.util.Optional;
+
 public interface Authorization {
     public static final Node ALL_ACCESS_RULE = new Node(
             "{rules:{\".write\": \"true\",\".read\": \"true\"}}");
 
-    void authorize(Operation op, Node auth, DataSnapshot root, Path path,
+    void authorize(Operation op,
+                   Optional<Node> auth,
+                   DataSnapshot root,
+                   Path path,
                    Object object) throws NotAuthorizedException;
 
-    boolean isAuthorized(Operation op, Node auth, DataSnapshot root, Path path,
+    boolean isAuthorized(Operation op,
+                         Optional<Node> auth,
+                         DataSnapshot root,
+                         Path path,
                          Object object);
+
+    Object filterContent(Optional<Node> auth, Path path, Node root, Object content);
 }

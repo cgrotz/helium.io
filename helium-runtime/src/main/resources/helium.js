@@ -127,6 +127,12 @@ var __extends = this.__extends || function (d, b) {
 	    		path: path
 	    	});
 	    };
+	    HeliumRPC.prototype.authenticate = function (username, password) {
+	        _super.prototype.sendRpc.call(this, 'authenticate', {
+	    		username: username,
+	    		password: password
+	    	});
+	    };
 	    HeliumRPC.prototype.setPriority = function (path, priority) {
 	        _super.prototype.sendRpc.call(this, 'setPriority', {
 	    		path: path,
@@ -278,6 +284,10 @@ var __extends = this.__extends || function (d, b) {
 			} else {
 				return null;
 			}
+		};
+		Helium.prototype.authenticate = function(username, password) {
+			this.rpc.authenticate(username, password);
+			return this;
 		};
 		Helium.prototype.setWithPriority = function(data, priority) {
 			this.rpc.set(this.path, data, priority);

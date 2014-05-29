@@ -28,6 +28,7 @@ import io.helium.core.translator.EventTranslator;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.ChangeLog;
+import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.server.Endpoint;
@@ -127,8 +128,10 @@ public class Core implements ExceptionHandler {
         handleEvent(heliumEvent);
     }
 
-    public void handleEvent(HeliumEventType type, String nodePath, Optional<?> value) {
+    public void handleEvent(HeliumEventType type, Optional<Node> auth, String nodePath, Optional<?> value) {
         HeliumEvent heliumEvent = new HeliumEvent(type, nodePath, value);
+        if(auth.isPresent())
+            heliumEvent.setAuth(auth.get());
         handle(heliumEvent);
     }
 

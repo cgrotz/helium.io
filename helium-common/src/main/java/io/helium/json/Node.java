@@ -1170,6 +1170,10 @@ public class Node {
         key_order.clear();
     }
 
+    public Collection<Object> values() {
+        return map.values();
+    }
+
     /**
      * Node.NULL is equivalent to the value that JavaScript calls null, whilst Java's null is
      * equivalent to the value that JavaScript calls undefined.

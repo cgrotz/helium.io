@@ -89,10 +89,10 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
                     Publish publish = (Publish) command.get();
                     Optional<?> optional = Optional.ofNullable(DataTypeConverter.convert(publish.getArray()));
                     if(publish.isRetainFlag()) {
-                        core.handleEvent(HeliumEventType.SET, publish.getTopic(), optional);
+                        core.handleEvent(HeliumEventType.SET, endpoints.get(ctx.channel()).getAuth(), publish.getTopic(), optional);
                     }
                     else {
-                        core.handleEvent(HeliumEventType.EVENT, publish.getTopic(), optional);
+                        core.handleEvent(HeliumEventType.EVENT, endpoints.get(ctx.channel()).getAuth(), publish.getTopic(), optional);
                     }
 
                     switch(publish.getQosLevel()) {

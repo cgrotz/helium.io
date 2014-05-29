@@ -2,6 +2,7 @@ package io.helium.server.protocols.http;
 
 import io.helium.common.Path;
 import io.helium.core.Core;
+import io.helium.core.processor.authorization.AuthorizationProcessor;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.json.Node;
@@ -43,6 +44,7 @@ public class RestHandler {
     }
 
     public void handle(ChannelHandlerContext ctx, FullHttpRequest req) {
+
         Path nodePath = new Path(HeliumEvent.extractPath(req.getUri().replaceAll("\\.json", "")));
         if (req.getMethod() == HttpMethod.GET) {
             get(ctx, req, nodePath);
@@ -58,13 +60,35 @@ public class RestHandler {
         }
     }
 
+    private Optional<Node> extractAuthentication(FullHttpRequest req) {
+        Optional<Node> auth = Optional.empty();
+        if( req.headers().contains(HttpHeaders.Names.AUTHORIZATION)) {
+            String authorizationToken = req.headers().get(HttpHeaders.Names.AUTHORIZATION);
+            Node authentication = AuthorizationProcessor.decode(authorizationToken);
+            String username = authentication.getString("username");
+            String password = authentication.getString("password");
+            Node users = persistence.getNode(new Path("/users"));
+            for(Object value : users.values()) {
+                if(value instanceof Node) {
+                    Node node = (Node)value;
+                    String localUsername = node.getString("username");
+                    String localPassword = node.getString("password");
+                    if(username.equals(localUsername) && password.equals(localPassword)) {
+                        auth = Optional.of(node);
+                    }
+                }
+            }
+        }
+        return auth;
+    }
+
     private void delete(ChannelHandlerContext ctx, FullHttpRequest req) {
         Path nodePath = Path.of(req.getUri());
         DataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));
         Object node = persistence.get(nodePath);
         Object object = new InMemoryDataSnapshot(node);
         if(authorized(Operation.WRITE, req, root, nodePath, object)) {
-            core.handleEvent(HeliumEventType.REMOVE, req.getUri(), Optional.empty());
+            core.handleEvent(HeliumEventType.REMOVE, extractAuthentication(req), req.getUri(), Optional.empty());
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
             setContentLength(res, 0);
             HttpServerHandler.sendHttpResponse(ctx, req, res);
@@ -83,7 +107,7 @@ public class RestHandler {
         if(authorized(Operation.WRITE, req, root, nodePath, object)) {
             ByteBuf content = Unpooled.buffer(req.content().readableBytes());
             req.content().readBytes(content);
-            core.handleEvent(HeliumEventType.SET, req.getUri(), Optional.ofNullable(DataTypeConverter.convert(content.array())));
+            core.handleEvent(HeliumEventType.SET, extractAuthentication(req), req.getUri(), Optional.ofNullable(DataTypeConverter.convert(content.array())));
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
             res.headers().set(HttpHeaders.Names.LOCATION, req.getUri());
             setContentLength(res, 0);
@@ -111,7 +135,7 @@ public class RestHandler {
         Object node = persistence.get(nodePath);
         Object object = new InMemoryDataSnapshot(node);
         if(authorized(Operation.WRITE, req, root, nodePath, object)) {
-            core.handleEvent(HeliumEventType.PUSH, uri, Optional.ofNullable(DataTypeConverter.convert(content.array())));
+            core.handleEvent(HeliumEventType.PUSH, extractAuthentication(req), uri, Optional.ofNullable(DataTypeConverter.convert(content.array())));
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
             res.headers().set(HttpHeaders.Names.LOCATION, uri);
             setContentLength(res, 0);
@@ -126,9 +150,10 @@ public class RestHandler {
     private void get(ChannelHandlerContext ctx, FullHttpRequest req, Path nodePath) {
         DataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));
         Object node = persistence.get(nodePath);
-        Object object = new InMemoryDataSnapshot(node);
+        InMemoryDataSnapshot object = new InMemoryDataSnapshot(node);
         if(authorized(Operation.READ, req, root, nodePath, object)) {
-            ByteBuf content = Unpooled.copiedBuffer(node.toString().getBytes());
+            ByteBuf content = Unpooled.buffer();
+            content.writeBytes(authorization.filterContent(extractAuthentication(req), nodePath, persistence.getRoot(), node).toString().getBytes());
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, content);
             res.headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
             setContentLength(res, content.readableBytes());
@@ -142,7 +167,8 @@ public class RestHandler {
     }
 
     private boolean authorized(Operation operation, FullHttpRequest req, DataSnapshot root, Path nodePath, Object node) {
-        return authorization.isAuthorized(operation, new Node(), root, nodePath,
+        Optional<Node> auth = extractAuthentication(req);
+        return authorization.isAuthorized(operation, auth, root, nodePath,
                 new InMemoryDataSnapshot(node));
     }
 }

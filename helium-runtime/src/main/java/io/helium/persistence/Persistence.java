@@ -20,7 +20,10 @@ import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
 import io.helium.persistence.queries.QueryEvaluator;
-import io.helium.server.protocols.http.HttpEndpoint;
+import io.helium.server.Endpoint;
+import io.helium.server.protocols.websocket.WebsocketEndpoint;
+
+import java.util.Optional;
 
 public interface Persistence {
 
@@ -28,20 +31,20 @@ public interface Persistence {
 
     Node getNode(Path path);
 
-    void remove(ChangeLog log, Node auth, Path path);
+    void remove(ChangeLog log, Optional<Node> auth, Path path);
 
-    void applyNewValue(ChangeLog log, Node auth, Path path, int priority, Object payload);
+    void applyNewValue(ChangeLog log, Optional<Node> auth, Path path, int priority, Object payload);
 
-    void updateValue(ChangeLog log, Node auth, Path path, int priority, Object payload);
+    void updateValue(ChangeLog log, Optional<Node> auth, Path path, int priority, Object payload);
 
-    void setPriority(ChangeLog log, Node auth, Path path, int priority);
+    void setPriority(ChangeLog log, Optional<Node> auth, Path path, int priority);
 
-    void syncPath(Path path, HttpEndpoint handler);
+    void syncPath(Path path, Endpoint handler);
 
-    void syncPropertyValue(Path path, HttpEndpoint heliumEventHandler);
+    void syncPropertyValue(Path path, Endpoint heliumEventHandler);
 
-    DataSnapshot getRoot();
+    Node getRoot();
 
-    void syncPathWithQuery(Path path, HttpEndpoint handler,
+    void syncPathWithQuery(Path path, WebsocketEndpoint handler,
                            QueryEvaluator queryEvaluator, String query);
 }

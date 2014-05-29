@@ -31,4 +31,8 @@ public interface Endpoint {
     void distributeChangeLog(ChangeLog changeLog);
 
     void distributeEvent(Path path, Node data);
+
+    void fireChildAdded(String childNodeKey, Path path, Path parent, Object object, boolean hasChildren, int numChildren, Object o, int indexOf);
+
+    void fireValue(String childNodeKey, Path path, Path parent, Object s, Object s1, int i);
 }

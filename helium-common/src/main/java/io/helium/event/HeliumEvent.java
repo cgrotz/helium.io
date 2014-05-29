@@ -282,11 +282,11 @@ public class HeliumEvent extends Node {
         return changeLog;
     }
 
-    public Node getAuth() {
+    public Optional<Node> getAuth() {
         if (!has(AUTH)) {
-            return new Node();
+            return Optional.empty();
         }
-        return getNode(AUTH);
+        return Optional.of(getNode(AUTH));
     }
 
     public void setAuth(Node auth) {

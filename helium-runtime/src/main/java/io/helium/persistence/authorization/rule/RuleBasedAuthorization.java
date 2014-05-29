@@ -24,6 +24,9 @@ import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.NotAuthorizedException;
 import io.helium.persistence.authorization.Operation;
+import io.helium.persistence.inmemory.InMemoryDataSnapshot;
+
+import java.util.Optional;
 
 public class RuleBasedAuthorization implements Authorization {
 
@@ -41,7 +44,7 @@ public class RuleBasedAuthorization implements Authorization {
     }
 
     @Override
-    public void authorize(Operation op, Node auth, DataSnapshot root, Path path,
+    public void authorize(Operation op, Optional<Node> auth, DataSnapshot root, Path path,
                           Object data) throws NotAuthorizedException {
         if (!isAuthorized(op, auth, root, path, data)) {
             throw new NotAuthorizedException(op, path);
@@ -49,7 +52,7 @@ public class RuleBasedAuthorization implements Authorization {
     }
 
     @Override
-    public boolean isAuthorized(Operation op, Node auth, DataSnapshot root, Path path,
+    public boolean isAuthorized(Operation op, Optional<Node> auth, DataSnapshot root, Path path,
                                 Object data) {
         String expression = rule.getExpressionForPathAndOperation(path, op);
         try {
@@ -58,6 +61,23 @@ public class RuleBasedAuthorization implements Authorization {
             scriptingEnvironment.put(HeliumEvent.AUTH, scriptingEnvironment.eval(auth.toString()));
             Boolean result = (Boolean) scriptingEnvironment.eval(expression);
             return result.booleanValue();
+        }
+    }
+
+    @Override
+    public Object filterContent(Optional<Node> auth, Path path, Node root, Object content) {
+        if (content instanceof Node) {
+            Node org = (Node) content;
+            Node node = new Node();
+            for (String key : org.keys()) {
+                if (isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(root),
+                        path.append(key), new InMemoryDataSnapshot(org.get(key)))) {
+                    node.put(key, filterContent(auth, path.append(key), root, org.get(key)));
+                }
+            }
+            return node;
+        } else {
+            return content;
         }
     }
 }

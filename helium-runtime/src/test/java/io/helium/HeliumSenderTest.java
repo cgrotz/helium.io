@@ -24,7 +24,7 @@ import io.helium.json.Node;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
-import io.helium.server.protocols.http.HttpEndpoint;
+import io.helium.server.protocols.websocket.WebsocketEndpoint;
 import io.netty.channel.Channel;
 import org.junit.Before;
 import org.mockito.Mockito;
@@ -36,7 +36,7 @@ public class HeliumSenderTest {
 
     private static final String BASE_PATH = "http://localhot:8080";
     private Channel channel;
-    private HttpEndpoint endpoint;
+    private WebsocketEndpoint endpoint;
 
     /**
      * @throws java.lang.Exception
@@ -44,7 +44,7 @@ public class HeliumSenderTest {
     @Before
     public void setUp() throws Exception {
         this.channel = Mockito.mock(Channel.class);
-        this.endpoint = new HttpEndpoint(BASE_PATH, new Node(), channel, new InMemoryPersistence(
+        this.endpoint = new WebsocketEndpoint(BASE_PATH, channel, new InMemoryPersistence(
                 new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE)),
                 new RuleBasedAuthorization(new Node()), null
         );

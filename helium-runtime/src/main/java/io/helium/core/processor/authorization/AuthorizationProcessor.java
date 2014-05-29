@@ -26,6 +26,9 @@ import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
 
+import java.util.Base64;
+import java.util.Optional;
+
 public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
 
     private Authorization authorization;
@@ -65,11 +68,18 @@ public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
         }
     }
 
-    private Node getAuth(HeliumEvent event) {
+    private Optional<Node> getAuth(HeliumEvent event) {
         if (event.has(HeliumEvent.AUTH)) {
-            return event.getNode(HeliumEvent.AUTH);
+            return Optional.of(event.getNode(HeliumEvent.AUTH));
         } else {
-            return new Node();
+            return Optional.empty();
         }
+    }
+
+    public static Node decode(String authorizationToken) {
+        String decodedAuthorizationToken = new String(Base64.getDecoder().decode(authorizationToken.substring(6)));
+        String username = decodedAuthorizationToken.substring(0, decodedAuthorizationToken.indexOf(":"));
+        String password = decodedAuthorizationToken.substring(decodedAuthorizationToken.indexOf(":"));
+        return new Node().put("username",username).put("password", password);
     }
 }

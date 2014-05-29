@@ -19,9 +19,9 @@ package io.helium.server.protocols.http;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import io.helium.core.Core;
-import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
+import io.helium.server.protocols.websocket.WebsocketEndpoint;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -53,7 +53,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
     private WebSocketServerHandshaker handshaker;
 
     private String basePath;
-    private Map<Channel, HttpEndpoint> endpoints = Maps.newHashMap();
+    private Map<Channel, WebsocketEndpoint> endpoints = Maps.newHashMap();
     private RestHandler restHandler;
 
     public HttpServerHandler(String basePath, Persistence persistence, Authorization authorization, Core core) {
@@ -155,7 +155,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
 
         // Check for closing frame
         if (frame instanceof CloseWebSocketFrame) {
-            HttpEndpoint endpoint = endpoints.get(ctx.channel());
+            WebsocketEndpoint endpoint = endpoints.get(ctx.channel());
             if(endpoint != null) {
                 endpoint.setOpen(false);
                 endpoint.executeDisconnectEvents();
@@ -173,9 +173,8 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
                     .getName()));
         }
         if (!endpoints.containsKey(ctx.channel())) {
-            final HttpEndpoint endpoint = new HttpEndpoint(
+            final WebsocketEndpoint endpoint = new WebsocketEndpoint(
                     basePath,
-                    new Node(),
                     ctx.channel(),
                     persistence,
                     authorization,

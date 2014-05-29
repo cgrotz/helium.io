@@ -22,14 +22,16 @@ import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.json.Node;
 import io.helium.json.NodeVisitor;
-import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.queries.QueryEvaluator;
-import io.helium.server.protocols.http.HttpEndpoint;
+import io.helium.server.Endpoint;
+import io.helium.server.protocols.websocket.WebsocketEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 
 public class InMemoryPersistence implements Persistence {
 
@@ -79,7 +81,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void remove(ChangeLog log, Node auth, Path path) {
+    public void remove(ChangeLog log, Optional<Node> auth, Path path) {
         String nodeName = path.getLastElement();
         Path parentPath = path.getParent();
         Node node = model.getNodeForPath(log, parentPath).getNode(nodeName);
@@ -95,7 +97,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void syncPath(Path path, HttpEndpoint handler) {
+    public void syncPath(Path path, Endpoint handler) {
 
         ChangeLog log = new ChangeLog();
         Node node = model.getNodeForPath(log, path);
@@ -115,7 +117,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void syncPathWithQuery(Path path, HttpEndpoint handler,
+    public void syncPathWithQuery(Path path, WebsocketEndpoint handler,
                                   QueryEvaluator queryEvaluator, String query) {
         ChangeLog log = new ChangeLog();
         Node node = model.getNodeForPath(log, path);
@@ -131,7 +133,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void syncPropertyValue(Path path, HttpEndpoint handler) {
+    public void syncPropertyValue(Path path, Endpoint handler) {
         ChangeLog log = new ChangeLog();
         Node node = model.getNodeForPath(log, path.getParent());
         String childNodeKey = path.getLastElement();
@@ -147,7 +149,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void updateValue(ChangeLog log, Node auth, Path path, int priority, Object payload) {
+    public void updateValue(ChangeLog log, Optional<Node> auth, Path path, int priority, Object payload) {
         Node node;
         boolean created = false;
         if (!model.pathExists(path)) {
@@ -205,7 +207,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void applyNewValue(ChangeLog log, Node auth, Path path, int priority, Object payload) {
+    public void applyNewValue(ChangeLog log, Optional<Node> auth, Path path, int priority, Object payload) {
         boolean created = false;
         if (!model.pathExists(path)) {
             created = true;
@@ -243,7 +245,7 @@ public class InMemoryPersistence implements Persistence {
         logger.trace("Model changed: " + model);
     }
 
-    public void populate(ChangeLogBuilder logBuilder, Path path, Node auth, Node node, Node payload) {
+    public void populate(ChangeLogBuilder logBuilder, Path path, Optional<Node> auth, Node node, Node payload) {
         for (String key : payload.keys()) {
             Object value = payload.get(key);
             if (value instanceof Node) {
@@ -296,7 +298,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void setPriority(ChangeLog log, Node auth, Path path, int priority) {
+    public void setPriority(ChangeLog log, Optional<Node> auth, Path path, int priority) {
         Node parent = model.getNodeForPath(log, path.getParent());
         if (authorization.isAuthorized(Operation.WRITE, auth,
                 new InMemoryDataSnapshot(model), path, parent)) {
@@ -305,8 +307,8 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public DataSnapshot getRoot() {
-        return new InMemoryDataSnapshot(model);
+    public Node getRoot() {
+        return model;
     }
 
     public void setCore(Core core) {
