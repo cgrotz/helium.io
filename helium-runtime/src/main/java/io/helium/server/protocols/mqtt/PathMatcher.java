@@ -3,7 +3,7 @@ package io.helium.server.protocols.mqtt;
 import io.helium.common.Path;
 
 /**
- * Created by balu on 26.05.14.
+ * Created by Christoph Grotz on 26.05.14.
  */
 public class PathMatcher {
     public boolean matchPath(String subscribedTopic, Path topic) {

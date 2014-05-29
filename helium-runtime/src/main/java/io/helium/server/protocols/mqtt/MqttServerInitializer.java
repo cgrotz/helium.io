@@ -12,7 +12,7 @@ import org.mapdb.DBMaker;
 import java.io.File;
 
 /**
- * Created by balu on 25.05.14.
+ * Created by Christoph Grotz on 25.05.14.
  */
 public class MqttServerInitializer extends ChannelInitializer<SocketChannel> {
     private final Core core;

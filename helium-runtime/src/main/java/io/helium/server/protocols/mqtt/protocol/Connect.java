@@ -3,7 +3,7 @@ package io.helium.server.protocols.mqtt.protocol;
 import java.util.Optional;
 
 /**
- * Created by balu on 25.05.14.
+ * Created by Christoph Grotz on 25.05.14.
  */
 public class Connect extends Command {
     private final String protocolName;

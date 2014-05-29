@@ -8,7 +8,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.Optional;
 
 /**
- * Created by balu on 25.05.14.
+ * Created by Christoph Grotz on 25.05.14.
  */
 public class DefaultDecoder implements Decoder {
     @Override

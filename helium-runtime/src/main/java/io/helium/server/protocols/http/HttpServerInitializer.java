@@ -26,7 +26,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 
 /**
- * Created by balu on 18.05.14.
+ * Created by Christoph Grotz on 18.05.14.
  */
 public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
 

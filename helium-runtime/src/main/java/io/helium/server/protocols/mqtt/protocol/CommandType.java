@@ -1,7 +1,7 @@
 package io.helium.server.protocols.mqtt.protocol;
 
 /**
- * Created by balu on 25.05.14.
+ * Created by Christoph Grotz on 25.05.14.
  */
 public enum CommandType {
     /**

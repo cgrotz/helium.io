@@ -6,7 +6,7 @@ import com.google.common.base.Objects;
 import java.io.Serializable;
 
 /**
- * Created by balu on 25.05.14.
+ * Created by Christoph Grotz on 25.05.14.
  */
 public class Topic implements Serializable {
     private static final long serialVersionUID = 1L;

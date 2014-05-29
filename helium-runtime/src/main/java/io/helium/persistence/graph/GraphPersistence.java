@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * Created by balu on 23.05.14.
+ * Created by Christoph Grotz on 23.05.14.
  */
 public class GraphPersistence implements Persistence {
 

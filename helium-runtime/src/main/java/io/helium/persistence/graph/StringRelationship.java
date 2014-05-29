@@ -3,7 +3,7 @@ package io.helium.persistence.graph;
 import org.neo4j.graphdb.RelationshipType;
 
 /**
- * Created by balu on 23.05.14.
+ * Created by Christoph Grotz on 23.05.14.
  */
 public class StringRelationship implements RelationshipType {
     private final String label;

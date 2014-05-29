@@ -3,7 +3,7 @@ package io.helium.server.protocols.mqtt.protocol;
 /**
  * MQTT V3.1 Protocol Specification - section 2.1
  * <p>
- * Created by balu on 25.05.14.
+ * Created by Christoph Grotz on 25.05.14.
  */
 public enum QosLevel {
     /**

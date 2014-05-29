@@ -31,7 +31,7 @@ import java.util.Map.Entry;
  * Sandbox Query executing thanks to
  * http://worldwizards.blogspot.de/2009/08/java-scripting-api-sandbox.html
  *
- * @author balu
+ * @author Christoph Grotz
  */
 public class QueryEvaluator {
 

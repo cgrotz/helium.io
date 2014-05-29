@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by balu on 26.05.14.
+ * Created by Christoph Grotz on 26.05.14.
  */
 public class MqttEndpoint implements Endpoint {
     private final String clientId;

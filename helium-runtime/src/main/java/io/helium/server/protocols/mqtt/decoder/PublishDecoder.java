@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 /**
- * Created by balu on 25.05.14.
+ * Created by Christoph Grotz on 25.05.14.
  */
 public class PublishDecoder implements Decoder {
     @Override

@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
- * Created by balu on 25.05.14.
+ * Created by Christoph Grotz on 25.05.14.
  */
 public class MqttServerHandler extends ChannelHandlerAdapter {
     private static final Logger LOGGER = Logger.getLogger(MqttServerHandler.class.getName());

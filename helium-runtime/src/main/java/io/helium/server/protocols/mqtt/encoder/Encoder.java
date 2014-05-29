@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * Created by balu on 25.05.14.
+ * Created by Christoph Grotz on 25.05.14.
  */
 public class Encoder {
     public ByteBuf encodeConnack(ConnackCode connackCode) {

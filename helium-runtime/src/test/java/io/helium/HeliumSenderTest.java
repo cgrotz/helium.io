@@ -30,7 +30,7 @@ import org.junit.Before;
 import org.mockito.Mockito;
 
 /**
- * @author balu
+ * @author Christoph Grotz
  */
 public class HeliumSenderTest {
 
