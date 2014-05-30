@@ -418,14 +418,20 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
 
     public void distributeEvent(Path path, Node payload) {
         if (hasListener(path, "event")) {
-            Node broadcast = new HashMapBackedNode();
-            broadcast.put(HeliumEvent.TYPE, "event");
+            if (authorization.isAuthorized(Operation.READ,
+                    auth,
+                    new InMemoryDataSnapshot(persistence.getRoot()),
+                    path,
+                    new InMemoryDataSnapshot(payload))) {
+                Node broadcast = new HashMapBackedNode();
+                broadcast.put(HeliumEvent.TYPE, "event");
 
-            broadcast.put(HeliumEvent.PATH, createPath(path));
-            broadcast.put(HeliumEvent.PAYLOAD, payload);
-            LOGGER.trace("Distributing Message (basePath: '" + basePath + "',path: '" + path + "') : "
-                    + broadcast.toString());
-            channel.writeAndFlush(new TextWebSocketFrame(broadcast.toString()));
+                broadcast.put(HeliumEvent.PATH, createPath(path));
+                broadcast.put(HeliumEvent.PAYLOAD, payload);
+                LOGGER.trace("Distributing Message (basePath: '" + basePath + "',path: '" + path + "') : "
+                        + broadcast.toString());
+                channel.writeAndFlush(new TextWebSocketFrame(broadcast.toString()));
+            }
         }
     }
 

@@ -2,8 +2,10 @@ package io.helium.server.protocols.mqtt;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.helium.common.Path;
 import io.helium.core.Core;
 import io.helium.event.HeliumEventType;
+import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.server.DataTypeConverter;
@@ -55,8 +57,9 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
                 case CONNECT: {
                     Connect connect = (Connect) command.get();
                     String clientId = connect.getClientId();
+                    Optional<Node> auth = extractAuthentication(connect);
                     ctx.writeAndFlush(encoder.encodeConnack(ConnackCode.Accepted));
-                    MqttEndpoint endpoint = new MqttEndpoint(clientId, ctx, db);
+                    MqttEndpoint endpoint = new MqttEndpoint(clientId, ctx, db, auth, persistence, authorization);
                     core.addEndpoint(endpoint);
                     endpoints.put(ctx.channel(), endpoint);
                     break;
@@ -135,6 +138,34 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
                 }
             }
         }
+    }
+
+    private Optional<Node> extractAuthentication(Connect connect) {
+        String clientId = connect.getClientId();
+        Optional<String> username = connect.getUsername();
+        Optional<String> password = connect.getPassword();
+        if(username.isPresent() && password.isPresent()) {
+            Node users = persistence.getNode(new Path("/users"));
+            for(Object value : users.values()) {
+                if(value instanceof Node) {
+                    Node node = (Node)value;
+                    if(node.has("username") && node.has("password")) {
+                        String localUsername = node.getString("username");
+                        String localPassword = node.getString("password");
+                        if(username.get().equals(localUsername) && password.get().equals(localPassword)) {
+                            return Optional.of(node);
+                        }
+                    }
+                }
+            }
+        }
+        else if(clientId != null) {
+            Node auth = persistence.getNode(Path.of("/users/"+clientId));
+            if( auth != null){
+                return Optional.of(auth);
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
