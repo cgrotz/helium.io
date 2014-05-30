@@ -22,7 +22,6 @@ import io.helium.common.Path;
 import io.helium.core.Core;
 import io.helium.json.Node;
 import io.helium.persistence.authorization.chained.ChainedAuthorization;
-import io.helium.persistence.authorization.path.PathBasedAuthorization;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import io.helium.server.protocols.http.HttpServer;
@@ -74,7 +73,7 @@ public class Helium {
         checkNotNull(basePath);
         checkNotNull(journalDirectory);
         persistence = new InMemoryPersistence();
-        authorization = new ChainedAuthorization(new PathBasedAuthorization(persistence), new RuleBasedAuthorization(persistence));
+        authorization = new ChainedAuthorization(new RuleBasedAuthorization(persistence));
         persistence.setAuthorization(authorization);
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
@@ -87,7 +86,7 @@ public class Helium {
     public Helium(String basePath, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
         persistence = new InMemoryPersistence();
-        authorization = new ChainedAuthorization(new PathBasedAuthorization(persistence), new RuleBasedAuthorization(persistence));
+        authorization = new ChainedAuthorization(new RuleBasedAuthorization(persistence));
         persistence.setAuthorization(authorization);
 
         core = new Core(File.createTempFile("Temp" + System.currentTimeMillis(), ""),
