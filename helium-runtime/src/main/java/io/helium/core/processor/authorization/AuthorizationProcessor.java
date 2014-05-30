@@ -79,7 +79,7 @@ public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
     public static Node decode(String authorizationToken) {
         String decodedAuthorizationToken = new String(Base64.getDecoder().decode(authorizationToken.substring(6)));
         String username = decodedAuthorizationToken.substring(0, decodedAuthorizationToken.indexOf(":"));
-        String password = decodedAuthorizationToken.substring(decodedAuthorizationToken.indexOf(":"));
+        String password = decodedAuthorizationToken.substring(decodedAuthorizationToken.indexOf(":")+1);
         return new Node().put("username",username).put("password", password);
     }
 }

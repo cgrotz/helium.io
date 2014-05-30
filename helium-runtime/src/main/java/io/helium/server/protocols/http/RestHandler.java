@@ -71,10 +71,12 @@ public class RestHandler {
             for(Object value : users.values()) {
                 if(value instanceof Node) {
                     Node node = (Node)value;
-                    String localUsername = node.getString("username");
-                    String localPassword = node.getString("password");
-                    if(username.equals(localUsername) && password.equals(localPassword)) {
-                        auth = Optional.of(node);
+                    if(node.has("username") && node.has("password")) {
+                        String localUsername = node.getString("username");
+                        String localPassword = node.getString("password");
+                        if(username.equals(localUsername) && password.equals(localPassword)) {
+                            auth = Optional.of(node);
+                        }
                     }
                 }
             }

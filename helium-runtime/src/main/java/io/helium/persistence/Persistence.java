@@ -31,6 +31,8 @@ public interface Persistence {
 
     Node getNode(Path path);
 
+    boolean exists(Path path);
+
     void remove(ChangeLog log, Optional<Node> auth, Path path);
 
     void applyNewValue(ChangeLog log, Optional<Node> auth, Path path, int priority, Object payload);

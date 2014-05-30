@@ -21,7 +21,6 @@ import io.helium.core.processor.persistence.PersistenceProcessor;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.builder.HeliumEventBuilder;
-import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import org.junit.Assert;
@@ -35,8 +34,8 @@ public class PersistenceProcessorTest {
 
     @Before
     public void setUp() throws Exception {
-        persistence = new InMemoryPersistence(new RuleBasedAuthorization(
-                Authorization.ALL_ACCESS_RULE));
+        persistence = new InMemoryPersistence();
+        persistence.setAuthorization(new RuleBasedAuthorization(persistence));
         persistenceProcessor = new PersistenceProcessor(persistence);
     }
 

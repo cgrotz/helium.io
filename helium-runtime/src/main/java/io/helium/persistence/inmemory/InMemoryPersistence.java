@@ -40,10 +40,6 @@ public class InMemoryPersistence implements Persistence {
     private Core core;
     private Authorization authorization;
 
-    public InMemoryPersistence(Authorization authorization) {
-        this.authorization = authorization;
-    }
-
     public static String prevChildName(Node parent, int priority) {
         if (priority <= 0) {
             return null;
@@ -84,15 +80,17 @@ public class InMemoryPersistence implements Persistence {
     public void remove(ChangeLog log, Optional<Node> auth, Path path) {
         String nodeName = path.getLastElement();
         Path parentPath = path.getParent();
-        Node node = model.getNodeForPath(log, parentPath).getNode(nodeName);
+        if(model.pathExists(path)) {
+            Node node = model.getNodeForPath(log, parentPath).getNode(nodeName);
 
-        if (authorization.isAuthorized(Operation.WRITE, auth,
-                new InMemoryDataSnapshot(model), path, node)) {
-            Node parent = model.getNodeForPath(log, parentPath);
-            node.accept(path, new ChildRemovedSubTreeVisitor(log));
-            parent.remove(nodeName);
-            log.addChildRemovedLogEntry(parentPath, nodeName, node);
-            core.distributeChangeLog(log);
+            if (authorization.isAuthorized(Operation.WRITE, auth,
+                    new InMemoryDataSnapshot(model), path, node)) {
+                Node parent = model.getNodeForPath(log, parentPath);
+                node.accept(path, new ChildRemovedSubTreeVisitor(log));
+                parent.remove(nodeName);
+                log.addChildRemovedLogEntry(parentPath, nodeName, node);
+                core.distributeChangeLog(log);
+            }
         }
     }
 
@@ -252,8 +250,6 @@ public class InMemoryPersistence implements Persistence {
                 if (authorization.isAuthorized(Operation.WRITE, auth, new InMemoryDataSnapshot(
                         model), path.append(key), value)) {
                     Node childNode = new Node();
-                    populate(logBuilder.getChildLogBuilder(key), path.append(key), auth, childNode,
-                            (Node) value);
                     if (node.has(key)) {
                         node.put(key, childNode);
                         logBuilder.addNew(key, childNode);
@@ -261,6 +257,8 @@ public class InMemoryPersistence implements Persistence {
                         node.put(key, childNode);
                         logBuilder.addChangedNode(key, childNode);
                     }
+                    populate(logBuilder.getChildLogBuilder(key), path.append(key), auth, childNode,
+                            (Node) value);
                 }
             } else {
                 if (authorization.isAuthorized(Operation.WRITE, auth, new InMemoryDataSnapshot(
@@ -313,6 +311,14 @@ public class InMemoryPersistence implements Persistence {
 
     public void setCore(Core core) {
         this.core = core;
+    }
+
+    public boolean exists(Path path) {
+        return model.pathExists(path);
+    }
+
+    public void setAuthorization(Authorization authorization) {
+        this.authorization = authorization;
     }
 
     private final class ChildRemovedSubTreeVisitor implements NodeVisitor {

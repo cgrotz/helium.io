@@ -44,7 +44,7 @@ public class RuleBasedAuthorizator {
             return value.toString();
             // return node.getString(op.getOp());
         } else {
-            return "true";
+            return "false";
         }
 
     }

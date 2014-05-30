@@ -20,8 +20,6 @@
 package io.helium;
 
 import io.helium.event.HeliumEvent;
-import io.helium.json.Node;
-import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import io.helium.server.protocols.websocket.WebsocketEndpoint;
@@ -44,9 +42,8 @@ public class HeliumSenderTest {
     @Before
     public void setUp() throws Exception {
         this.channel = Mockito.mock(Channel.class);
-        this.endpoint = new WebsocketEndpoint(BASE_PATH, channel, new InMemoryPersistence(
-                new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE)),
-                new RuleBasedAuthorization(new Node()), null
+        this.endpoint = new WebsocketEndpoint(BASE_PATH, channel, new InMemoryPersistence(),
+                new RuleBasedAuthorization(null), null
         );
     }
 

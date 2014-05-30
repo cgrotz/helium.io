@@ -451,6 +451,20 @@ public class Node {
         throw new RuntimeException("Node[" + quote(key) + "] is not a Boolean.");
     }
 
+    public boolean getBoolean(String key, boolean def) {
+        if( this.has(key) ) {
+            Object object = this.get(key);
+            if (object.equals(Boolean.FALSE)
+                    || (object instanceof String && ((String) object).equalsIgnoreCase("false"))) {
+                return false;
+            } else if (object.equals(Boolean.TRUE)
+                    || (object instanceof String && ((String) object).equalsIgnoreCase("true"))) {
+                return true;
+            }
+        }
+        return def;
+    }
+
     /**
      * Get the double value associated with a key.
      *

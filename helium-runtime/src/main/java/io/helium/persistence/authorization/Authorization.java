@@ -23,8 +23,7 @@ import io.helium.persistence.DataSnapshot;
 import java.util.Optional;
 
 public interface Authorization {
-    public static final Node ALL_ACCESS_RULE = new Node(
-            "{rules:{\".write\": \"true\",\".read\": \"true\"}}");
+    public final static Node ANONYMOUS = new Node().put("isAnonymous",true).put("permissions", new Node());
 
     void authorize(Operation op,
                    Optional<Node> auth,

@@ -31,10 +31,18 @@ public class PathBasedAuthorization implements Authorization {
 
     @Override
     public boolean isAuthorized(Operation op, Optional<Node> auth, DataSnapshot root, Path path, Object object) {
-        auth.get().getNode("permissions").keys().forEach(key -> {
-            Path permission = Path.of(key);
-
-        });
+        Node authentication = auth.orElseGet(() -> Authorization.ANONYMOUS);
+        if(path.getFirstElement().equalsIgnoreCase("users")) {
+            return authentication.getBoolean("isAdmin", false);
+        }
+        if(path.getFirstElement().equalsIgnoreCase("rules")) {
+            return authentication.getBoolean("isAdmin", false);
+        }
+        if(authentication.has("permissions")) {
+            authentication.getNode("permissions").keys().forEach(key -> {
+                Path permission = Path.of(key);
+            });
+        }
         return true;
     }
 

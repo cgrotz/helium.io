@@ -17,9 +17,9 @@
 package io.helium.persistence.authorization.rule;
 
 import io.helium.common.Path;
-import io.helium.event.HeliumEvent;
 import io.helium.json.Node;
 import io.helium.persistence.DataSnapshot;
+import io.helium.persistence.Persistence;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.NotAuthorizedException;
@@ -29,17 +29,11 @@ import io.helium.persistence.inmemory.InMemoryDataSnapshot;
 import java.util.Optional;
 
 public class RuleBasedAuthorization implements Authorization {
-
-    private RuleBasedAuthorizator rule;
+    private final Persistence persistence;
     private SandBoxedScriptingEnvironment scriptingEnvironment;
 
-    public RuleBasedAuthorization(Node rule) {
-        if (rule != null && rule.has("rules")) {
-            this.rule = new RuleBasedAuthorizator(rule.getNode("rules"));
-        } else {
-            this.rule = new RuleBasedAuthorizator(Authorization.ALL_ACCESS_RULE.getNode("rules"));
-        }
-
+    public RuleBasedAuthorization(Persistence persistence) {
+        this.persistence = persistence;
         this.scriptingEnvironment = new SandBoxedScriptingEnvironment();
     }
 
@@ -54,12 +48,32 @@ public class RuleBasedAuthorization implements Authorization {
     @Override
     public boolean isAuthorized(Operation op, Optional<Node> auth, DataSnapshot root, Path path,
                                 Object data) {
-        String expression = rule.getExpressionForPathAndOperation(path, op);
+
+        Node localAuth = auth.orElseGet(() -> Authorization.ANONYMOUS);
+        RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(persistence.getNode(Path.of("/rules")));
+        if (localAuth.has("permissions")) {
+            RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getNode("permissions"));
+            if( evaluateRules(op, root, path, data, localAuth, userRules) ) {
+                return true;
+            }
+        }
+        return evaluateRules(op, root, path, data, localAuth, globalRules);
+    }
+
+    private boolean evaluateRules(Operation op, DataSnapshot root, Path path, Object data, Node localAuth, RuleBasedAuthorizator globalRules) {
+        String expression = globalRules.getExpressionForPathAndOperation(path, op);
         try {
             return Boolean.parseBoolean(expression);
         } catch (Exception e) {
-            scriptingEnvironment.put(HeliumEvent.AUTH, scriptingEnvironment.eval(auth.toString()));
-            Boolean result = (Boolean) scriptingEnvironment.eval(expression);
+            Object evaledAuth = scriptingEnvironment.eval(localAuth.toString());
+            Object evaledData = null;
+            if(data instanceof  Node) {
+                evaledAuth = scriptingEnvironment.eval(data.toString());
+            }
+            else {
+                evaledData  = data;
+            }
+            Boolean result = (Boolean) scriptingEnvironment.invokeFunction(expression, evaledAuth, path, evaledData, root);
             return result.booleanValue();
         }
     }

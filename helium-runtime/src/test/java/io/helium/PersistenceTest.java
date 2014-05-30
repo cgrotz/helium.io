@@ -19,7 +19,6 @@ package io.helium;
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
-import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import org.junit.Assert;
@@ -34,8 +33,8 @@ public class PersistenceTest {
 
     @Before
     public void setUp() throws Exception {
-        persistence = new InMemoryPersistence(new RuleBasedAuthorization(
-                Authorization.ALL_ACCESS_RULE));
+        persistence = new InMemoryPersistence();
+        persistence.setAuthorization(new RuleBasedAuthorization(persistence));
     }
 
     @Test

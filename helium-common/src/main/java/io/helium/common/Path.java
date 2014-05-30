@@ -36,8 +36,9 @@ public final class Path {
 	 *          {@link String} Path as String
 	 */
 	public Path(String path) {
-		if (!Strings.isNullOrEmpty(path)) {
-			this.elements = getPathElements(path);
+        String workPath = path.replaceAll("//","/");
+		if (!Strings.isNullOrEmpty(workPath)) {
+			this.elements = getPathElements(workPath);
 		}
 		if (elements == null) {
 			this.elements = new String[] {};

@@ -18,9 +18,9 @@ package io.helium;
 
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
+import io.helium.common.Path;
 import io.helium.core.Core;
 import io.helium.json.Node;
-import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.chained.ChainedAuthorization;
 import io.helium.persistence.authorization.path.PathBasedAuthorization;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
@@ -31,6 +31,7 @@ import org.apache.commons.cli.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -69,32 +70,25 @@ public class Helium {
 
     private ExecutorService executor = Executors.newCachedThreadPool();
 
-    public Helium(String basePath, Node rule, File journalDirectory, String host, int httpPort, int mqttPort) throws IOException {
-        checkNotNull(basePath);
-        checkNotNull(journalDirectory);
-        authorization = new ChainedAuthorization(new PathBasedAuthorization(persistence), new RuleBasedAuthorization(rule));
-        persistence = new InMemoryPersistence(authorization);
-        core = new Core(journalDirectory, persistence, authorization);
-        persistence.setCore(core);
-        httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
-        mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
-    }
-
     public Helium(String basePath, File journalDirectory, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
         checkNotNull(journalDirectory);
-        authorization = new ChainedAuthorization(new PathBasedAuthorization(persistence), new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE));
-        persistence = new InMemoryPersistence(authorization);
+        persistence = new InMemoryPersistence();
+        authorization = new ChainedAuthorization(new PathBasedAuthorization(persistence), new RuleBasedAuthorization(persistence));
+        persistence.setAuthorization(authorization);
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
         httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
         mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
+
+        initDefaults();
     }
 
     public Helium(String basePath, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
-        authorization = new ChainedAuthorization(new PathBasedAuthorization(persistence), new RuleBasedAuthorization(Authorization.ALL_ACCESS_RULE));
-        persistence = new InMemoryPersistence(authorization);
+        persistence = new InMemoryPersistence();
+        authorization = new ChainedAuthorization(new PathBasedAuthorization(persistence), new RuleBasedAuthorization(persistence));
+        persistence.setAuthorization(authorization);
 
         core = new Core(File.createTempFile("Temp" + System.currentTimeMillis(), ""),
                 persistence,
@@ -102,6 +96,63 @@ public class Helium {
         persistence.setCore(core);
         httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
         mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
+
+        initDefaults();
+    }
+
+    private void initDefaults() {
+
+        if(!persistence.exists(Path.of("/users"))) {
+            String uuid = UUID.randomUUID().toString();
+            persistence.getNode(Path.of("/users")).put(uuid.replaceAll("-",""),
+                    new Node().put("username","admin").put("password", "admin").put("isAdmin", true)
+                            .put("permissions", new Node()));
+        }
+
+        if(!persistence.exists(Path.of("/rules"))) {
+            Node rules = persistence.getNode(Path.of("/rules"));
+            rules.put(".write", "function(auth, path, data, root){\n" +
+                    "   if(auth.isAdmin) {\n" +
+                    "       return true;\n" +
+                    "   }\n" +
+                    "   else {\n" +
+                    "       return false;\n" +
+                    "   }\n" +
+                    "}\n");
+            rules.put(".read", true);
+            rules.put("rules", new Node().put(".write", "function(auth, path, data, root){\n" +
+                    "   if(auth.isAdmin) {\n" +
+                    "       return true;\n" +
+                    "   }\n" +
+                    "   else {\n" +
+                    "       return false;\n" +
+                    "   }\n" +
+                    "}\n")
+                    .put(".read", "function(auth, path, data, root){\n" +
+                            "   if(auth.isAdmin) {\n" +
+                            "       return true;\n" +
+                            "   }\n" +
+                            "   else {\n" +
+                            "       return false;\n" +
+                            "   }\n" +
+                            "}\n"));
+            rules.put("users", new Node().put(".write", "function(auth, path, data, root){\n" +
+                    "   if(auth.isAdmin) {\n" +
+                    "       return true;\n" +
+                    "   }\n" +
+                    "   else {\n" +
+                    "       return false;\n" +
+                    "   }\n" +
+                    "}\n")
+                    .put(".read", "function(auth, path, data, root){\n" +
+                            "   if(auth.isAdmin) {\n" +
+                            "       return true;\n" +
+                            "   }\n" +
+                            "   else {\n" +
+                            "       return false;\n" +
+                            "   }\n" +
+                            "}\n"));
+        }
     }
 
     public static void main(String[] args) {
@@ -131,18 +182,5 @@ public class Helium {
     private void start() throws InterruptedException {
         executor.submit(httpServer);
         executor.submit(mqttServer);
-    }
-
-    public static File createTempDirectory() throws IOException {
-        final File temp;
-        temp = File.createTempFile("Temp" + System.currentTimeMillis(), "");
-        if (!(temp.delete())) {
-            throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
-        }
-
-        if (!(temp.mkdir())) {
-            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-        }
-        return temp;
     }
 }
