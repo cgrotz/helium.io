@@ -18,6 +18,7 @@ package io.helium.event;
 
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.JSONTokener;
 import io.helium.json.Node;
 
@@ -28,7 +29,7 @@ import java.util.Optional;
  *
  * @author Christoph Grotz
  */
-public class HeliumEvent extends Node {
+public class HeliumEvent extends HashMapBackedNode {
 
     /**
      * Payload of the event
@@ -216,7 +217,7 @@ public class HeliumEvent extends Node {
         }
         String requestPath = (String) get(HeliumEvent.PATH);
         if (has(HeliumEvent.NAME)) {
-            if (get(HeliumEvent.NAME) != Node.NULL) {
+            if (get(HeliumEvent.NAME) != HashMapBackedNode.NULL) {
                 return new Path(extractPath(requestPath)).append(getString(HeliumEvent.NAME));
             }
         }
@@ -229,7 +230,7 @@ public class HeliumEvent extends Node {
         }
         String parentPath;
         String requestPath = (String) get(HeliumEvent.PATH);
-        if (has(HeliumEvent.NAME) && get(HeliumEvent.NAME) != Node.NULL) {
+        if (has(HeliumEvent.NAME) && get(HeliumEvent.NAME) != HashMapBackedNode.NULL) {
             parentPath = extractPath(requestPath) + "/" + getString(HeliumEvent.NAME);
         } else {
             parentPath = extractPath(requestPath);

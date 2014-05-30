@@ -18,6 +18,7 @@ package io.helium.event.builder;
 
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 
 import java.util.Date;
@@ -36,13 +37,13 @@ public class HeliumEventBuilder {
 
     public HeliumEvent build() {
         if (!this.underConstruction.has(HeliumEvent.AUTH)) {
-            this.underConstruction.put(HeliumEvent.AUTH, new Node());
+            this.underConstruction.put(HeliumEvent.AUTH, new HashMapBackedNode());
         }
         return this.underConstruction;
     }
 
     public Node withNode() {
-        Node node = new Node(this);
+        Node node = new HashMapBackedNode(this);
         underConstruction.put(HeliumEvent.PAYLOAD, node);
         return node;
     }

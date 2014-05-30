@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.WebSocket;
@@ -96,7 +97,7 @@ public class Helium {
     }
 
     private void send(String type, Object data, String name) {
-        Node node = new Node();
+        Node node = new HashMapBackedNode();
         node.put("type", type);
         node.put("name", name);
         node.put("path", path);
@@ -105,7 +106,7 @@ public class Helium {
     }
 
     private void sendRpc(String method, Node args) {
-        Node node = new Node();
+        Node node = new HashMapBackedNode();
         node.put("id", UUID.randomUUID().toString());
         node.put("method", method);
         node.put("args", args);
@@ -123,29 +124,29 @@ public class Helium {
 
     public Helium push(Object value) {
         String name = UUID.randomUUID().toString();
-        sendRpc("push", new Node().put("path", path).put("name", name).put("data", value));
+        sendRpc("push", new HashMapBackedNode().put("path", path).put("name", name).put("data", value));
         return new Helium(path + "/" + name);
     }
 
     public void set(Object data) {
-        sendRpc("set", new Node().put("path", path).put("data", data));
+        sendRpc("set", new HashMapBackedNode().put("path", path).put("data", data));
     }
 
     public void set(String name, Object data) {
-        sendRpc("set", new Node().put("path", path).put("name", name).put("data", data));
+        sendRpc("set", new HashMapBackedNode().put("path", path).put("name", name).put("data", data));
     }
 
     public void update(Object data) {
-        sendRpc("update", new Node().put("path", path).put("data", data));
+        sendRpc("update", new HashMapBackedNode().put("path", path).put("data", data));
     }
 
     public void on(String event_type, HeliumCallback callback) {
         callbacks.put(new Tuple<String, String>(event_type, path), callback);
-        sendRpc("attachListener", new Node().put("path", path).put("event_type", event_type));
+        sendRpc("attachListener", new HashMapBackedNode().put("path", path).put("event_type", event_type));
     }
 
     public void off(String event_type, HeliumCallback callback) {
         callbacks.remove(event_type, callback);
-        sendRpc("detachListener", new Node().put("path", path).put("event_type", event_type));
+        sendRpc("detachListener", new HashMapBackedNode().put("path", path).put("event_type", event_type));
     }
 }

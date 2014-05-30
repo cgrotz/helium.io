@@ -18,6 +18,7 @@ package io.helium.core.processor.persistence.actions;
 
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 
@@ -34,11 +35,11 @@ public class SetAction {
         Node payload;
         if (event.has(HeliumEvent.PAYLOAD)) {
             Object obj = event.get(HeliumEvent.PAYLOAD);
-            if (obj == Node.NULL || obj == null) {
+            if (obj == HashMapBackedNode.NULL || obj == null) {
                 persistence.remove(event.getChangeLog(), event.getAuth(), path);
-            } else if (obj instanceof Node) {
+            } else if (obj instanceof HashMapBackedNode) {
                 payload = (Node) obj;
-                if (payload instanceof Node) {
+                if (payload instanceof HashMapBackedNode) {
                     if (event.hasPriority()) {
                         persistence.applyNewValue(event.getChangeLog(), event.getAuth(), path,
                                 event.getPriority(), obj);
@@ -47,7 +48,7 @@ public class SetAction {
                                 obj);
                     }
                 }
-            } else if (obj == null || obj == Node.NULL) {
+            } else if (obj == null || obj == HashMapBackedNode.NULL) {
                 persistence.remove(event.getChangeLog(), event.getAuth(), path);
             } else {
                 if (event.hasPriority()) {

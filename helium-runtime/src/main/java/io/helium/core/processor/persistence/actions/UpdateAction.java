@@ -18,6 +18,7 @@ package io.helium.core.processor.persistence.actions;
 
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 
@@ -34,9 +35,9 @@ public class UpdateAction {
         Node payload;
         if (event.has(HeliumEvent.PAYLOAD)) {
             Object obj = event.get(HeliumEvent.PAYLOAD);
-            if (obj instanceof Node) {
+            if (obj instanceof HashMapBackedNode) {
                 payload = (Node) obj;
-                if (payload instanceof Node) {
+                if (payload instanceof HashMapBackedNode) {
                     if (event.hasPriority()) {
                         persistence.updateValue(event.getChangeLog(), event.getAuth(), path,
                                 event.getPriority(), obj);

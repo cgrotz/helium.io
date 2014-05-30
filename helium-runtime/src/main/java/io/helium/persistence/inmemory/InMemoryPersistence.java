@@ -20,6 +20,7 @@ import io.helium.common.Path;
 import io.helium.core.Core;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.json.NodeVisitor;
 import io.helium.persistence.Persistence;
@@ -36,7 +37,7 @@ import java.util.Optional;
 public class InMemoryPersistence implements Persistence {
 
     private static final Logger logger = LoggerFactory.getLogger(InMemoryPersistence.class);
-    private Node model = new Node();
+    private Node model = new HashMapBackedNode();
     private Core core;
     private Authorization authorization;
 
@@ -48,7 +49,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     public static long childCount(Object node) {
-        return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
+        return (node instanceof HashMapBackedNode) ? ((Node) node).getChildren().size() : 0;
     }
 
     public static int priority(Node parentNode, String name) {
@@ -56,7 +57,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     public static boolean hasChildren(Object node) {
-        return (node instanceof Node) ? ((Node) node).hasChildren() : false;
+        return (node instanceof HashMapBackedNode) ? ((Node) node).hasChildren() : false;
     }
 
     @Override
@@ -102,10 +103,10 @@ public class InMemoryPersistence implements Persistence {
 
         for (String childNodeKey : node.keys()) {
             Object object = node.get(childNodeKey);
-            boolean hasChildren = (object instanceof Node) ? ((Node) object).hasChildren() : false;
+            boolean hasChildren = (object instanceof HashMapBackedNode) ? ((Node) object).hasChildren() : false;
             int indexOf = node.indexOf(childNodeKey);
-            int numChildren = (object instanceof Node) ? ((Node) object).length() : 0;
-            if (object != null && object != Node.NULL) {
+            int numChildren = (object instanceof HashMapBackedNode) ? ((Node) object).length() : 0;
+            if (object != null && object != HashMapBackedNode.NULL) {
                 handler.fireChildAdded(childNodeKey, path, path.getParent(), object, hasChildren,
                         numChildren, null, indexOf);
             }
@@ -122,7 +123,7 @@ public class InMemoryPersistence implements Persistence {
         for (String childNodeKey : node.keys()) {
             Object object = node.get(childNodeKey);
             if (queryEvaluator.evaluateQueryOnValue(object, query)) {
-                if (object != null && object != Node.NULL) {
+                if (object != null && object != HashMapBackedNode.NULL) {
                     handler.fireQueryChildAdded(path, node, object);
                 }
             }
@@ -154,12 +155,12 @@ public class InMemoryPersistence implements Persistence {
             created = true;
         }
         Node parent = model.getNodeForPath(log, path.getParent());
-        if (payload instanceof Node) {
+        if (payload instanceof HashMapBackedNode) {
             if (parent.has(path.getLastElement())) {
                 node = parent.getNode(path.getLastElement());
                 parent.setIndexOf(path.getLastElement(), priority);
             } else {
-                node = new Node();
+                node = new HashMapBackedNode();
                 parent.putWithIndex(path.getLastElement(), node, priority);
             }
             node.populate(new ChangeLogBuilder(log, path, path.getParent(), node), (Node) payload);
@@ -213,8 +214,8 @@ public class InMemoryPersistence implements Persistence {
         if (authorization.isAuthorized(Operation.WRITE, auth,
                 new InMemoryDataSnapshot(model), path, payload)) {
             Node parent = model.getNodeForPath(log, path.getParent());
-            if (payload instanceof Node) {
-                Node node = new Node();
+            if (payload instanceof HashMapBackedNode) {
+                Node node = new HashMapBackedNode();
                 populate(new ChangeLogBuilder(log, path, path.getParent(), node), path, auth, node,
                         (Node) payload);
                 parent.putWithIndex(path.getLastElement(), node, priority);
@@ -246,10 +247,10 @@ public class InMemoryPersistence implements Persistence {
     public void populate(ChangeLogBuilder logBuilder, Path path, Optional<Node> auth, Node node, Node payload) {
         for (String key : payload.keys()) {
             Object value = payload.get(key);
-            if (value instanceof Node) {
+            if (value instanceof HashMapBackedNode) {
                 if (authorization.isAuthorized(Operation.WRITE, auth, new InMemoryDataSnapshot(
                         model), path.append(key), value)) {
-                    Node childNode = new Node();
+                    Node childNode = new HashMapBackedNode();
                     if (node.has(key)) {
                         node.put(key, childNode);
                         logBuilder.addNew(key, childNode);

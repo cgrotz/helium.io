@@ -17,6 +17,7 @@
 package io.helium.persistence.authorization.rule;
 
 import io.helium.common.Path;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.Persistence;
@@ -67,7 +68,7 @@ public class RuleBasedAuthorization implements Authorization {
         } catch (Exception e) {
             Object evaledAuth = scriptingEnvironment.eval(localAuth.toString());
             Object evaledData = null;
-            if(data instanceof  Node) {
+            if(data instanceof HashMapBackedNode) {
                 evaledAuth = scriptingEnvironment.eval(data.toString());
             }
             else {
@@ -80,9 +81,9 @@ public class RuleBasedAuthorization implements Authorization {
 
     @Override
     public Object filterContent(Optional<Node> auth, Path path, Node root, Object content) {
-        if (content instanceof Node) {
+        if (content instanceof HashMapBackedNode) {
             Node org = (Node) content;
-            Node node = new Node();
+            Node node = new HashMapBackedNode();
             for (String key : org.keys()) {
                 if (isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(root),
                         path.append(key), new InMemoryDataSnapshot(org.get(key)))) {

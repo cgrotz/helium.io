@@ -17,13 +17,14 @@
 package io.helium.persistence.authorization;
 
 import io.helium.common.Path;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.DataSnapshot;
 
 import java.util.Optional;
 
 public interface Authorization {
-    public final static Node ANONYMOUS = new Node().put("isAnonymous",true).put("permissions", new Node());
+    public final static Node ANONYMOUS = new HashMapBackedNode().put("isAnonymous",true).put("permissions", new HashMapBackedNode());
 
     void authorize(Operation op,
                    Optional<Node> auth,

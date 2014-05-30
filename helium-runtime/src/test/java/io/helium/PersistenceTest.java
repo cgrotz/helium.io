@@ -18,7 +18,7 @@ package io.helium;
 
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
-import io.helium.json.Node;
+import io.helium.json.HashMapBackedNode;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryPersistence;
 import org.junit.Assert;
@@ -52,7 +52,7 @@ public class PersistenceTest {
         Assert.assertNotNull(persistence.get(path));
         Assert.assertNotNull(persistence.getNode(path));
         persistence.applyNewValue(new ChangeLog(), Optional.empty(), path, 2,
-                new Node().put("msg", "HalloWelt"));
+                new HashMapBackedNode().put("msg", "HalloWelt"));
         Assert.assertEquals(persistence.get(path.append("msg")), "HalloWelt");
         persistence.applyNewValue(new ChangeLog(), Optional.empty(), path.append("msg"), 1, "HalloWelt2");
         Assert.assertEquals(persistence.get(path.append("msg")), "HalloWelt2");

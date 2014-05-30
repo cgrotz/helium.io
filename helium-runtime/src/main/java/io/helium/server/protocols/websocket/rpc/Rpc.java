@@ -17,6 +17,7 @@
 package io.helium.server.protocols.websocket.rpc;
 
 import com.google.common.collect.Maps;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.server.protocols.websocket.WebsocketEndpoint;
 
@@ -42,12 +43,12 @@ public class Rpc {
     }
 
     public void handle(String message, WebsocketEndpoint socket) {
-        Node json = new Node(message);
+        Node json = new HashMapBackedNode(message);
         String id = checkNotNull(json.getString("id"));
         String method = checkNotNull(json.getString("method"));
         Node args = json.getNode("args");
         if (methods.containsKey(method)) {
-            Node response = new Node();
+            Node response = new HashMapBackedNode();
             response.put("id", id);
             try {
                 response.put("resp", methods.get(method).call(args));
@@ -61,7 +62,7 @@ public class Rpc {
             }
             socket.send(response.toString());
         } else {
-            Node response = new Node();
+            Node response = new HashMapBackedNode();
             response.put("id", id);
             response.put("type", "rpc");
             response.put("state", "error");

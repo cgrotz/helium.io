@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import io.helium.common.Path;
 import io.helium.core.Core;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.authorization.chained.ChainedAuthorization;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
@@ -104,8 +105,8 @@ public class Helium {
         if(!persistence.exists(Path.of("/users"))) {
             String uuid = UUID.randomUUID().toString();
             persistence.getNode(Path.of("/users")).put(uuid.replaceAll("-",""),
-                    new Node().put("username","admin").put("password", "admin").put("isAdmin", true)
-                            .put("permissions", new Node()));
+                    new HashMapBackedNode().put("username","admin").put("password", "admin").put("isAdmin", true)
+                            .put("permissions", new HashMapBackedNode()));
         }
 
         if(!persistence.exists(Path.of("/rules"))) {
@@ -119,7 +120,7 @@ public class Helium {
                     "   }\n" +
                     "}\n");
             rules.put(".read", true);
-            rules.put("rules", new Node().put(".write", "function(auth, path, data, root){\n" +
+            rules.put("rules", new HashMapBackedNode().put(".write", "function(auth, path, data, root){\n" +
                     "   if(auth.isAdmin) {\n" +
                     "       return true;\n" +
                     "   }\n" +
@@ -135,7 +136,7 @@ public class Helium {
                             "       return false;\n" +
                             "   }\n" +
                             "}\n"));
-            rules.put("users", new Node().put(".write", "function(auth, path, data, root){\n" +
+            rules.put("users", new HashMapBackedNode().put(".write", "function(auth, path, data, root){\n" +
                     "   if(auth.isAdmin) {\n" +
                     "       return true;\n" +
                     "   }\n" +

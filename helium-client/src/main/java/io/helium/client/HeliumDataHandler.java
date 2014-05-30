@@ -16,6 +16,7 @@
 
 package io.helium.client;
 
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
@@ -30,7 +31,7 @@ public class HeliumDataHandler implements Handler<Buffer> {
 
     @Override
     public void handle(Buffer buffer) {
-        Node event = new Node(buffer.toString());
+        Node event = new HashMapBackedNode(buffer.toString());
         helium.handleEvent(event);
     }
 }

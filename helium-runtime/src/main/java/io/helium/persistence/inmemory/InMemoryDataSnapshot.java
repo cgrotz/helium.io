@@ -16,6 +16,7 @@
 
 package io.helium.persistence.inmemory;
 
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.DataSnapshot;
 
@@ -26,7 +27,7 @@ public class InMemoryDataSnapshot implements DataSnapshot {
 
     public InMemoryDataSnapshot(Object value) {
         val = value;
-        if (value instanceof Node) {
+        if (value instanceof HashMapBackedNode) {
             this.node = (Node) value;
         }
     }

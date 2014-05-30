@@ -2,6 +2,7 @@ package io.helium.persistence.authorization.chained;
 
 import com.google.common.base.Strings;
 import io.helium.common.Path;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.authorization.Authorization;
@@ -45,9 +46,9 @@ public class ChainedAuthorization implements Authorization {
 
     @Override
     public Object filterContent(Optional<Node> auth, Path path, Node root, Object content) {
-        if (content instanceof Node) {
+        if (content instanceof HashMapBackedNode) {
             Node org = (Node) content;
-            Node node = new Node();
+            Node node = new HashMapBackedNode();
             for (String key : org.keys()) {
                 if(!Strings.isNullOrEmpty(key)) {
                     if (isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(root),

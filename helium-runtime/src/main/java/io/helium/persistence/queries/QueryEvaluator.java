@@ -19,7 +19,7 @@ package io.helium.persistence.queries;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import io.helium.common.Path;
-import io.helium.json.Node;
+import io.helium.json.HashMapBackedNode;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class QueryEvaluator {
         try {
 
             Object parsedValue;
-            if (value instanceof Node) {
+            if (value instanceof HashMapBackedNode) {
                 parsedValue = scriptingEnvironment.eval("JSON.parse('"
                         + value.toString() + "');");
             } else {

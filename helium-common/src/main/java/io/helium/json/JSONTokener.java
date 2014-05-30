@@ -335,7 +335,7 @@ public class JSONTokener {
                 return this.nextString(c);
             case '{':
                 this.back();
-                return new Node(this);
+                return new HashMapBackedNode(this);
         }
 
 		/*
@@ -358,7 +358,7 @@ public class JSONTokener {
         if ("".equals(string)) {
             throw this.syntaxError("Missing value");
         }
-        return Node.stringToValue(string);
+        return HashMapBackedNode.stringToValue(string);
     }
 
     /**

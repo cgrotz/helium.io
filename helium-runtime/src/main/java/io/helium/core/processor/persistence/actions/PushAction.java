@@ -18,7 +18,7 @@ package io.helium.core.processor.persistence.actions;
 
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.json.Node;
+import io.helium.json.HashMapBackedNode;
 import io.helium.persistence.Persistence;
 
 import java.util.UUID;
@@ -37,7 +37,7 @@ public class PushAction {
         if (event.has(HeliumEvent.PAYLOAD)) {
             payload = event.get(HeliumEvent.PAYLOAD);
         } else {
-            payload = new Node();
+            payload = new HashMapBackedNode();
         }
 
         String nodeName;

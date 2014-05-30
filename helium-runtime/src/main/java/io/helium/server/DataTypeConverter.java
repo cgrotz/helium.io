@@ -1,6 +1,6 @@
 package io.helium.server;
 
-import io.helium.json.Node;
+import io.helium.json.HashMapBackedNode;
 
 /**
  * Created by Christoph Grotz on 29.05.14.
@@ -34,7 +34,7 @@ public class DataTypeConverter {
         }
 
         try {
-            return new Node(content);
+            return new HashMapBackedNode(content);
         }
         catch(Exception e) {
 

@@ -20,6 +20,7 @@ import com.lmax.disruptor.EventHandler;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
@@ -54,7 +55,7 @@ public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
             authorization.authorize(Operation.WRITE, getAuth(event), root, path, data);
         } else if (event.getType() == HeliumEventType.SET) {
             if (event.has(HeliumEvent.PAYLOAD)
-                    && event.get(HeliumEvent.PAYLOAD) == Node.NULL) {
+                    && event.get(HeliumEvent.PAYLOAD) == HashMapBackedNode.NULL) {
                 InMemoryDataSnapshot root = new InMemoryDataSnapshot(
                         persistence.get(null));
                 InMemoryDataSnapshot data = new InMemoryDataSnapshot(
@@ -80,6 +81,6 @@ public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
         String decodedAuthorizationToken = new String(Base64.getDecoder().decode(authorizationToken.substring(6)));
         String username = decodedAuthorizationToken.substring(0, decodedAuthorizationToken.indexOf(":"));
         String password = decodedAuthorizationToken.substring(decodedAuthorizationToken.indexOf(":")+1);
-        return new Node().put("username",username).put("password", password);
+        return new HashMapBackedNode().put("username",username).put("password", password);
     }
 }

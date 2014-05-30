@@ -5,6 +5,7 @@ import io.helium.core.Core;
 import io.helium.core.processor.authorization.AuthorizationProcessor;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
+import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.Persistence;
@@ -69,7 +70,7 @@ public class RestHandler {
             String password = authentication.getString("password");
             Node users = persistence.getNode(new Path("/users"));
             for(Object value : users.values()) {
-                if(value instanceof Node) {
+                if(value instanceof HashMapBackedNode) {
                     Node node = (Node)value;
                     if(node.has("username") && node.has("password")) {
                         String localUsername = node.getString("username");
