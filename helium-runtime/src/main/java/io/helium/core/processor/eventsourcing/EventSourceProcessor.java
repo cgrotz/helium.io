@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 public class EventSourceProcessor implements EventHandler<HeliumEvent> {
-    private static final Logger logger = LoggerFactory.getLogger(EventSourceProcessor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventSourceProcessor.class);
 
     private Journal journal = new Journal();
     private Core helium;
@@ -49,12 +49,14 @@ public class EventSourceProcessor implements EventHandler<HeliumEvent> {
     @Override
     public void onEvent(HeliumEvent event, long sequence, boolean endOfBatch)
             throws IOException {
+        long startTime = System.currentTimeMillis();
         if (!event.isFromHistory()) {
-            logger.trace("storing event: " + event);
+            LOGGER.info("storing event: " + event);
             Location write = journal.write(event.toString().getBytes(), WriteType.SYNC);
             journal.sync();
             currentLocation = Optional.of(write);
         }
+        LOGGER.info("onEvent("+sequence+") "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
     }
 
     public void restore() throws IOException, RuntimeException {
@@ -72,6 +74,6 @@ public class EventSourceProcessor implements EventHandler<HeliumEvent> {
             Preconditions.checkArgument(heliumEvent.has(HeliumEvent.TYPE), "No type defined in Event");
             helium.handleEvent(heliumEvent);
         }
-        logger.info("Done restoring from journal");
+        LOGGER.info("Done restoring from journal");
     }
 }

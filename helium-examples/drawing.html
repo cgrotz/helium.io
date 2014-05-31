@@ -146,6 +146,7 @@
 <body>
 <div>
     <canvas id="drawing-canvas" width="480" height="420"></canvas>
+    <a href="#" id="login">Login</a>
 </div>
 <div id="colorholder"></div>
 <script>
@@ -155,6 +156,10 @@
 
     //Create a reference to the pixel data for our drawing.
     var pixelDataRef = new Helium('http://localhost:8080');
+
+    $('#login').click(function(){
+      pixelDataRef.authenticate('admin','admin');
+    });
 
     // Set up our canvas
     var myCanvas = document.getElementById('drawing-canvas');

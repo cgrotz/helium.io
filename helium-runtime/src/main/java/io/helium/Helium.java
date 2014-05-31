@@ -102,55 +102,32 @@ public class Helium {
 
     private void initDefaults() {
 
-        if(!persistence.exists(Path.of("/users"))) {
+        //if(!persistence.exists(Path.of("/users"))) {
+        {
             String uuid = UUID.randomUUID().toString();
             persistence.getNode(Path.of("/users")).put(uuid.replaceAll("-",""),
                     new HashMapBackedNode().put("username","admin").put("password", "admin").put("isAdmin", true)
                             .put("permissions", new HashMapBackedNode()));
         }
 
-        if(!persistence.exists(Path.of("/rules"))) {
+        //if(!persistence.exists(Path.of("/rules"))) {
+        {
             Node rules = persistence.getNode(Path.of("/rules"));
             rules.put(".write", "function(auth, path, data, root){\n" +
-                    "   if(auth.isAdmin) {\n" +
-                    "       return true;\n" +
-                    "   }\n" +
-                    "   else {\n" +
-                    "       return false;\n" +
-                    "   }\n" +
+                    "   return auth.isAdmin;\n" +
                     "}\n");
             rules.put(".read", true);
             rules.put("rules", new HashMapBackedNode().put(".write", "function(auth, path, data, root){\n" +
-                    "   if(auth.isAdmin) {\n" +
-                    "       return true;\n" +
-                    "   }\n" +
-                    "   else {\n" +
-                    "       return false;\n" +
-                    "   }\n" +
+                    "  return auth.isAdmin;\n" +
                     "}\n")
                     .put(".read", "function(auth, path, data, root){\n" +
-                            "   if(auth.isAdmin) {\n" +
-                            "       return true;\n" +
-                            "   }\n" +
-                            "   else {\n" +
-                            "       return false;\n" +
-                            "   }\n" +
+                            "  return auth.isAdmin;\n" +
                             "}\n"));
             rules.put("users", new HashMapBackedNode().put(".write", "function(auth, path, data, root){\n" +
-                    "   if(auth.isAdmin) {\n" +
-                    "       return true;\n" +
-                    "   }\n" +
-                    "   else {\n" +
-                    "       return false;\n" +
-                    "   }\n" +
+                    "  return auth.isAdmin;\n" +
                     "}\n")
                     .put(".read", "function(auth, path, data, root){\n" +
-                            "   if(auth.isAdmin) {\n" +
-                            "       return true;\n" +
-                            "   }\n" +
-                            "   else {\n" +
-                            "       return false;\n" +
-                            "   }\n" +
+                            "  return auth.isAdmin;\n" +
                             "}\n"));
         }
     }

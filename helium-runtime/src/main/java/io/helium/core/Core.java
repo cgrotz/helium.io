@@ -105,7 +105,7 @@ public class Core implements ExceptionHandler {
         Preconditions.checkArgument(heliumEvent.has(HeliumEvent.TYPE),
                 "No type defined in Event");
         EventTranslator eventTranslator = new EventTranslator(heliumEvent);
-        logger.trace("handling event: " + heliumEvent + "(" + heliumEvent.length() + ")");
+        logger.info("handling event: " + heliumEvent + "(" + heliumEvent.length() + ")");
         disruptor.publishEvent(eventTranslator);
         this.currentSequence = eventTranslator.getSequence();
     }

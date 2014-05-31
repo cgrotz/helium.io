@@ -26,11 +26,14 @@ import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Base64;
 import java.util.Optional;
 
 public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationProcessor.class);
 
     private Authorization authorization;
 
@@ -44,6 +47,7 @@ public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
 
     @Override
     public void onEvent(HeliumEvent event, long sequence, boolean endOfBatch) {
+        long startTime = System.currentTimeMillis();
         Path path = event.extractNodePath();
         if (event.getType() == HeliumEventType.PUSH) {
             InMemoryDataSnapshot root = new InMemoryDataSnapshot(
@@ -67,6 +71,7 @@ public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
                 authorization.authorize(Operation.WRITE, getAuth(event), root, path, null);
             }
         }
+        LOGGER.info("onEvent("+sequence+") "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
     }
 
     private Optional<Node> getAuth(HeliumEvent event) {

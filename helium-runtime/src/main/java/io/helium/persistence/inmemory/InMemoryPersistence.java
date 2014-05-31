@@ -202,7 +202,7 @@ public class InMemoryPersistence implements Persistence {
                     priority(parent, path.getLastElement()));
 
         }
-        logger.trace("Model changed: " + model);
+        logger.info("Model changed: " + model);
     }
 
     @Override
@@ -241,7 +241,7 @@ public class InMemoryPersistence implements Persistence {
                 }
             }
         }
-        logger.trace("Model changed: " + model);
+        logger.info("Model changed: " + model);
     }
 
     public void populate(ChangeLogBuilder logBuilder, Path path, Optional<Node> auth, Node node, Node payload) {

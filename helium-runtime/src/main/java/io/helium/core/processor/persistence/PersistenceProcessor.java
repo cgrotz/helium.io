@@ -20,8 +20,11 @@ import com.lmax.disruptor.EventHandler;
 import io.helium.core.processor.persistence.actions.*;
 import io.helium.event.HeliumEvent;
 import io.helium.persistence.Persistence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PersistenceProcessor implements EventHandler<HeliumEvent> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PersistenceProcessor.class);
 
     private PushAction pushAction;
 
@@ -43,6 +46,7 @@ public class PersistenceProcessor implements EventHandler<HeliumEvent> {
 
     @Override
     public void onEvent(HeliumEvent event, long sequence, boolean endOfBatch) {
+        long startTime = System.currentTimeMillis();
         switch (event.getType()) {
             case PUSH:
                 pushAction.handle(event);
@@ -62,5 +66,6 @@ public class PersistenceProcessor implements EventHandler<HeliumEvent> {
             default:
                 break;
         }
+        LOGGER.info("onEvent("+sequence+") "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
     }
 }

@@ -30,7 +30,7 @@ import java.util.Set;
 
 public class Distributor implements EventHandler<HeliumEvent> {
 
-    private static final Logger logger = LoggerFactory.getLogger(Distributor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Distributor.class);
 
     private Set<Endpoint> endpoints = Sets.newHashSet();
 
@@ -38,12 +38,14 @@ public class Distributor implements EventHandler<HeliumEvent> {
 
     @Override
     public void onEvent(HeliumEvent event, long sequence, boolean endOfBatch) {
+        long startTime = System.currentTimeMillis();
         this.sequence = sequence;
         distribute(event);
+        LOGGER.info("onEvent("+sequence+") "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
     }
 
     public void distribute(HeliumEvent event) {
-        logger.trace("distributing event: " + event);
+        LOGGER.info("distributing event: " + event);
         if (!event.isFromHistory()) {
             for (Endpoint handler : Sets.newHashSet(endpoints)) {
                 handler.distribute(event);

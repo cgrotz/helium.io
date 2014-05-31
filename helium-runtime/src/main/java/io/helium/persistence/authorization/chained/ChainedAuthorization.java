@@ -37,7 +37,7 @@ public class ChainedAuthorization implements Authorization {
     public boolean isAuthorized(Operation op, Optional<Node> auth, DataSnapshot root, Path path, Object object) {
         for( Authorization authorization : authorizations) {
             if(authorization.isAuthorized(op, auth, root, path, object)){
-                LOG.trace("Authorized access("+op+") to "+path+" for "+auth);
+                LOG.info("Authorized access("+op+") to "+path+" for "+auth);
                 return true;
             }
         }

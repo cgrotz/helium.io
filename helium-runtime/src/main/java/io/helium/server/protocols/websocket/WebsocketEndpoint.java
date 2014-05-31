@@ -83,7 +83,7 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
     @Rpc.Method
     public void attachListener(@Rpc.Param("path") String path,
                                @Rpc.Param("event_type") String eventType) {
-        LOGGER.trace("attachListener");
+        LOGGER.info("attachListener");
         addListener(new Path(HeliumEvent.extractPath(path)), eventType);
         if ("child_added".equals(eventType)) {
             this.persistence.syncPath(new Path(HeliumEvent.extractPath(path)), this);
@@ -95,13 +95,13 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
     @Rpc.Method
     public void detachListener(@Rpc.Param("path") String path,
                                @Rpc.Param("event_type") String eventType) {
-        LOGGER.trace("detachListener");
+        LOGGER.info("detachListener");
         removeListener(new Path(HeliumEvent.extractPath(path)), eventType);
     }
 
     @Rpc.Method
     public void attachQuery(@Rpc.Param("path") String path, @Rpc.Param("query") String query) {
-        LOGGER.trace("attachQuery");
+        LOGGER.info("attachQuery");
         addQuery(new Path(HeliumEvent.extractPath(path)), query);
         this.persistence.syncPathWithQuery(new Path(HeliumEvent.extractPath(path)), this,
                 new QueryEvaluator(), query);
@@ -109,80 +109,96 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
 
     @Rpc.Method
     public void detachQuery(@Rpc.Param("path") String path, @Rpc.Param("query") String query) {
-        LOGGER.trace("detachQuery");
+        LOGGER.info("detachQuery");
         removeQuery(new Path(HeliumEvent.extractPath(path)), query);
     }
 
     @Rpc.Method
     public void event(@Rpc.Param("path") String path, @Rpc.Param("data") Node data) {
-        LOGGER.trace("event");
+        LOGGER.info("event");
         this.core.getDistributor().distribute(path, data);
     }
 
     @Rpc.Method
     public void push(@Rpc.Param("path") String path, @Rpc.Param("name") String name,
                      @Rpc.Param("data") Node data) {
-        LOGGER.trace("push");
+        LOGGER.info("push");
         HeliumEvent event = new HeliumEvent(HeliumEventType.PUSH, path + "/" + name, data);
+        if(auth.isPresent())
+            event.setAuth(auth.get());
         this.core.handle(event);
     }
 
     @Rpc.Method
     public void set(@Rpc.Param("path") String path, @Rpc.Param("data") Object data,
                     @Rpc.Param(value = "priority", defaultValue = "-1") Integer priority) {
-        LOGGER.trace("set");
+        LOGGER.info("set");
         HeliumEvent event = new HeliumEvent(HeliumEventType.SET, path, data, priority);
+        if(auth.isPresent())
+            event.setAuth(auth.get());
         this.core.handle(event);
     }
 
     @Rpc.Method
     public void update(@Rpc.Param("path") String path, @Rpc.Param("data") Node data) {
-        LOGGER.trace("update");
+        LOGGER.info("update");
         HeliumEvent event = new HeliumEvent(HeliumEventType.UPDATE, path, data);
+        if(auth.isPresent())
+            event.setAuth(auth.get());
         this.core.handle(event);
     }
 
     @Rpc.Method
     public void setPriority(@Rpc.Param("path") String path, @Rpc.Param("priority") Integer priority) {
-        LOGGER.trace("setPriority");
+        LOGGER.info("setPriority");
         HeliumEvent event = new HeliumEvent(HeliumEventType.SETPRIORITY, path, priority);
+        if(auth.isPresent())
+            event.setAuth(auth.get());
         this.core.handle(event);
     }
 
     @Rpc.Method
     public void pushOnDisconnect(@Rpc.Param("path") String path, @Rpc.Param("name") String name,
                                  @Rpc.Param("payload") Node payload) {
-        LOGGER.trace("pushOnDisconnect");
+        LOGGER.info("pushOnDisconnect");
         HeliumEvent event = new HeliumEvent(HeliumEventType.PUSH, path + "/" + name,
                 payload);
+        if(auth.isPresent())
+            event.setAuth(auth.get());
         this.disconnectEvents.add(event);
     }
 
     @Rpc.Method
     public void setOnDisconnect(@Rpc.Param("path") String path, @Rpc.Param("data") Node data,
                                 @Rpc.Param(value = "priority", defaultValue = "-1") Integer priority) {
-        LOGGER.trace("setOnDisconnect");
+        LOGGER.info("setOnDisconnect");
         HeliumEvent event = new HeliumEvent(HeliumEventType.SET, path, data, priority);
+        if(auth.isPresent())
+            event.setAuth(auth.get());
         this.disconnectEvents.add(event);
     }
 
     @Rpc.Method
     public void updateOnDisconnect(@Rpc.Param("path") String path, @Rpc.Param("data") Node data) {
-        LOGGER.trace("updateOnDisconnect");
+        LOGGER.info("updateOnDisconnect");
         HeliumEvent event = new HeliumEvent(HeliumEventType.UPDATE, path, data);
+        if(auth.isPresent())
+            event.setAuth(auth.get());
         this.disconnectEvents.add(event);
     }
 
     @Rpc.Method
     public void removeOnDisconnect(@Rpc.Param("path") String path) {
-        LOGGER.trace("removeOnDisconnect");
+        LOGGER.info("removeOnDisconnect");
         HeliumEvent event = new HeliumEvent(HeliumEventType.REMOVE, path);
+        if(auth.isPresent())
+            event.setAuth(auth.get());
         this.disconnectEvents.add(event);
     }
 
     @Rpc.Method
     public void authenticate(@Rpc.Param("username") String username, @Rpc.Param("password") String password) {
-        LOGGER.trace("authenticate");
+        LOGGER.info("authenticate");
         auth = extractAuthentication(username, password);
     }
 
@@ -208,6 +224,7 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
 
     public void distribute(HeliumEvent event) {
         if (open) {
+            long startTime = System.currentTimeMillis();
             if (event.getType() == HeliumEventType.EVENT) {
                 Node jsonObject;
                 Object object = event.get(HeliumEvent.PAYLOAD);
@@ -223,10 +240,12 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
                 ChangeLog changeLog = event.getChangeLog();
                 distributeChangeLog(changeLog);
             }
+            LOGGER.info("distribute "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
         }
     }
 
     public void distributeChangeLog(ChangeLog changeLog) {
+        long startTime = System.currentTimeMillis();
         for (ChangeLogEvent logE : changeLog.getLog()) {
             if (logE instanceof ChildAddedLogEvent) {
                 ChildAddedLogEvent logEvent = (ChildAddedLogEvent) logE;
@@ -258,6 +277,7 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
                 }
             }
         }
+        LOGGER.info("distributeChangeLog "+(System.currentTimeMillis()-startTime)+"ms");
     }
 
     private void processQuery(HeliumEvent event) {
@@ -428,7 +448,7 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
 
                 broadcast.put(HeliumEvent.PATH, createPath(path));
                 broadcast.put(HeliumEvent.PAYLOAD, payload);
-                LOGGER.trace("Distributing Message (basePath: '" + basePath + "',path: '" + path + "') : "
+                LOGGER.info("Distributing Message (basePath: '" + basePath + "',path: '" + path + "') : "
                         + broadcast.toString());
                 channel.writeAndFlush(new TextWebSocketFrame(broadcast.toString()));
             }

@@ -16,7 +16,6 @@
 
 package io.helium.persistence;
 
-import io.helium.persistence.queries.QueryEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +25,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.security.*;
 import java.security.cert.Certificate;
+import java.util.UUID;
 
 /**
  * With security manager secured ScriptingEnvironment
@@ -33,10 +33,24 @@ import java.security.cert.Certificate;
  * @author Christoph Grotz
  */
 public class SandBoxedScriptingEnvironment {
-    private static final Logger LOGGER = LoggerFactory.getLogger(QueryEvaluator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SandBoxedScriptingEnvironment.class);
     private ScriptEngineManager mgr = new ScriptEngineManager();
     private ScriptEngine engine = mgr.getEngineByName("JavaScript");
     private AccessControlContext accessControlContext;
+
+
+    public static void main(String args[]){
+        ScriptEngineManager mgr = new ScriptEngineManager();
+        ScriptEngine engine = mgr.getEngineByName("JavaScript");
+        try {
+            engine.eval("function convert(){ return {\"test\": \"Hallo Welt\" };}");
+            System.out.println(((Invocable) engine).invokeFunction("convert"));
+        } catch (ScriptException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+    }
 
     public SandBoxedScriptingEnvironment() {
         Permissions perms = new Permissions();
@@ -53,8 +67,16 @@ public class SandBoxedScriptingEnvironment {
             @Override
             public Object run() {
                 try {
-                    return engine.eval(code);
+                    long startTime = System.currentTimeMillis();
+                    engine.eval("function convert(){ return "+code+";}");
+                    LOGGER.info("evaluation of convert function " + (System.currentTimeMillis() - startTime) + "ms");
+                    Object retValue = ((Invocable) engine).invokeFunction("convert");
+                    LOGGER.info("invocation of convert function " + (System.currentTimeMillis() - startTime) + "ms");
+                    return retValue;
+                    //return engine.eval(code);
                 } catch (ScriptException e) {
+                    LOGGER.error(e.getMessage(), e);
+                } catch (NoSuchMethodException e) {
                     LOGGER.error(e.getMessage(), e);
                 }
                 return null;
@@ -68,7 +90,13 @@ public class SandBoxedScriptingEnvironment {
             @Override
             public Object run() {
                 try {
-                    return ((Invocable) engine).invokeFunction(code, args);
+                    long startTime = System.currentTimeMillis();
+                    String functionName = "rule" + UUID.randomUUID().toString().replaceAll("-","");
+                    engine.eval("var " + functionName + " = " + code + ";");
+                    LOGGER.info("evaluation of rule function " + (System.currentTimeMillis() - startTime) + "ms");
+                    Object returnValue = ((Invocable) engine).invokeFunction(functionName, args);
+                    LOGGER.info("invocation of rule function " + (System.currentTimeMillis() - startTime) + "ms");
+                    return returnValue;
                 } catch (ScriptException e) {
                     LOGGER.error(e.getMessage(), e);
                 } catch (NoSuchMethodException e) {
