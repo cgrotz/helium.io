@@ -56,7 +56,6 @@
         <module>helium-common</module>
         <module>helium-runtime</module>
         <module>helium-client</module>
-        <module>helium-examples</module>
     </modules>
 
     <properties>
