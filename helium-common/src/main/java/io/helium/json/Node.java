@@ -111,4 +111,6 @@ public interface Node {
     void clear();
 
     Collection<Object> values();
+
+    Object get(String key, Object defaultValue);
 }

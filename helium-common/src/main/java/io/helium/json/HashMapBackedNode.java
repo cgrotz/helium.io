@@ -434,6 +434,14 @@ public class HashMapBackedNode implements Node {
         return object;
     }
 
+    @Override
+    public Object get(String key, Object defaultValue) {
+        if (has(key) ){
+            return get(key);
+        }
+        return defaultValue;
+    }
+
     /**
      * Get the boolean value associated with a key.
      *
