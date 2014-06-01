@@ -1,7 +1,7 @@
 <html>
 <head>
   <title>Helium.io Drawing Example</title>
-  <script type="text/javascript" src="http://helium.io.skiptag.eu.cloudbees.net/helium.io.js"></script>
+  <script type="text/javascript" src="http://helium.skiptag.eu.cloudbees.net/helium.js"></script>
   <script type="text/javascript" src="js/jquery.js"></script>
   <style>
     #clear {
@@ -53,7 +53,7 @@
       localStorage.setItem(key, generateRandom());
     }
     var name = localStorage.getItem(key);
-    return new Helium.io("http://helium.io.skiptag.eu.cloudbees.net").child(name);
+    return new Helium.io("http://helium.skiptag.eu.cloudbees.net").child(name);
   }
 
   $(document).ready(function () {

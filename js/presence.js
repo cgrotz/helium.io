@@ -14,7 +14,7 @@ var code = CodeMirror($('.edit').get()[0], {
     '<head>\n'+
     '  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">\n'+
     '  <meta charset="utf-8">\n'+
-    '  <script src="http://localhost:8080/helium.io.js"></script>\n'+
+    '  <script src="http://localhost:8080/helium.js"></script>\n'+
     '  <script src="js/jquery.js"></script>\n'+
     '  <script src="js/idle.js"></script>\n'+
     '</head>\n'+
@@ -25,7 +25,7 @@ var code = CodeMirror($('.edit').get()[0], {
     '  var name = prompt("Your name?", "Guest"),\n'+
     '      currentStatus = "★ online";\n'+
     '\n'+
-    '  // Get a reference to the presence data in Helium.io.\n'+
+    '  // Get a reference to the presence data in Helium.\n'+
     '  var userListRef = new Helium.io("http://localhost:8080");\n'+
     '\n'+
     '  // Generate a reference to a new location for my user with push.\n'+

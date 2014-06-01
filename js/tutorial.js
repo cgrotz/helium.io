@@ -47,7 +47,7 @@ function initStep2()
 	var code = CodeMirror($('.step2-code').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
 		'    <script>\n'+
@@ -71,7 +71,7 @@ function initStep3()
 	var code = CodeMirror($('.step3-code').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
@@ -107,7 +107,7 @@ function initStep4()
 
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
@@ -142,7 +142,7 @@ function initStep5()
 	var code = CodeMirror($('.step5-code').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
@@ -176,7 +176,7 @@ function initStep6()
 	var code = CodeMirror($('.step6-code').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
@@ -213,7 +213,7 @@ function initStep7()
 	var code = CodeMirror($('.step7-code').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
@@ -256,7 +256,7 @@ function initStep8()
 	var code = CodeMirror($('.step-edit').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+

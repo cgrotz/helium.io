@@ -12,7 +12,7 @@ $(function() {
 var code = CodeMirror($('.edit').get()[0], {
     value: '<html>\n'+
 '<head>\n'+
-'  <script src="http://localhost:8080/helium.io.js"></script>\n'+
+'  <script src="http://localhost:8080/helium.js"></script>\n'+
 '  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 '  <link rel="stylesheet" type="text/css" href="css/drawing.css">\n'+
 '</head>\n'+

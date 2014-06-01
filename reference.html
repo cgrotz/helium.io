@@ -10,7 +10,7 @@
   <!-- Bootstrap core CSS --> 
   <link href="css/bootstrap.css" rel="stylesheet" /> 
   <!-- Custom styles for this template --> 
-  <link href="css/helium.io.css" rel="stylesheet" />
+  <link href="css/helium.css" rel="stylesheet" />
  </head> 
  <body> 
   <div class="navbar navbar-inverse navbar-static-top"> 
@@ -64,15 +64,15 @@
      <h2 id="quickstart-installation">Installation</h2> 
      <h4></h4> 
      <h3>Tomcat</h3> 
-     <p>Simply put the <i>helium.io.war</i> into the webapps folder of your Apache Tomcat v7.0.3x. Afterwards helium.io will be available to your under <i>http://localhost:8080/helium.io</i></p>
+     <p>Simply put the <i>helium.war</i> into the webapps folder of your Apache Tomcat v7.0.3x. Afterwards helium.io will be available to your under <i>http://localhost:8080/helium.io</i></p>
      <h3>Vert.x Standalone</h3> 
-     <p>You can also use the vertx standalone variant of helium.io.</p>
+     <p>You can also use the vertx standalone variant of helium.</p>
      <pre style=""><code style="font-size: 12px;">java -jar helium.io-standalone.jar -url <span class="string">http://localhost:8080/helium.io</span><span class="xml"><span class="tag"><br style="" /></span></span></code></pre>
      <p></p> 
      <p></p> 
      <h2 id="quickstart-javascript">Javascript</h2> 
      <p>Simply include the JavaScript library in the &lt;head&gt; tag of your web page.&nbsp;</p> 
-     <pre><code>&lt;script type=<span class="string">'text/javascript'</span> src=<span class="string">'http://localhost:8080/helium.io/helium.io.js'</span>&gt;<span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span></code></pre>
+     <pre><code>&lt;script type=<span class="string">'text/javascript'</span> src=<span class="string">'http://localhost:8080/helium.io/helium.js'</span>&gt;<span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span></code></pre>
      <p>Finally, create a Helium.io reference using the URL to your Helium.io Repository and start using your data: </p>
      <pre><code><span class="keyword">var</span> myRootRef = <span class="keyword">new</span> Helium.io(<span class="string">'http://localhost:8080/helium.io'</span>);
 myRootRef.set(<span class="string">'Beep, Beep'</span>);</code></pre> 
@@ -156,7 +156,7 @@ nameRef.child(<span class="string">'lastname'</span>).set(<span class="string">'
      <pre><code>nameRef.set({firstname : <span class="string">'Bruce'</span>, lastname : <span class="string">'Wayne</span>}); </code></pre> 
      <p></p> 
      <p></p> 
-     <p>The above two examples ― writing the first and last name separately and writing them at the same time as an object ― will result in the same data being saved to your Helium.io. The set operation will overwrite</p>
+     <p>The above two examples ― writing the first and last name separately and writing them at the same time as an object ― will result in the same data being saved to your Helium. The set operation will overwrite</p>
      <p>If you want to write multiple children of a Helium.io location at the same time without overwriting other existing data, you can perform an &quot;update&quot; operation as shown: </p>
      <p></p> 
      <p></p> 
