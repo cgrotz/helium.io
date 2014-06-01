@@ -78,10 +78,8 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public Node getNode(Path path) {
-        ChangeLog log = new ChangeLog();
+    public Node getNode(ChangeLog log, Path path) {
         Node nodeForPath = model.getNodeForPath(log, path);
-        core.distributeChangeLog(log);
         return nodeForPath;
     }
 
@@ -104,11 +102,8 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void syncPath(Path path, Endpoint handler) {
-
-        ChangeLog log = new ChangeLog();
+    public void syncPath(ChangeLog log, Path path, Endpoint handler) {
         Node node = model.getNodeForPath(log, path);
-
         for (String childNodeKey : node.keys()) {
             Object object = node.get(childNodeKey);
             boolean hasChildren = (object instanceof HashMapBackedNode) ? ((Node) object).hasChildren() : false;
@@ -119,14 +114,11 @@ public class InMemoryPersistence implements Persistence {
                         numChildren, null, indexOf);
             }
         }
-        core.distributeChangeLog(log);
-
     }
 
     @Override
-    public void syncPathWithQuery(Path path, WebsocketEndpoint handler,
+    public void syncPathWithQuery(ChangeLog log, Path path, WebsocketEndpoint handler,
                                   QueryEvaluator queryEvaluator, String query) {
-        ChangeLog log = new ChangeLog();
         Node node = model.getNodeForPath(log, path);
         for (String childNodeKey : node.keys()) {
             Object object = node.get(childNodeKey);
@@ -136,12 +128,10 @@ public class InMemoryPersistence implements Persistence {
                 }
             }
         }
-        core.distributeChangeLog(log);
     }
 
     @Override
-    public void syncPropertyValue(Path path, Endpoint handler) {
-        ChangeLog log = new ChangeLog();
+    public void syncPropertyValue(ChangeLog log, Path path, Endpoint handler) {
         Node node = model.getNodeForPath(log, path.getParent());
         String childNodeKey = path.getLastElement();
         if (node.has(path.getLastElement())) {
@@ -151,8 +141,6 @@ public class InMemoryPersistence implements Persistence {
         } else {
             handler.fireValue(childNodeKey, path, path.getParent(), "", "", node.indexOf(childNodeKey));
         }
-        core.distributeChangeLog(log);
-
     }
 
     @Override

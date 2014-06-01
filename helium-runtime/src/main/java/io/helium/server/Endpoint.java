@@ -32,7 +32,7 @@ public interface Endpoint {
 
     void distributeEvent(Path path, Node data);
 
-    void fireChildAdded(String childNodeKey, Path path, Path parent, Object object, boolean hasChildren, int numChildren, Object o, int indexOf);
+    void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren, String prevChildName, int priority);
 
-    void fireValue(String childNodeKey, Path path, Path parent, Object s, Object s1, int i);
+    void fireValue(String name, Path path, Path parent, Object value, String prevChildName, int priority);
 }

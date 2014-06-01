@@ -17,6 +17,7 @@
 package io.helium.persistence.authorization.rule;
 
 import io.helium.common.Path;
+import io.helium.event.changelog.ChangeLog;
 import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.DataSnapshot;
@@ -26,10 +27,15 @@ import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.NotAuthorizedException;
 import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.script.ScriptException;
 import java.util.Optional;
+import java.util.UUID;
 
 public class RuleBasedAuthorization implements Authorization {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RuleBasedAuthorization.class);
     private final Persistence persistence;
     private SandBoxedScriptingEnvironment scriptingEnvironment;
 
@@ -49,19 +55,24 @@ public class RuleBasedAuthorization implements Authorization {
     @Override
     public boolean isAuthorized(Operation op, Optional<Node> auth, DataSnapshot root, Path path,
                                 Object data) {
-
-        Node localAuth = auth.orElseGet(() -> Authorization.ANONYMOUS);
-        RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(persistence.getNode(Path.of("/rules")));
-        if (localAuth.has("permissions")) {
-            RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getNode("permissions"));
-            if( evaluateRules(op, root, path, data, localAuth, userRules) ) {
-                return true;
+        try {
+            Node localAuth = auth.orElseGet(() -> Authorization.ANONYMOUS);
+            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(persistence.getNode(new ChangeLog(-1), Path.of("/rules")));
+            if (localAuth.has("permissions")) {
+                RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getNode("permissions"));
+                if (evaluateRules(op, root, path, data, localAuth, userRules)) {
+                    return true;
+                }
             }
+            return evaluateRules(op, root, path, data, localAuth, globalRules);
         }
-        return evaluateRules(op, root, path, data, localAuth, globalRules);
+        catch (NoSuchMethodException | ScriptException e) {
+            LOGGER.error("error evaluating expression for authorization", e);
+            return false;
+        }
     }
 
-    private boolean evaluateRules(Operation op, DataSnapshot root, Path path, Object data, Node localAuth, RuleBasedAuthorizator globalRules) {
+    private boolean evaluateRules(Operation op, DataSnapshot root, Path path, Object data, Node localAuth, RuleBasedAuthorizator globalRules) throws ScriptException, NoSuchMethodException {
         String expression = globalRules.getExpressionForPathAndOperation(path, op);
         if("false".equalsIgnoreCase(expression)) {
             return false;
@@ -71,17 +82,27 @@ public class RuleBasedAuthorization implements Authorization {
 
         }
         else {
-            Object evaledAuth = scriptingEnvironment.eval(localAuth.toString());
-            Object evaledData = null;
-            if(data instanceof HashMapBackedNode) {
-                evaledAuth = scriptingEnvironment.eval(data.toString());
+            Object evaledAuth = eval(localAuth.toString());
+            Boolean result = (Boolean) invoke(expression, evaledAuth, path);
+            if(result == null) {
+                return false;
             }
-            else {
-                evaledData  = data;
-            }
-            Boolean result = (Boolean) scriptingEnvironment.invokeFunction(expression, evaledAuth, path, evaledData, root);
             return result.booleanValue();
         }
+    }
+
+    private Object eval(String code) throws ScriptException, NoSuchMethodException {
+        scriptingEnvironment.eval("function convert(){ return " + code + ";}");
+        Object retValue =scriptingEnvironment.invokeFunction("convert");
+        return retValue;
+    }
+
+    private Object invoke(String code, Object evaledAuth, Path path) throws ScriptException, NoSuchMethodException {
+        String functionName = "rule" + UUID.randomUUID().toString().replaceAll("-","");
+        scriptingEnvironment.eval("var " + functionName + " = " + code + ";");
+        Boolean returnValue = (Boolean) scriptingEnvironment.
+                invokeFunction(functionName, evaledAuth, path);
+        return returnValue;
     }
 
     @Override

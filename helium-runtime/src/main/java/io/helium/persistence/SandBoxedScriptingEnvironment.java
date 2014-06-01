@@ -19,38 +19,21 @@ package io.helium.persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
+import javax.script.*;
+import java.io.Reader;
 import java.security.*;
 import java.security.cert.Certificate;
-import java.util.UUID;
 
 /**
  * With security manager secured ScriptingEnvironment
  *
  * @author Christoph Grotz
  */
-public class SandBoxedScriptingEnvironment {
+public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(SandBoxedScriptingEnvironment.class);
     private ScriptEngineManager mgr = new ScriptEngineManager();
     private ScriptEngine engine = mgr.getEngineByName("JavaScript");
     private AccessControlContext accessControlContext;
-
-
-    public static void main(String args[]){
-        ScriptEngineManager mgr = new ScriptEngineManager();
-        ScriptEngine engine = mgr.getEngineByName("JavaScript");
-        try {
-            engine.eval("function convert(){ return {\"test\": \"Hallo Welt\" };}");
-            System.out.println(((Invocable) engine).invokeFunction("convert"));
-        } catch (ScriptException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-    }
 
     public SandBoxedScriptingEnvironment() {
         Permissions perms = new Permissions();
@@ -61,19 +44,108 @@ public class SandBoxedScriptingEnvironment {
         accessControlContext = new AccessControlContext(new ProtectionDomain[]{domain});
     }
 
+    @Override
+    public Object eval(String script, ScriptContext context) throws ScriptException {
+        return AccessController.doPrivileged(new PrivilegedAction() {
+            @Override
+            public Object run() {
+                try {
+                    return engine.eval(script, context);
+                } catch (ScriptException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+                return null;
+            }
+        }, accessControlContext);
+    }
+
+    @Override
+    public Object eval(Reader reader, ScriptContext context) throws ScriptException {
+        return AccessController.doPrivileged(new PrivilegedAction() {
+            @Override
+            public Object run() {
+                try {
+                    return engine.eval(reader, context);
+                } catch (ScriptException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+                return null;
+            }
+        }, accessControlContext);
+    }
+
+    @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object eval(final String code) {
         return AccessController.doPrivileged(new PrivilegedAction() {
             @Override
             public Object run() {
                 try {
-                    long startTime = System.currentTimeMillis();
-                    engine.eval("function convert(){ return "+code+";}");
-                    LOGGER.info("evaluation of convert function " + (System.currentTimeMillis() - startTime) + "ms");
-                    Object retValue = ((Invocable) engine).invokeFunction("convert");
-                    LOGGER.info("invocation of convert function " + (System.currentTimeMillis() - startTime) + "ms");
-                    return retValue;
-                    //return engine.eval(code);
+                    return engine.eval(code);
+                } catch (ScriptException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+                return null;
+            }
+        }, accessControlContext);
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Object eval(Reader reader) throws ScriptException {
+        return AccessController.doPrivileged(new PrivilegedAction() {
+            @Override
+            public Object run() {
+                try {
+                    return engine.eval(reader);
+                } catch (ScriptException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+                return null;
+            }
+        }, accessControlContext);
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Object eval(String script, Bindings bindings) throws ScriptException {
+        return AccessController.doPrivileged(new PrivilegedAction() {
+            @Override
+            public Object run() {
+                try {
+                    return engine.eval(script, bindings);
+                } catch (ScriptException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+                return null;
+            }
+        }, accessControlContext);
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Object eval(Reader reader, Bindings bindings) throws ScriptException {
+        return AccessController.doPrivileged(new PrivilegedAction() {
+            @Override
+            public Object run() {
+                try {
+                    return engine.eval(reader, bindings);
+                } catch (ScriptException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+                return null;
+            }
+        }, accessControlContext);
+    }
+
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Object invokeMethod(Object thiz, String name, Object... args) throws ScriptException, NoSuchMethodException {
+        return AccessController.doPrivileged(new PrivilegedAction() {
+            @Override
+            public Object run() {
+                try {
+                    return ((Invocable) engine).invokeMethod(thiz, name, args);
                 } catch (ScriptException e) {
                     LOGGER.error(e.getMessage(), e);
                 } catch (NoSuchMethodException e) {
@@ -84,22 +156,15 @@ public class SandBoxedScriptingEnvironment {
         }, accessControlContext);
     }
 
+    @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object invokeFunction(final String code, final Object... args) {
         return AccessController.doPrivileged(new PrivilegedAction() {
             @Override
             public Object run() {
                 try {
-                    long startTime = System.currentTimeMillis();
-                    String functionName = "rule" + UUID.randomUUID().toString().replaceAll("-","");
-                    engine.eval("var " + functionName + " = " + code + ";");
-                    LOGGER.info("evaluation of rule function " + (System.currentTimeMillis() - startTime) + "ms");
-                    Object returnValue = ((Invocable) engine).invokeFunction(functionName, args);
-                    LOGGER.info("invocation of rule function " + (System.currentTimeMillis() - startTime) + "ms");
-                    return returnValue;
-                } catch (ScriptException e) {
-                    LOGGER.error(e.getMessage(), e);
-                } catch (NoSuchMethodException e) {
+                    return ((Invocable) engine).invokeFunction(code, args);
+                } catch (ScriptException | NoSuchMethodException e) {
                     LOGGER.error(e.getMessage(), e);
                 }
                 return null;
@@ -107,7 +172,52 @@ public class SandBoxedScriptingEnvironment {
         }, accessControlContext);
     }
 
+    @Override
+    public <T> T getInterface(Class<T> clasz) {
+        return ((Invocable)engine).getInterface(clasz);
+    }
+
+    @Override
+    public <T> T getInterface(Object thiz, Class<T> clasz) {
+        return ((Invocable)engine).getInterface(thiz, clasz);
+    }
+
     public void put(String key, Object obj) {
         engine.put(key, obj);
+    }
+
+    @Override
+    public Object get(String key) {
+        return engine.get(key);
+    }
+
+    @Override
+    public Bindings getBindings(int scope) {
+        return engine.getBindings(scope);
+    }
+
+    @Override
+    public void setBindings(Bindings bindings, int scope) {
+        engine.setBindings(bindings, scope);
+    }
+
+    @Override
+    public Bindings createBindings() {
+        return engine.createBindings();
+    }
+
+    @Override
+    public ScriptContext getContext() {
+        return engine.getContext();
+    }
+
+    @Override
+    public void setContext(ScriptContext context) {
+        engine.setContext(context);
+    }
+
+    @Override
+    public ScriptEngineFactory getFactory() {
+        return engine.getFactory();
     }
 }

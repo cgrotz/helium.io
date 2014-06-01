@@ -29,7 +29,7 @@ public interface Persistence {
 
     Object get(Path path);
 
-    Node getNode(Path path);
+    Node getNode(ChangeLog log, Path path);
 
     boolean exists(Path path);
 
@@ -41,12 +41,12 @@ public interface Persistence {
 
     void setPriority(ChangeLog log, Optional<Node> auth, Path path, int priority);
 
-    void syncPath(Path path, Endpoint handler);
+    void syncPath(ChangeLog log, Path path, Endpoint handler);
 
-    void syncPropertyValue(Path path, Endpoint heliumEventHandler);
+    void syncPropertyValue(ChangeLog log, Path path, Endpoint heliumEventHandler);
 
     Node getRoot();
 
-    void syncPathWithQuery(Path path, WebsocketEndpoint handler,
+    void syncPathWithQuery(ChangeLog log, Path path, WebsocketEndpoint handler,
                            QueryEvaluator queryEvaluator, String query);
 }

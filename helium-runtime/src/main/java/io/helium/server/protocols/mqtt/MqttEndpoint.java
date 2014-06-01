@@ -75,7 +75,8 @@ public class MqttEndpoint implements Endpoint {
         });
     }
 
-    private void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren, String prevChildName, int priority) {
+    @Override
+    public void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren, String prevChildName, int priority) {
         try {
             if(channel.channel().isWritable()) {
                 if (authorization.isAuthorized(Operation.READ, auth,
@@ -94,7 +95,8 @@ public class MqttEndpoint implements Endpoint {
         }
     }
 
-    private void fireValue(String name, Path path, Path parent, Object value, String prevChildName, int priority) {
+    @Override
+    public void fireValue(String name, Path path, Path parent, Object value, String prevChildName, int priority) {
         try {
             if(channel.channel().isWritable()) {
                 if (authorization.isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(persistence.getRoot()), path,
@@ -139,16 +141,6 @@ public class MqttEndpoint implements Endpoint {
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public void fireChildAdded(String childNodeKey, Path path, Path parent, Object object, boolean hasChildren, int numChildren, Object o, int indexOf) {
-
-    }
-
-    @Override
-    public void fireValue(String childNodeKey, Path path, Path parent, Object s, Object s1, int i) {
-
     }
 
     public void subscribeToTopics(List<Topic> topics) {

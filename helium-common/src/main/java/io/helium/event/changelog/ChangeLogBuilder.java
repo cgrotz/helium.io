@@ -29,7 +29,6 @@ public class ChangeLogBuilder {
 
     public ChangeLogBuilder(ChangeLog log, long sequence, Path path, Path parentPath, Node node) {
         this.log = log;
-        this.log.setSequence(sequence);
         this.path = path;
         this.parentPath = parentPath;
         this.node = node;

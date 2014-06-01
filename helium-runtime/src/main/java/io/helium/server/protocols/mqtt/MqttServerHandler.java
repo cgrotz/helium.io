@@ -6,6 +6,7 @@ import io.helium.common.Path;
 import io.helium.core.Core;
 import io.helium.core.Endpoints;
 import io.helium.event.HeliumEventType;
+import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
@@ -146,7 +147,7 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
         Optional<String> username = connect.getUsername();
         Optional<String> password = connect.getPassword();
         if(username.isPresent() && password.isPresent()) {
-            Node users = persistence.getNode(new Path("/users"));
+            Node users = persistence.getNode(new ChangeLog(-1), new Path("/users"));
             for(Object value : users.values()) {
                 if(value instanceof Node) {
                     Node node = (Node)value;
@@ -161,7 +162,7 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
             }
         }
         else if(clientId != null) {
-            Node auth = persistence.getNode(Path.of("/users/"+clientId));
+            Node auth = persistence.getNode(new ChangeLog(-1), Path.of("/users/"+clientId));
             if( auth != null){
                 return Optional.of(auth);
             }

@@ -61,7 +61,6 @@ public class SetAction {
         } else {
             persistence.remove(event.getChangeLog(), event.getAuth(), path);
         }
-
     }
 
 }

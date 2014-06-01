@@ -16,7 +16,11 @@
 
 package io.helium.core.processor.persistence;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.routing.RoundRobinPool;
+import io.helium.core.processor.distribution.Distributor;
 import io.helium.core.processor.persistence.actions.*;
 import io.helium.event.HeliumEvent;
 import io.helium.persistence.Persistence;
@@ -26,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 public class PersistenceProcessor extends UntypedActor {
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistenceProcessor.class);
+    private ActorRef distributor = getContext().actorOf(new RoundRobinPool(5).props(Props.create(Distributor.class)), "distributor");
 
     private PushAction pushAction;
 
@@ -69,7 +74,7 @@ public class PersistenceProcessor extends UntypedActor {
             default:
                 break;
         }
-
-        LOGGER.info("onEvent "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
+        distributor.tell(message, ActorRef.noSender());
+        LOGGER.info("onEvent " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
     }
 }

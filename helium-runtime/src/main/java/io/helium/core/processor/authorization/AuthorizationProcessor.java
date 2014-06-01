@@ -21,7 +21,6 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.routing.RoundRobinPool;
 import io.helium.common.Path;
-import io.helium.core.processor.distribution.Distributor;
 import io.helium.core.processor.eventsourcing.EventSourceProcessor;
 import io.helium.core.processor.persistence.PersistenceProcessor;
 import io.helium.event.HeliumEvent;
@@ -46,7 +45,6 @@ public class AuthorizationProcessor extends UntypedActor {
 
     private ActorRef eventSourceActor = getContext().actorOf(new RoundRobinPool(1).props(Props.create(EventSourceProcessor.class)), "eventSourceActor");
     private ActorRef persistenceActor = getContext().actorOf(new RoundRobinPool(5).props(Props.create(PersistenceProcessor.class)), "persistenceActor");
-    private ActorRef distributor = getContext().actorOf(new RoundRobinPool(5).props(Props.create(Distributor.class)), "distributor");
 
     private Authorization authorization;
 
@@ -109,7 +107,6 @@ public class AuthorizationProcessor extends UntypedActor {
     private void distribute(Object message) {
         eventSourceActor.tell(message, getSelf());
         persistenceActor.tell(message, ActorRef.noSender());
-        distributor.tell(message, ActorRef.noSender());
     }
 
     private Optional<Node> getAuth(HeliumEvent event) {

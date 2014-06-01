@@ -38,18 +38,17 @@ public class Distributor extends UntypedActor {
         if(message instanceof  HeliumEvent) {
             HeliumEvent event = (HeliumEvent)message;
             distribute(event);
-            distributeChangeLog(event.getChangeLog());
-            LOGGER.trace("onEvent ("+event.getSequence()+")"+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
+            LOGGER.trace("distribute ("+event.getSequence()+")"+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
         }
         else if (message instanceof Event) {
             Event event = (Event)message;
             distribute(event.getPath(), event.getEvent());
-            LOGGER.trace("distribute" + (System.currentTimeMillis() - startTime) + "ms;");
+            LOGGER.trace("distribute Event" + (System.currentTimeMillis() - startTime) + "ms;");
         }
         else if (message instanceof ChangeLog) {
             ChangeLog log = (ChangeLog)message;
             distributeChangeLog(log);
-            LOGGER.trace("distributeChangeLog ("+log.getSequence()+")"+(System.currentTimeMillis()-startTime)+"ms;");
+            LOGGER.trace("distribute ChangeLog ("+log.getSequence()+")"+(System.currentTimeMillis()-startTime)+"ms;");
         }
     }
 

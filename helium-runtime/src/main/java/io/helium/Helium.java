@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import io.helium.common.Path;
 import io.helium.core.Core;
+import io.helium.event.changelog.ChangeLog;
 import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.authorization.chained.ChainedAuthorization;
@@ -105,14 +106,14 @@ public class Helium {
         //if(!persistence.exists(Path.of("/users"))) {
         {
             String uuid = UUID.randomUUID().toString();
-            persistence.getNode(Path.of("/users")).put(uuid.replaceAll("-",""),
+            persistence.getNode(new ChangeLog(-1), Path.of("/users")).put(uuid.replaceAll("-",""),
                     new HashMapBackedNode().put("username","admin").put("password", "admin").put("isAdmin", true)
                             .put("permissions", new HashMapBackedNode()));
         }
 
         //if(!persistence.exists(Path.of("/rules"))) {
         {
-            Node rules = persistence.getNode(Path.of("/rules"));
+            Node rules = persistence.getNode(new ChangeLog(-1), Path.of("/rules"));
             rules.put(".write", "function(auth, path, data, root){\n" +
                     "   return auth.isAdmin;\n" +
                     "}\n");

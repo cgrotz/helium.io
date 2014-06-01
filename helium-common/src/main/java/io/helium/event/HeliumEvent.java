@@ -79,7 +79,7 @@ public class HeliumEvent extends HashMapBackedNode {
      */
     public static final String PREVCHILDNAME = "prevChildName";
 
-    private ChangeLog changeLog = new ChangeLog();
+    private ChangeLog changeLog = new ChangeLog(sequence);
 
     /**
      * Creates an empty event
