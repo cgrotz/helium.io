@@ -16,9 +16,11 @@
 
 package io.helium.core.processor.distribution;
 
+import akka.actor.UntypedActor;
 import com.google.common.collect.Sets;
-import com.lmax.disruptor.EventHandler;
 import io.helium.common.Path;
+import io.helium.core.Endpoints;
+import io.helium.core.Event;
 import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
@@ -26,53 +28,49 @@ import io.helium.server.Endpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
-
-public class Distributor implements EventHandler<HeliumEvent> {
+public class Distributor extends UntypedActor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Distributor.class);
 
-    private Set<Endpoint> endpoints = Sets.newHashSet();
-
-    private long sequence;
-
     @Override
-    public void onEvent(HeliumEvent event, long sequence, boolean endOfBatch) {
+    public void onReceive(Object message) throws Exception {
         long startTime = System.currentTimeMillis();
-        this.sequence = sequence;
-        distribute(event);
-        LOGGER.info("onEvent("+sequence+") "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
+        if(message instanceof  HeliumEvent) {
+            HeliumEvent event = (HeliumEvent)message;
+            distribute(event);
+            distributeChangeLog(event.getChangeLog());
+            LOGGER.trace("onEvent ("+event.getSequence()+")"+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
+        }
+        else if (message instanceof Event) {
+            Event event = (Event)message;
+            distribute(event.getPath(), event.getEvent());
+            LOGGER.trace("distribute" + (System.currentTimeMillis() - startTime) + "ms;");
+        }
+        else if (message instanceof ChangeLog) {
+            ChangeLog log = (ChangeLog)message;
+            distributeChangeLog(log);
+            LOGGER.trace("distributeChangeLog ("+log.getSequence()+")"+(System.currentTimeMillis()-startTime)+"ms;");
+        }
     }
 
     public void distribute(HeliumEvent event) {
-        LOGGER.info("distributing event: " + event);
+        LOGGER.trace("distributing event: " + event);
         if (!event.isFromHistory()) {
-            for (Endpoint handler : Sets.newHashSet(endpoints)) {
+            for (Endpoint handler : Sets.newHashSet(Endpoints.get().endpoints())) {
                 handler.distribute(event);
             }
         }
     }
 
     public void distribute(String path, Node data) {
-        for (Endpoint handler : Sets.newHashSet(endpoints)) {
+        for (Endpoint handler : Sets.newHashSet(Endpoints.get().endpoints())) {
             handler.distributeEvent(new Path(HeliumEvent.extractPath(path)), data);
         }
     }
 
-    public void addHandler(Endpoint handler) {
-        endpoints.add(handler);
-    }
-
-    public void removeHandler(Endpoint handler) {
-        endpoints.remove(handler);
-    }
-
-    public long getSequence() {
-        return sequence;
-    }
 
     public void distributeChangeLog(ChangeLog changeLog) {
-        for (Endpoint endpoint : this.endpoints) {
+        for (Endpoint endpoint : Endpoints.get().endpoints()) {
             endpoint.distributeChangeLog(changeLog);
         }
     }

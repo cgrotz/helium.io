@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.helium.common.Path;
 import io.helium.core.Core;
+import io.helium.core.Endpoints;
 import io.helium.event.HeliumEventType;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
@@ -60,7 +61,7 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
                     Optional<Node> auth = extractAuthentication(connect);
                     ctx.writeAndFlush(encoder.encodeConnack(ConnackCode.Accepted));
                     MqttEndpoint endpoint = new MqttEndpoint(clientId, ctx, db, auth, persistence, authorization);
-                    core.addEndpoint(endpoint);
+                    Endpoints.get().addEndpoint(endpoint);
                     endpoints.put(ctx.channel(), endpoint);
                     break;
                 }
@@ -85,7 +86,7 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
                     break;
                 }
                 case DISCONNECT: {
-                    core.removeEndpoint(endpoints.remove(ctx.channel()));
+                    Endpoints.get().removeEndpoint(endpoints.remove(ctx.channel()));
                     break;
                 }
                 case PUBLISH: {
@@ -171,7 +172,7 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
     @Override
     public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
         MqttEndpoint endpoint = endpoints.remove(ctx);
-        core.removeEndpoint(endpoint);
+        Endpoints.get().removeEndpoint(endpoint);
         super.close(ctx, promise);
     }
 

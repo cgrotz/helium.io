@@ -21,21 +21,23 @@ import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 
 public class ChangeLogBuilder {
+    private final long sequence;
     private Node node;
     private Path parentPath;
     private Path path;
     private ChangeLog log;
 
-    public ChangeLogBuilder(ChangeLog log, Path path, Path parentPath, Node node) {
+    public ChangeLogBuilder(ChangeLog log, long sequence, Path path, Path parentPath, Node node) {
         this.log = log;
+        this.log.setSequence(sequence);
         this.path = path;
         this.parentPath = parentPath;
         this.node = node;
-
+        this.sequence = sequence;
     }
 
     public ChangeLogBuilder getChildLogBuilder(String childName) {
-        return new ChangeLogBuilder(log, path.append(childName), path,
+        return new ChangeLogBuilder(log, sequence, path.append(childName), path,
                 node.getNode(childName));
     }
 

@@ -31,6 +31,9 @@ import java.util.Optional;
  */
 public class HeliumEvent extends HashMapBackedNode {
 
+    private static long sequence = 0;
+
+    private long localSequence = sequence++;
     /**
      * Payload of the event
      */
@@ -302,5 +305,9 @@ public class HeliumEvent extends HashMapBackedNode {
 
     public HeliumEvent copy() {
         return new HeliumEvent(toString());
+    }
+
+    public long getSequence() {
+        return this.localSequence;
     }
 }

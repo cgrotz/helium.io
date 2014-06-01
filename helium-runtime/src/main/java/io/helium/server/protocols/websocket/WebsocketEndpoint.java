@@ -116,7 +116,7 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
     @Rpc.Method
     public void event(@Rpc.Param("path") String path, @Rpc.Param("data") Node data) {
         LOGGER.info("event");
-        this.core.getDistributor().distribute(path, data);
+        this.core.distribute(path, data);
     }
 
     @Rpc.Method
@@ -246,7 +246,7 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
 
     public void distributeChangeLog(ChangeLog changeLog) {
         long startTime = System.currentTimeMillis();
-        for (ChangeLogEvent logE : changeLog.getLog()) {
+        for (ChangeLogEvent logE : Lists.newArrayList(changeLog.getLog())) {
             if (logE instanceof ChildAddedLogEvent) {
                 ChildAddedLogEvent logEvent = (ChildAddedLogEvent) logE;
                 if (hasListener(logEvent.getPath(), CHILD_ADDED)) {

@@ -63,8 +63,12 @@ public class RuleBasedAuthorization implements Authorization {
 
     private boolean evaluateRules(Operation op, DataSnapshot root, Path path, Object data, Node localAuth, RuleBasedAuthorizator globalRules) {
         String expression = globalRules.getExpressionForPathAndOperation(path, op);
-        if("false".equalsIgnoreCase(expression) || "true".equalsIgnoreCase(expression)) {
-            return Boolean.parseBoolean(expression);
+        if("false".equalsIgnoreCase(expression)) {
+            return false;
+        }
+        else if ("true".equalsIgnoreCase(expression)) {
+            return true;
+
         }
         else {
             Object evaledAuth = scriptingEnvironment.eval(localAuth.toString());

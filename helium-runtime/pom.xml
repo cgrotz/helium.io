@@ -141,7 +141,7 @@
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
         <dependency>
@@ -149,9 +149,14 @@
             <artifactId>netty-codec-http</artifactId>
             <version>${netty.version}</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>
+        </dependency>-->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor_2.10</artifactId>
+            <version>2.3.3</version>
         </dependency>
         <dependency>
             <groupId>com.github.sbtourist</groupId>

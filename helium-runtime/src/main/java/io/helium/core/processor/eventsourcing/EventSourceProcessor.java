@@ -16,12 +16,9 @@
 
 package io.helium.core.processor.eventsourcing;
 
-import com.google.common.base.Preconditions;
-import com.lmax.disruptor.EventHandler;
-import io.helium.core.Core;
+import akka.actor.UntypedActor;
 import io.helium.event.HeliumEvent;
 import journal.io.api.Journal;
-import journal.io.api.Journal.ReadType;
 import journal.io.api.Journal.WriteType;
 import journal.io.api.Location;
 import org.slf4j.Logger;
@@ -31,24 +28,27 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
-public class EventSourceProcessor implements EventHandler<HeliumEvent> {
+public class EventSourceProcessor extends UntypedActor {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventSourceProcessor.class);
 
     private Journal journal = new Journal();
-    private Core helium;
-
     private Optional<Location> currentLocation = Optional.empty();
 
-    public EventSourceProcessor(File journal_dir, Core helium)
+    public EventSourceProcessor(File journal_dir)
             throws IOException {
         journal.setDirectory(journal_dir);
         journal.open();
-        this.helium = helium;
+    }
+
+    public EventSourceProcessor() throws IOException {
+        journal.setDirectory(new File("helium"));
+        journal.open();
     }
 
     @Override
-    public void onEvent(HeliumEvent event, long sequence, boolean endOfBatch)
-            throws IOException {
+    public void onReceive(Object message) throws Exception {
+        HeliumEvent event = (HeliumEvent)message;
+
         long startTime = System.currentTimeMillis();
         if (!event.isFromHistory()) {
             LOGGER.info("storing event: " + event);
@@ -56,24 +56,6 @@ public class EventSourceProcessor implements EventHandler<HeliumEvent> {
             journal.sync();
             currentLocation = Optional.of(write);
         }
-        LOGGER.info("onEvent("+sequence+") "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
-    }
-
-    public void restore() throws IOException, RuntimeException {
-        Iterable<Location> redo;
-        if (currentLocation.isPresent()) {
-            redo = journal.redo(currentLocation.get());
-        } else {
-            redo = journal.redo();
-        }
-        for (Location location : redo) {
-            byte[] record = journal.read(location, ReadType.SYNC);
-            HeliumEvent heliumEvent = new HeliumEvent(new String(
-                    record));
-            heliumEvent.setFromHistory(true);
-            Preconditions.checkArgument(heliumEvent.has(HeliumEvent.TYPE), "No type defined in Event");
-            helium.handleEvent(heliumEvent);
-        }
-        LOGGER.info("Done restoring from journal");
+        LOGGER.info("onEvent "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
     }
 }

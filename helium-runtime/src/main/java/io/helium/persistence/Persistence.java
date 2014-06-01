@@ -35,9 +35,9 @@ public interface Persistence {
 
     void remove(ChangeLog log, Optional<Node> auth, Path path);
 
-    void applyNewValue(ChangeLog log, Optional<Node> auth, Path path, int priority, Object payload);
+    void applyNewValue(ChangeLog log, long sequence, Optional<Node> auth, Path path, int priority, Object payload);
 
-    void updateValue(ChangeLog log, Optional<Node> auth, Path path, int priority, Object payload);
+    void updateValue(ChangeLog log,long sequence,  Optional<Node> auth, Path path, int priority, Object payload);
 
     void setPriority(ChangeLog log, Optional<Node> auth, Path path, int priority);
 

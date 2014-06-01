@@ -16,8 +16,14 @@
 
 package io.helium.core.processor.authorization;
 
-import com.lmax.disruptor.EventHandler;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.routing.RoundRobinPool;
 import io.helium.common.Path;
+import io.helium.core.processor.distribution.Distributor;
+import io.helium.core.processor.eventsourcing.EventSourceProcessor;
+import io.helium.core.processor.persistence.PersistenceProcessor;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.json.HashMapBackedNode;
@@ -25,29 +31,37 @@ import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.Operation;
+import io.helium.persistence.authorization.chained.ChainedAuthorization;
+import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
+import io.helium.persistence.inmemory.InMemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Base64;
 import java.util.Optional;
 
-public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
+public class AuthorizationProcessor extends UntypedActor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationProcessor.class);
+
+    private ActorRef eventSourceActor = getContext().actorOf(new RoundRobinPool(1).props(Props.create(EventSourceProcessor.class)), "eventSourceActor");
+    private ActorRef persistenceActor = getContext().actorOf(new RoundRobinPool(5).props(Props.create(PersistenceProcessor.class)), "persistenceActor");
+    private ActorRef distributor = getContext().actorOf(new RoundRobinPool(5).props(Props.create(Distributor.class)), "distributor");
 
     private Authorization authorization;
 
     private Persistence persistence;
 
-    public AuthorizationProcessor(Authorization authorization,
-                                  Persistence persistence) {
-        this.authorization = authorization;
-        this.persistence = persistence;
+    public AuthorizationProcessor() {
+        this.persistence = InMemoryPersistence.getInstance();
+        this.authorization = new ChainedAuthorization(new RuleBasedAuthorization(persistence));
     }
 
     @Override
-    public void onEvent(HeliumEvent event, long sequence, boolean endOfBatch) {
+    public void onReceive(Object message) throws Exception {
         long startTime = System.currentTimeMillis();
+        HeliumEvent event = (HeliumEvent)message;
+        LOGGER.trace("checking auth for ("+event.getSequence()+"): ", message);
         Path path = event.extractNodePath();
         if (event.getType() == HeliumEventType.PUSH) {
             InMemoryDataSnapshot root = new InMemoryDataSnapshot(
@@ -56,7 +70,13 @@ public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
                     event.has(HeliumEvent.PAYLOAD) ? event.get(HeliumEvent.PAYLOAD)
                             : null
             );
-            authorization.authorize(Operation.WRITE, getAuth(event), root, path, data);
+            if (authorization.isAuthorized(Operation.WRITE, getAuth(event), root, path, data)) {
+                distribute(message);
+                LOGGER.trace("authorized ("+event.getSequence()+"): ", message);
+            }
+            else {
+                LOGGER.warn("not authorized ("+event.getSequence()+"): ", message);
+            }
         } else if (event.getType() == HeliumEventType.SET) {
             if (event.has(HeliumEvent.PAYLOAD)
                     && event.get(HeliumEvent.PAYLOAD) == HashMapBackedNode.NULL) {
@@ -64,14 +84,32 @@ public class AuthorizationProcessor implements EventHandler<HeliumEvent> {
                         persistence.get(null));
                 InMemoryDataSnapshot data = new InMemoryDataSnapshot(
                         event.get(HeliumEvent.PAYLOAD));
-                authorization.authorize(Operation.WRITE, getAuth(event), root, path, data);
+                if (authorization.isAuthorized(Operation.WRITE, getAuth(event), root, path, data)){
+                    distribute(message);
+                    LOGGER.trace("authorized ("+event.getSequence()+"): ", message);
+                }
+                else {
+                    LOGGER.warn("not authorized ("+event.getSequence()+"): ", message);
+                }
             } else {
                 InMemoryDataSnapshot root = new InMemoryDataSnapshot(
                         persistence.get(null));
-                authorization.authorize(Operation.WRITE, getAuth(event), root, path, null);
+                if (authorization.isAuthorized(Operation.WRITE, getAuth(event), root, path, null)){
+                    distribute(message);
+                    LOGGER.trace("authorized ("+event.getSequence()+"): ", message);
+                }
+                else {
+                    LOGGER.warn("not authorized ("+event.getSequence()+"): ", message);
+                }
             }
         }
-        LOGGER.info("onEvent("+sequence+") "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
+        LOGGER.trace("onEvent ("+event.getSequence()+")"+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
+    }
+
+    private void distribute(Object message) {
+        eventSourceActor.tell(message, getSelf());
+        persistenceActor.tell(message, ActorRef.noSender());
+        distributor.tell(message, ActorRef.noSender());
     }
 
     private Optional<Node> getAuth(HeliumEvent event) {

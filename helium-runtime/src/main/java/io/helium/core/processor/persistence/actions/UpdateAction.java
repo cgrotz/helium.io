@@ -39,10 +39,10 @@ public class UpdateAction {
                 payload = (Node) obj;
                 if (payload instanceof HashMapBackedNode) {
                     if (event.hasPriority()) {
-                        persistence.updateValue(event.getChangeLog(), event.getAuth(), path,
+                        persistence.updateValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path,
                                 event.getPriority(), obj);
                     } else {
-                        persistence.updateValue(event.getChangeLog(), event.getAuth(), path, -1,
+                        persistence.updateValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path, -1,
                                 obj);
                     }
                 }

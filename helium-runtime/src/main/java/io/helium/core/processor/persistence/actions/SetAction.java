@@ -41,10 +41,10 @@ public class SetAction {
                 payload = (Node) obj;
                 if (payload instanceof HashMapBackedNode) {
                     if (event.hasPriority()) {
-                        persistence.applyNewValue(event.getChangeLog(), event.getAuth(), path,
+                        persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path,
                                 event.getPriority(), obj);
                     } else {
-                        persistence.applyNewValue(event.getChangeLog(), event.getAuth(), path, -1,
+                        persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path, -1,
                                 obj);
                     }
                 }
@@ -52,10 +52,10 @@ public class SetAction {
                 persistence.remove(event.getChangeLog(), event.getAuth(), path);
             } else {
                 if (event.hasPriority()) {
-                    persistence.applyNewValue(event.getChangeLog(), event.getAuth(), path,
+                    persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path,
                             event.getPriority(), obj);
                 } else {
-                    persistence.applyNewValue(event.getChangeLog(), event.getAuth(), path, -1, obj);
+                    persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path, -1, obj);
                 }
             }
         } else {

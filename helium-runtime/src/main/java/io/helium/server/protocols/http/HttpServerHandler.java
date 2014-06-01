@@ -19,6 +19,7 @@ package io.helium.server.protocols.http;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import io.helium.core.Core;
+import io.helium.core.Endpoints;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.server.protocols.websocket.WebsocketEndpoint;
@@ -159,7 +160,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
             if(endpoint != null) {
                 endpoint.setOpen(false);
                 endpoint.executeDisconnectEvents();
-                core.removeEndpoint(endpoint);
+                Endpoints.get().removeEndpoint(endpoint);
                 handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
             }
             return;
@@ -179,7 +180,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<Object> {
                     persistence,
                     authorization,
                     core);
-            core.addEndpoint(endpoint);
+            Endpoints.get().addEndpoint(endpoint);
             endpoints.put(ctx.channel(), endpoint);
         }
 

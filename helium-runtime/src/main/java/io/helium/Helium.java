@@ -73,7 +73,7 @@ public class Helium {
     public Helium(String basePath, File journalDirectory, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
         checkNotNull(journalDirectory);
-        persistence = new InMemoryPersistence();
+        persistence = InMemoryPersistence.getInstance();
         authorization = new ChainedAuthorization(new RuleBasedAuthorization(persistence));
         persistence.setAuthorization(authorization);
         core = new Core(journalDirectory, persistence, authorization);

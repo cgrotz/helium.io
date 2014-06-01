@@ -22,6 +22,8 @@ import io.helium.common.Path;
 import java.util.List;
 
 public class ChangeLog {
+    private long sequence;
+
     private List<ChangeLogEvent> log = Lists.newArrayList();
 
     public List<ChangeLogEvent> getLog() {
@@ -56,5 +58,13 @@ public class ChangeLog {
 
     public void clear() {
         log.clear();
+    }
+
+    public long getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(long sequence) {
+        this.sequence = sequence;
     }
 }

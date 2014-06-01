@@ -16,14 +16,15 @@
 
 package io.helium.core.processor.persistence;
 
-import com.lmax.disruptor.EventHandler;
+import akka.actor.UntypedActor;
 import io.helium.core.processor.persistence.actions.*;
 import io.helium.event.HeliumEvent;
 import io.helium.persistence.Persistence;
+import io.helium.persistence.inmemory.InMemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PersistenceProcessor implements EventHandler<HeliumEvent> {
+public class PersistenceProcessor extends UntypedActor {
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistenceProcessor.class);
 
     private PushAction pushAction;
@@ -36,7 +37,8 @@ public class PersistenceProcessor implements EventHandler<HeliumEvent> {
 
     private UpdateAction updateAction;
 
-    public PersistenceProcessor(Persistence persistence) {
+    public PersistenceProcessor() {
+        Persistence persistence = InMemoryPersistence.getInstance();
         pushAction = new PushAction(persistence);
         updateAction = new UpdateAction(persistence);
         setAction = new SetAction(persistence);
@@ -45,7 +47,8 @@ public class PersistenceProcessor implements EventHandler<HeliumEvent> {
     }
 
     @Override
-    public void onEvent(HeliumEvent event, long sequence, boolean endOfBatch) {
+    public void onReceive(Object message) throws Exception {
+        HeliumEvent event = (HeliumEvent)message;
         long startTime = System.currentTimeMillis();
         switch (event.getType()) {
             case PUSH:
@@ -66,6 +69,7 @@ public class PersistenceProcessor implements EventHandler<HeliumEvent> {
             default:
                 break;
         }
-        LOGGER.info("onEvent("+sequence+") "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
+
+        LOGGER.info("onEvent "+(System.currentTimeMillis()-startTime)+"ms; event processing time "+(System.currentTimeMillis()-event.getLong("creationDate"))+"ms");
     }
 }

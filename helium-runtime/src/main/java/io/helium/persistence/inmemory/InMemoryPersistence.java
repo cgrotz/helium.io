@@ -60,6 +60,14 @@ public class InMemoryPersistence implements Persistence {
         return (node instanceof HashMapBackedNode) ? ((Node) node).hasChildren() : false;
     }
 
+    private static Optional<InMemoryPersistence> instance = Optional.empty();
+    public static InMemoryPersistence getInstance() {
+        if (!instance.isPresent()) {
+            instance = Optional.of(new InMemoryPersistence());
+        }
+        return instance.get();
+    }
+
     @Override
     public Object get(Path path) {
         if (path == null || path.isEmtpy() || model.getObjectForPath(path) == null) {
@@ -148,7 +156,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void updateValue(ChangeLog log, Optional<Node> auth, Path path, int priority, Object payload) {
+    public void updateValue(ChangeLog log, long sequence, Optional<Node> auth, Path path, int priority, Object payload) {
         Node node;
         boolean created = false;
         if (!model.pathExists(path)) {
@@ -163,7 +171,7 @@ public class InMemoryPersistence implements Persistence {
                 node = new HashMapBackedNode();
                 parent.putWithIndex(path.getLastElement(), node, priority);
             }
-            node.populate(new ChangeLogBuilder(log, path, path.getParent(), node), (Node) payload);
+            node.populate(new ChangeLogBuilder(log, sequence, path, path.getParent(), node), (Node) payload);
             if (created) {
                 log.addChildAddedLogEntry(path.getLastElement(), path.getParent(), path.getParent()
                                 .getParent(), payload, false, 0,
@@ -206,7 +214,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     @Override
-    public void applyNewValue(ChangeLog log, Optional<Node> auth, Path path, int priority, Object payload) {
+    public void applyNewValue(ChangeLog log, long sequence, Optional<Node> auth, Path path, int priority, Object payload) {
         boolean created = false;
         if (!model.pathExists(path)) {
             created = true;
@@ -216,7 +224,7 @@ public class InMemoryPersistence implements Persistence {
             Node parent = model.getNodeForPath(log, path.getParent());
             if (payload instanceof HashMapBackedNode) {
                 Node node = new HashMapBackedNode();
-                populate(new ChangeLogBuilder(log, path, path.getParent(), node), path, auth, node,
+                populate(new ChangeLogBuilder(log, sequence,path, path.getParent(), node), path, auth, node,
                         (Node) payload);
                 parent.putWithIndex(path.getLastElement(), node, priority);
             } else {

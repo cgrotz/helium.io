@@ -47,10 +47,10 @@ public class PushAction {
             nodeName = UUID.randomUUID().toString().replaceAll("-", "");
         }
         if (path.isEmtpy()) {
-            persistence.applyNewValue(event.getChangeLog(), event.getAuth(), new Path(nodeName),
+            persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), new Path(nodeName),
                     -1, payload);
         } else {
-            persistence.applyNewValue(event.getChangeLog(), event.getAuth(), path, -1, payload);
+            persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path, -1, payload);
         }
     }
 

@@ -16,55 +16,40 @@
 
 package io.helium.core;
 
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.routing.RoundRobinPool;
 import com.google.common.base.Preconditions;
-import com.lmax.disruptor.EventFactory;
-import com.lmax.disruptor.ExceptionHandler;
-import com.lmax.disruptor.dsl.Disruptor;
 import io.helium.core.processor.authorization.AuthorizationProcessor;
 import io.helium.core.processor.distribution.Distributor;
-import io.helium.core.processor.eventsourcing.EventSourceProcessor;
-import io.helium.core.processor.persistence.PersistenceProcessor;
-import io.helium.core.translator.EventTranslator;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
-import io.helium.server.Endpoint;
 import journal.io.api.ClosedJournalException;
 import journal.io.api.CompactedDataFileException;
 import journal.io.api.Journal;
+import journal.io.api.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-public class Core implements ExceptionHandler {
+public class Core {
 
-    public static final EventFactory<HeliumEvent> EVENT_FACTORY = new EventFactory<HeliumEvent>() {
-
-        @Override
-        public HeliumEvent newInstance() {
-            return new HeliumEvent();
-        }
-    };
-    private static final Logger logger = LoggerFactory
+    private static final Logger LOGGER = LoggerFactory
             .getLogger(Core.class);
-    private static final int RING_SIZE = 256;
-    private EventSourceProcessor eventSourceProcessor;
-    private PersistenceProcessor persistenceProcessor;
-    private Distributor distributionProcessor;
-
-    private Disruptor<HeliumEvent> disruptor;
-    private AuthorizationProcessor authorizationProcessor;
     private Persistence persistence;
     private Optional<Journal> snapshotJournal = Optional.empty();
     private long currentSequence;
+    private ActorRef authorizationActor;
+    private ActorSystem actorSystem;
+    private ActorRef distributionActor;
 
     public Core(File journalDirectory, Persistence persistence, Authorization authorization) throws IOException {
 
@@ -73,18 +58,39 @@ public class Core implements ExceptionHandler {
         restoreFromJournal();
     }
 
-    public Disruptor<HeliumEvent> getDisruptor() {
-        return disruptor;
-    }
-
     private void restoreFromJournal() throws ClosedJournalException, CompactedDataFileException,
             IOException {
-        eventSourceProcessor.restore();
+        Journal journal = new Journal();
+        journal.setDirectory(new File("helium"));
+        journal.open();
+        Optional<Location> currentLocation = Optional.empty();
+
+        Iterable<Location> redo;
+        if (currentLocation.isPresent()) {
+            redo = journal.redo(currentLocation.get());
+        } else {
+            redo = journal.redo();
+        }
+        for (Location location : redo) {
+            byte[] record = journal.read(location, Journal.ReadType.SYNC);
+            HeliumEvent heliumEvent = new HeliumEvent(new String(
+                    record));
+            heliumEvent.setFromHistory(true);
+            Preconditions.checkArgument(heliumEvent.has(HeliumEvent.TYPE), "No type defined in Event");
+            handleEvent(heliumEvent);
+        }
+        journal.close();
+        LOGGER.info("Done restoring from journal");
     }
 
     @SuppressWarnings("unchecked")
     private void initDisruptor(File journalDirectory, Persistence persistence,
                                Authorization authorization) throws IOException {
+        actorSystem = ActorSystem.apply("helium");
+        authorizationActor = actorSystem.actorOf(new RoundRobinPool(5).props(Props.create(AuthorizationProcessor.class)), "authorizationActor");
+        distributionActor = actorSystem.actorOf(new RoundRobinPool(5).props(Props.create(Distributor.class)), "distributor");
+
+        /*
         ExecutorService executor = Executors.newCachedThreadPool();
         disruptor = new Disruptor<HeliumEvent>(Core.EVENT_FACTORY, RING_SIZE,
                 executor);
@@ -98,34 +104,22 @@ public class Core implements ExceptionHandler {
         disruptor.handleEventsWith(authorizationProcessor).then(eventSourceProcessor)
                 .then(persistenceProcessor).then(distributionProcessor);
 
-        disruptor.start();
+        disruptor.start();*/
     }
 
     public void handleEvent(final HeliumEvent heliumEvent) {
-        Preconditions.checkArgument(heliumEvent.has(HeliumEvent.TYPE),
+        authorizationActor.tell(heliumEvent, ActorRef.noSender());
+        /*Preconditions.checkArgument(heliumEvent.has(HeliumEvent.TYPE),
                 "No type defined in Event");
         EventTranslator eventTranslator = new EventTranslator(heliumEvent);
-        logger.info("handling event: " + heliumEvent + "(" + heliumEvent.length() + ")");
+        LOGGER.info("handling event: " + heliumEvent + "(" + heliumEvent.length() + ")");
+
         disruptor.publishEvent(eventTranslator);
-        this.currentSequence = eventTranslator.getSequence();
+        this.currentSequence = eventTranslator.getSequence();*/
     }
 
     public void shutdown() {
-        disruptor.shutdown();
-    }
-
-    public void addEndpoint(Endpoint endpoint) {
-        distributionProcessor.addHandler(endpoint);
-    }
-
-    public void removeEndpoint(Endpoint endpoint) {
-        distributionProcessor.removeHandler(endpoint);
-    }
-
-
-    public void handle(HeliumEvent heliumEvent) {
-        heliumEvent.setFromHistory(false);
-        handleEvent(heliumEvent);
+        actorSystem.shutdown();
     }
 
     public void handleEvent(HeliumEventType type, Optional<Node> auth, String nodePath, Optional<?> value) {
@@ -135,32 +129,16 @@ public class Core implements ExceptionHandler {
         handle(heliumEvent);
     }
 
-    public void distributeChangeLog(ChangeLog changeLog) {
-        distributionProcessor.distributeChangeLog(changeLog);
+    public void handle(HeliumEvent heliumEvent) {
+        heliumEvent.setFromHistory(false);
+        handleEvent(heliumEvent);
     }
 
-
-    public Distributor getDistributor() {
-        return distributionProcessor;
+    public void distribute(String path, Node event) {
+        distributionActor.tell(new Event(path, event), ActorRef.noSender());
     }
 
-    public boolean hasBacklog() {
-        return currentSequence != distributionProcessor.getSequence();
-    }
-
-    @Override
-    public void handleEventException(Throwable ex, long sequence, Object event) {
-        logger.error("Event Exception (msg: " + ex.getMessage() + ", sequence: +" + sequence
-                + ", event: " + event + ")", ex);
-    }
-
-    @Override
-    public void handleOnStartException(Throwable ex) {
-        logger.error("OnStart Exception (msg: " + ex.getMessage() + ")", ex);
-    }
-
-    @Override
-    public void handleOnShutdownException(Throwable ex) {
-        logger.error("OnShutdown Exception (msg: " + ex.getMessage() + ")", ex);
+    public void distributeChangeLog(ChangeLog log) {
+        distributionActor.tell(log, ActorRef.noSender());
     }
 }
