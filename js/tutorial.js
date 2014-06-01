@@ -47,11 +47,11 @@ function initStep2()
 	var code = CodeMirror($('.step2-code').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/roadrunner.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
 		'    <script>\n'+
-		'      [ADD NEW ROADRUNNER CODE HERE]\n'+
+		'      [ADD NEW HELIUM.IO CODE HERE]\n'+
 		'    </script>\n'+
 		'  </body>\n'+
 		'</html>',
@@ -71,14 +71,14 @@ function initStep3()
 	var code = CodeMirror($('.step3-code').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/roadrunner.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
 		'    <input type="text" id="nameInput" placeholder="Name">\n'+
 		'    <input type="text" id="messageInput" placeholder="Message">\n'+
 		'    <script>\n'+
-		'      var myDataRef = new Roadrunner("http://localhost:8080/");\n'+
+		'      var myDataRef = new Helium.io("http://localhost:8080/");\n'+
 		'      $("#messageInput").keypress(function (e) {\n'+
 		'        if (e.keyCode == 13) {\n'+
 		'          var name = $("#nameInput").val();\n'+
@@ -107,14 +107,14 @@ function initStep4()
 
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/roadrunner.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
 		'    <input type="text" id="nameInput" placeholder="Name">\n'+
 		'    <input type="text" id="messageInput" placeholder="Message">\n'+
 		'    <script>\n'+
-		'      var myDataRef = new Roadrunner("http://localhost:8080/");\n'+
+		'      var myDataRef = new Helium.io("http://localhost:8080/");\n'+
 		'      $("#messageInput").keypress(function (e) {\n'+
 		'        if (e.keyCode == 13) {\n'+
 		'          var name = $("#nameInput").val();\n'+
@@ -142,14 +142,14 @@ function initStep5()
 	var code = CodeMirror($('.step5-code').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/roadrunner.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
 		'    <input type="text" id="nameInput" placeholder="Name">\n'+
 		'    <input type="text" id="messageInput" placeholder="Message">\n'+
 		'    <script>\n'+
-		'      var myDataRef = new Roadrunner("http://localhost:8080/");\n'+
+		'      var myDataRef = new Helium.io("http://localhost:8080/");\n'+
 		'      $("#messageInput").keypress(function (e) {\n'+
 		'        if (e.keyCode == 13) {\n'+
 		'          var name = $("#nameInput").val();\n'+
@@ -176,7 +176,7 @@ function initStep6()
 	var code = CodeMirror($('.step6-code').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/roadrunner.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
@@ -184,7 +184,7 @@ function initStep6()
 		'    <input type="text" id="nameInput" placeholder="Name">\n'+
 		'    <input type="text" id="messageInput" placeholder="Message">\n'+
 		'    <script>\n'+
-		'      var myDataRef = new Roadrunner("http://localhost:8080/");\n'+
+		'      var myDataRef = new Helium.io("http://localhost:8080/");\n'+
 		'      $("#messageInput").keypress(function (e) {\n'+
 		'        if (e.keyCode == 13) {\n'+
 		'          var name = $("#nameInput").val();\n'+
@@ -213,7 +213,7 @@ function initStep7()
 	var code = CodeMirror($('.step7-code').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/roadrunner.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
@@ -221,7 +221,7 @@ function initStep7()
 		'    <input type="text" id="nameInput" placeholder="Name">\n'+
 		'    <input type="text" id="messageInput" placeholder="Message">\n'+
 		'    <script>\n'+
-		'      var myDataRef = new Roadrunner("http://localhost:8080/");\n'+
+		'      var myDataRef = new Helium.io("http://localhost:8080/");\n'+
 		'      $("#messageInput").keypress(function (e) {\n'+
 		'        if (e.keyCode == 13) {\n'+
 		'          var name = $("#nameInput").val();\n'+
@@ -256,7 +256,7 @@ function initStep8()
 	var code = CodeMirror($('.step-edit').get()[0], {
 		value: '<html>\n'+
 		'  <head>\n'+
-		'    <script src="http://localhost:8080/roadrunner.js"></script>\n'+
+		'    <script src="http://localhost:8080/helium.io.js"></script>\n'+
 		'    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 		'  </head>\n'+
 		'  <body>\n'+
@@ -264,7 +264,7 @@ function initStep8()
 		'    <input type="text" id="nameInput" placeholder="Name">\n'+
 		'    <input type="text" id="messageInput" placeholder="Message">\n'+
 		'    <script>\n'+
-		'      var myDataRef = new Roadrunner("http://localhost:8080/");\n'+
+		'      var myDataRef = new Helium.io("http://localhost:8080/");\n'+
 		'      $("#messageInput").keypress(function (e) {\n'+
 		'        if (e.keyCode == 13) {\n'+
 		'          var name = $("#nameInput").val();\n'+

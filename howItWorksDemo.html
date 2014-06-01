@@ -1,7 +1,7 @@
 <html>
 <head>
-  <title>Roadrunner Drawing Example</title>
-  <script type="text/javascript" src="http://roadrunner.skiptag.eu.cloudbees.net/roadrunner.js"></script>
+  <title>Helium.io Drawing Example</title>
+  <script type="text/javascript" src="http://helium.io.skiptag.eu.cloudbees.net/helium.io.js"></script>
   <script type="text/javascript" src="js/jquery.js"></script>
   <style>
     #clear {
@@ -47,13 +47,13 @@
     return retVal;
   }
 
-  function getRoadrunner() {
-    var key = "roadrunner-how-it-works-demo";
+  function getHelium.io() {
+    var key = "helium.io-how-it-works-demo";
     if (!localStorage.getItem(key)) {
       localStorage.setItem(key, generateRandom());
     }
     var name = localStorage.getItem(key);
-    return new Roadrunner("http://roadrunner.skiptag.eu.cloudbees.net").child(name);
+    return new Helium.io("http://helium.io.skiptag.eu.cloudbees.net").child(name);
   }
 
   $(document).ready(function () {
@@ -61,7 +61,7 @@
     var pixSize = 4, lastPoint = null, currentColor = "fc5", mouseDown = 0;
 
     // Create a reference to the pixel data for our drawing.
-    var pixelDataRef = getRoadrunner();
+    var pixelDataRef = getHelium.io();
 
     // Add clear handler
     $('#clear').click(function() {
@@ -99,7 +99,7 @@
       var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
       var sx = (x0 < x1) ? 1 : -1, sy = (y0 < y1) ? 1 : -1, err = dx - dy;
       while (true) {
-        // Write the pixel into Roadrunner, or if we are drawing white, remove the pixel.
+        // Write the pixel into Helium.io, or if we are drawing white, remove the pixel.
         pixelDataRef.child(x0 + ":" + y0).set(currentColor === "fff" ? null : currentColor);
 
         if (x0 == x1 && y0 == y1) break;

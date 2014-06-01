@@ -7,13 +7,13 @@
     <meta name="author" content="">
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 
-    <title>Roadrunner</title>
+    <title>Helium.io</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="css/roadrunner.css" rel="stylesheet">
+    <link href="css/helium.io.css" rel="stylesheet">
     <link href="codemirror/lib/codemirror.css" rel="stylesheet">
     <script src="codemirror/lib/codemirror.js"></script>
 	<link rel="stylesheet" href="codemirror/addon/hint/show-hint.css">
@@ -37,7 +37,7 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="#">Roadrunner</a>
+        <a class="navbar-brand" href="#">Helium.io</a>
         <div class="nav-collapse collapse">
           <ul class="nav navbar-nav">
             <li><a href="index.html">Home</a></li>
@@ -58,21 +58,21 @@
 
     <div class="container">
      <div id="step1" class="step">
-      <h1>Installing Roadrunner</h1>
-      <p>As first step, please download the vert.x based Roadrunner distribution <a href="http://repo1.maven.org/maven2/de/skiptag/roadrunner/roadrunner-vertx/0.1/roadrunner-vertx-0.1-standalone.jar">standalone download</a>. You can start it, by simply executing the follwing command
-      <pre>java -jar roadrunner-vertx-0.1-standalone.jar</pre>
-      This will start a standalone vert.x based Roadrunner on port 8080 of your local computer. Now you can start using Roadrunner in your web app for development.</p>
+      <h1>Installing Helium.io</h1>
+      <p>As first step, please download the vert.x based Helium.io distribution <a href="http://repo1.maven.org/maven2/de/skiptag/helium.io/helium.io-vertx/0.1/helium.io-vertx-0.1-standalone.jar">standalone download</a>. You can start it, by simply executing the follwing command
+      <pre>java -jar helium.io-vertx-0.1-standalone.jar</pre>
+      This will start a standalone vert.x based Helium.io on port 8080 of your local computer. Now you can start using Helium.io in your web app for development.</p>
       <p>
-      To get started add the Roadrunner JavaScript client by adding the following line into the <head>section below:
-      <pre>&lt;script src='http://localhost:8080/roadrunner.js'&gt;&lt;/script&gt;</pre></p>
+      To get started add the Helium.io JavaScript client by adding the following line into the <head>section below:
+      <pre>&lt;script src='http://localhost:8080/helium.io.js'&gt;&lt;/script&gt;</pre></p>
       <div class="step1-code">
       </div>
      </div>
      <div id="step2" class="step">
       <h1>Accessing Data</h1>
       <p>Roadunner references are created using a URL that specifies which data you want to access.<br>
-      To complete this step, create a reference to the root of your Roadrunner repository as shown below:<br>
-      <pre>var myDataRef = new Roadrunner('http://localhost:8080/');</pre>
+      To complete this step, create a reference to the root of your Helium.io repository as shown below:<br>
+      <pre>var myDataRef = new Helium.io('http://localhost:8080/');</pre>
       </p>
       <div class="step2-code">
       </div>
@@ -80,9 +80,9 @@
      <div id="step3" class="step">
       <h1>Writing Data</h1>
       <p><b>Let's send a chat message</b>
-You can use the Roadrunner reference you just created to write data to Roadrunner using the set() function.<br>
+You can use the Helium.io reference you just created to write data to Helium.io using the set() function.<br>
 To make things easy, we've already added input text boxes for the chatter's name and message as well as a keypress handler that will fire whenever someone tries to send a message.<br>
-For this step, write a message to Roadrunner using the set() function as shown:<br>
+For this step, write a message to Helium.io using the set() function as shown:<br>
       <pre>myDataRef.set('User ' + name + ' says ' + text);</pre>
       </p>
       <div class="step3-code">
@@ -99,7 +99,7 @@ For this step, write a message to Roadrunner using the set() function as shown:<
      </div>
      <div id="step5" class="step">
       <h1>Writing Lists</h1>
-      <p>You've already learned how to write data to specific, named locations in Roadrunner, but your chat application will require a list of messages. Roadrunner provides a helper function called push() that makes creating lists easy.<br>
+      <p>You've already learned how to write data to specific, named locations in Helium.io, but your chat application will require a list of messages. Helium.io provides a helper function called push() that makes creating lists easy.<br>
 Modify your code below to use push() instead of set() so that your chat can support a list of messages (rather than just one):<br>
 <pre>myDataRef.push({name: name, text: text});</pre>
       </p>
@@ -108,7 +108,7 @@ Modify your code below to use push() instead of set() so that your chat can supp
      </div>
      <div id="step6" class="step">
       <h1>Reading Data</h1>
-      <p>We need to tell Roadrunner to notify us when chat messages arrive. We do this by adding a callback to the list of chat messages using the on() method, as shown below:<br>
+      <p>We need to tell Helium.io to notify us when chat messages arrive. We do this by adding a callback to the list of chat messages using the on() method, as shown below:<br>
       <pre>myDataRef.on('child_added', function(snapshot) {
   //We'll fill this in later.
 });</pre>
@@ -120,7 +120,7 @@ Modify your code below to use push() instead of set() so that your chat can supp
      <div id="step7" class="step">
       <h1>Using Snapshots</h1>
       <p><b>Now we need to display the chat messages on the page.</b>
-For each chat message, Roadrunner will call your callback with a snapshot containing the message's data.<br>
+For each chat message, Helium.io will call your callback with a snapshot containing the message's data.<br>
 Extract the message data from the snapshot by calling the val() function and assign it to a variable. Then, call the displayChatMessage() function to display the message as shown:<br>
       <pre>var message = snapshot.val();
 displayChatMessage(message.name, message.text);</pre>
@@ -130,7 +130,7 @@ displayChatMessage(message.name, message.text);</pre>
      </div>
 
      <div id="step8" class="step">
-      <h1>Play with Roadrunner</h1>
+      <h1>Play with Helium.io</h1>
       <p>You can edit and run your app below.</p>
       <div class="row">
          <div class="btn-group">

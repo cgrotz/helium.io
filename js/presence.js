@@ -14,7 +14,7 @@ var code = CodeMirror($('.edit').get()[0], {
     '<head>\n'+
     '  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">\n'+
     '  <meta charset="utf-8">\n'+
-    '  <script src="http://localhost:8080/roadrunner.js"></script>\n'+
+    '  <script src="http://localhost:8080/helium.io.js"></script>\n'+
     '  <script src="js/jquery.js"></script>\n'+
     '  <script src="js/idle.js"></script>\n'+
     '</head>\n'+
@@ -25,14 +25,14 @@ var code = CodeMirror($('.edit').get()[0], {
     '  var name = prompt("Your name?", "Guest"),\n'+
     '      currentStatus = "★ online";\n'+
     '\n'+
-    '  // Get a reference to the presence data in Roadrunner.\n'+
-    '  var userListRef = new Roadrunner("http://localhost:8080");\n'+
+    '  // Get a reference to the presence data in Helium.io.\n'+
+    '  var userListRef = new Helium.io("http://localhost:8080");\n'+
     '\n'+
     '  // Generate a reference to a new location for my user with push.\n'+
     '  var myUserRef = userListRef.push();\n'+
     '\n'+
     '  // Get a reference to my own presence status.\n'+
-    '  var connectedRef = new RoadrunnerOnlineSwitch("http://localhost:8080", function(isOnline) {\n'+
+    '  var connectedRef = new Helium.ioOnlineSwitch("http://localhost:8080", function(isOnline) {\n'+
     '    if (isOnline) {\n'+
     '      // If we lose our internet connection, we want ourselves removed from the list.\n'+
     '      myUserRef.onDisconnect().remove();\n'+

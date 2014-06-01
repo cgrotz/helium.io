@@ -12,7 +12,7 @@ $(function() {
 var code = CodeMirror($('.edit').get()[0], {
     value: '<html>\n'+
 '<head>\n'+
-'  <script src="http://localhost:8080/roadrunner.js"></script>\n'+
+'  <script src="http://localhost:8080/helium.io.js"></script>\n'+
 '  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>\n'+
 '  <link rel="stylesheet" type="text/css" href="css/drawing.css">\n'+
 '</head>\n'+
@@ -27,7 +27,7 @@ var code = CodeMirror($('.edit').get()[0], {
 '    var pixSize = 8, lastPoint = null, currentColor = "000", mouseDown = 0;\n'+
 '\n'+
 '    //Create a reference to the pixel data for our drawing.\n'+
-'    var pixelDataRef = new Roadrunner("http://localhost:8080/drawing/points");\n'+
+'    var pixelDataRef = new Helium.io("http://localhost:8080/drawing/points");\n'+
 '\n'+
 '    // Set up our canvas\n'+
 '    var myCanvas = document.getElementById("drawing-canvas");\n'+

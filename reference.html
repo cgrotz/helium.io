@@ -6,17 +6,17 @@
   <meta name="description" content="" /> 
   <meta name="author" content="" /> 
   <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" /> 
-  <title>Roadrunner</title> 
+  <title>Helium.io</title>
   <!-- Bootstrap core CSS --> 
   <link href="css/bootstrap.css" rel="stylesheet" /> 
   <!-- Custom styles for this template --> 
-  <link href="css/roadrunner.css" rel="stylesheet" /> 
+  <link href="css/helium.io.css" rel="stylesheet" />
  </head> 
  <body> 
   <div class="navbar navbar-inverse navbar-static-top"> 
    <div class="container"> 
     <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> 
-    <a class="navbar-brand" href="#">Roadrunner</a> 
+    <a class="navbar-brand" href="#">Helium.io</a>
     <div class="nav-collapse collapse"> 
           <ul class="nav navbar-nav">
             <li><a href="index.html">Home</a></li>
@@ -64,56 +64,56 @@
      <h2 id="quickstart-installation">Installation</h2> 
      <h4></h4> 
      <h3>Tomcat</h3> 
-     <p>Simply put the <i>roadrunner.war</i> into the webapps folder of your Apache Tomcat v7.0.3x. Afterwards roadrunner will be available to your under <i>http://localhost:8080/roadrunner</i></p> 
+     <p>Simply put the <i>helium.io.war</i> into the webapps folder of your Apache Tomcat v7.0.3x. Afterwards helium.io will be available to your under <i>http://localhost:8080/helium.io</i></p>
      <h3>Vert.x Standalone</h3> 
-     <p>You can also use the vertx standalone variant of roadrunner.</p> 
-     <pre style=""><code style="font-size: 12px;">java -jar roadrunner-standalone.jar -url <span class="string">http://localhost:8080/roadrunner</span><span class="xml"><span class="tag"><br style="" /></span></span></code></pre> 
+     <p>You can also use the vertx standalone variant of helium.io.</p>
+     <pre style=""><code style="font-size: 12px;">java -jar helium.io-standalone.jar -url <span class="string">http://localhost:8080/helium.io</span><span class="xml"><span class="tag"><br style="" /></span></span></code></pre>
      <p></p> 
      <p></p> 
      <h2 id="quickstart-javascript">Javascript</h2> 
      <p>Simply include the JavaScript library in the &lt;head&gt; tag of your web page.&nbsp;</p> 
-     <pre><code>&lt;script type=<span class="string">'text/javascript'</span> src=<span class="string">'http://localhost:8080/roadrunner/roadrunner.js'</span>&gt;<span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span></code></pre> 
-     <p>Finally, create a Roadrunner reference using the URL to your Roadrunner Repository and start using your data: </p> 
-     <pre><code><span class="keyword">var</span> myRootRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner'</span>);
+     <pre><code>&lt;script type=<span class="string">'text/javascript'</span> src=<span class="string">'http://localhost:8080/helium.io/helium.io.js'</span>&gt;<span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span></code></pre>
+     <p>Finally, create a Helium.io reference using the URL to your Helium.io Repository and start using your data: </p>
+     <pre><code><span class="keyword">var</span> myRootRef = <span class="keyword">new</span> Helium.io(<span class="string">'http://localhost:8080/helium.io'</span>);
 myRootRef.set(<span class="string">'Beep, Beep'</span>);</code></pre> 
      <p></p> 
      <h2 id="quickstart-rest">REST</h2> 
-     <p>You can use any Roadrunner URL as a REST endpoint. </p> 
-     <p>Here we read some data from the root of our Roadrunner: </p> 
-     <pre><code>curl http:<span class="comment">//localhost:8080/roadrunner</span></code></pre> 
+     <p>You can use any Helium.io URL as a REST endpoint. </p>
+     <p>Here we read some data from the root of our Helium.io: </p>
+     <pre><code>curl http:<span class="comment">//localhost:8080/helium.io</span></code></pre>
      <p>Next, we write data at some data inside the repository: </p> 
-     <pre><code>curl -X PUT -d <span class="string">&quot;\&quot;Beep, Beep\&quot;&quot;</span> http:<span class="comment">//localhost:8080/roadrunner</span></code></pre> 
+     <pre><code>curl -X PUT -d <span class="string">&quot;\&quot;Beep, Beep\&quot;&quot;</span> http:<span class="comment">//localhost:8080/helium.io</span></code></pre>
      <h1 id="basics">Basics&nbsp; </h1> 
      <h2 id="basics-structure">Data Structure</h2> 
-     <pre><code>http:<span class="comment">//localhost:8080/roadrunner/sample-chat</span></code></pre> 
-     <p>Every data node inside a Roadrunner repository is addressable by URL. For example, here's a depiction of a Simple Roadrunner Repository with a title and two heroes: </p> 
+     <pre><code>http:<span class="comment">//localhost:8080/helium.io/sample-chat</span></code></pre>
+     <p>Every data node inside a Helium.io repository is addressable by URL. For example, here's a depiction of a Simple Helium.io Repository with a title and two heroes: </p>
      <p><img src="images/RepositoryStructure.png" alt="SampleChat Data Structure" /> </p> 
-     <p>These URLs that point to data are called locations. At a location inside a Roadrunner Repository you can store strings, numbers, booleans, or nested children. To store data hierarchically you should use nested children. For example, our simple example has a list of heroes, which are located at: </p> 
-     <pre><code>http:<span class="comment">//localhost:8080/roadrunner/heroes</span></code></pre> 
+     <p>These URLs that point to data are called locations. At a location inside a Helium.io Repository you can store strings, numbers, booleans, or nested children. To store data hierarchically you should use nested children. For example, our simple example has a list of heroes, which are located at: </p>
+     <pre><code>http:<span class="comment">//localhost:8080/helium.io/heroes</span></code></pre>
      <p>The data for 'superman' and 'batman' are stored at these nested locations: </p> 
-     <pre><code>http:<span class="comment">//localhost:8080/roadrunner/heroes/batman</span>
-http:<span class="comment">//localhost:8080/roadrunner/heroes/superman</span></code></pre> 
+     <pre><code>http:<span class="comment">//localhost:8080/helium.io/heroes/batman</span>
+http:<span class="comment">//localhost:8080/helium.io/heroes/superman</span></code></pre>
      <p>In our example, 'batman' and 'superman' are <strong>children</strong> of 'heroes', and 'heroes' is the <strong>parent</strong> of 'batman' and 'superman'. </p> 
      <p>Please note a location can either contain data (a string, number, or boolean) or a nested node, but not both. </p> 
      <p>Locations for data can nest as deeply as you like. For example, the last name for user 'batman' is located at: </p> 
-     <pre><code>http:<span class="comment">//localhost:8080/roadrunner/heroes/batman/lastname</span></code></pre> 
+     <pre><code>http:<span class="comment">//localhost:8080/helium.io/heroes/batman/lastname</span></code></pre>
      <ol></ol> 
      <h2 id="basics-references">Creating References</h2> 
-     <p>Before doing any operations on your Roadrunner repository, you need a Roadrunner reference, which is a pointer to data inside your Roadrunner repository. </p> 
-     <p>You create a Roadrunner reference by specifying the URL of the data you would like to access: </p> 
+     <p>Before doing any operations on your Helium.io repository, you need a Helium.io reference, which is a pointer to data inside your Helium.io repository. </p>
+     <p>You create a Helium.io reference by specifying the URL of the data you would like to access: </p>
      <p></p> 
      <p></p> 
-     <pre><code><span class="keyword">var</span> sampleRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner'</span>);</code></pre> 
+     <pre><code><span class="keyword">var</span> sampleRef = <span class="keyword">new</span> Helium.io(<span class="string">'http://localhost:8080/helium.io'</span>);</code></pre>
      <p></p> 
      <p></p> 
-     <p>Creating a Roadrunner reference is an extremely light-weight operation, so you can create as many as you like without worrying about wasting bandwidth or memory. </p> 
-     <p>Since references are created so often in Roadrunner applications, there are a couple of helper functions to make constructing them easier. </p> 
+     <p>Creating a Helium.io reference is an extremely light-weight operation, so you can create as many as you like without worrying about wasting bandwidth or memory. </p>
+     <p>Since references are created so often in Helium.io applications, there are a couple of helper functions to make constructing them easier. </p>
      <p>First, each reference has a function that takes the path to a child and returns a reference pointing to that child location: </p> 
      <p></p> 
      <p></p> 
      <pre><code><span class="keyword">var</span> childRef = sampleRef.child(<span class="string">'heroes'</span>);
 <span class="comment">// This is equivalent to:</span>
-<span class="keyword">var</span> childRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/heroes'</span>);</code></pre> 
+<span class="keyword">var</span> childRef = <span class="keyword">new</span> Helium.io(<span class="string">'http://localhost:8080/helium.io/heroes'</span>);</code></pre>
      <p></p> 
      <p></p> 
      <p>Second, each reference has a function that returns a reference to its parent location. For example: </p> 
@@ -123,7 +123,7 @@ http:<span class="comment">//localhost:8080/roadrunner/heroes/superman</span></c
 <span class="comment">// parentRef and sampleRef now point to the same location.</span></code></pre> 
      <p></p> 
      <p></p> 
-     <p>Here are several ways of creating a reference that points to the same Roadrunner location: </p> 
+     <p>Here are several ways of creating a reference that points to the same Helium.io location: </p>
      <p></p> 
      <p></p> 
      <pre><code>heroesRef = sampleRef.child(<span class="string">'heroes'</span>);
@@ -133,51 +133,51 @@ batmanRef = sampleRef.child(<span class="string">'heroes/batman'</span>);
 
 messageListRef = batmanRef.parent().parent().child(<span class="string">'message_list'</span>);
 <span class="comment">// is equivalent to:</span>
-messageListRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/message_list'</span>);</code></pre> 
+messageListRef = <span class="keyword">new</span> Helium.io(<span class="string">'http://localhost:8080/helium.io/message_list'</span>);</code></pre>
      <p></p> 
      <p></p> 
-     <p>Once you have a Roadrunner reference, you can use it to read, write, and query data at that location using the other Roadrunner API functions.&nbsp;</p> 
+     <p>Once you have a Helium.io reference, you can use it to read, write, and query data at that location using the other Helium.io API functions.&nbsp;</p>
      <ul></ul> 
      <h2 id="basics-writing">Writing Data</h2> 
-     <p>The basic Roadrunner write operation is a &quot;set&quot;, which overwrites any data at the specified location. The example below demonstrates setting the first and last names of hero 'batman'. </p> 
+     <p>The basic Helium.io write operation is a &quot;set&quot;, which overwrites any data at the specified location. The example below demonstrates setting the first and last names of hero 'batman'. </p>
      <p></p> 
      <p></p> 
      <pre><code><span class="comment">// First we get a reference to the location of the heroe's data:</span>
-<span class="keyword">var</span> nameRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/heroes/batman'</span>);
+<span class="keyword">var</span> nameRef = <span class="keyword">new</span> Helium.io(<span class="string">'http://localhost:8080/helium.io/heroes/batman'</span>);
 
 <span class="comment">// And then we write data to his first and last name locations:</span>
 nameRef.child(<span class="string">'firstname'</span>).set(<span class="string">'Bruce'</span>);
 nameRef.child(<span class="string">'lastname'</span>).set(<span class="string">'Wayne'</span>);</code></pre> 
      <p></p> 
      <p></p> 
-     <p>In addition to strings, you can write booleans, numbers, and objects to any Roadrunner location. When a javascript object is written, the object properties are automatically mapped to Roadrunner child locations in a nested fashion: &quot;foo.bar&quot; maps to the child &quot;foo/bar&quot;, &quot;foo.bar.baz&quot; maps to the child &quot;foo/bar/baz&quot; and so on. For example, the code below sets the first and last name of user 'fred', just as the previous code example did: </p> 
+     <p>In addition to strings, you can write booleans, numbers, and objects to any Helium.io location. When a javascript object is written, the object properties are automatically mapped to Helium.io child locations in a nested fashion: &quot;foo.bar&quot; maps to the child &quot;foo/bar&quot;, &quot;foo.bar.baz&quot; maps to the child &quot;foo/bar/baz&quot; and so on. For example, the code below sets the first and last name of user 'fred', just as the previous code example did: </p>
      <p></p> 
      <p></p> 
      <pre><code>nameRef.set({firstname : <span class="string">'Bruce'</span>, lastname : <span class="string">'Wayne</span>}); </code></pre> 
      <p></p> 
      <p></p> 
-     <p>The above two examples ― writing the first and last name separately and writing them at the same time as an object ― will result in the same data being saved to your Roadrunner. The set operation will overwrite</p> 
-     <p>If you want to write multiple children of a Roadrunner location at the same time without overwriting other existing data, you can perform an &quot;update&quot; operation as shown: </p> 
+     <p>The above two examples ― writing the first and last name separately and writing them at the same time as an object ― will result in the same data being saved to your Helium.io. The set operation will overwrite</p>
+     <p>If you want to write multiple children of a Helium.io location at the same time without overwriting other existing data, you can perform an &quot;update&quot; operation as shown: </p>
      <p></p> 
      <p></p> 
      <pre><code>nameRef.update({firstname : <span class="string">'Bruce'</span>, lastname : <span class="string">'Wayne'</span>});</code></pre> 
      <p></p> 
      <h3>Lists of Data</h3>
-     <h2 id="basics-reading"><p style="font-size: 14px; line-height: 20px;">Roadrunner provides a helper function which automates the generation of unique child names. This function is called&nbsp;<a href="http://localhost:8000/javascript/roadrunner/push.html" class="functionLink">push( )</a>&nbsp;in JavaScript. By using unique child names for each write, many clients can append children to the same location at the same time without fear of conflicts.</p><p style="font-size: 14px; line-height: 20px;">Here is an example:</p><p style="font-size: 14px; line-height: 20px;"></p><p style="font-size: 14px; line-height: 20px;"></p><pre><code style="font-size: 12px;"><span class="comment">// Generate a reference to a new location with push</span>
+     <h2 id="basics-reading"><p style="font-size: 14px; line-height: 20px;">Helium.io provides a helper function which automates the generation of unique child names. This function is called&nbsp;<a href="http://localhost:8000/javascript/helium.io/push.html" class="functionLink">push( )</a>&nbsp;in JavaScript. By using unique child names for each write, many clients can append children to the same location at the same time without fear of conflicts.</p><p style="font-size: 14px; line-height: 20px;">Here is an example:</p><p style="font-size: 14px; line-height: 20px;"></p><p style="font-size: 14px; line-height: 20px;"></p><pre><code style="font-size: 12px;"><span class="comment">// Generate a reference to a new location with push</span>
 <span class="keyword">var</span> newPushRef = listRef.push();
 
 <span class="comment">// Set some data to the generated location</span>
 newPushRef.set({user_id: <span class="string">'wilma'</span>, text: <span class="string">'Hello'</span>});
 
 <span class="comment">// Get the name generated by push</span>
-<span class="keyword">var</span> pushedName = newPushRef.name();</code></pre><p style="font-size: 14px; line-height: 20px;"></p><p style="font-size: 14px; line-height: 20px;"></p><p style="font-size: 14px; line-height: 20px;">When push( ) with no arguments is called, it returns a Roadrunner reference. You can then use this reference to do any of the usual Roadrunner operations, such as getting its name or setting data to it.</p><p style="font-size: 14px; line-height: 20px;">In JavaScript, the pattern of calling push( ) and then immediately calling set( ) is so common that we let you combine them by just passing the data to be set directly to push( ) as follows:</p><p style="font-size: 14px; line-height: 20px;"></p><p style="font-size: 14px; line-height: 20px;"></p><pre><code style="font-size: 12px;"><span class="comment">// These two methods are equivalent</span>
+<span class="keyword">var</span> pushedName = newPushRef.name();</code></pre><p style="font-size: 14px; line-height: 20px;"></p><p style="font-size: 14px; line-height: 20px;"></p><p style="font-size: 14px; line-height: 20px;">When push( ) with no arguments is called, it returns a Helium.io reference. You can then use this reference to do any of the usual Helium.io operations, such as getting its name or setting data to it.</p><p style="font-size: 14px; line-height: 20px;">In JavaScript, the pattern of calling push( ) and then immediately calling set( ) is so common that we let you combine them by just passing the data to be set directly to push( ) as follows:</p><p style="font-size: 14px; line-height: 20px;"></p><p style="font-size: 14px; line-height: 20px;"></p><pre><code style="font-size: 12px;"><span class="comment">// These two methods are equivalent</span>
 listRef.push().set({user_id: <span class="string">'wilma'</span>, text: <span class="string">'Hello'</span>});
 listRef.push({user_id: <span class="string">'wilma'</span>, text: <span class="string">'Hello'</span>});</code></pre><p style="font-size: 14px; line-height: 20px;"></p><p style="font-size: 14px; line-height: 20px;"></p></h2>
      <h2>Reading Data</h2> 
-     <p>Because Roadrunner allows real-time data access, data is never read synchronously. Instead, you read data by attaching a callback to a Roadrunner reference as shown: </p> 
+     <p>Because Helium.io allows real-time data access, data is never read synchronously. Instead, you read data by attaching a callback to a Helium.io reference as shown: </p>
      <p></p> 
      <p></p> 
-     <pre><code><span class="keyword">var</span> dataRef = <span class="keyword">new</span> Roadrunner(<span class="string">'http://localhost:8080/roadrunner/heroes/batman/firstname'</span>);
+     <pre><code><span class="keyword">var</span> dataRef = <span class="keyword">new</span> Helium.io(<span class="string">'http://localhost:8080/helium.io/heroes/batman/firstname'</span>);
 dataRef.on(<span class="string">'value'</span>, <span class="keyword">function</span>(snapshot) {
   alert(<span class="string">'batman’s first name is '</span> + snapshot.val());
 });</code></pre> 
@@ -185,7 +185,7 @@ dataRef.on(<span class="string">'value'</span>, <span class="keyword">function</
      <p></p> 
      <p><strong>Callbacks are triggered both for the initial state of your data and again any time data changes.</strong> In the above example, the callback will be called again if Batman's first name ever changes.</p> 
      <p><strong>Callbacks receive snapshots of data.</strong> A snapshot is a wrapper that holds the data of a specific location.&nbsp;</p> 
-     <h3>Roadrunner Event Types</h3> 
+     <h3>Helium.io Event Types</h3>
      <p>There are 4 event types for which you can attach callbacks: </p> 
      <ol>
       <li>Value</li>
@@ -193,7 +193,7 @@ dataRef.on(<span class="string">'value'</span>, <span class="keyword">function</
       <li>Child Changed</li>
       <li>Child Removed</li>
      </ol> 
-     <p>Roadrunner only distributes the changes to the client that the client has event listeners attached to.</p> 
+     <p>Helium.io only distributes the changes to the client that the client has event listeners attached to.</p>
      <h3><br /></h3> 
      <ul></ul> 
     </div> 
