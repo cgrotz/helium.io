@@ -16,6 +16,7 @@
 
 package io.helium.persistence.authorization.rule;
 
+import com.google.common.collect.Maps;
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.HashMapBackedNode;
@@ -31,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,6 +40,7 @@ public class RuleBasedAuthorization implements Authorization {
     private static final Logger LOGGER = LoggerFactory.getLogger(RuleBasedAuthorization.class);
     private final Persistence persistence;
     private SandBoxedScriptingEnvironment scriptingEnvironment;
+    private Map<String, String> functions = Maps.newHashMap();
 
     public RuleBasedAuthorization(Persistence persistence) {
         this.persistence = persistence;
@@ -98,11 +101,16 @@ public class RuleBasedAuthorization implements Authorization {
     }
 
     private Object invoke(String code, Object evaledAuth, Path path) throws ScriptException, NoSuchMethodException {
-        String functionName = "rule" + UUID.randomUUID().toString().replaceAll("-","");
-        scriptingEnvironment.eval("var " + functionName + " = " + code + ";");
-        Boolean returnValue = (Boolean) scriptingEnvironment.
-                invokeFunction(functionName, evaledAuth, path);
-        return returnValue;
+        String functionName;
+        if ( functions.containsKey(code)) {
+            functionName = functions.get(code);
+        }
+        else {
+            functionName = "rule" + UUID.randomUUID().toString().replaceAll("-", "");
+            scriptingEnvironment.eval("var " + functionName + " = " + code + ";");
+            functions.put(code, functionName);
+        }
+        return (Boolean) scriptingEnvironment.invokeFunction(functionName, evaledAuth, path);
     }
 
     @Override
