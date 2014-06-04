@@ -20,18 +20,18 @@ import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import io.helium.common.Path;
 import io.helium.core.Core;
-import io.helium.event.changelog.ChangeLog;
-import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.authorization.chained.ChainedAuthorization;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
-import io.helium.persistence.inmemory.InMemoryPersistence;
+import io.helium.persistence.mapdb.MapDbBackedNode;
+import io.helium.persistence.mapdb.MapDbPersistence;
 import io.helium.server.protocols.http.HttpServer;
 import io.helium.server.protocols.mqtt.MqttServer;
 import org.apache.commons.cli.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -65,7 +65,7 @@ public class Helium {
     private final HttpServer httpServer;
     private final MqttServer mqttServer;
 
-    private InMemoryPersistence persistence;
+    private MapDbPersistence persistence;
     private Core core;
     private ChainedAuthorization authorization;
 
@@ -74,62 +74,69 @@ public class Helium {
     public Helium(String basePath, File journalDirectory, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
         checkNotNull(journalDirectory);
-        persistence = InMemoryPersistence.getInstance();
+        persistence = new MapDbPersistence();
         authorization = new ChainedAuthorization(new RuleBasedAuthorization(persistence));
         persistence.setAuthorization(authorization);
         core = new Core(journalDirectory, persistence, authorization);
         persistence.setCore(core);
+        instance = Optional.of(persistence);
         httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
         mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
 
+        //core.restoreFromJournal();
         initDefaults();
     }
 
     public Helium(String basePath, String host, int httpPort, int mqttPort) throws IOException {
         checkNotNull(basePath);
-        persistence = new InMemoryPersistence();
+        persistence = new MapDbPersistence();
         authorization = new ChainedAuthorization(new RuleBasedAuthorization(persistence));
         persistence.setAuthorization(authorization);
-
         core = new Core(File.createTempFile("Temp" + System.currentTimeMillis(), ""),
                 persistence,
                 authorization);
         persistence.setCore(core);
+        instance = Optional.of(persistence);
         httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
         mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
 
+        //core.restoreFromJournal();
         initDefaults();
+
+    }
+
+
+    private static Optional<MapDbPersistence> instance = Optional.empty();
+    public static MapDbPersistence getPersistence() {
+        return instance.get();
     }
 
     private void initDefaults() {
 
-        //if(!persistence.exists(Path.of("/users"))) {
-        {
+        if(!persistence.exists(Path.of("/users"))) {
             String uuid = UUID.randomUUID().toString();
-            persistence.getNode(new ChangeLog(-1), Path.of("/users")).put(uuid.replaceAll("-",""),
-                    new HashMapBackedNode().put("username","admin").put("password", "admin").put("isAdmin", true)
-                            .put("permissions", new HashMapBackedNode()));
+            Node user = MapDbBackedNode.of(Path.of("/users").append(uuid.replaceAll("-", "")));
+            user.put("username", "admin").put("password", "admin").put("isAdmin", true);
         }
 
-        //if(!persistence.exists(Path.of("/rules"))) {
-        {
-            Node rules = persistence.getNode(new ChangeLog(-1), Path.of("/rules"));
+        if(!persistence.exists(Path.of("/rules"))) {
+            Node rules = MapDbBackedNode.of(Path.of("/rules"));
             rules.put(".write", "function(auth, path, data, root){\n" +
                     "   return auth.isAdmin;\n" +
                     "}\n");
             rules.put(".read", true);
-            rules.put("rules", new HashMapBackedNode().put(".write", "function(auth, path, data, root){\n" +
+            rules.getNode("rules").put(".write", "function(auth, path, data, root){\n" +
                     "  return auth.isAdmin;\n" +
                     "}\n")
                     .put(".read", "function(auth, path, data, root){\n" +
                             "  return auth.isAdmin;\n" +
-                            "}\n"));
-            rules.put("users", new HashMapBackedNode().put(".write", "function(auth, path, data, root){\n" +
+                            "}\n");
+            rules.getNode("users").put(".write", "function(auth, path, data, root){\n" +
                     "  return auth.isAdmin;\n" +
                     "}\n")
                     .put(".read", "function(auth, path, data, root){\n" +
                             "  return auth.isAdmin;\n" +
-                            "}\n"));
+                            "}\n");
         }
     }
 

@@ -20,11 +20,11 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.routing.RoundRobinPool;
+import io.helium.Helium;
 import io.helium.core.processor.distribution.Distributor;
 import io.helium.core.processor.persistence.actions.*;
 import io.helium.event.HeliumEvent;
 import io.helium.persistence.Persistence;
-import io.helium.persistence.inmemory.InMemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ public class PersistenceProcessor extends UntypedActor {
     private UpdateAction updateAction;
 
     public PersistenceProcessor() {
-        Persistence persistence = InMemoryPersistence.getInstance();
+        Persistence persistence = Helium.getPersistence();
         pushAction = new PushAction(persistence);
         updateAction = new UpdateAction(persistence);
         setAction = new SetAction(persistence);

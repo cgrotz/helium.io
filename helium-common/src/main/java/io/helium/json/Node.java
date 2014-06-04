@@ -1,7 +1,6 @@
 package io.helium.json;
 
 import io.helium.common.Path;
-import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 
@@ -13,7 +12,6 @@ import java.util.List;
  * Created by Christoph Grotz on 30.05.14.
  */
 public interface Node {
-    HeliumEventBuilder complete();
 
     Object get(String key);
 
@@ -75,6 +73,8 @@ public interface Node {
 
     Node put(String key, long value);
 
+    Node put(String key, Node node);
+
     Node put(String key, Object value);
 
     Node putWithIndex(String key, Object value, int index);
@@ -113,4 +113,63 @@ public interface Node {
     Collection<Object> values();
 
     Object get(String key, Object defaultValue);
+
+    /**
+     * Node.NULL is equivalent to the value that JavaScript calls null, whilst Java's null is
+     * equivalent to the value that JavaScript calls undefined.
+     */
+    public static final class Null {
+
+        /**
+         * There is only intended to be a single instance of the NULL object, so the clone method
+         * returns itself.
+         *
+         * @return NULL.
+         */
+        @Override
+        protected final Object clone() {
+            return this;
+        }
+
+        /**
+         * A Null object is equal to the null value and to itself.
+         *
+         * @param object An object to test for nullness.
+         * @return true if the object parameter is the Node.NULL object or null.
+         */
+        @Override
+        public boolean equals(Object object) {
+            return object == null || object == this;
+        }
+
+        /**
+         * Get the "null" string value.
+         *
+         * @return The string "null".
+         */
+        @Override
+        public String toString() {
+            return "null";
+        }
+    }
+
+
+    public static String prevChildName(Node parent, int priority) {
+        if (priority <= 0) {
+            return null;
+        }
+        return parent.keys().get(priority - 1);
+    }
+
+    public static long childCount(Object node) {
+        return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
+    }
+
+    public static int priority(Node parentNode, String name) {
+        return parentNode.indexOf(name);
+    }
+
+    public static boolean hasChildren(Object node) {
+        return (node instanceof Node) ? ((Node) node).hasChildren() : false;
+    }
 }

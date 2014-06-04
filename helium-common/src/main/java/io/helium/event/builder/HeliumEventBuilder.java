@@ -43,7 +43,7 @@ public class HeliumEventBuilder {
     }
 
     public Node withNode() {
-        Node node = new HashMapBackedNode(this);
+        Node node = new HeliumEvent(this);
         underConstruction.put(HeliumEvent.PAYLOAD, node);
         return node;
     }

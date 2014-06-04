@@ -21,7 +21,6 @@ import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
-import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.authorization.Authorization;
@@ -48,26 +47,26 @@ public class RuleBasedAuthorization implements Authorization {
     }
 
     @Override
-    public void authorize(Operation op, Optional<Node> auth, DataSnapshot root, Path path,
+    public void authorize(Operation op, Optional<Node> auth, Path path,
                           Object data) throws NotAuthorizedException {
-        if (!isAuthorized(op, auth, root, path, data)) {
+        if (!isAuthorized(op, auth, path, data)) {
             throw new NotAuthorizedException(op, path);
         }
     }
 
     @Override
-    public boolean isAuthorized(Operation op, Optional<Node> auth, DataSnapshot root, Path path,
+    public boolean isAuthorized(Operation op, Optional<Node> auth, Path path,
                                 Object data) {
         try {
             Node localAuth = auth.orElseGet(() -> Authorization.ANONYMOUS);
             RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(persistence.getNode(new ChangeLog(-1), Path.of("/rules")));
             if (localAuth.has("permissions")) {
                 RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getNode("permissions"));
-                if (evaluateRules(op, root, path, data, localAuth, userRules)) {
+                if (evaluateRules(op, path, data, localAuth, userRules)) {
                     return true;
                 }
             }
-            return evaluateRules(op, root, path, data, localAuth, globalRules);
+            return evaluateRules(op, path, data, localAuth, globalRules);
         }
         catch (NoSuchMethodException | ScriptException e) {
             LOGGER.error("error evaluating expression for authorization", e);
@@ -75,7 +74,7 @@ public class RuleBasedAuthorization implements Authorization {
         }
     }
 
-    private boolean evaluateRules(Operation op, DataSnapshot root, Path path, Object data, Node localAuth, RuleBasedAuthorizator globalRules) throws ScriptException, NoSuchMethodException {
+    private boolean evaluateRules(Operation op, Path path, Object data, Node localAuth, RuleBasedAuthorizator globalRules) throws ScriptException, NoSuchMethodException {
         String expression = globalRules.getExpressionForPathAndOperation(path, op);
         if("false".equalsIgnoreCase(expression)) {
             return false;
@@ -114,19 +113,23 @@ public class RuleBasedAuthorization implements Authorization {
     }
 
     @Override
-    public Object filterContent(Optional<Node> auth, Path path, Node root, Object content) {
-        if (content instanceof HashMapBackedNode) {
+    public Object filterContent(Optional<Node> auth, Path path, Object content) {
+        if (content instanceof Node) {
             Node org = (Node) content;
             Node node = new HashMapBackedNode();
             for (String key : org.keys()) {
-                if (isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(root),
+                if (isAuthorized(Operation.READ, auth,
                         path.append(key), new InMemoryDataSnapshot(org.get(key)))) {
-                    node.put(key, filterContent(auth, path.append(key), root, org.get(key)));
+                    node.put(key, filterContent(auth, path.append(key), org.get(key)));
                 }
             }
             return node;
         } else {
-            return content;
+            if (isAuthorized(Operation.READ, auth,
+                    path, new InMemoryDataSnapshot(content))) {
+                return content;
+            }
         }
+        return null;
     }
 }

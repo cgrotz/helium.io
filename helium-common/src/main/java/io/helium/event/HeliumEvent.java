@@ -17,6 +17,7 @@
 package io.helium.event;
 
 import io.helium.common.Path;
+import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.HashMapBackedNode;
 import io.helium.json.JSONTokener;
@@ -81,6 +82,17 @@ public class HeliumEvent extends HashMapBackedNode {
 
     private ChangeLog changeLog = new ChangeLog(sequence);
 
+
+    private HeliumEventBuilder builder;
+
+    public HeliumEventBuilder complete() {
+        return this.builder;
+    }
+
+    public HeliumEvent(HeliumEventBuilder heliumEventBuilder) {
+        this();
+        this.builder = heliumEventBuilder;
+    }
     /**
      * Creates an empty event
      */

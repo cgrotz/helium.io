@@ -6,7 +6,6 @@ import io.helium.core.processor.authorization.AuthorizationProcessor;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.ChangeLog;
-import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.Persistence;
@@ -71,7 +70,7 @@ public class RestHandler {
             String password = authentication.getString("password");
             Node users = persistence.getNode(new ChangeLog(-1), new Path("/users"));
             for(Object value : users.values()) {
-                if(value instanceof HashMapBackedNode) {
+                if(value instanceof Node) {
                     Node node = (Node)value;
                     if(node.has("username") && node.has("password")) {
                         String localUsername = node.getString("username");
@@ -91,7 +90,7 @@ public class RestHandler {
         DataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));
         Object node = persistence.get(nodePath);
         Object object = new InMemoryDataSnapshot(node);
-        if(authorized(Operation.WRITE, req, root, nodePath, object)) {
+        if(authorized(Operation.WRITE, req, nodePath, object)) {
             core.handleEvent(HeliumEventType.REMOVE, extractAuthentication(req), req.getUri(), Optional.empty());
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
             setContentLength(res, 0);
@@ -108,7 +107,7 @@ public class RestHandler {
         DataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));
         Object node = persistence.get(nodePath);
         Object object = new InMemoryDataSnapshot(node);
-        if(authorized(Operation.WRITE, req, root, nodePath, object)) {
+        if(authorized(Operation.WRITE, req, nodePath, object)) {
             ByteBuf content = Unpooled.buffer(req.content().readableBytes());
             req.content().readBytes(content);
             core.handleEvent(HeliumEventType.SET, extractAuthentication(req), req.getUri(), Optional.ofNullable(DataTypeConverter.convert(content.array())));
@@ -138,7 +137,7 @@ public class RestHandler {
         DataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));
         Object node = persistence.get(nodePath);
         Object object = new InMemoryDataSnapshot(node);
-        if(authorized(Operation.WRITE, req, root, nodePath, object)) {
+        if(authorized(Operation.WRITE, req, nodePath, object)) {
             core.handleEvent(HeliumEventType.PUSH, extractAuthentication(req), uri, Optional.ofNullable(DataTypeConverter.convert(content.array())));
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.buffer(0));
             res.headers().set(HttpHeaders.Names.LOCATION, uri);
@@ -152,12 +151,12 @@ public class RestHandler {
     }
 
     private void get(ChannelHandlerContext ctx, FullHttpRequest req, Path nodePath) {
-        DataSnapshot root = new InMemoryDataSnapshot(persistence.get(null));
         Object node = persistence.get(nodePath);
         InMemoryDataSnapshot object = new InMemoryDataSnapshot(node);
-        if(authorized(Operation.READ, req, root, nodePath, object)) {
+        if(authorized(Operation.READ, req, nodePath, object)) {
             ByteBuf content = Unpooled.buffer();
-            content.writeBytes(authorization.filterContent(extractAuthentication(req), nodePath, persistence.getRoot(), node).toString().getBytes());
+            Optional<Node> auth = extractAuthentication(req);
+            content.writeBytes(authorization.filterContent(auth, nodePath, node).toString().getBytes());
             FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, content);
             res.headers().set(CONTENT_TYPE, "application/json; charset=UTF-8");
             setContentLength(res, content.readableBytes());
@@ -170,9 +169,9 @@ public class RestHandler {
         }
     }
 
-    private boolean authorized(Operation operation, FullHttpRequest req, DataSnapshot root, Path nodePath, Object node) {
+    private boolean authorized(Operation operation, FullHttpRequest req, Path nodePath, Object node) {
         Optional<Node> auth = extractAuthentication(req);
-        return authorization.isAuthorized(operation, auth, root, nodePath,
+        return authorization.isAuthorized(operation, auth, nodePath,
                 new InMemoryDataSnapshot(node));
     }
 }

@@ -4,7 +4,6 @@ import com.google.common.base.Strings;
 import io.helium.common.Path;
 import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
-import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.NotAuthorizedException;
 import io.helium.persistence.authorization.Operation;
@@ -27,16 +26,16 @@ public class ChainedAuthorization implements Authorization {
     }
 
     @Override
-    public void authorize(Operation op, Optional<Node> auth, DataSnapshot root, Path path, Object object) throws NotAuthorizedException {
-        if(! isAuthorized(op, auth, root, path, object)){
+    public void authorize(Operation op, Optional<Node> auth, Path path, Object object) throws NotAuthorizedException {
+        if(! isAuthorized(op, auth, path, object)){
             throw new NotAuthorizedException(op, path);
         }
     }
 
     @Override
-    public boolean isAuthorized(Operation op, Optional<Node> auth, DataSnapshot root, Path path, Object object) {
+    public boolean isAuthorized(Operation op, Optional<Node> auth, Path path, Object object) {
         for( Authorization authorization : authorizations) {
-            if(authorization.isAuthorized(op, auth, root, path, object)){
+            if(authorization.isAuthorized(op, auth, path, object)){
                 LOG.info("Authorized access("+op+") to "+path+" for "+auth);
                 return true;
             }
@@ -45,21 +44,25 @@ public class ChainedAuthorization implements Authorization {
     }
 
     @Override
-    public Object filterContent(Optional<Node> auth, Path path, Node root, Object content) {
-        if (content instanceof HashMapBackedNode) {
+    public Object filterContent(Optional<Node> auth, Path path, Object content) {
+        if (content instanceof Node) {
             Node org = (Node) content;
             Node node = new HashMapBackedNode();
             for (String key : org.keys()) {
                 if(!Strings.isNullOrEmpty(key)) {
-                    if (isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(root),
+                    if (isAuthorized(Operation.READ, auth,
                             path.append(key), new InMemoryDataSnapshot(org.get(key)))) {
-                        node.put(key, filterContent(auth, path.append(key), root, org.get(key)));
+                        node.put(key, filterContent(auth, path.append(key), org.get(key)));
                     }
                 }
             }
             return node;
         } else {
-            return content;
+            if (isAuthorized(Operation.READ, auth,
+                    path, new InMemoryDataSnapshot(content))) {
+                return content;
+            }
         }
+        return null;
     }
 }

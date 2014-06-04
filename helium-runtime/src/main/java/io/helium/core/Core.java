@@ -55,10 +55,9 @@ public class Core {
 
         this.persistence = persistence;
         initDisruptor(journalDirectory, persistence, authorization);
-        restoreFromJournal();
     }
 
-    private void restoreFromJournal() throws ClosedJournalException, CompactedDataFileException,
+    public void restoreFromJournal() throws ClosedJournalException, CompactedDataFileException,
             IOException {
         Journal journal = new Journal();
         journal.setDirectory(new File("helium"));

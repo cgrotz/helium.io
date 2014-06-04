@@ -18,7 +18,7 @@ public class MqttServerInitializer extends ChannelInitializer<SocketChannel> {
     private final Core core;
     private final Persistence persistence;
     private final Authorization authorization;
-    private final DB db = DBMaker.newFileDB(new File("mqttEndpoints"))
+    private final DB db = DBMaker.newFileDB(new File("helium/mqttEndpoints"))
             .closeOnJvmShutdown()
             .make();
 

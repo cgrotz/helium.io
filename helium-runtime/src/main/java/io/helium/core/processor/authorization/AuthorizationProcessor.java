@@ -20,6 +20,7 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.routing.RoundRobinPool;
+import io.helium.Helium;
 import io.helium.common.Path;
 import io.helium.core.processor.eventsourcing.EventSourceProcessor;
 import io.helium.core.processor.persistence.PersistenceProcessor;
@@ -33,7 +34,6 @@ import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.authorization.chained.ChainedAuthorization;
 import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
-import io.helium.persistence.inmemory.InMemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +51,7 @@ public class AuthorizationProcessor extends UntypedActor {
     private Persistence persistence;
 
     public AuthorizationProcessor() {
-        this.persistence = InMemoryPersistence.getInstance();
+        this.persistence = Helium.getPersistence();
         this.authorization = new ChainedAuthorization(new RuleBasedAuthorization(persistence));
     }
 
@@ -68,7 +68,7 @@ public class AuthorizationProcessor extends UntypedActor {
         if (event.getType() == HeliumEventType.PUSH) {
             InMemoryDataSnapshot root = new InMemoryDataSnapshot( persistence.get(null));
             InMemoryDataSnapshot data = new InMemoryDataSnapshot( event.get(HeliumEvent.PAYLOAD, null));
-            if (authorization.isAuthorized(Operation.WRITE, getAuth(event), root, path, data)) {
+            if (authorization.isAuthorized(Operation.WRITE, getAuth(event), path, data)) {
                 distribute(message);
                 LOGGER.trace("authorized ("+event.getSequence()+"): ", message);
             }
@@ -79,7 +79,7 @@ public class AuthorizationProcessor extends UntypedActor {
             if (event.has(HeliumEvent.PAYLOAD) && event.get(HeliumEvent.PAYLOAD) == HashMapBackedNode.NULL) {
                 InMemoryDataSnapshot root = new InMemoryDataSnapshot( persistence.get(null));
                 InMemoryDataSnapshot data = new InMemoryDataSnapshot( event.get(HeliumEvent.PAYLOAD));
-                if (authorization.isAuthorized(Operation.WRITE, getAuth(event), root, path, data)){
+                if (authorization.isAuthorized(Operation.WRITE, getAuth(event), path, data)){
                     distribute(message);
                     LOGGER.trace("authorized ("+event.getSequence()+"): ", message);
                 }
@@ -88,7 +88,7 @@ public class AuthorizationProcessor extends UntypedActor {
                 }
             } else {
                 InMemoryDataSnapshot root = new InMemoryDataSnapshot( persistence.get(null));
-                if (authorization.isAuthorized(Operation.WRITE, getAuth(event), root, path, null)){
+                if (authorization.isAuthorized(Operation.WRITE, getAuth(event), path, null)){
                     distribute(message);
                     LOGGER.trace("authorized ("+event.getSequence()+"): ", message);
                 }

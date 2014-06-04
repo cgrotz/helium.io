@@ -1,20 +1,4 @@
-/*
- * Copyright 2012 The Helium Project
- *
- * The Helium Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
-package io.helium.persistence.inmemory;
+package io.helium.persistence.mapdb;
 
 import io.helium.common.Path;
 import io.helium.core.Core;
@@ -34,49 +18,53 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class InMemoryPersistence implements Persistence {
-
-    private static final Logger logger = LoggerFactory.getLogger(InMemoryPersistence.class);
-    private Node model = new HashMapBackedNode();
+/**
+ * Created by Christoph Grotz on 02.06.14.
+ */
+public class MapDbPersistence implements Persistence {
+    private static final Logger logger = LoggerFactory.getLogger(MapDbPersistence.class);
     private Core core;
     private Authorization authorization;
 
     @Override
     public Object get(Path path) {
-        if (path == null || path.isEmtpy() || model.getObjectForPath(path) == null) {
-            return model;
+        if (path == null || path.isEmtpy()) {
+            return MapDbBackedNode.of(path);
         } else {
-            return model.getObjectForPath(path);
+            return MapDbBackedNode.of(path.parent()).getObjectForPath(path);
         }
     }
 
     @Override
     public Node getNode(ChangeLog log, Path path) {
-        Node nodeForPath = model.getNodeForPath(log, path);
-        return nodeForPath;
+        return MapDbBackedNode.of(path);
     }
 
     @Override
     public void remove(ChangeLog log, Optional<Node> auth, Path path) {
-        String nodeName = path.lastElement();
-        Path parentPath = path.parent();
-        if(model.pathExists(path)) {
-            Node node = model.getNodeForPath(log, parentPath).getNode(nodeName);
+        Node parent = MapDbBackedNode.of(path.parent());
+        Object value = parent.get(path.lastElement());
 
-            if (authorization.isAuthorized(Operation.WRITE, auth,
-                    path, node)) {
-                Node parent = model.getNodeForPath(log, parentPath);
-                node.accept(path, new ChildRemovedSubTreeVisitor(log));
-                parent.remove(nodeName);
-                log.addChildRemovedLogEntry(parentPath, nodeName, node);
-                core.distributeChangeLog(log);
+        if (authorization.isAuthorized(Operation.WRITE, auth, path, value)) {
+            if(value instanceof Node) {
+                ((Node)value).accept(path, new ChildRemovedSubTreeVisitor(log));
             }
+            parent.remove(path.lastElement());
+            log.addChildRemovedLogEntry(path.parent(), path.lastElement(), value);
+            core.distributeChangeLog(log);
         }
     }
 
     @Override
     public void syncPath(ChangeLog log, Path path, Endpoint handler) {
-        Node node = model.getNodeForPath(log, path);
+        Node node;
+        if(MapDbBackedNode.exists(path)) {
+            node = MapDbBackedNode.of(path);
+        }
+        else {
+            node = MapDbBackedNode.of(path.parent());
+        }
+
         for (String childNodeKey : node.keys()) {
             Object object = node.get(childNodeKey);
             boolean hasChildren = (object instanceof Node) ? ((Node) object).hasChildren() : false;
@@ -92,7 +80,14 @@ public class InMemoryPersistence implements Persistence {
     @Override
     public void syncPathWithQuery(ChangeLog log, Path path, WebsocketEndpoint handler,
                                   QueryEvaluator queryEvaluator, String query) {
-        Node node = model.getNodeForPath(log, path);
+        Node node;
+        if(MapDbBackedNode.exists(path)) {
+            node = MapDbBackedNode.of(path);
+        }
+        else {
+            node = MapDbBackedNode.of(path.parent());
+        }
+
         for (String childNodeKey : node.keys()) {
             Object object = node.get(childNodeKey);
             if (queryEvaluator.evaluateQueryOnValue(object, query)) {
@@ -105,7 +100,7 @@ public class InMemoryPersistence implements Persistence {
 
     @Override
     public void syncPropertyValue(ChangeLog log, Path path, Endpoint handler) {
-        Node node = model.getNodeForPath(log, path.parent());
+        Node node = MapDbBackedNode.of(path.parent());
         String childNodeKey = path.lastElement();
         if (node.has(path.lastElement())) {
             Object object = node.get(path.lastElement());
@@ -120,10 +115,17 @@ public class InMemoryPersistence implements Persistence {
     public void updateValue(ChangeLog log, long sequence, Optional<Node> auth, Path path, int priority, Object payload) {
         Node node;
         boolean created = false;
-        if (!model.pathExists(path)) {
+        if (!MapDbBackedNode.exists(path)) {
             created = true;
         }
-        Node parent = model.getNodeForPath(log, path.parent());
+        Node parent;
+        if(MapDbBackedNode.exists(path.parent())) {
+            parent = MapDbBackedNode.of(path.parent());
+        }
+        else {
+            parent = MapDbBackedNode.of(path.parent().parent());
+        }
+
         if (payload instanceof Node) {
             if (parent.has(path.lastElement())) {
                 node = parent.getNode(path.lastElement());
@@ -171,18 +173,24 @@ public class InMemoryPersistence implements Persistence {
                     Node.priority(parent, path.lastElement()));
 
         }
-        logger.info("Model changed: " + model);
     }
 
     @Override
     public void applyNewValue(ChangeLog log, long sequence, Optional<Node> auth, Path path, int priority, Object payload) {
         boolean created = false;
-        if (!model.pathExists(path)) {
+        if (!MapDbBackedNode.exists(path)) {
             created = true;
         }
         if (authorization.isAuthorized(Operation.WRITE, auth,
                 path, payload)) {
-            Node parent = model.getNodeForPath(log, path.parent());
+            Node parent;
+            if(MapDbBackedNode.exists(path.parent())) {
+                parent = MapDbBackedNode.of(path.parent());
+            }
+            else {
+                parent = MapDbBackedNode.of(path.parent().parent());
+            }
+
             if (payload instanceof Node) {
                 Node node = new HashMapBackedNode();
                 populate(new ChangeLogBuilder(log, sequence,path, path.parent(), node), path, auth, node,
@@ -205,12 +213,15 @@ public class InMemoryPersistence implements Persistence {
                 Path currentPath = path;
                 while (!currentPath.isSimple()) {
                     log.addValueChangedLogEntry(currentPath.lastElement(), currentPath,
-                            currentPath.parent(), model.getObjectForPath(currentPath), null, -1);
+                            currentPath.parent(), getObjectForPath(currentPath), null, -1);
                     currentPath = currentPath.parent();
                 }
             }
         }
-        logger.info("Model changed: " + model);
+    }
+
+    private Object getObjectForPath(Path path) {
+        return MapDbBackedNode.of(path.parent()).get(path.lastElement());
     }
 
     public void populate(ChangeLogBuilder logBuilder, Path path, Optional<Node> auth, Node node, Node payload) {
@@ -246,8 +257,15 @@ public class InMemoryPersistence implements Persistence {
     }
 
     private void addChangeEvent(ChangeLog log, Path path) {
-        Object payload = model.getObjectForPath(path);
-        Node parent = model.getNodeForPath(log, path.parent());
+        Object payload = getObjectForPath(path);
+        Node parent;
+        if(MapDbBackedNode.exists(path.parent())) {
+            parent = MapDbBackedNode.of(path.parent());
+        }
+        else {
+            parent = MapDbBackedNode.of(path.parent().parent());
+        }
+
         log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
                         .parent(), payload, Node.hasChildren(payload), Node.childCount(payload),
                 Node.prevChildName(parent, Node.priority(parent, path.lastElement())),
@@ -265,7 +283,14 @@ public class InMemoryPersistence implements Persistence {
 
     @Override
     public void setPriority(ChangeLog log, Optional<Node> auth, Path path, int priority) {
-        Node parent = model.getNodeForPath(log, path.parent());
+        Node parent;
+        if(MapDbBackedNode.exists(path.parent())) {
+            parent = MapDbBackedNode.of(path.parent());
+        }
+        else {
+            parent = MapDbBackedNode.of(path.parent().parent());
+        }
+
         if (authorization.isAuthorized(Operation.WRITE, auth,
                 path, parent)) {
             parent.setIndexOf(path.lastElement(), priority);
@@ -277,7 +302,7 @@ public class InMemoryPersistence implements Persistence {
     }
 
     public boolean exists(Path path) {
-        return model.pathExists(path);
+        return MapDbBackedNode.exists(path);
     }
 
     public void setAuthorization(Authorization authorization) {

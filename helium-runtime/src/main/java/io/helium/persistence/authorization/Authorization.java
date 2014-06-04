@@ -19,7 +19,6 @@ package io.helium.persistence.authorization;
 import io.helium.common.Path;
 import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
-import io.helium.persistence.DataSnapshot;
 
 import java.util.Optional;
 
@@ -28,15 +27,13 @@ public interface Authorization {
 
     void authorize(Operation op,
                    Optional<Node> auth,
-                   DataSnapshot root,
                    Path path,
                    Object object) throws NotAuthorizedException;
 
     boolean isAuthorized(Operation op,
                          Optional<Node> auth,
-                         DataSnapshot root,
                          Path path,
                          Object object);
 
-    Object filterContent(Optional<Node> auth, Path path, Node root, Object content);
+    Object filterContent(Optional<Node> auth, Path path, Object content);
 }

@@ -1,158 +1,80 @@
-/*
- * Copyright 2012 The Helium Project
- *
- * The Helium Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
-package io.helium.json;
+package io.helium.persistence.mapdb;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
+import io.helium.json.HashMapBackedNode;
+import io.helium.json.Node;
+import io.helium.json.NodeVisitor;
+import org.mapdb.DB;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.util.*;
 
 /**
- * A Node is an unordered collection of name/value pairs. Its external form is a string wrapped in
- * curly braces with colons between the names and values, and commas between the values and names.
- * The internal form is an object having <code>get</code> and <code>opt</code> methods for accessing
- * the values by name, and <code>put</code> methods for adding or replacing values by name. The
- * values can be any of these types: <code>Boolean</code>, <code>JSONArray</code>, <code>Node</code>
- * , <code>Number</code>, <code>String</code>, or the <code>Node.NULL</code> object. A Node
- * constructor can be used to convert an external form JSON text into an internal form whose values
- * can be retrieved with the <code>get</code> and <code>opt</code> methods, or to convert values
- * into a JSON text using the <code>put</code> and <code>toString</code> methods. A <code>get</code>
- * method returns a value if one can be found, and throws an exception if one cannot be found. An
- * <code>opt</code> method returns a default value instead of throwing an exception, and so is
- * useful for obtaining optional values.
- * <p>
- * The generic <code>get()</code> and <code>opt()</code> methods return an object, which you can
- * cast or query for type. There are also typed <code>get</code> and <code>opt</code> methods that
- * do type checking and type coercion for you. The opt methods differ from the get methods in that
- * they do not throw. Instead, they return a specified value, such as null.
- * <p>
- * The <code>put</code> methods add or replace values in an object. For example,
- * <p>
- * <pre>
- * myString = new Node().put(&quot;JSON&quot;, &quot;Hello, World!&quot;).toString();
- * </pre>
- * <p>
- * produces the string <code>{"JSON": "Hello, World"}</code>.
- * <p>
- * The texts produced by the <code>toString</code> methods strictly conform to the JSON syntax
- * rules. The constructors are more forgiving in the texts they will accept:
- * <ul>
- * <li>An extra <code>,</code>&nbsp;<small>(comma)</small> may appear just before the closing brace.
- * </li>
- * <li>Strings may be quoted with <code>'</code>&nbsp;<small>(single quote)</small>.</li>
- * <li>Strings do not need to be quoted at all if they do not begin with a quote or single quote,
- * and if they do not contain leading or trailing spaces, and if they do not contain any of these
- * characters: <code>{ } [ ] / \ : , #</code> and if they do not look like numbers and if they are
- * not the reserved words <code>true</code>, <code>false</code>, or <code>null</code>.</li>
- * </ul>
- *
- * @author JSON.org
- * @version 2013-06-17
+ * Created by Christoph Grotz on 02.06.14.
  */
-public class HashMapBackedNode implements Node {
-    /**
-     * It is sometimes more convenient and less ambiguous to have a <code>NULL</code> object than to
-     * use Java's <code>null</code> value. <code>Node.NULL.equals(null)</code> returns
-     * <code>true</code>. <code>Node.NULL.toString()</code> returns <code>"null"</code>.
-     */
+public class MapDbBackedNode implements Node, Serializable, Externalizable {
+
+    private static final long serialVersionUID = 1L;
+
     public static final Object NULL = new Null();
-    /**
-     * The map where the Node's properties are kept.
-     */
-    private final Map<String, Object> map;
 
-    private final List<String> key_order = Lists.newArrayList();
-    /**
-     * Construct an empty Node.
-     */
-    public HashMapBackedNode() {
-        this.map = Maps.newHashMapWithExpectedSize(10000);
-    }
+    private DB db = MapDbHolder.get();
 
-    /**
-     * Construct a Node from a JSONTokener.
-     *
-     * @param x A JSONTokener object containing the source string.
-     * @throws RuntimeException If there is a syntax error in the source string or a duplicated key.
-     */
-    public HashMapBackedNode(JSONTokener x) {
-        this();
-        char c;
-        String key;
+    private Map<String, Object> attributes;
+    private Map<String, MapDbBackedNode> nodes;
+    private List<String> keyOrder;
 
-        if (x.nextClean() != '{') {
-            throw x.syntaxError("A Node text must begin with '{'");
+    private Path pathToNode;
+    private Map<String, List<String>> keyListsMap;
+
+    private MapDbBackedNode(Path pathToNode) {
+        this.pathToNode = pathToNode;
+        attributes = db.getHashMap(pathToNode +"Attributes");
+        nodes = db.getHashMap(pathToNode +"Nodes");
+        keyListsMap  = db.getHashMap("orderedKeys");
+        if( keyListsMap.containsKey(pathToNode + "Keys")) {
+            keyOrder = keyListsMap.get(pathToNode + "Keys");
         }
-        for (; ; ) {
-            c = x.nextClean();
-            switch (c) {
-                case 0:
-                    throw x.syntaxError("A Node text must end with '}'");
-                case '}':
-                    return;
-                default:
-                    x.back();
-                    key = x.nextValue().toString();
-            }
-
-            // The key is followed by ':'.
-
-            c = x.nextClean();
-            if (c != ':') {
-                throw x.syntaxError("Expected a ':' after a key");
-            }
-            this.putOnce(key, x.nextValue());
-
-            // Pairs are separated by ','.
-
-            switch (x.nextClean()) {
-                case ';':
-                case ',':
-                    if (x.nextClean() == '}') {
-                        return;
-                    }
-                    x.back();
-                    break;
-                case '}':
-                    return;
-                default:
-                    throw x.syntaxError("Expected a ',' or '}'");
-            }
+        else {
+            keyOrder = new ArrayList<String>();
+            keyListsMap.put(pathToNode +"Keys", keyOrder);
         }
     }
 
-    /**
-     * Construct a Node from a source JSON text string. This is the most commonly used Node
-     * constructor.
-     *
-     * @param source A string beginning with <code>{</code>&nbsp;<small>(left brace)</small> and ending
-     *               with <code>}</code> &nbsp;<small>(right brace)</small>.
-     * @throws RuntimeException If there is a syntax error in the source string or a duplicated key.
-     */
-    public HashMapBackedNode(String source) {
-        this(new JSONTokener(source));
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.write(pathToNode.toString().getBytes());
+        attributes = db.getHashMap(pathToNode +"Attributes");
+        nodes = db.getHashMap(pathToNode +"Nodes");
+        keyListsMap  = db.getHashMap("orderedKeys");
+        if( keyListsMap.containsKey(pathToNode + "Keys")) {
+            keyOrder = keyListsMap.get(pathToNode + "Keys");
+        }
+        else {
+            keyOrder = new ArrayList<>();
+            keyListsMap.put(pathToNode +"Keys", keyOrder);
+        }
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        String source = in.readUTF();
+        pathToNode = new Path(source);
+        attributes = db.getHashMap(pathToNode+"Attributes");
+        nodes = db.getHashMap(pathToNode+"Nodes");
+        keyListsMap  = db.getHashMap("orderedKeys");
+        if( keyListsMap.containsKey(pathToNode + "Keys")) {
+            keyOrder = keyListsMap.get(pathToNode + "Keys");
+        }
+        else {
+            keyOrder = new ArrayList<>();
+            keyListsMap.put(pathToNode+"Keys", keyOrder);
+        }
     }
 
     /**
@@ -299,7 +221,7 @@ public class HashMapBackedNode implements Node {
             return Boolean.FALSE;
         }
         if (string.equalsIgnoreCase("null")) {
-            return HashMapBackedNode.NULL;
+            return MapDbBackedNode.NULL;
         }
 
 		/*
@@ -383,8 +305,8 @@ public class HashMapBackedNode implements Node {
             throws RuntimeException, IOException {
         if (value == null || value.equals(null)) {
             writer.write("null");
-        } else if (value instanceof Node) {
-            ((HashMapBackedNode) value).write(writer, indentFactor, indent);
+        } else if (value instanceof MapDbBackedNode) {
+            ((MapDbBackedNode) value).write(writer, indentFactor, indent);
         } else if (value instanceof Number) {
             writer.write(numberToString((Number) value));
         } else if (value instanceof Boolean) {
@@ -403,16 +325,16 @@ public class HashMapBackedNode implements Node {
 
 
     /**
-     * Get the value object associated with a key.
+     * Get the value object associated with a pathToNode.
      *
-     * @param key A key string.
-     * @return The object associated with the key.
-     * @throws RuntimeException if the key is not found.
+     * @param key A pathToNode string.
+     * @return The object associated with the pathToNode.
+     * @throws RuntimeException if the pathToNode is not found.
      */
     @Override
     public Object get(String key) {
-        if (key == null) {
-            throw new RuntimeException("Null key.");
+        if (Strings.isNullOrEmpty(key)) {
+            throw new RuntimeException("Null pathToNode.");
         }
         Object object = this.opt(key);
         if (object == null) {
@@ -430,9 +352,9 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get the boolean value associated with a key.
+     * Get the boolean value associated with a pathToNode.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return The truth.
      * @throws RuntimeException if the value is not a Boolean or the String "true" or "false".
      */
@@ -465,11 +387,11 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get the double value associated with a key.
+     * Get the double value associated with a pathToNode.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return The numeric value.
-     * @throws RuntimeException if the key is not found or if the value is not a Number object and cannot be
+     * @throws RuntimeException if the pathToNode is not found or if the value is not a Number object and cannot be
      *                          converted to a number.
      */
     @Override
@@ -484,11 +406,11 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get the int value associated with a key.
+     * Get the int value associated with a pathToNode.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return The integer value.
-     * @throws RuntimeException if the key is not found or if the value cannot be converted to an integer.
+     * @throws RuntimeException if the pathToNode is not found or if the value cannot be converted to an integer.
      */
     @Override
     public int getInt(String key) {
@@ -502,27 +424,32 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get the Node value associated with a key.
+     * Get the Node value associated with a pathToNode.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return A Node which is the value.
-     * @throws RuntimeException if the key is not found or if the value is not a Node.
+     * @throws RuntimeException if the pathToNode is not found or if the value is not a Node.
      */
     @Override
     public Node getNode(String key) {
-        Object object = this.get(key);
-        if (object instanceof Node) {
-            return (Node) object;
+        if(has(key)) {
+            return (Node)get(key);
         }
-        throw new RuntimeException("Node[" + quote(key) + "] is not a Node. " + toString(2));
+        else {
+            MapDbBackedNode node = new MapDbBackedNode(pathToNode.append(key));
+            nodes.put(key, node);
+            keyOrder.add(key);
+            keyListsMap.put(pathToNode.toString(), keyOrder);
+            return node;
+        }
     }
 
     /**
-     * Get the long value associated with a key.
+     * Get the long value associated with a pathToNode.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return The long value.
-     * @throws RuntimeException if the key is not found or if the value cannot be converted to a long.
+     * @throws RuntimeException if the pathToNode is not found or if the value cannot be converted to a long.
      */
     @Override
     public long getLong(String key) {
@@ -536,11 +463,11 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get the string associated with a key.
+     * Get the string associated with a pathToNode.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return A string which is the value.
-     * @throws RuntimeException if there is no string value for the key.
+     * @throws RuntimeException if there is no string value for the pathToNode.
      */
     @Override
     public String getString(String key) {
@@ -552,21 +479,23 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Determine if the Node contains a specific key.
+     * Determine if the Node contains a specific pathToNode.
      *
-     * @param key A key string.
-     * @return true if the key exists in the Node.
+     * @param key A pathToNode string.
+     * @return true if the pathToNode exists in the Node.
      */
     @Override
     public boolean has(String key) {
-        return !Strings.isNullOrEmpty(key) && this.map.containsKey(key) && (this.map.get(key) != null && this.map.get(key) != NULL);
+        return !Strings.isNullOrEmpty(key) && (
+                this.attributes.containsKey(key) ||
+                this.nodes.containsKey(key));
     }
 
     /**
      * Increment a property of a Node. If there is no such property, create one with a value of 1. If
      * there is such a property, and if it is an Integer, Long, Double, or Float, then add one to it.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return this.
      * @throws RuntimeException If there is already a property with this name that is not an Integer, Long, Double,
      *                          or Float.
@@ -591,15 +520,15 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Determine if the value associated with the key is null or if there is no value.
+     * Determine if the value associated with the pathToNode is null or if there is no value.
      *
-     * @param key A key string.
-     * @return true if there is no value associated with the key or if the value is the Node.NULL
+     * @param key A pathToNode string.
+     * @return true if there is no value associated with the pathToNode or if the value is the Node.NULL
      * object.
      */
     @Override
     public boolean isNull(String key) {
-        return HashMapBackedNode.NULL.equals(this.opt(key));
+        return MapDbBackedNode.NULL.equals(this.opt(key));
     }
 
     /**
@@ -609,7 +538,7 @@ public class HashMapBackedNode implements Node {
      */
     @Override
     public Iterator<String> keyIterator() {
-        return (Lists.newArrayList(this.key_order)).iterator();
+        return (Lists.newArrayList(this.keyOrder)).iterator();
     }
 
     /**
@@ -619,7 +548,7 @@ public class HashMapBackedNode implements Node {
      */
     @Override
     public List<String> keys() {
-        return Lists.newArrayList(this.key_order);
+        return Lists.newArrayList(this.keyOrder);
     }
 
     /**
@@ -629,25 +558,39 @@ public class HashMapBackedNode implements Node {
      */
     @Override
     public int length() {
-        return this.map.size();
+        return this.nodes.size()+this.attributes.size();
     }
 
     /**
-     * Get an optional value associated with a key.
+     * Get an optional value associated with a pathToNode.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return An object which is the value, or null if there is no value.
      */
     @Override
     public Object opt(String key) {
-        return key == null ? null : this.map.get(key);
+        if(Strings.isNullOrEmpty(key)) {
+            return null;
+        }
+        else if(!keyOrder.contains(key)) {
+            return null;
+        }
+        else if(this.attributes.containsKey(key)) {
+            return this.attributes.get(key);
+        }
+        else if(this.nodes.containsKey(key)) {
+            return this.nodes.get(key);
+        }
+        else {
+            return null;
+        }
     }
 
     /**
-     * Get an optional boolean associated with a key. It returns false if there is no such key, or if
+     * Get an optional boolean associated with a pathToNode. It returns false if there is no such pathToNode, or if
      * the value is not Boolean.TRUE or the String "true".
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return The truth.
      */
     @Override
@@ -656,10 +599,10 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get an optional boolean associated with a key. It returns the defaultValue if there is no such
-     * key, or if it is not a Boolean or the String "true" or "false" (case insensitive).
+     * Get an optional boolean associated with a pathToNode. It returns the defaultValue if there is no such
+     * pathToNode, or if it is not a Boolean or the String "true" or "false" (case insensitive).
      *
-     * @param key          A key string.
+     * @param key          A pathToNode string.
      * @param defaultValue The default.
      * @return The truth.
      */
@@ -673,10 +616,10 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get an optional double associated with a key, or NaN if there is no such key or if its value is
+     * Get an optional double associated with a pathToNode, or NaN if there is no such pathToNode or if its value is
      * not a number. If the value is a string, an attempt will be made to evaluate it as a number.
      *
-     * @param key A string which is the key.
+     * @param key A string which is the pathToNode.
      * @return An object which is the value.
      */
     @Override
@@ -685,11 +628,11 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get an optional double associated with a key, or the defaultValue if there is no such key or if
+     * Get an optional double associated with a pathToNode, or the defaultValue if there is no such pathToNode or if
      * its value is not a number. If the value is a string, an attempt will be made to evaluate it as
      * a number.
      *
-     * @param key          A key string.
+     * @param key          A pathToNode string.
      * @param defaultValue The default.
      * @return An object which is the value.
      */
@@ -703,11 +646,11 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get an optional int value associated with a key, or zero if there is no such key or if the
+     * Get an optional int value associated with a pathToNode, or zero if there is no such pathToNode or if the
      * value is not a number. If the value is a string, an attempt will be made to evaluate it as a
      * number.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return An object which is the value.
      */
     @Override
@@ -716,11 +659,11 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get an optional int value associated with a key, or the default if there is no such key or if
+     * Get an optional int value associated with a pathToNode, or the default if there is no such pathToNode or if
      * the value is not a number. If the value is a string, an attempt will be made to evaluate it as
      * a number.
      *
-     * @param key          A key string.
+     * @param key          A pathToNode string.
      * @param defaultValue The default.
      * @return An object which is the value.
      */
@@ -734,24 +677,24 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get an optional Node associated with a key. It returns null if there is no such key, or if its
+     * Get an optional Node associated with a pathToNode. It returns null if there is no such pathToNode, or if its
      * value is not a Node.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return A Node which is the value.
      */
     @Override
     public Node optNode(String key) {
         Object object = this.opt(key);
-        return object instanceof Node ? (Node) object : null;
+        return object instanceof MapDbBackedNode ? (Node) object : null;
     }
 
     /**
-     * Get an optional long value associated with a key, or zero if there is no such key or if the
+     * Get an optional long value associated with a pathToNode, or zero if there is no such pathToNode or if the
      * value is not a number. If the value is a string, an attempt will be made to evaluate it as a
      * number.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return An object which is the value.
      */
     @Override
@@ -760,11 +703,11 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get an optional long value associated with a key, or the default if there is no such key or if
+     * Get an optional long value associated with a pathToNode, or the default if there is no such pathToNode or if
      * the value is not a number. If the value is a string, an attempt will be made to evaluate it as
      * a number.
      *
-     * @param key          A key string.
+     * @param key          A pathToNode string.
      * @param defaultValue The default.
      * @return An object which is the value.
      */
@@ -778,10 +721,10 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get an optional string associated with a key. It returns an empty string if there is no such
-     * key. If the value is not a string and is not null, then it is converted to a string.
+     * Get an optional string associated with a pathToNode. It returns an empty string if there is no such
+     * pathToNode. If the value is not a string and is not null, then it is converted to a string.
      *
-     * @param key A key string.
+     * @param key A pathToNode string.
      * @return A string which is the value.
      */
     @Override
@@ -790,10 +733,10 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Get an optional string associated with a key. It returns the defaultValue if there is no such
-     * key.
+     * Get an optional string associated with a pathToNode. It returns the defaultValue if there is no such
+     * pathToNode.
      *
-     * @param key          A key string.
+     * @param key          A pathToNode string.
      * @param defaultValue The default.
      * @return A string which is the value.
      */
@@ -804,12 +747,12 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Put a key/boolean pair in the Node.
+     * Put a pathToNode/boolean pair in the Node.
      *
-     * @param key   A key string.
+     * @param key   A pathToNode string.
      * @param value A boolean which is the value.
      * @return this.
-     * @throws RuntimeException If the key is null.
+     * @throws RuntimeException If the pathToNode is null.
      */
     @Override
     public Node put(String key, boolean value) {
@@ -821,12 +764,12 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Put a key/double pair in the Node.
+     * Put a pathToNode/double pair in the Node.
      *
-     * @param key   A key string.
+     * @param key   A pathToNode string.
      * @param value A double which is the value.
      * @return this.
-     * @throws RuntimeException If the key is null or if the number is invalid.
+     * @throws RuntimeException If the pathToNode is null or if the number is invalid.
      */
     @Override
     public Node put(String key, double value) {
@@ -838,12 +781,12 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Put a key/int pair in the Node.
+     * Put a pathToNode/int pair in the Node.
      *
-     * @param key   A key string.
+     * @param key   A pathToNode string.
      * @param value An int which is the value.
      * @return this.
-     * @throws RuntimeException If the key is null.
+     * @throws RuntimeException If the pathToNode is null.
      */
     @Override
     public Node put(String key, int value) {
@@ -855,12 +798,12 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Put a key/long pair in the Node.
+     * Put a pathToNode/long pair in the Node.
      *
-     * @param key   A key string.
+     * @param key   A pathToNode string.
      * @param value A long which is the value.
      * @return this.
-     * @throws RuntimeException If the key is null.
+     * @throws RuntimeException If the pathToNode is null.
      */
     @Override
     public Node put(String key, long value) {
@@ -872,14 +815,14 @@ public class HashMapBackedNode implements Node {
     }
 
     /**
-     * Put a key/value pair in the Node. If the value is null, then the key will be removed from the
+     * Put a pathToNode/value pair in the Node. If the value is null, then the pathToNode will be removed from the
      * Node if it is present.
      *
-     * @param key   A key string.
+     * @param key   A pathToNode string.
      * @param value An object which is the value. It should be of one of these types: Boolean, Double,
      *              Integer, JSONArray, Node, Long, String, or the Node.NULL object.
      * @return this.
-     * @throws RuntimeException If the value is non-finite number or if the key is null.
+     * @throws RuntimeException If the value is non-finite number or if the pathToNode is null.
      */
     @Override
     public Node put(String key, Object value) {
@@ -903,33 +846,46 @@ public class HashMapBackedNode implements Node {
             return this;
         }
         if (key == null) {
-            throw new NullPointerException("Null key.");
+            throw new NullPointerException("Null pathToNode.");
         }
         if (value != null) {
             testValidity(value);
-            this.map.put(key, value);
-            if (key_order.contains(key)) {
-                key_order.remove(key);
+            if(value instanceof MapDbBackedNode) {
+                this.nodes.put(key, (MapDbBackedNode)value);
             }
-            if (index < 0 || index > key_order.size()) {
-                this.key_order.add(key);
+            else if (value instanceof Node) {
+                HashMapBackedNode node = (HashMapBackedNode)value;
+                node.keys().forEach(valueKey -> {
+                    MapDbBackedNode nodeToFill = MapDbBackedNode.of(pathToNode.append(key));
+                    nodeToFill.put(valueKey, node.get(valueKey));
+                });
+            }
+            else {
+                this.attributes.put(key, value);
+            }
+            if (keyOrder.contains(key)) {
+                keyOrder.remove(key);
+            }
+            if (index < 0 || index > keyOrder.size()) {
+                this.keyOrder.add(key);
             } else {
-                this.key_order.add(index, key);
+                this.keyOrder.add(index, key);
             }
         } else {
             this.remove(key);
         }
+        keyListsMap.put(key+"Keys",keyOrder);
         return this;
     }
 
     /**
-     * Put a key/value pair in the Node, but only if the key and the value are both non-null, and only
+     * Put a pathToNode/value pair in the Node, but only if the pathToNode and the value are both non-null, and only
      * if there is not already a member with that name.
      *
      * @param key
      * @param value
      * @return his.
-     * @throws RuntimeException if the key is a duplicate
+     * @throws RuntimeException if the pathToNode is a duplicate
      */
     @Override
     public Node putOnce(String key, Object value) {
@@ -938,7 +894,7 @@ public class HashMapBackedNode implements Node {
         }
         if (key != null && value != null) {
             if (this.opt(key) != null) {
-                throw new RuntimeException("Duplicate key \"" + key + "\"");
+                throw new RuntimeException("Duplicate pathToNode \"" + key + "\"");
             }
             this.put(key, value);
         }
@@ -953,8 +909,17 @@ public class HashMapBackedNode implements Node {
      */
     @Override
     public Object remove(String key) {
-        this.key_order.remove(key);
-        return this.map.remove(key);
+        this.keyOrder.remove(key);
+        this.keyListsMap.put(key+"Keys", keyOrder);
+        if (this.nodes.containsKey(key)) {
+            return this.nodes.remove(key);
+        }
+        else if (this.attributes.containsKey(key)) {
+            return this.attributes.remove(key);
+        }
+        else {
+            return null;
+        }
     }
 
     /**
@@ -1012,31 +977,33 @@ public class HashMapBackedNode implements Node {
             writer.write('{');
 
             if (length == 1) {
-                Object key = keys.next();
+                String key = keys.next();
                 writer.write(quote(key.toString()));
                 writer.write(':');
                 if (indentFactor > 0) {
                     writer.write(' ');
                 }
-                writeValue(writer, this.map.get(key), indentFactor, indent);
+                writeValue(writer, get(key), indentFactor, indent);
             } else if (length != 0) {
                 final int newindent = indent + indentFactor;
                 while (keys.hasNext()) {
-                    Object key = keys.next();
-                    if (commanate) {
-                        writer.write(',');
+                    String key = keys.next();
+                    if(!Strings.isNullOrEmpty(key)) {
+                        if (commanate) {
+                            writer.write(',');
+                        }
+                        if (indentFactor > 0) {
+                            writer.write('\n');
+                        }
+                        indent(writer, newindent);
+                        writer.write(quote(key.toString()));
+                        writer.write(':');
+                        if (indentFactor > 0) {
+                            writer.write(' ');
+                        }
+                        writeValue(writer, get(key), indentFactor, newindent);
+                        commanate = true;
                     }
-                    if (indentFactor > 0) {
-                        writer.write('\n');
-                    }
-                    indent(writer, newindent);
-                    writer.write(quote(key.toString()));
-                    writer.write(':');
-                    if (indentFactor > 0) {
-                        writer.write(' ');
-                    }
-                    writeValue(writer, this.map.get(key), indentFactor, newindent);
-                    commanate = true;
                 }
                 if (indentFactor > 0) {
                     writer.write('\n');
@@ -1052,7 +1019,7 @@ public class HashMapBackedNode implements Node {
 
     @Override
     public int indexOf(String name) {
-        return key_order.indexOf(name);
+        return keyOrder.indexOf(name);
     }
 
     @Override
@@ -1060,67 +1027,54 @@ public class HashMapBackedNode implements Node {
         if (index <= 0) {
             return;
         }
-        key_order.remove(name);
-        if (index < key_order.size()) {
-            key_order.add(index, name);
+        keyOrder.remove(name);
+        if (index < keyOrder.size()) {
+            keyOrder.add(index, name);
         } else {
-            key_order.add(name);
+            keyOrder.add(name);
         }
+        this.keyListsMap.put(pathToNode +"Keys", keyOrder);
     }
 
     @Override
     public Object getObjectForPath(Path path) {
-        Object node;
-        if (has(path.firstElement())) {
-            Object object = get(path.firstElement());
-            node = object;
-        } else {
-            if (path.firstElement() == null) {
-                return this;
-            }
-            node = new HashMapBackedNode();
-            put(path.firstElement(), node);
-        }
-
-        if (node instanceof Node) {
-            return ((Node) node).getObjectForPath(path.subpath(1));
-        }
-        return node;
+        Node parent = getNodeForPath(new ChangeLog(-1), path.parent());
+        return parent.get(path.lastElement());
     }
 
     @Override
     public Node getNodeForPath(ChangeLog log, Path path) {
-        Node node;
+        /*Node node;
         String firstElement = path.firstElement();
         if (Strings.isNullOrEmpty(firstElement)) {
             return this;
         }
         if (has(firstElement)) {
             Object object = get(firstElement);
-            if (object instanceof Node) {
+            if (object instanceof MapDbBackedNode) {
                 node = (Node) object;
             } else {
-                node = new HashMapBackedNode();
+                node = new MapDbBackedNode();
                 log.addChildAddedLogEntry(firstElement, path, path.parent(), node, false, 0, null, -1);
                 put(firstElement, node);
             }
         } else {
-            node = new HashMapBackedNode();
+            node = new MapDbBackedNode();
             log.addChildAddedLogEntry(firstElement, path, path.parent(), node, false, 0, null, -1);
             put(firstElement, node);
         }
         if (path.isSimple()) {
             if (has(firstElement)) {
                 Object object = get(firstElement);
-                if (object instanceof Node) {
+                if (object instanceof MapDbBackedNode) {
                     node = (Node) object;
                 } else {
-                    node = new HashMapBackedNode();
+                    node = new MapDbBackedNode();
                     log.addChildAddedLogEntry(firstElement, path, path.parent(), node, false, 0, null, -1);
                     put(firstElement, node);
                 }
             } else {
-                node = new HashMapBackedNode();
+                node = new MapDbBackedNode();
                 log.addChildAddedLogEntry(firstElement, path, path.parent(), node, false, 0, null, -1);
                 put(firstElement, node);
             }
@@ -1131,15 +1085,28 @@ public class HashMapBackedNode implements Node {
             return this;
         } else {
             return node.getNodeForPath(log, subpath);
+        }*/
+        Path fullPath = pathToNode.append(path);
+        MapDbBackedNode lastNode = null;
+        for(int i = 0; i<fullPath.toArray().length; i++) {
+            Path nodePath = fullPath.prefix(0);
+            MapDbBackedNode node = MapDbBackedNode.of(nodePath);
+            if(lastNode == null) {
+                node = lastNode;
+            }
+            else {
+                lastNode.put(nodePath.lastElement(), node);
+            }
         }
+        return MapDbBackedNode.of(fullPath);
     }
 
     @Override
     public void populate(ChangeLogBuilder logBuilder, Node payload) {
         for (String key : payload.keys()) {
             Object value = payload.get(key);
-            if (value instanceof Node) {
-                Node childNode = new HashMapBackedNode();
+            if (value instanceof MapDbBackedNode) {
+                Node childNode = MapDbBackedNode.of(pathToNode.append(key));
                 childNode.populate(logBuilder.getChildLogBuilder(key), (Node) value);
                 if (has(key)) {
                     put(key, childNode);
@@ -1168,7 +1135,7 @@ public class HashMapBackedNode implements Node {
         Iterator<?> itr = keyIterator();
         while (itr.hasNext()) {
             Object key = itr.next();
-            if (get((String) key) instanceof Node) {
+            if (get((String) key) instanceof MapDbBackedNode) {
                 nodes.add((Node) get((String) key));
             }
         }
@@ -1186,7 +1153,7 @@ public class HashMapBackedNode implements Node {
             return true;
         } else if (has(path.firstElement())) {
             Object object = get(path.firstElement());
-            if (object instanceof Node) {
+            if (object instanceof MapDbBackedNode) {
                 Node node = (Node) object;
                 return node.pathExists(path.subpath(1));
             } else if (path.isSimple()) {
@@ -1203,7 +1170,7 @@ public class HashMapBackedNode implements Node {
     public Node getLastLeafNode(Path path) {
         if (has(path.firstElement())) {
             if (path.isSimple()) {
-                if (get(path.firstElement()) instanceof Node) {
+                if (get(path.firstElement()) instanceof MapDbBackedNode) {
                     return getNode(path.firstElement());
                 } else {
                     return this;
@@ -1221,7 +1188,7 @@ public class HashMapBackedNode implements Node {
         visitor.visitNode(path, this);
         for (String key : keys()) {
             Object value = get(key);
-            if (value instanceof Node) {
+            if (value instanceof MapDbBackedNode) {
                 ((Node) value).accept(path.append(key), visitor);
             } else {
                 visitor.visitProperty(path, this, key, value);
@@ -1231,12 +1198,35 @@ public class HashMapBackedNode implements Node {
 
     @Override
     public void clear() {
-        map.clear();
-        key_order.clear();
+        nodes.clear();
+        attributes.clear();
+        keyOrder.clear();
+        this.keyListsMap.put(pathToNode +"Keys", keyOrder);
     }
 
     @Override
     public Collection<Object> values() {
-        return map.values();
+        Set<Object> values = Sets.newHashSet();
+        nodes.values().forEach( val -> {
+            values.add(val);
+        });
+        attributes.values().forEach( val -> {
+            values.add(val);
+        });
+        return values;
+    }
+
+    public static MapDbBackedNode of(Path path) {
+        MapDbBackedNode node = new MapDbBackedNode(Path.of("/"));
+        Path currentPath = Path.copy(path);
+        for(int i=0;i<path.toArray().length;i++) {
+            node = (MapDbBackedNode) node.getNode(currentPath.firstElement());
+            currentPath = currentPath.subpath(1);
+        }
+        return node;
+    }
+
+    public static boolean exists(Path path) {
+        return MapDbHolder.get().exists(path.toString());
     }
 }

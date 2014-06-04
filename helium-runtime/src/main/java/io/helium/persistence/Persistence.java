@@ -45,8 +45,26 @@ public interface Persistence {
 
     void syncPropertyValue(ChangeLog log, Path path, Endpoint heliumEventHandler);
 
-    Node getRoot();
-
     void syncPathWithQuery(ChangeLog log, Path path, WebsocketEndpoint handler,
                            QueryEvaluator queryEvaluator, String query);
+
+    public static String prevChildName(Node parent, int priority) {
+        if (priority <= 0) {
+            return null;
+        }
+        return parent.keys().get(priority - 1);
+    }
+
+    public static long childCount(Object node) {
+        return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
+    }
+
+    public static int priority(Node parentNode, String name) {
+        return parentNode.indexOf(name);
+    }
+
+    public static boolean hasChildren(Object node) {
+        return (node instanceof Node) ? ((Node) node).hasChildren() : false;
+    }
+
 }

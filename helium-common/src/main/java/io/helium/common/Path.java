@@ -31,6 +31,10 @@ public final class Path {
 
 	private String[]	elements;
 
+    public Path(String[]	elements) {
+        this.elements = elements;
+
+    }
 	/**
 	 * @param path
 	 *          {@link String} Path as String
@@ -52,7 +56,7 @@ public final class Path {
 	/**
 	 * @return the first element of the path
 	 */
-	public String getFirstElement() {
+	public String firstElement() {
 		if (elements == null || elements.length == 0) {
 			return null;
 		}
@@ -62,7 +66,7 @@ public final class Path {
 	/**
 	 * @return the last element of the path
 	 */
-	public String getLastElement() {
+	public String lastElement() {
 		if (elements.length == 0) {
 			return null;
 		}
@@ -77,13 +81,29 @@ public final class Path {
 	 * @param offset
 	 * @return returns the subpath at the offset
 	 */
-	public Path getSubpath(int offset) {
+	public Path subpath(int offset) {
 		String output = "";
 		for (int i = offset; i < elements.length; i++) {
 			output += "/" + elements[i];
 		}
 		return new Path(output);
 	}
+
+    /**
+     * Path: /element1/element2/element3/element4
+     *
+     * Subpath from offset 2: /element1/element2
+     *
+     * @param offset
+     * @return returns the subpath at the offset
+     */
+    public Path prefix(int offset) {
+        String output = "";
+        for (int i = 0; i < offset; i++) {
+            output += "/" + elements[i];
+        }
+        return new Path(output);
+    }
 
 	/**
 	 * @return true if path consists of only one element
@@ -99,7 +119,7 @@ public final class Path {
 	 * 
 	 * @return returns the parent path
 	 */
-	public Path getParent() {
+	public Path parent() {
 		String output = "";
 		for (int i = 0; i < elements.length - 1; i++) {
 			output += "/" + elements[i];
@@ -117,6 +137,10 @@ public final class Path {
 	public Path append(String element) {
 		return new Path(toString() + "/" + element);
 	}
+
+    public Path append(Path path) {
+        return new Path(toString() + path.toString());
+    }
 
 	/**
 	 * @return Path has no elements
@@ -146,5 +170,9 @@ public final class Path {
 
     public static Path of(String key) {
         return new Path(key);
+    }
+
+    public static Path copy(Path path) {
+        return new Path(path.toString());
     }
 }

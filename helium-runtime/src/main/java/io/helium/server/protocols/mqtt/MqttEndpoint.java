@@ -80,13 +80,13 @@ public class MqttEndpoint implements Endpoint {
         try {
             if(channel.channel().isWritable()) {
                 if (authorization.isAuthorized(Operation.READ, auth,
-                        new InMemoryDataSnapshot(persistence.getRoot()), path,
+                        path,
                         new InMemoryDataSnapshot(value))) {
                     ByteBuf buffer = Unpooled.buffer(1);
                     encoder.encodePublish(
                             channel,
                             buffer,
-                            (int) System.currentTimeMillis(), path.append(name).toString(), authorization.filterContent(auth, path, persistence.getRoot(), value).toString());
+                            (int) System.currentTimeMillis(), path.append(name).toString(), authorization.filterContent(auth, path, value).toString());
                     channel.writeAndFlush(buffer);
                 }
             }
@@ -99,13 +99,13 @@ public class MqttEndpoint implements Endpoint {
     public void fireValue(String name, Path path, Path parent, Object value, String prevChildName, int priority) {
         try {
             if(channel.channel().isWritable()) {
-                if (authorization.isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(persistence.getRoot()), path,
+                if (authorization.isAuthorized(Operation.READ, auth, path,
                         new InMemoryDataSnapshot(value))) {
                     ByteBuf buffer = Unpooled.buffer(1);
                     encoder.encodePublish(
                             channel,
                             buffer,
-                            (int) System.currentTimeMillis(), path.append(name).toString(), authorization.filterContent(auth, path, persistence.getRoot(), value).toString());
+                            (int) System.currentTimeMillis(), path.append(name).toString(), authorization.filterContent(auth, path, value).toString());
                     channel.writeAndFlush(buffer);
                 }
             }
@@ -125,7 +125,6 @@ public class MqttEndpoint implements Endpoint {
                 if(channel.channel().isWritable()) {
                     if (authorization.isAuthorized(Operation.READ,
                             auth,
-                            new InMemoryDataSnapshot(persistence.getRoot()),
                             path,
                             new InMemoryDataSnapshot(payload))) {
                         Node broadcast = new HashMapBackedNode();

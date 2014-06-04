@@ -17,7 +17,6 @@
 package io.helium.event.changelog;
 
 import io.helium.common.Path;
-import io.helium.json.HashMapBackedNode;
 import io.helium.json.Node;
 
 public class ChangeLogBuilder {
@@ -75,7 +74,7 @@ public class ChangeLogBuilder {
     }
 
     private long childCount(Object node) {
-        return (node instanceof HashMapBackedNode) ? ((Node) node).getChildren().size() : 0;
+        return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
     }
 
     private int priority(Node parentNode, String name) {
@@ -83,6 +82,6 @@ public class ChangeLogBuilder {
     }
 
     private boolean hasChildren(Object node) {
-        return (node instanceof HashMapBackedNode) ? ((Node) node).hasChildren() : false;
+        return (node instanceof Node) ? ((Node) node).hasChildren() : false;
     }
 }

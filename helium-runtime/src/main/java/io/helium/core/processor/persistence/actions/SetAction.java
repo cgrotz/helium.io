@@ -37,9 +37,9 @@ public class SetAction {
             Object obj = event.get(HeliumEvent.PAYLOAD);
             if (obj == HashMapBackedNode.NULL || obj == null) {
                 persistence.remove(event.getChangeLog(), event.getAuth(), path);
-            } else if (obj instanceof HashMapBackedNode) {
+            } else if (obj instanceof Node) {
                 payload = (Node) obj;
-                if (payload instanceof HashMapBackedNode) {
+                if (payload instanceof Node) {
                     if (event.hasPriority()) {
                         persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path,
                                 event.getPriority(), obj);

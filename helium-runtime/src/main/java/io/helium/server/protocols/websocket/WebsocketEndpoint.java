@@ -30,7 +30,6 @@ import io.helium.persistence.Persistence;
 import io.helium.persistence.authorization.Authorization;
 import io.helium.persistence.authorization.Operation;
 import io.helium.persistence.inmemory.InMemoryDataSnapshot;
-import io.helium.persistence.inmemory.InMemoryPersistence;
 import io.helium.persistence.queries.QueryEvaluator;
 import io.helium.server.protocols.websocket.rpc.Rpc;
 import io.netty.channel.Channel;
@@ -210,7 +209,7 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
         Optional<Node> auth = Optional.empty();
         Node users = persistence.getNode(new ChangeLog(-1), new Path("/users"));
         for(Object value : users.values()) {
-            if(value instanceof HashMapBackedNode) {
+            if(value instanceof Node) {
                 Node node = (Node)value;
                 String localUsername = node.getString("username");
                 String localPassword = node.getString("password");
@@ -232,7 +231,7 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
             if (event.getType() == HeliumEventType.EVENT) {
                 Node jsonObject;
                 Object object = event.get(HeliumEvent.PAYLOAD);
-                if (object instanceof HashMapBackedNode) {
+                if (object instanceof Node) {
                     jsonObject = event.getNode(HeliumEvent.PAYLOAD);
                     distributeEvent(event.extractNodePath(), jsonObject);
                 } else if (object instanceof String) {
@@ -286,15 +285,15 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
 
     private void processQuery(HeliumEvent event) {
         Path nodePath = event.extractNodePath();
-        if (!(persistence.get(nodePath) instanceof HashMapBackedNode)) {
-            nodePath = nodePath.getParent();
+        if (!(persistence.get(nodePath) instanceof Node)) {
+            nodePath = nodePath.parent();
         }
 
-        if (hasQuery(nodePath.getParent())) {
+        if (hasQuery(nodePath.parent())) {
             for (Entry<String, String> queryEntry : queryEvaluator.getQueries()) {
                 if (event.getPayload() != null) {
                     Node value = persistence.getNode(new ChangeLog(-1), nodePath);
-                    Node parent = persistence.getNode(new ChangeLog(-1), nodePath.getParent());
+                    Node parent = persistence.getNode(new ChangeLog(-1), nodePath.parent());
                     boolean matches = queryEvaluator.evaluateQueryOnValue(value, queryEntry.getValue());
                     boolean containsNode = queryEvaluator.queryContainsNode(new Path(queryEntry.getKey()),
                             queryEntry.getValue(), nodePath);
@@ -302,35 +301,35 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
                     if (matches) {
                         if (!containsNode) {
                             fireQueryChildAdded(nodePath, parent, value);
-                            queryEvaluator.addNodeToQuery(nodePath.getParent(), queryEntry.getValue(), nodePath);
+                            queryEvaluator.addNodeToQuery(nodePath.parent(), queryEntry.getValue(), nodePath);
                         } else {
                             fireQueryChildChanged(nodePath, parent, value);
                         }
                     } else if (containsNode) {
                         fireQueryChildRemoved(nodePath, value);
-                        queryEvaluator.removeNodeFromQuery(nodePath.getParent(), queryEntry.getValue(),
+                        queryEvaluator.removeNodeFromQuery(nodePath.parent(), queryEntry.getValue(),
                                 nodePath);
                     }
                 } else {
                     fireQueryChildRemoved(nodePath, null);
-                    queryEvaluator.removeNodeFromQuery(nodePath.getParent(), queryEntry.getValue(), nodePath);
+                    queryEvaluator.removeNodeFromQuery(nodePath.parent(), queryEntry.getValue(), nodePath);
                 }
             }
         }
     }
 
     public void fireQueryChildAdded(Path path, Node parent, Object value) {
-        if (authorization.isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(persistence.getRoot()), path,
+        if (authorization.isAuthorized(Operation.READ, auth, path,
                 new InMemoryDataSnapshot(value))) {
             Node broadcast = new HashMapBackedNode();
             broadcast.put(HeliumEvent.TYPE, QUERY_CHILD_ADDED);
-            broadcast.put("name", path.getLastElement());
-            broadcast.put(HeliumEvent.PATH, createPath(path.getParent()));
-            broadcast.put("parent", createPath(path.getParent().getParent()));
-            broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, persistence.getRoot(), value));
-            broadcast.put("hasChildren", InMemoryPersistence.hasChildren(value));
-            broadcast.put("numChildren", InMemoryPersistence.childCount(value));
-            broadcast.put("priority", InMemoryPersistence.priority(parent, path.getLastElement()));
+            broadcast.put("name", path.lastElement());
+            broadcast.put(HeliumEvent.PATH, createPath(path.parent()));
+            broadcast.put("parent", createPath(path.parent().parent()));
+            broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, value));
+            broadcast.put("hasChildren", Persistence.hasChildren(value));
+            broadcast.put("numChildren", Persistence.childCount(value));
+            broadcast.put("priority", Persistence.priority(parent, path.lastElement()));
             sendViaWebsocket(broadcast);
         }
     }
@@ -343,14 +342,14 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
     public void fireChildChanged(String name, Path path, Path parent, Object node,
                                  boolean hasChildren, long numChildren, String prevChildName, int priority) {
         if (node != null && node != HashMapBackedNode.NULL) {
-            if (authorization.isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(persistence.getRoot()), path,
+            if (authorization.isAuthorized(Operation.READ, auth, path,
                     new InMemoryDataSnapshot(node))) {
                 Node broadcast = new HashMapBackedNode();
                 broadcast.put(HeliumEvent.TYPE, CHILD_CHANGED);
                 broadcast.put("name", name);
                 broadcast.put(HeliumEvent.PATH, createPath(path));
                 broadcast.put("parent", createPath(parent));
-                broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, persistence.getRoot(), node));
+                broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, node));
                 broadcast.put("hasChildren", hasChildren);
                 broadcast.put("numChildren", numChildren);
                 broadcast.put("priority", priority);
@@ -360,27 +359,27 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
     }
 
     public void fireChildRemoved(Path path, String name, Object payload) {
-        if (authorization.isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(persistence.getRoot()), path,
+        if (authorization.isAuthorized(Operation.READ, auth, path,
                 new InMemoryDataSnapshot(payload))) {
             Node broadcast = new HashMapBackedNode();
             broadcast.put(HeliumEvent.TYPE, CHILD_REMOVED);
             broadcast.put(HeliumEvent.NAME, name);
             broadcast.put(HeliumEvent.PATH, createPath(path));
-            broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, persistence.getRoot(), payload));
+            broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, payload));
             sendViaWebsocket(broadcast);
         }
     }
 
     @Override
     public void fireValue(String name, Path path, Path parent, Object value, String prevChildName, int priority) {
-        if (authorization.isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(persistence.getRoot()), path,
+        if (authorization.isAuthorized(Operation.READ, auth, path,
                 new InMemoryDataSnapshot(value))) {
             Node broadcast = new HashMapBackedNode();
             broadcast.put(HeliumEvent.TYPE, VALUE);
             broadcast.put("name", name);
             broadcast.put(HeliumEvent.PATH, createPath(path));
             broadcast.put("parent", createPath(parent));
-            broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, persistence.getRoot(), value));
+            broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, value));
             broadcast.put("priority", priority);
             sendViaWebsocket(broadcast);
         }
@@ -397,14 +396,14 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
 
     @Override
     public void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren, String prevChildName, int priority) {
-        if (authorization.isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(persistence.getRoot()), path,
+        if (authorization.isAuthorized(Operation.READ, auth, path,
                 new InMemoryDataSnapshot(value))) {
             Node broadcast = new HashMapBackedNode();
             broadcast.put(HeliumEvent.TYPE, CHILD_ADDED);
             broadcast.put("name", name);
             broadcast.put(HeliumEvent.PATH, createPath(path));
             broadcast.put("parent", createPath(parent));
-            broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, persistence.getRoot(), value));
+            broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, value));
             broadcast.put("hasChildren", hasChildren);
             broadcast.put("numChildren", numChildren);
             broadcast.put("priority", priority);
@@ -414,17 +413,17 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
 
     public void fireQueryChildChanged(Path path, Node parent, Object value) {
         if (value != null && value != HashMapBackedNode.NULL) {
-            if (authorization.isAuthorized(Operation.READ, auth, new InMemoryDataSnapshot(persistence.getRoot()), path,
+            if (authorization.isAuthorized(Operation.READ, auth, path,
                     new InMemoryDataSnapshot(value))) {
                 Node broadcast = new HashMapBackedNode();
                 broadcast.put(HeliumEvent.TYPE, QUERY_CHILD_CHANGED);
-                broadcast.put("name", path.getLastElement());
-                broadcast.put(HeliumEvent.PATH, createPath(path.getParent()));
-                broadcast.put("parent", createPath(path.getParent().getParent()));
-                broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, persistence.getRoot(), value));
-                broadcast.put("hasChildren", InMemoryPersistence.hasChildren(value));
-                broadcast.put("numChildren", InMemoryPersistence.childCount(value));
-                broadcast.put("priority", InMemoryPersistence.priority(parent, path.getLastElement()));
+                broadcast.put("name", path.lastElement());
+                broadcast.put(HeliumEvent.PATH, createPath(path.parent()));
+                broadcast.put("parent", createPath(path.parent().parent()));
+                broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, value));
+                broadcast.put("hasChildren", Persistence.hasChildren(value));
+                broadcast.put("numChildren", Persistence.childCount(value));
+                broadcast.put("priority", Persistence.priority(parent, path.lastElement()));
                 sendViaWebsocket(broadcast);
             }
         }
@@ -433,14 +432,13 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
     public void fireQueryChildRemoved(Path path, Object payload) {
         if (authorization.isAuthorized(Operation.READ,
                 auth,
-                new InMemoryDataSnapshot(persistence.getRoot()),
                 path,
                 new InMemoryDataSnapshot(payload))) {
             Node broadcast = new HashMapBackedNode();
             broadcast.put(HeliumEvent.TYPE, QUERY_CHILD_REMOVED);
-            broadcast.put(HeliumEvent.NAME, path.getLastElement());
-            broadcast.put(HeliumEvent.PATH, createPath(path.getParent()));
-            broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, persistence.getRoot(), payload));
+            broadcast.put(HeliumEvent.NAME, path.lastElement());
+            broadcast.put(HeliumEvent.PATH, createPath(path.parent()));
+            broadcast.put(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, payload));
             sendViaWebsocket(broadcast);
         }
     }
@@ -449,7 +447,6 @@ public class WebsocketEndpoint implements io.helium.server.Endpoint {
         if (hasListener(path, "event")) {
             if (authorization.isAuthorized(Operation.READ,
                     auth,
-                    new InMemoryDataSnapshot(persistence.getRoot()),
                     path,
                     new InMemoryDataSnapshot(payload))) {
                 Node broadcast = new HashMapBackedNode();
