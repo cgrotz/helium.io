@@ -66,7 +66,6 @@ public class AuthorizationProcessor extends UntypedActor {
         LOGGER.trace("checking auth for ("+event.getSequence()+"): ", message);
         Path path = event.extractNodePath();
         if (event.getType() == HeliumEventType.PUSH) {
-            InMemoryDataSnapshot root = new InMemoryDataSnapshot( persistence.get(null));
             InMemoryDataSnapshot data = new InMemoryDataSnapshot( event.get(HeliumEvent.PAYLOAD, null));
             if (authorization.isAuthorized(Operation.WRITE, getAuth(event), path, data)) {
                 distribute(message);
@@ -77,7 +76,6 @@ public class AuthorizationProcessor extends UntypedActor {
             }
         } else if (event.getType() == HeliumEventType.SET) {
             if (event.has(HeliumEvent.PAYLOAD) && event.get(HeliumEvent.PAYLOAD) == HashMapBackedNode.NULL) {
-                InMemoryDataSnapshot root = new InMemoryDataSnapshot( persistence.get(null));
                 InMemoryDataSnapshot data = new InMemoryDataSnapshot( event.get(HeliumEvent.PAYLOAD));
                 if (authorization.isAuthorized(Operation.WRITE, getAuth(event), path, data)){
                     distribute(message);
@@ -87,7 +85,6 @@ public class AuthorizationProcessor extends UntypedActor {
                     LOGGER.warn("not authorized ("+event.getSequence()+"): ", message);
                 }
             } else {
-                InMemoryDataSnapshot root = new InMemoryDataSnapshot( persistence.get(null));
                 if (authorization.isAuthorized(Operation.WRITE, getAuth(event), path, null)){
                     distribute(message);
                     LOGGER.trace("authorized ("+event.getSequence()+"): ", message);

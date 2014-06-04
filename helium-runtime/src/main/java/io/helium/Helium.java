@@ -83,28 +83,10 @@ public class Helium {
         httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
         mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
 
+        // Not needed anymore with mapDb Persistence
         //core.restoreFromJournal();
         initDefaults();
     }
-
-    public Helium(String basePath, String host, int httpPort, int mqttPort) throws IOException {
-        checkNotNull(basePath);
-        persistence = new MapDbPersistence();
-        authorization = new ChainedAuthorization(new RuleBasedAuthorization(persistence));
-        persistence.setAuthorization(authorization);
-        core = new Core(File.createTempFile("Temp" + System.currentTimeMillis(), ""),
-                persistence,
-                authorization);
-        persistence.setCore(core);
-        instance = Optional.of(persistence);
-        httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
-        mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
-
-        //core.restoreFromJournal();
-        initDefaults();
-
-    }
-
 
     private static Optional<MapDbPersistence> instance = Optional.empty();
     public static MapDbPersistence getPersistence() {
@@ -112,6 +94,7 @@ public class Helium {
     }
 
     private void initDefaults() {
+
 
         if(!persistence.exists(Path.of("/users"))) {
             String uuid = UUID.randomUUID().toString();
@@ -150,7 +133,7 @@ public class Helium {
             String host = cmd.getOptionValue("h", "localhost");
             int httpPort = Integer.parseInt(cmd.getOptionValue("p", "8080"));
             int mqttPort = Integer.parseInt(cmd.getOptionValue("m", "1883"));
-            File file = new File(Strings.isNullOrEmpty(directory)?"helium":directory);
+            File file = new File(Strings.isNullOrEmpty(directory)?"helium/journal":directory);
             Files.createParentDirs(new File(file,".helium"));
 
             Helium helium = new Helium( basePath, file, host, httpPort, mqttPort );

@@ -13,6 +13,8 @@ import java.util.List;
  */
 public interface Node {
 
+    public static final Object NULL = new Null();
+
     Object get(String key);
 
     boolean getBoolean(String key);

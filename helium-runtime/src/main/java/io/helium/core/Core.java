@@ -129,7 +129,6 @@ public class Core {
     }
 
     public void handle(HeliumEvent heliumEvent) {
-        heliumEvent.setFromHistory(false);
         handleEvent(heliumEvent);
     }
 

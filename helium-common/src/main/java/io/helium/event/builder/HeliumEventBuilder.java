@@ -16,6 +16,7 @@
 
 package io.helium.event.builder;
 
+import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.json.HashMapBackedNode;
@@ -68,13 +69,13 @@ public class HeliumEventBuilder {
         return this;
     }
 
-    public HeliumEventBuilder fromHistory(String fromHistory) {
-        underConstruction.put(HeliumEvent.FROM_HISTORY, fromHistory);
+    public HeliumEventBuilder fromHistory() {
+        underConstruction.put(HeliumEvent.FROM_HISTORY, true);
         return this;
     }
 
     public HeliumEventBuilder auth(String auth) {
-        underConstruction.put(HeliumEvent.FROM_HISTORY, auth);
+        underConstruction.put(HeliumEvent.AUTH, auth);
         return this;
     }
 
@@ -88,8 +89,21 @@ public class HeliumEventBuilder {
         return this;
     }
 
+    public HeliumEventBuilder noAuthCheck() {
+        underConstruction.put(HeliumEvent.NO_AUTH, true);
+        return this;
+    }
+
     public HeliumEventBuilder prevChildName(String prevChildName) {
         underConstruction.put(HeliumEvent.PREVCHILDNAME, prevChildName);
         return this;
+    }
+
+    public static HeliumEventBuilder set(Path path, Object value) {
+        return start().type(HeliumEventType.SET).path(path.toString()).withPayload(value);
+    }
+
+    public static HeliumEventBuilder push(Path path, Object value) {
+        return start().type(HeliumEventType.PUSH).path(path.toString()).withPayload(value);
     }
 }

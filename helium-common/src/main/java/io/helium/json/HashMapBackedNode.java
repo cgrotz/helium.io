@@ -73,12 +73,6 @@ import java.util.*;
  */
 public class HashMapBackedNode implements Node {
     /**
-     * It is sometimes more convenient and less ambiguous to have a <code>NULL</code> object than to
-     * use Java's <code>null</code> value. <code>Node.NULL.equals(null)</code> returns
-     * <code>true</code>. <code>Node.NULL.toString()</code> returns <code>"null"</code>.
-     */
-    public static final Object NULL = new Null();
-    /**
      * The map where the Node's properties are kept.
      */
     private final Map<String, Object> map;

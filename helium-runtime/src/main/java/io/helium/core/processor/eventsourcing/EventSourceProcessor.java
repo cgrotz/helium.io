@@ -50,7 +50,7 @@ public class EventSourceProcessor extends UntypedActor {
         HeliumEvent event = (HeliumEvent)message;
 
         long startTime = System.currentTimeMillis();
-        if (!event.isFromHistory()) {
+        if (!event.isFromHistory() || event.isNoAuth()) {
             LOGGER.info("storing event: " + event);
             Location write = journal.write(event.toString().getBytes(), WriteType.SYNC);
             journal.sync();

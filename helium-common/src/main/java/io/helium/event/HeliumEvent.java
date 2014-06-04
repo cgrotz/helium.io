@@ -32,6 +32,7 @@ import java.util.Optional;
  */
 public class HeliumEvent extends HashMapBackedNode {
 
+    public static final String NO_AUTH = "noAuth";
     private static long sequence = 0;
 
     private long localSequence = sequence++;
@@ -324,4 +325,7 @@ public class HeliumEvent extends HashMapBackedNode {
     }
 
 
+    public boolean isNoAuth() {
+        return getBoolean(NO_AUTH, false);
+    }
 }
