@@ -4,6 +4,7 @@ import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 
+import java.io.Writer;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -115,6 +116,8 @@ public interface Node {
     Collection<Object> values();
 
     Object get(String key, Object defaultValue);
+
+    public Writer write(Writer writer, int indentFactor, int indent);
 
     /**
      * Node.NULL is equivalent to the value that JavaScript calls null, whilst Java's null is

@@ -25,6 +25,7 @@ import io.helium.core.processor.distribution.Distributor;
 import io.helium.core.processor.persistence.actions.*;
 import io.helium.event.HeliumEvent;
 import io.helium.persistence.Persistence;
+import io.helium.persistence.mapdb.MapDbHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,7 @@ public class PersistenceProcessor extends UntypedActor {
     private SetPriorityAction setPriorityAction;
 
     private UpdateAction updateAction;
+    private int counter;
 
     public PersistenceProcessor() {
         Persistence persistence = Helium.getPersistence();
@@ -53,6 +55,8 @@ public class PersistenceProcessor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
+
+        // Now open first transaction and get map from first transaction
         HeliumEvent event = (HeliumEvent)message;
         long startTime = System.currentTimeMillis();
         switch (event.getType()) {
@@ -75,6 +79,11 @@ public class PersistenceProcessor extends UntypedActor {
                 break;
         }
         distributor.tell(message, ActorRef.noSender());
+        if(counter > 1000) {
+            MapDbHolder.get().compact();
+            counter = 0;
+        }
+        counter++;
         LOGGER.info("onEvent " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
     }
 }

@@ -378,7 +378,7 @@ public class HashMapBackedNode implements Node {
         if (value == null || value.equals(null)) {
             writer.write("null");
         } else if (value instanceof Node) {
-            ((HashMapBackedNode) value).write(writer, indentFactor, indent);
+            ((Node) value).write(writer, indentFactor, indent);
         } else if (value instanceof Number) {
             writer.write(numberToString((Number) value));
         } else if (value instanceof Boolean) {
@@ -998,7 +998,8 @@ public class HashMapBackedNode implements Node {
      * @return The writer.
      * @throws RuntimeException
      */
-    Writer write(Writer writer, int indentFactor, int indent) {
+    @Override
+    public Writer write(Writer writer, int indentFactor, int indent) {
         try {
             boolean commanate = false;
             final int length = this.length();

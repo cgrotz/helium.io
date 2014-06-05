@@ -969,7 +969,8 @@ public class MapDbBackedNode implements Node, Serializable, Externalizable {
      * @return The writer.
      * @throws RuntimeException
      */
-    Writer write(Writer writer, int indentFactor, int indent) {
+    @Override
+    public Writer write(Writer writer, int indentFactor, int indent) {
         try {
             boolean commanate = false;
             final int length = this.length();
