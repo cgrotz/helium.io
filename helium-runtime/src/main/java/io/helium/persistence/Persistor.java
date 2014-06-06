@@ -18,7 +18,10 @@ package io.helium.persistence;
 
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.persistence.actions.*;
+import io.helium.persistence.actions.Push;
+import io.helium.persistence.actions.Remove;
+import io.helium.persistence.actions.Set;
+import io.helium.persistence.actions.Update;
 import io.helium.persistence.mapdb.MapDbBackedNode;
 import io.helium.persistence.mapdb.MapDbPersistence;
 import io.helium.server.distributor.Distributor;
@@ -40,7 +43,6 @@ public class Persistor extends Verticle {
     private Push push;
     private Set set;
     private Remove remove;
-    private SetPriority setPriority;
     private Update update;
 
     private MapDbPersistence persistence = new MapDbPersistence(vertx);
@@ -50,7 +52,6 @@ public class Persistor extends Verticle {
         update = new Update(persistence);
         set = new Set(persistence);
         remove = new Remove(persistence);
-        setPriority = new SetPriority(persistence);
         initDefaults();
 
         vertx.eventBus().registerHandler(SUBSCRIPTION, this::onReceive);
@@ -111,9 +112,6 @@ public class Persistor extends Verticle {
                 break;
             case REMOVE:
                 remove.handle(event);
-                break;
-            case SETPRIORITY:
-                setPriority.handle(event);
                 break;
             default:
                 break;

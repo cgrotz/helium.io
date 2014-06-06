@@ -22,5 +22,5 @@ package io.helium.event;
  * @author Christoph Grotz
  */
 public enum HeliumEventType {
-    PUSH, SET, REMOVE, UPDATE, SETPRIORITY, GET, EVENT
+    PUSH, SET, REMOVE, UPDATE, GET, EVENT
 }

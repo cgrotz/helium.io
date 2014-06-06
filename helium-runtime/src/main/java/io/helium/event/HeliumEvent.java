@@ -69,18 +69,7 @@ public class HeliumEvent extends JsonObject {
      */
     public static final String NAME = "name";
 
-    /**
-     * Priority to be set on the element at the path
-     */
-    public static final String PRIORITY = "priority";
-
-    /**
-     * Previous Child name
-     */
-    public static final String PREVCHILDNAME = "prevChildName";
-
     private ChangeLog changeLog = new ChangeLog();
-
 
     private HeliumEventBuilder builder;
 
@@ -139,14 +128,12 @@ public class HeliumEvent extends JsonObject {
         putString(HeliumEvent.TYPE, type.toString());
         putString(HeliumEvent.PATH, path);
         putValue(HeliumEvent.PAYLOAD, data);
-        putNumber(HeliumEvent.PRIORITY, priority);
         putNumber(HeliumEvent.CREATION_DATE, System.currentTimeMillis());
     }
 
     public HeliumEvent(HeliumEventType type, String path, Integer priority) {
         putString(HeliumEvent.TYPE, type.toString());
         putString(HeliumEvent.PATH, path);
-        putNumber(HeliumEvent.PRIORITY, priority);
         putNumber(HeliumEvent.CREATION_DATE, System.currentTimeMillis());
     }
 
@@ -229,18 +216,6 @@ public class HeliumEvent extends JsonObject {
         putNumber(HeliumEvent.CREATION_DATE, creationDate);
     }
 
-    public int getPriority() {
-        return getInteger(HeliumEvent.PRIORITY);
-    }
-
-    public void setPriority(int priority) {
-        putNumber(HeliumEvent.PRIORITY, priority);
-    }
-
-    public boolean hasPriority() {
-        return containsField(HeliumEvent.PRIORITY);
-    }
-
     public Object getPayload() {
         return getValue(HeliumEvent.PAYLOAD);
     }
@@ -263,11 +238,6 @@ public class HeliumEvent extends JsonObject {
     public HeliumEvent copy() {
         return new HeliumEvent(toString());
     }
-
-    public long getSequence() {
-        return this.localSequence;
-    }
-
 
     public boolean isNoAuth() {
         return getBoolean(NO_AUTH, false);

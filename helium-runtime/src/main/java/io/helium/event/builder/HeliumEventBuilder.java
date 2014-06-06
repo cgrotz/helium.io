@@ -91,18 +91,8 @@ public class HeliumEventBuilder {
         return this;
     }
 
-    public HeliumEventBuilder priority(String priority) {
-        underConstruction.putString(HeliumEvent.PRIORITY, priority);
-        return this;
-    }
-
     public HeliumEventBuilder noAuthCheck() {
         underConstruction.putBoolean(HeliumEvent.NO_AUTH, true);
-        return this;
-    }
-
-    public HeliumEventBuilder prevChildName(String prevChildName) {
-        underConstruction.putString(HeliumEvent.PREVCHILDNAME, prevChildName);
         return this;
     }
 

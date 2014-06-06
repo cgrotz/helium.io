@@ -54,22 +54,22 @@ public class MqttEndpoint implements Endpoint {
                 ChildAddedLogEvent logEvent = (ChildAddedLogEvent) logE;
                 if (hasListener(logEvent.getPath().append(logEvent.getName()), CHILD_ADDED)) {
                     fireChildAdded(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
-                            logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren(),
-                            logEvent.getPrevChildName(), logEvent.getPriority());
+                            logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren()
+                    );
                 }
             }
             if (logE instanceof ValueChangedLogEvent) {
                 ValueChangedLogEvent logEvent = (ValueChangedLogEvent) logE;
                 if (hasListener(logEvent.getPath(), VALUE)) {
                     fireValue(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
-                            logEvent.getValue(), logEvent.getPrevChildName(), logEvent.getPriority());
+                            logEvent.getValue());
                 }
             }
         });
     }
 
     @Override
-    public void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren, String prevChildName, int priority) {
+    public void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
         try {
             if (channel.channel().isWritable()) {
                 if (authorization.isAuthorized(Operation.READ, auth,
@@ -89,7 +89,7 @@ public class MqttEndpoint implements Endpoint {
     }
 
     @Override
-    public void fireValue(String name, Path path, Path parent, Object value, String prevChildName, int priority) {
+    public void fireValue(String name, Path path, Path parent, Object value) {
         try {
             if (channel.channel().isWritable()) {
                 if (authorization.isAuthorized(Operation.READ, auth, path,

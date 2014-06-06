@@ -20,15 +20,12 @@ import io.helium.common.Path;
 
 public class ChildAddedLogEvent extends ChangeLogEvent {
 
-    public ChildAddedLogEvent(String name, Path path, Path parent, Object value, long numChildren,
-                              String prevChildName, int priority) {
+    public ChildAddedLogEvent(String name, Path path, Path parent, Object value, long numChildren) {
         putString("name", name);
         putString("path", path.toString());
         putString("parent", parent.toString());
         putValue("value", value);
-        putString("prevChildName", prevChildName);
-        putString("priority", prevChildName);
-        putString("numChildren", prevChildName);
+        putNumber("numChildren", numChildren);
     }
 
 
@@ -46,14 +43,6 @@ public class ChildAddedLogEvent extends ChangeLogEvent {
 
     public Object getValue() {
         return getValue("value");
-    }
-
-    public String getPrevChildName() {
-        return getString("prevChildName");
-    }
-
-    public int getPriority() {
-        return getInteger("priority");
     }
 
     public int getNumChildren() {

@@ -32,7 +32,7 @@ public interface Endpoint {
 
     void distributeEvent(Path path, JsonObject data);
 
-    void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren, String prevChildName, int priority);
+    void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren);
 
-    void fireValue(String name, Path path, Path parent, Object value, String prevChildName, int priority);
+    void fireValue(String name, Path path, Path parent, Object value);
 }

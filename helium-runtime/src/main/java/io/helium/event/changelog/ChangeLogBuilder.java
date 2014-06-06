@@ -40,45 +40,25 @@ public class ChangeLogBuilder {
     }
 
     public void addChange(String name, Object value) {
-        int priority = priority(node, name);
-        log.addChildChangedLogEntry(name, path, parentPath, value,
-                hasChildren(value), childCount(value),
-                prevChildName(node, priority), priority);
-        log.addValueChangedLogEntry(name, path.append(name), path, value,
-                prevChildName(node, priority), priority);
+        log.addChildChangedLogEntry(name, path, parentPath, value, hasChildren(value), childCount(value));
+        log.addValueChangedLogEntry(name, path.append(name), path, value);
     }
 
     public void addNew(String name, Object value) {
-        int priority = priority(node, name);
-        log.addChildAddedLogEntry(name, path, parentPath, value,
-                hasChildren(value), childCount(value),
-                prevChildName(node, priority), priority);
+        log.addChildAddedLogEntry(name, path, parentPath, value, hasChildren(value), childCount(value));
     }
 
     public void addChangedNode(String name, MapDbBackedNode value) {
-        int priority = priority(node, name);
-        log.addChildChangedLogEntry(name, path, parentPath, value,
-                hasChildren(value), childCount(value),
-                prevChildName(node, priority), priority);
+        log.addChildChangedLogEntry(name, path, parentPath, value, hasChildren(value), childCount(value));
     }
 
     public void addRemoved(String name, Object value) {
         log.addChildRemovedLogEntry(path, name, value);
     }
 
-    private String prevChildName(MapDbBackedNode parent, int priority) {
-        if (priority <= 0) {
-            return null;
-        }
-        return parent.keys().get(priority - 1);
-    }
 
     private long childCount(Object node) {
         return (node instanceof MapDbBackedNode) ? ((MapDbBackedNode) node).getChildren().size() : 0;
-    }
-
-    private int priority(MapDbBackedNode parentNode, String name) {
-        return parentNode.indexOf(name);
     }
 
     private boolean hasChildren(Object node) {

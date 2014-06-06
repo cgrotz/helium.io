@@ -162,7 +162,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
                 + heliumContent;
     }
 
-    private Optional<JsonObject> extractAuthentication(HttpServerRequest req, Handler<Optional<JsonObject>> handler) {
+    private void extractAuthentication(HttpServerRequest req, Handler<Optional<JsonObject>> handler) {
         Optional<JsonObject> auth = Optional.empty();
         if (req.headers().contains(HttpHeaders.Names.AUTHORIZATION)) {
             String authorizationToken = req.headers().get(HttpHeaders.Names.AUTHORIZATION);
@@ -192,6 +192,5 @@ public class RestHandler implements Handler<HttpServerRequest> {
                 }
             });
         }
-        return auth;
     }
 }
