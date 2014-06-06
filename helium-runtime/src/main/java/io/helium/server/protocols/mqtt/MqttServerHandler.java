@@ -2,15 +2,15 @@ package io.helium.server.protocols.mqtt;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.helium.authorization.Authorization;
 import io.helium.common.Path;
-import io.helium.core.Core;
-import io.helium.core.Endpoints;
 import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.json.Node;
 import io.helium.persistence.Persistence;
-import io.helium.persistence.authorization.Authorization;
 import io.helium.server.DataTypeConverter;
+import io.helium.server.distributor.Core;
+import io.helium.server.distributor.Endpoints;
 import io.helium.server.protocols.mqtt.decoder.MqttDecoder;
 import io.helium.server.protocols.mqtt.encoder.Encoder;
 import io.helium.server.protocols.mqtt.protocol.*;
@@ -33,13 +33,12 @@ import java.util.logging.Logger;
 public class MqttServerHandler extends ChannelHandlerAdapter {
     private static final Logger LOGGER = Logger.getLogger(MqttServerHandler.class.getName());
 
-    private final Core core;
     private final Persistence persistence;
     private final Authorization authorization;
     private final MqttDecoder decoder;
     private final Encoder encoder = new Encoder();
     private final DB db;
-    private Map<Channel, MqttEndpoint> endpoints  = Maps.newHashMap();
+    private Map<Channel, MqttEndpoint> endpoints = Maps.newHashMap();
 
     public MqttServerHandler(Persistence persistence, Authorization authorization, Core core, DB db) {
         this.persistence = persistence;
@@ -93,14 +92,13 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
                 case PUBLISH: {
                     Publish publish = (Publish) command.get();
                     Optional<?> optional = Optional.ofNullable(DataTypeConverter.convert(publish.getArray()));
-                    if(publish.isRetainFlag()) {
+                    if (publish.isRetainFlag()) {
                         core.handleEvent(HeliumEventType.SET, endpoints.get(ctx.channel()).getAuth(), publish.getTopic(), optional);
-                    }
-                    else {
+                    } else {
                         core.handleEvent(HeliumEventType.EVENT, endpoints.get(ctx.channel()).getAuth(), publish.getTopic(), optional);
                     }
 
-                    switch(publish.getQosLevel()) {
+                    switch (publish.getQosLevel()) {
                         case AtMostOnce: {
                             break;
                         }
@@ -133,7 +131,7 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
                              */
                             break;
                         }
-                        case R3 : {
+                        case R3: {
                             throw new NotImplementedException();//"QoS Level R3 not implemented yet");
                         }
                     }
@@ -146,24 +144,23 @@ public class MqttServerHandler extends ChannelHandlerAdapter {
         String clientId = connect.getClientId();
         Optional<String> username = connect.getUsername();
         Optional<String> password = connect.getPassword();
-        if(username.isPresent() && password.isPresent()) {
-            Node users = persistence.getNode(new ChangeLog(-1), new Path("/users"));
-            for(Object value : users.values()) {
-                if(value instanceof Node) {
-                    Node node = (Node)value;
-                    if(node.has("username") && node.has("password")) {
+        if (username.isPresent() && password.isPresent()) {
+            Node users = persistence.getNode(new ChangeLog(), new Path("/users"));
+            for (Object value : users.values()) {
+                if (value instanceof Node) {
+                    Node node = (Node) value;
+                    if (node.has("username") && node.has("password")) {
                         String localUsername = node.getString("username");
                         String localPassword = node.getString("password");
-                        if(username.get().equals(localUsername) && password.get().equals(localPassword)) {
+                        if (username.get().equals(localUsername) && password.get().equals(localPassword)) {
                             return Optional.of(node);
                         }
                     }
                 }
             }
-        }
-        else if(clientId != null) {
-            Node auth = persistence.getNode(new ChangeLog(-1), Path.of("/users/"+clientId));
-            if( auth != null){
+        } else if (clientId != null) {
+            Node auth = persistence.getNode(new ChangeLog(), Path.of("/users/" + clientId));
+            if (auth != null) {
                 return Optional.of(auth);
             }
         }

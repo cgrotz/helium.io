@@ -2,7 +2,7 @@ package io.helium.server.protocols.websocket.rpc;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import io.helium.json.Node;
+import org.vertx.java.core.json.JsonObject;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -17,7 +17,7 @@ class RpcMethodInstance {
         this.method = method;
     }
 
-    public Object call(Node passedArgs) {
+    public Object call(JsonObject passedArgs) {
         try {
             List<Object> args = Lists.newArrayList();
             for (Annotation[] annotations : method.getParameterAnnotations()) {
@@ -25,8 +25,8 @@ class RpcMethodInstance {
                     if (annotation instanceof Rpc.Param) {
                         if (passedArgs != null) {
                             Rpc.Param param = (Rpc.Param) annotation;
-                            if (passedArgs.has(param.value())) {
-                                args.add(passedArgs.get(param.value()));
+                            if (passedArgs.containsField(param.value())) {
+                                args.add(passedArgs.getValue(param.value()));
                             } else {
                                 if (!Strings.isNullOrEmpty(param.defaultValue())) {
                                     args.add(param.defaultValue());

@@ -22,13 +22,9 @@
         <artifactId>helium</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>helium-runtime-netty</artifactId>
-    <name>Helium Runtime based on Netty Server</name>
+    <artifactId>helium-runtime</artifactId>
+    <name>Helium Runtime based on Vertx Server</name>
 
-    <properties>
-        <commons.cli.version>1.2</commons.cli.version>
-        <netty.version>5.0.0.Alpha1</netty.version>
-    </properties>
     <build>
         <finalName>helium-runtime</finalName>
         <resources>
@@ -125,13 +121,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>commons-cli</groupId>
-            <artifactId>commons-cli</artifactId>
-            <version>${commons.cli.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.helium</groupId>
-            <artifactId>helium-common</artifactId>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-platform</artifactId>
+            <version>2.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -141,16 +133,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec-http</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor_2.10</artifactId>
-            <version>2.3.3</version>
         </dependency>
         <dependency>
             <groupId>com.github.sbtourist</groupId>

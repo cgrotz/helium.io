@@ -3,7 +3,7 @@ package io.helium.server;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
-import io.helium.json.Node;
+import org.vertx.java.core.json.JsonObject;
 
 /**
  * Created by Christoph Grotz on 26.05.14.
@@ -30,7 +30,7 @@ public interface Endpoint {
 
     void distributeChangeLog(ChangeLog changeLog);
 
-    void distributeEvent(Path path, Node data);
+    void distributeEvent(Path path, JsonObject data);
 
     void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren, String prevChildName, int priority);
 

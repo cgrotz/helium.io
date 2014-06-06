@@ -1,0 +1,17 @@
+{
+  // Java verticle
+  "main":"io.helium.Helium",
+
+  // If your module is going to be registered in the Vert.x module registry you will also need the following
+  // mandatory fields
+  "description":"Helium Server",
+  "licenses": ["The Apache Software License Version 2.0"],
+  "author": "Christoph Grotz",
+
+  // Optional fields
+  "developers": [],
+  "keywords": ["helium", "websockets"],
+  "homepage": "http://christophgrotz.github.io/helium.io/",
+
+  "auto-redeploy": true
+}

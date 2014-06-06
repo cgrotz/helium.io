@@ -1,42 +1,43 @@
 package io.helium.server;
 
-import io.helium.json.HashMapBackedNode;
+import org.vertx.java.core.buffer.Buffer;
+import org.vertx.java.core.json.JsonObject;
 
 /**
  * Created by Christoph Grotz on 29.05.14.
  */
 public class DataTypeConverter {
 
+    public static Object convert(Buffer content) {
+        return convert(content);
+    }
+
     public static Object convert(String content) {
-        if ( content.equalsIgnoreCase("true") || content.equalsIgnoreCase("true") ) {
+        if (content.equalsIgnoreCase("true") || content.equalsIgnoreCase("true")) {
             return Boolean.parseBoolean(content);
         }
 
         try {
             return Double.parseDouble(content);
-        }
-        catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
 
         }
 
         try {
             return Float.parseFloat(content);
-        }
-        catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
 
         }
 
         try {
             return Long.parseLong(content);
-        }
-        catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
 
         }
 
         try {
-            return new HashMapBackedNode(content);
-        }
-        catch(Exception e) {
+            return new JsonObject(content);
+        } catch (Exception e) {
 
         }
 

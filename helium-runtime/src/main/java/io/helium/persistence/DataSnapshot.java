@@ -16,6 +16,8 @@
 
 package io.helium.persistence;
 
+import org.vertx.java.core.json.JsonObject;
+
 /**
  * <p>
  * A RulesDataSnapshot contains data from a Helium location. It is akin to a
@@ -28,7 +30,17 @@ package io.helium.persistence;
  * written.
  * </p>
  */
-public interface DataSnapshot {
+public class DataSnapshot {
+
+    Object val;
+    private JsonObject node;
+
+    public DataSnapshot(Object value) {
+        val = value;
+        if (value instanceof JsonObject) {
+            this.node = (JsonObject) value;
+        }
+    }
 
     /**
      * <p>
@@ -46,7 +58,9 @@ public interface DataSnapshot {
      * "data.child('name').val()", not "data.val().name").
      * </p>
      */
-    public Object val();
+    public Object val() {
+        return val;
+    }
 
     /**
      * <p>
@@ -56,12 +70,16 @@ public interface DataSnapshot {
      * location has no data, an empty RulesDataSnapshot is returned.
      * </p>
      */
-    public DataSnapshot child(String childPath);
+    public DataSnapshot child(String childPath) {
+        return new DataSnapshot(node.getValue(childPath));
+    }
 
     /**
      * Return true if the specified child exists.
      */
-    public boolean hasChild(String childPath);
+    public boolean hasChild(String childPath) {
+        return node.containsField(childPath);
+    }
 
     /**
      * Checks for the existence of children. If no arguments are provided, it
@@ -69,28 +87,44 @@ public interface DataSnapshot {
      * of child names is provided, it will return true only if all of the
      * specifid children exist in the RulesDataSnapshot.
      */
-    public boolean hasChildren(String... childPaths);
+    public boolean hasChildren(String... childPaths) {
+        boolean hasChildren = true;
+        for (String childPath : childPaths) {
+            if (!hasChild(childPath)) {
+                hasChildren = false;
+            }
+        }
+        return hasChildren;
+    }
 
     /**
      * The exists function returns true if this RulesDataSnapshot contains any
      * data. It is purely a convenience function since "data.exists()" is
      * equivalent to "data.val() != null".
      */
-    public boolean exists();
+    public boolean exists() {
+        return (val != null);
+    }
 
     /**
      * @return true if this RulesDataSnapshot contains a numeric value.
      */
-    public boolean isNumber();
+    public boolean isNumber() {
+        return val instanceof Integer || val instanceof Float || val instanceof Double;
+    }
 
     /**
      * @return true if this RulesDataSnapshot contains a string value.
      */
-    public boolean isString();
+    public boolean isString() {
+        return val instanceof String;
+    }
 
     /**
      * @return true if this RulesDataSnapshot contains a boolean value.
      */
-    public boolean isBoolean();
+    public boolean isBoolean() {
+        return val instanceof Boolean;
+    }
 
 }

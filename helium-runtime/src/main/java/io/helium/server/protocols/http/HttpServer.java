@@ -16,57 +16,31 @@
 
 package io.helium.server.protocols.http;
 
-import io.helium.core.Core;
-import io.helium.persistence.Persistence;
-import io.helium.persistence.authorization.Authorization;
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.helium.server.protocols.websocket.WebsocketEndpoint;
+import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.platform.Verticle;
 
-import java.io.IOException;
+public class HttpServer extends Verticle {
 
-public class HttpServer implements Runnable {
-
-    private final int port;
-    private final Authorization authorization;
-    private final Persistence persistence;
-    private final Core core;
-    private final String basePath;
-    private final String host;
-
-    public HttpServer(int port, String basePath, String host, Core core, Persistence persistence, Authorization authorization) throws IOException {
-        this.port = port;
-        this.basePath = basePath;
-        this.host = host;
-        this.core = core;
-        this.persistence = persistence;
-        this.authorization = authorization;
-    }
+    private int port;
+    private String basePath;
+    private String host;
 
     @Override
-    public void run() {
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
-        try {
-            ServerBootstrap b = new ServerBootstrap();
-            b.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .childHandler(new HttpServerInitializer(basePath, persistence, authorization, core));
+    public void start() {
+        JsonObject httpConfig = container.config().getObject("http", new JsonObject());
+        this.port = httpConfig.getInteger("port", 8080);
+        this.basePath = httpConfig.getString("basepath", "http://localhost:8080/");
+        this.host = httpConfig.getString("servername", "localhost");
 
-            Channel ch = b.bind(host, port).sync().channel();
-            System.out.println("Helium server started");
-            System.out.println("Open your browser and navigate to http://localhost:" + port + '/');
-            //System.out.println("Connect via MQTT to mqtt://localhost/");
-            //System.out.println("Connect via CoAP to coap://localhost/");
+        vertx.createHttpServer().requestHandler(new RestHandler(vertx, basePath)).websocketHandler(socket -> {
+            WebsocketEndpoint endpoint = new WebsocketEndpoint(basePath, socket);
+            /*serverWebSocket.endHandler(() -> {
+                // TODO handle Close
+            });*/
+        }).listen(port);
 
-            ch.closeFuture().sync();
-        } catch (InterruptedException e) {
-
-        } finally {
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
-        }
+        System.out.println("Helium http server started");
+        System.out.println("Open your browser and navigate to http://localhost:" + port + '/');
     }
 }

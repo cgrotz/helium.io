@@ -17,9 +17,8 @@
 package io.helium.server.protocols.websocket.rpc;
 
 import com.google.common.collect.Maps;
-import io.helium.json.HashMapBackedNode;
-import io.helium.json.Node;
 import io.helium.server.protocols.websocket.WebsocketEndpoint;
+import org.vertx.java.core.json.JsonObject;
 
 import java.lang.annotation.*;
 import java.util.Map;
@@ -43,30 +42,30 @@ public class Rpc {
     }
 
     public void handle(String message, WebsocketEndpoint socket) {
-        Node json = new HashMapBackedNode(message);
+        JsonObject json = new JsonObject(message);
         String id = checkNotNull(json.getString("id"));
         String method = checkNotNull(json.getString("method"));
-        Node args = json.getNode("args");
+        JsonObject args = json.getObject("args");
         if (methods.containsKey(method)) {
-            Node response = new HashMapBackedNode();
-            response.put("id", id);
+            JsonObject response = new JsonObject();
+            response.putValue("id", id);
             try {
-                response.put("resp", methods.get(method).call(args));
-                response.put("state", "ok");
-                response.put("type", "rpc");
+                response.putValue("resp", methods.get(method).call(args));
+                response.putValue("state", "ok");
+                response.putValue("type", "rpc");
             } catch (Exception e) {
                 e.printStackTrace();
-                response.put("resp", e.getMessage());
-                response.put("state", "error");
-                response.put("type", "rpc");
+                response.putValue("resp", e.getMessage());
+                response.putValue("state", "error");
+                response.putValue("type", "rpc");
             }
             socket.send(response.toString());
         } else {
-            Node response = new HashMapBackedNode();
-            response.put("id", id);
-            response.put("type", "rpc");
-            response.put("state", "error");
-            response.put("resp", method + " not found");
+            JsonObject response = new JsonObject();
+            response.putValue("id", id);
+            response.putValue("type", "rpc");
+            response.putValue("state", "error");
+            response.putValue("resp", method + " not found");
             socket.send(response.toString());
         }
     }

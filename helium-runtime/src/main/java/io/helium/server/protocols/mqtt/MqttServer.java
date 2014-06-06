@@ -1,8 +1,7 @@
 package io.helium.server.protocols.mqtt;
 
-import io.helium.core.Core;
+import io.helium.authorization.Authorization;
 import io.helium.persistence.Persistence;
-import io.helium.persistence.authorization.Authorization;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
@@ -13,14 +12,12 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  * Created by Christoph Grotz on 25.05.14.
  */
 public class MqttServer implements Runnable {
-    private final Core core;
     private final Persistence persistence;
     private final Authorization authorization;
     private final int port;
 
-    public MqttServer(int port, Core core, Persistence persistence, Authorization authorization) {
+    public MqttServer(int port, Persistence persistence, Authorization authorization) {
         this.port = port;
-        this.core = core;
         this.persistence = persistence;
         this.authorization = authorization;
     }

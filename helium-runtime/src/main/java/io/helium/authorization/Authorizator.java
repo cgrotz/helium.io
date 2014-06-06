@@ -1,0 +1,252 @@
+/*
+ * Copyright 2012 The Helium Project
+ *
+ * The Helium Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package io.helium.authorization;
+
+import com.google.common.collect.Maps;
+import io.helium.common.Path;
+import io.helium.event.HeliumEvent;
+import io.helium.event.HeliumEventType;
+import io.helium.persistence.DataSnapshot;
+import io.helium.persistence.Journaling;
+import io.helium.persistence.Persistor;
+import io.helium.persistence.SandBoxedScriptingEnvironment;
+import io.helium.persistence.mapdb.MapDbBackedNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.platform.Verticle;
+
+import javax.script.ScriptException;
+import java.util.Base64;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+public class Authorizator extends Verticle {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Authorizator.class);
+    public final static JsonObject ANONYMOUS = new JsonObject().putBoolean("isAnonymous", true).putObject("permissions", new JsonObject());
+
+    public static final String FILTER_CONTENT = "filterContent";
+    public static final String SUBSCRIPTION = "authorize";
+    public static final String IS_AUTHORIZED = "isAuthorized";
+
+    private SandBoxedScriptingEnvironment scriptingEnvironment = new SandBoxedScriptingEnvironment();
+    private Map<String, String> functions = Maps.newHashMap();
+
+    @Override
+    public void start() {
+        vertx.eventBus().registerHandler(SUBSCRIPTION, this::onReceive);
+        vertx.eventBus().registerHandler(FILTER_CONTENT, this::filter);
+
+        vertx.eventBus().registerHandler(IS_AUTHORIZED, new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> event) {
+                Operation operation = Operation.valueOf(event.body().getString("operation"));
+                Optional<JsonObject> auth;
+                if (event.body().containsField("auth")) {
+                    auth = Optional.of(event.body().getObject("auth"));
+                } else {
+                    auth = Optional.empty();
+                }
+
+                Path path = Path.of(event.body().getString("path"));
+                Object value = event.body().getValue("payload");
+                JsonObject localAuth = auth.orElse(ANONYMOUS);
+                try {
+                    RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/users")));
+                    if (localAuth.containsField("permissions")) {
+                        RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
+                        event.reply(evaluateRules(operation, path, value, localAuth, userRules));
+                        return;
+                    }
+                    event.reply(evaluateRules(operation, path, value, localAuth, globalRules));
+                    return;
+                } catch (NoSuchMethodException | ScriptException e) {
+                    event.reply(Boolean.FALSE);
+                }
+            }
+        });
+    }
+
+    private void filter(Message<JsonObject> message) {
+        Optional<JsonObject> auth;
+        if (message.body().containsField("auth")) {
+            auth = Optional.of(message.body().getObject("auth"));
+        } else {
+            auth = Optional.empty();
+        }
+
+        Path path = Path.of(message.body().getString("path"));
+        Object payload = message.body().getValue("payload");
+        try {
+            message.reply(filterContent(auth, path, payload));
+        } catch (NoSuchMethodException | ScriptException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void onReceive(Message<JsonObject> message) {
+        long startTime = System.currentTimeMillis();
+        HeliumEvent event = HeliumEvent.of(message.body());
+        if (event.isFromHistory()) {
+            distribute(message);
+            return;
+        }
+        LOGGER.trace("checking auth for (" + event.getSequence() + "): ", message);
+        Path path = event.extractNodePath();
+        if (event.getType() == HeliumEventType.PUSH) {
+            DataSnapshot data = new DataSnapshot(event.getValue(HeliumEvent.PAYLOAD));
+            vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, data), (Message<Boolean> event1) -> {
+                if (event1.body()) {
+                    distribute(message);
+                    LOGGER.trace("authorized: ", message);
+                } else {
+                    LOGGER.warn("not authorized: ", message);
+                }
+            });
+        } else if (event.getType() == HeliumEventType.SET) {
+            if (event.containsField(HeliumEvent.PAYLOAD)) {
+                DataSnapshot data = new DataSnapshot(event.getValue(HeliumEvent.PAYLOAD));
+                vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, data), (Message<Boolean> event1) -> {
+                    if (event1.body()) {
+                        distribute(message);
+                        LOGGER.trace("authorized: ", message);
+                    } else {
+                        LOGGER.warn("not authorized: ", message);
+                    }
+                });
+            } else {
+                vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, null), (Message<Boolean> event1) -> {
+                    if (event1.body()) {
+                        distribute(message);
+                        LOGGER.trace("authorized: ", message);
+                    } else {
+                        LOGGER.warn("not authorized: ", message);
+                    }
+                });
+            }
+        }
+        LOGGER.trace("onEvent (" + event.getSequence() + ")" + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
+    }
+
+    private void distribute(Object message) {
+        vertx.eventBus().send(Journaling.SUBSCRIPTION, message);
+        vertx.eventBus().send(Persistor.SUBSCRIPTION, message);
+    }
+
+    private Optional<JsonObject> getAuth(HeliumEvent event) {
+        if (event.containsField(HeliumEvent.AUTH)) {
+            return Optional.of(event.getObject(HeliumEvent.AUTH));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private boolean evaluateRules(Operation op, Path path, Object data, JsonObject localAuth, RuleBasedAuthorizator globalRules) throws ScriptException, NoSuchMethodException {
+        String expression = globalRules.getExpressionForPathAndOperation(path, op);
+        if ("false".equalsIgnoreCase(expression)) {
+            return false;
+        } else if ("true".equalsIgnoreCase(expression)) {
+            return true;
+
+        } else {
+            Object evaledAuth = eval(localAuth.toString());
+            Boolean result = (Boolean) invoke(expression, evaledAuth, path);
+            if (result == null) {
+                return false;
+            }
+            return result.booleanValue();
+        }
+    }
+
+    private Object eval(String code) throws ScriptException, NoSuchMethodException {
+        scriptingEnvironment.eval("function convert(){ return " + code + ";}");
+        Object retValue = scriptingEnvironment.invokeFunction("convert");
+        return retValue;
+    }
+
+    private Object invoke(String code, Object evaledAuth, Path path) throws ScriptException, NoSuchMethodException {
+        String functionName;
+        if (functions.containsKey(code)) {
+            functionName = functions.get(code);
+        } else {
+            functionName = "rule" + UUID.randomUUID().toString().replaceAll("-", "");
+            scriptingEnvironment.eval("var " + functionName + " = " + code + ";");
+            functions.put(code, functionName);
+        }
+        return (Boolean) scriptingEnvironment.invokeFunction(functionName, evaledAuth, path);
+    }
+
+    public Object filterContent(Optional<JsonObject> auth, Path path, Object content) throws ScriptException, NoSuchMethodException {
+        if (content instanceof MapDbBackedNode) {
+            MapDbBackedNode org = (MapDbBackedNode) content;
+            JsonObject node = new JsonObject();
+            for (String key : org.keys()) {
+                Object value = org.get(key);
+                Operation operation = Operation.READ;
+                JsonObject localAuth = auth.orElse(ANONYMOUS);
+
+                RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/users")));
+                if (localAuth.containsField("permissions")) {
+                    RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
+                    if (evaluateRules(operation, path, value, localAuth, userRules)) {
+                        node.putValue(key, filterContent(auth, path, value));
+                    }
+                } else if (evaluateRules(operation, path, value, localAuth, globalRules)) {
+                    node.putValue(key, filterContent(auth, path, value));
+                }
+            }
+            return node;
+        } else {
+            Operation operation = Operation.READ;
+            JsonObject localAuth = auth.orElse(ANONYMOUS);
+
+            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/users")));
+            if (localAuth.containsField("permissions")) {
+                RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
+                if (evaluateRules(operation, path, content, localAuth, userRules)) {
+                    return content;
+                }
+            } else if (evaluateRules(operation, path, content, localAuth, globalRules)) {
+                return content;
+            }
+        }
+        return null;
+    }
+
+    public static JsonObject decode(String authorizationToken) {
+        String decodedAuthorizationToken = new String(Base64.getDecoder().decode(authorizationToken.substring(6)));
+        String username = decodedAuthorizationToken.substring(0, decodedAuthorizationToken.indexOf(":"));
+        String password = decodedAuthorizationToken.substring(decodedAuthorizationToken.indexOf(":") + 1);
+        return new JsonObject().putString("username", username).putString("password", password);
+    }
+
+    public static JsonObject filter(Optional<JsonObject> auth, Path nodePath, Object value) {
+        return new JsonObject().putObject("auth", new JsonObject(auth.get().toString())).putString("path", nodePath.toString()).putValue("payload", value);
+    }
+
+    public static JsonObject check(Operation operation, Optional<JsonObject> auth, Path path, Object value) {
+        JsonObject event = new JsonObject().putString("operation", operation.getOp());
+        if (auth.isPresent()) {
+            event.putObject("auth", auth.get());
+        }
+        event.putString("path", path.toString()).putValue("value", value);
+        return event;
+    }
+}

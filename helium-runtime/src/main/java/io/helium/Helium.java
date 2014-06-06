@@ -18,137 +18,43 @@ package io.helium;
 
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
-import io.helium.common.Path;
-import io.helium.core.Core;
-import io.helium.json.Node;
-import io.helium.persistence.authorization.chained.ChainedAuthorization;
-import io.helium.persistence.authorization.rule.RuleBasedAuthorization;
-import io.helium.persistence.mapdb.MapDbBackedNode;
-import io.helium.persistence.mapdb.MapDbPersistence;
+import io.helium.authorization.Authorizator;
+import io.helium.persistence.Journaling;
+import io.helium.persistence.Persistor;
+import io.helium.server.distributor.Distributor;
 import io.helium.server.protocols.http.HttpServer;
 import io.helium.server.protocols.mqtt.MqttServer;
-import org.apache.commons.cli.*;
+import org.vertx.java.platform.Verticle;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Main entry point for Helium
  *
  * @author Christoph Grotz
  */
-public class Helium {
+public class Helium extends Verticle {
 
-    private static Options options = new Options();
-
-    static {
-        @SuppressWarnings("static-access")
-        Option directoryOption = OptionBuilder.withArgName("directory").hasArg()
-                .withDescription("Journal directory").create("d");
-
-        @SuppressWarnings("static-access")
-        Option basePathOption = OptionBuilder.withArgName("basepath").hasArg()
-                .withDescription("basePath of the Helium instance").create("b");
-
-        options.addOption(directoryOption);
-        options.addOption(basePathOption);
-
-        options.addOption("p", true, "Port for the webserver");
-    }
-
-    private final HttpServer httpServer;
-    private final MqttServer mqttServer;
-
-    private MapDbPersistence persistence;
-    private Core core;
-    private ChainedAuthorization authorization;
-
-    private ExecutorService executor = Executors.newCachedThreadPool();
-
-    public Helium(String basePath, File journalDirectory, String host, int httpPort, int mqttPort) throws IOException {
-        checkNotNull(basePath);
-        checkNotNull(journalDirectory);
-        persistence = new MapDbPersistence();
-        authorization = new ChainedAuthorization(new RuleBasedAuthorization(persistence));
-        persistence.setAuthorization(authorization);
-        core = new Core(journalDirectory, persistence, authorization);
-        persistence.setCore(core);
-        instance = Optional.of(persistence);
-        httpServer = new HttpServer(httpPort, basePath, host, core, persistence, authorization);
-        mqttServer = new MqttServer(mqttPort, core, persistence, authorization);
-
-        // Not needed anymore with mapDb Persistence
-        //core.restoreFromJournal();
-        initDefaults();
-    }
-
-    private static Optional<MapDbPersistence> instance = Optional.empty();
-    public static MapDbPersistence getPersistence() {
-        return instance.get();
-    }
-
-    private void initDefaults() {
-
-
-        if(!persistence.exists(Path.of("/users"))) {
-            String uuid = UUID.randomUUID().toString();
-            Node user = MapDbBackedNode.of(Path.of("/users").append(uuid.replaceAll("-", "")));
-            user.put("username", "admin").put("password", "admin").put("isAdmin", true);
-        }
-
-        if(!persistence.exists(Path.of("/rules"))) {
-            Node rules = MapDbBackedNode.of(Path.of("/rules"));
-            rules.put(".write", "function(auth, path, data, root){\n" +
-                    "   return auth.isAdmin;\n" +
-                    "}\n");
-            rules.put(".read", true);
-            rules.getNode("rules").put(".write", "function(auth, path, data, root){\n" +
-                    "  return auth.isAdmin;\n" +
-                    "}\n")
-                    .put(".read", "function(auth, path, data, root){\n" +
-                            "  return auth.isAdmin;\n" +
-                            "}\n");
-            rules.getNode("users").put(".write", "function(auth, path, data, root){\n" +
-                    "  return auth.isAdmin;\n" +
-                    "}\n")
-                    .put(".read", "function(auth, path, data, root){\n" +
-                            "  return auth.isAdmin;\n" +
-                            "}\n");
-        }
-    }
-
-    public static void main(String[] args) {
-        CommandLineParser parser = new BasicParser();
+    @Override
+    public void start() {
         try {
-            CommandLine cmd = parser.parse(options, args);
 
-            String directory = cmd.getOptionValue("d");
-            String basePath = cmd.getOptionValue("b", "http://localhost:8080");
-            String host = cmd.getOptionValue("h", "localhost");
-            int httpPort = Integer.parseInt(cmd.getOptionValue("p", "8080"));
-            int mqttPort = Integer.parseInt(cmd.getOptionValue("m", "1883"));
-            File file = new File(Strings.isNullOrEmpty(directory)?"helium/journal":directory);
-            Files.createParentDirs(new File(file,".helium"));
+            String directory = container.config().getString("directory", "helium");
+            File file = new File(Strings.isNullOrEmpty(directory) ? "helium/journal" : directory);
+            Files.createParentDirs(new File(file, ".helium"));
 
-            Helium helium = new Helium( basePath, file, host, httpPort, mqttPort );
-            helium.start();
-        } catch (ParseException e) {
-            System.out.println(e.getLocalizedMessage());
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("helium", options);
-        } catch (Exception exp) {
-            exp.printStackTrace();
+            // Workers
+            container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
+            container.deployWorkerVerticle(Distributor.class.getName(), container.config());
+            container.deployWorkerVerticle(Journaling.class.getName(), container.config());
+            container.deployWorkerVerticle(Persistor.class.getName(), container.config());
+
+            // Servers
+            container.deployVerticle(HttpServer.class.getName(), container.config());
+            container.deployVerticle(MqttServer.class.getName(), container.config());
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    }
-
-    private void start() throws InterruptedException {
-        executor.submit(httpServer);
-        executor.submit(mqttServer);
     }
 }
