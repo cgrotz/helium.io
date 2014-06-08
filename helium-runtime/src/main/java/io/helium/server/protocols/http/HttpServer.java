@@ -18,6 +18,9 @@ package io.helium.server.protocols.http;
 
 import io.helium.server.distributor.Endpoints;
 import io.helium.server.protocols.websocket.WebsocketEndpoint;
+import org.vertx.java.core.AsyncResult;
+import org.vertx.java.core.AsyncResultHandler;
+import org.vertx.java.core.Future;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
@@ -28,8 +31,13 @@ public class HttpServer extends Verticle {
     private String host;
 
     @Override
-    public void start() {
+    public void start(Future<Void> startedResult) {
         JsonObject httpConfig = container.config().getObject("http", new JsonObject());
+/*
+        this.host = container.env().getOrDefault("OPENSHIFT_VERTX_IP","127.0.0.1");
+        this.port = Integer.parseInt(container.env().getOrDefault("OPENSHIFT_VERTX_PORT","8080"));
+        this.basePath = "http://helium-skiptag.rhcloud.com/";// "http://"+host+":"+port+"/";
+*/
         this.port = httpConfig.getInteger("port", 8080);
         this.basePath = httpConfig.getString("basepath", "http://localhost:8080/");
         this.host = httpConfig.getString("servername", "localhost");
@@ -43,9 +51,11 @@ public class HttpServer extends Verticle {
                         Endpoints.get().removeEndpoint(endpoint);
                     });
                 })
-                .listen(port);
-
-        System.out.println("Helium http server started");
-        System.out.println("Open your browser and navigate to http://localhost:" + port + '/');
+                .listen(port, new AsyncResultHandler<org.vertx.java.core.http.HttpServer>() {
+                    @Override
+                    public void handle(AsyncResult<org.vertx.java.core.http.HttpServer> event) {
+                        startedResult.complete();
+                    }
+                });
     }
 }
