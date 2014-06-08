@@ -18,7 +18,6 @@ package io.helium.persistence;
 
 import com.google.common.base.Strings;
 import io.helium.event.HeliumEvent;
-import journal.io.api.Journal;
 import journal.io.api.Journal.WriteType;
 import journal.io.api.Location;
 import org.vertx.java.core.Handler;
@@ -29,10 +28,10 @@ import org.vertx.java.platform.Verticle;
 import java.io.File;
 import java.util.Optional;
 
-public class Journaling extends Verticle {
-    public static final String SUBSCRIPTION = "eventsource";
+public class EventSource extends Verticle {
+    public static final String SUBSCRIPTION = EventSource.class.getSimpleName() + ".journal";
 
-    private Journal journal = new Journal();
+    private journal.io.api.Journal journal = new journal.io.api.Journal();
     private Optional<Location> currentLocation = Optional.empty();
 
     @Override
@@ -43,7 +42,7 @@ public class Journaling extends Verticle {
             journal.setDirectory(file);
             journal.open();
         } catch (Exception exp) {
-            exp.printStackTrace();
+            container.logger().error("Failed starting journal", exp);
         }
         vertx.eventBus().registerHandler(SUBSCRIPTION, new Handler<Message<JsonObject>>() {
             @Override
@@ -66,7 +65,7 @@ public class Journaling extends Verticle {
             }
             container.logger().info("onEvent " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
         } catch (Exception exp) {
-            exp.printStackTrace();
+            container.logger().error("Failed storing event", exp);
         }
     }
 }

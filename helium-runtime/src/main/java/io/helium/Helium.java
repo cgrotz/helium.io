@@ -17,7 +17,7 @@
 package io.helium;
 
 import io.helium.authorization.Authorizator;
-import io.helium.persistence.Journaling;
+import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
 import io.helium.server.distributor.Distributor;
 import io.helium.server.protocols.http.HttpServer;
@@ -36,7 +36,7 @@ public class Helium extends Verticle {
             // Workers
             container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
             container.deployWorkerVerticle(Distributor.class.getName(), container.config());
-            container.deployWorkerVerticle(Journaling.class.getName(), container.config());
+            container.deployWorkerVerticle(EventSource.class.getName(), container.config());
             container.deployWorkerVerticle(Persistor.class.getName(), container.config());
 
             // Servers
@@ -52,7 +52,7 @@ public class Helium extends Verticle {
                 MapDbBackedNode.getDb().compact();
             });*/
         } catch (Exception e) {
-            e.printStackTrace();
+            container.logger().error("Failed starting Helium", e);
         }
     }
 }

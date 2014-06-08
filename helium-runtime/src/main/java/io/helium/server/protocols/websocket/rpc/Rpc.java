@@ -19,6 +19,7 @@ package io.helium.server.protocols.websocket.rpc;
 import com.google.common.collect.Maps;
 import io.helium.server.protocols.websocket.WebsocketEndpoint;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.platform.Container;
 
 import java.lang.annotation.*;
 import java.util.Map;
@@ -28,6 +29,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Rpc {
 
     private Map<String, RpcMethodInstance> methods = Maps.newHashMap();
+    private final Container container;
+
+    public Rpc(Container container) {
+        this.container = container;
+    }
 
     public void register(Object obj) {
         try {
@@ -37,7 +43,7 @@ public class Rpc {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            container.logger().error("Couldn't register object", e);
         }
     }
 
@@ -54,7 +60,7 @@ public class Rpc {
                 response.putValue("state", "ok");
                 response.putValue("type", "rpc");
             } catch (Exception e) {
-                e.printStackTrace();
+                this.container.logger().error("RPC failed", e);
                 response.putValue("resp", e.getMessage());
                 response.putValue("state", "error");
                 response.putValue("type", "rpc");

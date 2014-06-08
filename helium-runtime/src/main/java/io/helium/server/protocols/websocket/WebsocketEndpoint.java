@@ -70,7 +70,7 @@ public class WebsocketEndpoint implements Endpoint {
         this.basePath = basePath;
         this.queryEvaluator = new QueryEvaluator(container);
 
-        this.rpc = new Rpc();
+        this.rpc = new Rpc(container);
         this.rpc.register(this);
 
         this.socket.dataHandler(new Handler<Buffer>() {

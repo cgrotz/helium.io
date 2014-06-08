@@ -21,7 +21,7 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.persistence.DataSnapshot;
-import io.helium.persistence.Journaling;
+import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.mapdb.MapDbBackedNode;
@@ -100,7 +100,7 @@ public class Authorizator extends Verticle {
         try {
             message.reply(filterContent(auth, path, payload));
         } catch (NoSuchMethodException | ScriptException e) {
-            e.printStackTrace();
+            container.logger().error("failed filtering", e);
         }
     }
 
@@ -149,7 +149,7 @@ public class Authorizator extends Verticle {
     }
 
     private void distribute(Object message) {
-        vertx.eventBus().send(Journaling.SUBSCRIPTION, message);
+        vertx.eventBus().send(EventSource.SUBSCRIPTION, message);
         vertx.eventBus().send(Persistor.SUBSCRIPTION, message);
     }
 
