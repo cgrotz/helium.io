@@ -36,29 +36,37 @@ public class RuleBasedAuthorizator {
     }
 
     public String getExpressionForPathAndOperation(Path path, Operation op) {
-        if (nodeRule.isPresent()) {
+        if (jsonObjectRule.isPresent()) {
             return getExpressionForPathAndOperationNodeBased(path, op);
-        } else if (jsonObjectRule.isPresent()) {
+        } else if (nodeRule.isPresent()) {
             return getExpressionForPathAndOperationJsonObjectBased(path, op);
         }
         return null;
     }
 
     private String getExpressionForPathAndOperationJsonObjectBased(Path path, Operation op) {
-        MapDbBackedNode node = nodeRule.get().getLastLeafNode(path);
-        if (node != null && node.has(op.getOp()) && node.get(op.getOp()) != null) {
-            Object value = node.get(op.getOp());
-            return value.toString();
+        if (nodeRule.isPresent()) {
+            MapDbBackedNode node = nodeRule.get().getLastLeafNode(path);
+            if (node != null && node.has(op.getOp()) && node.get(op.getOp()) != null) {
+                Object value = node.get(op.getOp());
+                return value.toString();
+            } else {
+                return "false";
+            }
         } else {
             return "false";
         }
     }
 
     private String getExpressionForPathAndOperationNodeBased(Path path, Operation op) {
-        JsonObject node = getLastLeafNode(jsonObjectRule.get(), path);
-        if (node != null && node.containsField(op.getOp()) && node.getValue(op.getOp()) != null) {
-            Object value = node.getValue(op.getOp());
-            return value.toString();
+        if (jsonObjectRule.isPresent()) {
+            JsonObject node = getLastLeafNode(jsonObjectRule.get(), path);
+            if (node != null && node.containsField(op.getOp()) && node.getValue(op.getOp()) != null) {
+                Object value = node.getValue(op.getOp());
+                return value.toString();
+            } else {
+                return "false";
+            }
         } else {
             return "false";
         }

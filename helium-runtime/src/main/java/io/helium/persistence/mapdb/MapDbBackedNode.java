@@ -8,6 +8,7 @@ import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.*;
@@ -808,7 +809,7 @@ public class MapDbBackedNode implements Serializable, Externalizable {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
-        return putWithIndex(key, value, -1);
+        return putWithIndex(key, value);
     }
 
 
@@ -816,11 +817,11 @@ public class MapDbBackedNode implements Serializable, Externalizable {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
-        return putWithIndex(key, node, -1);
+        return putWithIndex(key, node);
     }
 
 
-    public MapDbBackedNode putWithIndex(String key, Object value, int index) {
+    public MapDbBackedNode putWithIndex(String key, Object value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -843,11 +844,7 @@ public class MapDbBackedNode implements Serializable, Externalizable {
             if (keyOrder.contains(key)) {
                 keyOrder.remove(key);
             }
-            if (index < 0 || index > keyOrder.size()) {
-                this.keyOrder.add(key);
-            } else {
-                this.keyOrder.add(index, key);
-            }
+            this.keyOrder.add(key);
         } else {
             this.remove(key);
         }
@@ -1014,7 +1011,7 @@ public class MapDbBackedNode implements Serializable, Externalizable {
 
 
     public Object getObjectForPath(Path path) {
-        MapDbBackedNode parent = getNodeForPath(new ChangeLog(), path.parent());
+        MapDbBackedNode parent = getNodeForPath(ChangeLog.of(new JsonArray()), path.parent());
         return parent.get(path.lastElement());
     }
 
@@ -1159,19 +1156,8 @@ public class MapDbBackedNode implements Serializable, Externalizable {
         return node;
     }
 
-    public static String prevChildName(MapDbBackedNode parent, int priority) {
-        if (priority <= 0) {
-            return null;
-        }
-        return parent.keys().get(priority - 1);
-    }
-
     public static long childCount(Object node) {
         return (node instanceof MapDbBackedNode) ? ((MapDbBackedNode) node).getChildren().size() : 0;
-    }
-
-    public static int priority(MapDbBackedNode parentNode, String name) {
-        return parentNode.indexOf(name);
     }
 
     public static boolean hasChildren(Object node) {

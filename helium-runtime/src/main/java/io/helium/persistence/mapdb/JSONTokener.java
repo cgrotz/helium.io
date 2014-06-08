@@ -319,49 +319,6 @@ public class JSONTokener {
     }
 
     /**
-     * Get the next value. The value can be a Boolean, Double, Integer,
-     * JSONArray, Node, Long, or String, or the Node.NULL object.
-     *
-     * @return An object.
-     * @throws RuntimeException If syntax error.
-     */
-    public Object nextValue() {
-        char c = this.nextClean();
-        String string;
-
-        switch (c) {
-            case '"':
-            case '\'':
-                return this.nextString(c);
-            case '{':
-                this.back();
-                return new HashMapBackedNode(this);
-        }
-
-		/*
-         * Handle unquoted text. This could be the values true, false, or null,
-		 * or it can be a number. An implementation (such as this one) is
-		 * allowed to also accept non-standard forms.
-		 * 
-		 * Accumulate characters until we reach the end of the text or a
-		 * formatting character.
-		 */
-
-        StringBuffer sb = new StringBuffer();
-        while (c >= ' ' && ",:]}/\\\"[{;=#".indexOf(c) < 0) {
-            sb.append(c);
-            c = this.next();
-        }
-        this.back();
-
-        string = sb.toString().trim();
-        if ("".equals(string)) {
-            throw this.syntaxError("Missing value");
-        }
-        return HashMapBackedNode.stringToValue(string);
-    }
-
-    /**
      * Skip characters until the next character is the requested character. If
      * the requested character is not found, no characters are skipped.
      *

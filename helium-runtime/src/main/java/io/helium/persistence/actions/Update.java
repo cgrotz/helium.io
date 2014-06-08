@@ -37,17 +37,11 @@ public class Update {
             if (obj instanceof MapDbBackedNode) {
                 payload = (MapDbBackedNode) obj;
                 if (payload instanceof MapDbBackedNode) {
-                    if (event.hasPriority()) {
-                        persistence.updateValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path,
-                                event.getPriority(), obj);
-                    } else {
-                        persistence.updateValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path, -1,
-                                obj);
-                    }
+                    persistence.updateValue(event, event.getAuth(), path, obj);
                 }
             }
         } else {
-            persistence.remove(event.getChangeLog(), event.getAuth(), path);
+            persistence.remove(event, event.getAuth(), path);
         }
 
     }

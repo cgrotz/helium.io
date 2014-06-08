@@ -3,6 +3,7 @@ package io.helium.persistence.mapdb;
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
 import io.helium.common.Path;
+import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.persistence.ChildRemovedSubTreeVisitor;
@@ -40,125 +41,126 @@ public class MapDbPersistence {
     }
 
 
-    public void remove(ChangeLog log, Optional<JsonObject> auth, Path path) {
+    public void remove(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path) {
         MapDbBackedNode parent = MapDbBackedNode.of(path.parent());
         Object value = parent.get(path.lastElement());
 
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, path, value), (Message<Boolean> event) -> {
-            if (event.body()) {
-                if (value instanceof MapDbBackedNode) {
-                    ((MapDbBackedNode) value).accept(path, new ChildRemovedSubTreeVisitor(log));
+        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, path, value), new Handler<Message<Boolean>>() {
+            @Override
+            public void handle(Message<Boolean> event) {
+                if (event.body()) {
+                    if (value instanceof MapDbBackedNode) {
+                        ((MapDbBackedNode) value).accept(path, new ChildRemovedSubTreeVisitor(heliumEvent.getChangeLog()));
+                    }
+                    parent.remove(path.lastElement());
+                    heliumEvent.getChangeLog().addChildRemovedLogEntry(path.parent(), path.lastElement(), value);
+                    vertx.eventBus().send(Distributor.DISTRIBUTE_CHANGE_LOG, heliumEvent.getChangeLog());
+                    vertx.eventBus().publish(Distributor.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
                 }
-                parent.remove(path.lastElement());
-                log.addChildRemovedLogEntry(path.parent(), path.lastElement(), value);
-                vertx.eventBus().send(Distributor.DISTRIBUTE_CHANGE_LOG, log);
             }
         });
     }
 
-    public void updateValue(ChangeLog log, long sequence, Optional<JsonObject> auth, Path path, int priority, Object payload) {
-        MapDbBackedNode node;
-        boolean created = false;
-        if (!exists(path)) {
-            created = true;
-        }
-        MapDbBackedNode parent;
-        if (exists(path.parent())) {
-            parent = MapDbBackedNode.of(path.parent());
-        } else {
-            parent = MapDbBackedNode.of(path.parent().parent());
-        }
+    public void updateValue(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path, Object payload) {
+        vertx.eventBus().send(Authorizator.IS_AUTHORIZED,
+                Authorizator.check(Operation.WRITE, auth, path, payload),
+                new Handler<Message<Boolean>>() {
+                    @Override
+                    public void handle(Message<Boolean> event) {
+                        if (event.body()) {
+                            MapDbBackedNode node;
+                            boolean created = false;
+                            if (!MapDbPersistence.this.exists(path)) {
+                                created = true;
+                            }
+                            MapDbBackedNode parent;
+                            if (MapDbPersistence.this.exists(path.parent())) {
+                                parent = MapDbBackedNode.of(path.parent());
+                            } else {
+                                parent = MapDbBackedNode.of(path.parent().parent());
+                            }
+                            ChangeLog log = heliumEvent.getChangeLog();
+                            if (payload instanceof MapDbBackedNode) {
+                                if (parent.has(path.lastElement())) {
+                                    node = parent.getNode(path.lastElement());
+                                } else {
+                                    node = MapDbBackedNode.of(path.append(path.lastElement()));
+                                    parent.put(path.lastElement(), node);
+                                }
+                                node.populate(new ChangeLogBuilder(log, path, path.parent(), node), (MapDbBackedNode) payload);
+                                if (created) {
+                                    log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                            .parent(), payload, false, 0);
+                                } else {
+                                    log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                            .parent(), payload, false, 0);
+                                }
+                            } else {
+                                parent.putWithIndex(path.lastElement(), payload);
 
-        if (payload instanceof MapDbBackedNode) {
-            if (parent.has(path.lastElement())) {
-                node = parent.getNode(path.lastElement());
-                parent.setIndexOf(path.lastElement(), priority);
-            } else {
-                node = MapDbBackedNode.of(path.append(path.lastElement()));
-                parent.putWithIndex(path.lastElement(), node, priority);
-            }
-            node.populate(new ChangeLogBuilder(log, sequence, path, path.parent(), node), (MapDbBackedNode) payload);
-            if (created) {
-                log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                .parent(), payload, false, 0,
-                        MapDbBackedNode.prevChildName(parent, MapDbBackedNode.priority(parent, path.lastElement())),
-                        MapDbBackedNode.priority(parent, path.lastElement())
-                );
-            } else {
-                log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                .parent(), payload, false, 0,
-                        MapDbBackedNode.prevChildName(parent, MapDbBackedNode.priority(parent, path.lastElement())),
-                        MapDbBackedNode.priority(parent, path.lastElement())
-                );
-            }
-        } else {
-            parent.putWithIndex(path.lastElement(), payload, priority);
+                                if (created) {
+                                    log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                            .parent(), payload, false, 0);
+                                } else {
+                                    log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                            .parent(), payload, false, 0);
+                                    log.addValueChangedLogEntry(path.lastElement(), path, path.parent(), payload);
+                                }
+                                log.addChildChangedLogEntry(path.parent().lastElement(), path.parent().parent(),
+                                        path.parent().parent().parent(), parent, false, 0);
 
-            if (created) {
-                log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                .parent(), payload, false, 0,
-                        MapDbBackedNode.prevChildName(parent, MapDbBackedNode.priority(parent, path.lastElement())),
-                        MapDbBackedNode.priority(parent, path.lastElement())
-                );
-            } else {
-                log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                .parent(), payload, false, 0,
-                        MapDbBackedNode.prevChildName(parent, MapDbBackedNode.priority(parent, path.lastElement())),
-                        MapDbBackedNode.priority(parent, path.lastElement())
-                );
-                log.addValueChangedLogEntry(path.lastElement(), path, path.parent(), payload,
-                        MapDbBackedNode.prevChildName(parent, MapDbBackedNode.priority(parent, path.lastElement())),
-                        MapDbBackedNode.priority(parent, path.lastElement()));
-            }
-            log.addChildChangedLogEntry(path.parent().lastElement(), path.parent().parent(),
-                    path.parent().parent().parent(), parent, false, 0,
-                    MapDbBackedNode.prevChildName(parent, MapDbBackedNode.priority(parent, path.lastElement())),
-                    MapDbBackedNode.priority(parent, path.lastElement()));
-
-        }
+                            }
+                        }
+                    }
+                }
+        );
     }
 
 
-    public void applyNewValue(ChangeLog log, long sequence, Optional<JsonObject> auth, Path path, int priority, Object payload) {
+    public void applyNewValue(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path, Object payload) {
         vertx.eventBus().send(Authorizator.IS_AUTHORIZED,
                 Authorizator.check(Operation.WRITE, auth, path, payload),
-                (Message<Object> event) -> {
-                    boolean created = false;
-                    if (!exists(path)) {
-                        created = true;
-                    }
+                new Handler<Message<Boolean>>() {
+                    @Override
+                    public void handle(Message<Boolean> event) {
+                        if (event.body()) {
+                            boolean created = false;
+                            if (!MapDbPersistence.this.exists(path)) {
+                                created = true;
+                            }
 
-                    MapDbBackedNode parent;
-                    if (exists(path.parent())) {
-                        parent = MapDbBackedNode.of(path.parent());
-                    } else {
-                        parent = MapDbBackedNode.of(path.parent().parent());
-                    }
+                            MapDbBackedNode parent;
+                            if (MapDbPersistence.this.exists(path.parent())) {
+                                parent = MapDbBackedNode.of(path.parent());
+                            } else {
+                                parent = MapDbBackedNode.of(path.parent().parent());
+                            }
 
-                    if (payload instanceof MapDbBackedNode) {
-                        MapDbBackedNode node = (MapDbBackedNode) payload;
-                        populate(new ChangeLogBuilder(log, sequence, path, path.parent(), node), path, auth, node,
-                                (MapDbBackedNode) payload);
-                        parent.putWithIndex(path.lastElement(), node, priority);
-                    } else {
-                        parent.putWithIndex(path.lastElement(), payload, priority);
-                    }
+                            if (payload instanceof MapDbBackedNode) {
+                                MapDbBackedNode node = (MapDbBackedNode) payload;
+                                MapDbPersistence.this.populate(new ChangeLogBuilder(heliumEvent.getChangeLog(), path, path.parent(), node), path, auth, node,
+                                        (MapDbBackedNode) payload);
+                                parent.putWithIndex(path.lastElement(), node);
+                            } else {
+                                parent.putWithIndex(path.lastElement(), payload);
+                            }
 
-                    if (created) {
-                        log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                        .parent(), payload, false, 0,
-                                MapDbBackedNode.prevChildName(parent, MapDbBackedNode.priority(parent, path.lastElement())),
-                                MapDbBackedNode.priority(parent, path.lastElement())
-                        );
-                    } else {
-                        addChangeEvent(log, path);
-                    }
-                    {
-                        Path currentPath = path;
-                        while (!currentPath.isSimple()) {
-                            log.addValueChangedLogEntry(currentPath.lastElement(), currentPath,
-                                    currentPath.parent(), getObjectForPath(currentPath), null, -1);
-                            currentPath = currentPath.parent();
+                            if (created) {
+                                heliumEvent.getChangeLog().addChildAddedLogEntry(path.lastElement(),
+                                        path.parent(), path.parent().parent(), payload, false, 0);
+                            } else {
+                                MapDbPersistence.this.addChangeEvent(heliumEvent.getChangeLog(), path);
+                            }
+                            {
+                                Path currentPath = path;
+                                while (!currentPath.isSimple()) {
+                                    heliumEvent.getChangeLog().addValueChangedLogEntry(currentPath.lastElement(), currentPath,
+                                            currentPath.parent(), MapDbPersistence.this.getObjectForPath(currentPath));
+                                    currentPath = currentPath.parent();
+                                }
+                            }
+
+                            vertx.eventBus().publish(Distributor.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
                         }
                     }
                 }
@@ -166,7 +168,12 @@ public class MapDbPersistence {
     }
 
     private Object getObjectForPath(Path path) {
-        return MapDbBackedNode.of(path.parent()).get(path.lastElement());
+        MapDbBackedNode node = MapDbBackedNode.of(path.parent());
+        if (node.has(path.lastElement())) {
+            return node.get(path.lastElement());
+        } else {
+            return null;
+        }
     }
 
     public void populate(ChangeLogBuilder logBuilder, Path path, Optional<JsonObject> auth, MapDbBackedNode node, MapDbBackedNode payload) {
@@ -218,37 +225,13 @@ public class MapDbPersistence {
         }
 
         log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                        .parent(), payload, MapDbBackedNode.hasChildren(payload), MapDbBackedNode.childCount(payload),
-                MapDbBackedNode.prevChildName(parent, MapDbBackedNode.priority(parent, path.lastElement())),
-                MapDbBackedNode.priority(parent, path.lastElement())
-        );
+                .parent(), payload, MapDbBackedNode.hasChildren(payload), MapDbBackedNode.childCount(payload));
 
         log.addValueChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                        .parent(), payload, MapDbBackedNode.prevChildName(parent, MapDbBackedNode.priority(parent, path.lastElement())),
-                MapDbBackedNode.priority(parent, path.lastElement())
-        );
+                .parent(), payload);
         if (!path.isEmtpy()) {
             addChangeEvent(log, path.parent());
         }
-    }
-
-
-    public void setPriority(ChangeLog log, Optional<JsonObject> auth, Path path, int priority) {
-        MapDbBackedNode parent;
-        if (exists(path.parent())) {
-            parent = MapDbBackedNode.of(path.parent());
-        } else {
-            parent = MapDbBackedNode.of(path.parent().parent());
-        }
-
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED,
-                Authorizator.check(Operation.WRITE, auth, path, parent),
-                (Message<Boolean> event) -> {
-                    if (event.body()) {
-                        parent.setIndexOf(path.lastElement(), priority);
-                    }
-                }
-        );
     }
 
     public boolean exists(Path path) {

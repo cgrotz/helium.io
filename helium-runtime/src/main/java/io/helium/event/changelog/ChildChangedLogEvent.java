@@ -17,15 +17,31 @@
 package io.helium.event.changelog;
 
 import io.helium.common.Path;
+import org.vertx.java.core.json.JsonObject;
+
+import java.util.Map;
 
 public class ChildChangedLogEvent extends ChangeLogEvent {
 
     public ChildChangedLogEvent(String name, Path path, Path parent, Object value, long numChildren) {
+        putString("type", getClass().getSimpleName());
         putString("name", name);
         putString("path", path.toString());
         putString("parent", parent.toString());
         putValue("value", value);
         putNumber("numChildren", numChildren);
+    }
+
+    public ChildChangedLogEvent(Map<String, Object> stringObjectMap) {
+        super(stringObjectMap);
+    }
+
+    public static ChildChangedLogEvent of(JsonObject logE) {
+        return new ChildChangedLogEvent(logE.toMap());
+    }
+
+    private ChildChangedLogEvent() {
+
     }
 
     public String getName() {

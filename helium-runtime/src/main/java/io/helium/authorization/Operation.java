@@ -28,4 +28,13 @@ public enum Operation {
     public String getOp() {
         return this.op;
     }
+
+    public static Operation get(String op) {
+        if (READ.op.equals(op))
+            return READ;
+        else if (WRITE.op.equals(op))
+            return WRITE;
+        else
+            throw new IllegalStateException(op + " not found");
+    }
 }

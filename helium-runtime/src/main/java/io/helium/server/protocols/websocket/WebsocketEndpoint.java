@@ -16,6 +16,7 @@
 
 package io.helium.server.protocols.websocket;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -39,6 +40,7 @@ import org.vertx.java.core.Vertx;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.ServerWebSocket;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.List;
@@ -61,7 +63,7 @@ public class WebsocketEndpoint implements Endpoint {
     private Rpc rpc;
 
     public WebsocketEndpoint(String basePath,
-                             ServerWebSocket channel,
+                             ServerWebSocket socket,
                              Vertx vertx) {
         this.socket = socket;
         this.vertx = vertx;
@@ -70,6 +72,13 @@ public class WebsocketEndpoint implements Endpoint {
 
         this.rpc = new Rpc();
         this.rpc.register(this);
+
+        this.socket.dataHandler(new Handler<Buffer>() {
+            @Override
+            public void handle(Buffer event) {
+                rpc.handle(event.toString(), WebsocketEndpoint.this);
+            }
+        });
     }
 
 
@@ -79,11 +88,11 @@ public class WebsocketEndpoint implements Endpoint {
         LOGGER.info("attachListener");
         addListener(new Path(HeliumEvent.extractPath(path)), eventType);
         if ("child_added".equals(eventType)) {
-            ChangeLog log = new ChangeLog();
-            syncPath(log, new Path(HeliumEvent.extractPath(path)), this);
+            ChangeLog log = ChangeLog.of(new JsonArray());
+            syncPath(log, Path.of(HeliumEvent.extractPath(path)), this);
             distributeChangeLog(log);
         } else if ("value".equals(eventType)) {
-            ChangeLog log = new ChangeLog();
+            ChangeLog log = ChangeLog.of(new JsonArray());
             syncPropertyValue(log, new Path(HeliumEvent.extractPath(path)), this);
             distributeChangeLog(log);
         }
@@ -100,7 +109,7 @@ public class WebsocketEndpoint implements Endpoint {
     public void attachQuery(@Rpc.Param("path") String path, @Rpc.Param("query") String query) {
         LOGGER.info("attachQuery");
         addQuery(new Path(HeliumEvent.extractPath(path)), query);
-        syncPathWithQuery(new ChangeLog(), new Path(HeliumEvent.extractPath(path)), this,
+        syncPathWithQuery(ChangeLog.of(new JsonArray()), new Path(HeliumEvent.extractPath(path)), this,
                 new QueryEvaluator(), query);
     }
 
@@ -123,7 +132,7 @@ public class WebsocketEndpoint implements Endpoint {
         HeliumEvent event = new HeliumEvent(HeliumEventType.PUSH, path + "/" + name, data);
         if(auth.isPresent())
             event.setAuth(auth.get());
-        vertx.eventBus().send(Distributor.DISTRIBUTE_HELIUM_EVENT, event);
+        vertx.eventBus().send(Authorizator.SUBSCRIPTION, event);
     }
 
     @Rpc.Method
@@ -132,7 +141,7 @@ public class WebsocketEndpoint implements Endpoint {
         HeliumEvent event = new HeliumEvent(HeliumEventType.SET, path, data);
         if(auth.isPresent())
             event.setAuth(auth.get());
-        vertx.eventBus().send(Distributor.DISTRIBUTE_HELIUM_EVENT, event);
+        vertx.eventBus().send(Authorizator.SUBSCRIPTION, event);
     }
 
     @Rpc.Method
@@ -141,7 +150,7 @@ public class WebsocketEndpoint implements Endpoint {
         HeliumEvent event = new HeliumEvent(HeliumEventType.UPDATE, path, data);
         if(auth.isPresent())
             event.setAuth(auth.get());
-        vertx.eventBus().send(Distributor.DISTRIBUTE_HELIUM_EVENT, event);
+        vertx.eventBus().send(Authorizator.SUBSCRIPTION, event);
     }
 
     @Rpc.Method
@@ -189,6 +198,18 @@ public class WebsocketEndpoint implements Endpoint {
             @Override
             public void handle(Optional<JsonObject> event) {
                 auth = event;
+                for (String path : attached_listeners.keys()) {
+                    for (String eventType : attached_listeners.get(path))
+                        if ("child_added".equals(eventType)) {
+                            ChangeLog log = ChangeLog.of(new JsonArray());
+                            syncPath(log, Path.of(HeliumEvent.extractPath(path)), WebsocketEndpoint.this);
+                            distributeChangeLog(log);
+                        } else if ("value".equals(eventType)) {
+                            ChangeLog log = ChangeLog.of(new JsonArray());
+                            syncPropertyValue(log, new Path(HeliumEvent.extractPath(path)), WebsocketEndpoint.this);
+                            distributeChangeLog(log);
+                        }
+                }
             }
         });
     }
@@ -244,39 +265,39 @@ public class WebsocketEndpoint implements Endpoint {
     }
 
     public void distributeChangeLog(ChangeLog changeLog) {
-        long startTime = System.currentTimeMillis();
-        changeLog.forEach(logE -> {
-            if (logE instanceof ChildAddedLogEvent) {
-                ChildAddedLogEvent logEvent = (ChildAddedLogEvent) logE;
+        changeLog.forEach(obj -> {
+            JsonObject logE = (JsonObject) obj;
+
+            if (logE.getString("type").equals(ChildAddedLogEvent.class.getSimpleName())) {
+                ChildAddedLogEvent logEvent = ChildAddedLogEvent.of(logE);
                 if (hasListener(logEvent.getPath(), CHILD_ADDED)) {
                     fireChildAdded(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
                             logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren()
                     );
                 }
             }
-            if (logE instanceof ChildChangedLogEvent) {
-                ChildChangedLogEvent logEvent = (ChildChangedLogEvent) logE;
+            if (logE.getString("type").equals(ChildChangedLogEvent.class.getSimpleName())) {
+                ChildChangedLogEvent logEvent = ChildChangedLogEvent.of(logE);
                 if (hasListener(logEvent.getPath(), CHILD_CHANGED)) {
                     fireChildChanged(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
                             logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren()
                     );
                 }
             }
-            if (logE instanceof ValueChangedLogEvent) {
-                ValueChangedLogEvent logEvent = (ValueChangedLogEvent) logE;
+            if (logE.getString("type").equals(ValueChangedLogEvent.class.getSimpleName())) {
+                ValueChangedLogEvent logEvent = ValueChangedLogEvent.of(logE);
                 if (hasListener(logEvent.getPath(), VALUE)) {
                     fireValue(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
                             logEvent.getValue());
                 }
             }
-            if (logE instanceof ChildRemovedLogEvent) {
-                ChildRemovedLogEvent logEvent = (ChildRemovedLogEvent) logE;
+            if (logE.getString("type").equals(ChildRemovedLogEvent.class.getSimpleName())) {
+                ChildRemovedLogEvent logEvent = ChildRemovedLogEvent.of(logE);
                 if (hasListener(logEvent.getPath(), CHILD_REMOVED)) {
                     fireChildRemoved(logEvent.getPath(), logEvent.getName(), logEvent.getValue());
                 }
             }
         });
-        LOGGER.info("distributeChangeLog "+(System.currentTimeMillis()-startTime)+"ms");
     }
 
     private void processQuery(HeliumEvent event) {
@@ -315,38 +336,48 @@ public class WebsocketEndpoint implements Endpoint {
     }
 
     public void fireQueryChildAdded(Path path, JsonObject parent, Object value) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(value)), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                JsonObject broadcast = new JsonObject();
-                broadcast.putValue(HeliumEvent.TYPE, QUERY_CHILD_ADDED);
-                broadcast.putValue("name", path.lastElement());
-                broadcast.putValue(HeliumEvent.PATH, createPath(path.parent()));
-                broadcast.putValue("parent", createPath(path.parent().parent()));
-                broadcast.putValue(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, value));
-                broadcast.putValue("hasChildren", MapDbBackedNode.hasChildren(value));
-                broadcast.putValue("numChildren", MapDbBackedNode.childCount(value));
-                sendViaWebsocket(broadcast);
+                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
+                    @Override
+                    public void handle(Message<Object> event) {
+                        JsonObject broadcast = new JsonObject();
+                        broadcast.putValue(HeliumEvent.TYPE, QUERY_CHILD_ADDED);
+                        broadcast.putValue("name", path.lastElement());
+                        broadcast.putValue(HeliumEvent.PATH, createPath(path.parent()));
+                        broadcast.putValue("parent", createPath(path.parent().parent()));
+                        broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
+                        broadcast.putValue("hasChildren", MapDbBackedNode.hasChildren(value));
+                        broadcast.putValue("numChildren", MapDbBackedNode.childCount(value));
+                        sendViaWebsocket(broadcast);
+                    }
+                });
             }
         });
     }
 
     private void sendViaWebsocket(JsonObject broadcast) {
-        socket.write(new Buffer(broadcast.toString()));
+        socket.writeTextFrame(broadcast.toString());
     }
 
     public void fireChildChanged(String name, Path path, Path parent, Object node,
                                  boolean hasChildren, long numChildren) {
         vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(node)), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                JsonObject broadcast = new JsonObject();
-                broadcast.putValue(HeliumEvent.TYPE, CHILD_CHANGED);
-                broadcast.putValue("name", name);
-                broadcast.putValue(HeliumEvent.PATH, createPath(path));
-                broadcast.putValue("parent", createPath(parent));
-                broadcast.putValue(HeliumEvent.PAYLOAD, MapDbBackedNode.filterContent(auth, path, node));
-                broadcast.putValue("hasChildren", hasChildren);
-                broadcast.putValue("numChildren", numChildren);
-                sendViaWebsocket(broadcast);
+                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, node), new Handler<Message<Object>>() {
+                    @Override
+                    public void handle(Message<Object> event) {
+                        JsonObject broadcast = new JsonObject();
+                        broadcast.putValue(HeliumEvent.TYPE, CHILD_CHANGED);
+                        broadcast.putValue("name", name);
+                        broadcast.putValue(HeliumEvent.PATH, createPath(path));
+                        broadcast.putValue("parent", createPath(parent));
+                        broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
+                        broadcast.putValue("hasChildren", hasChildren);
+                        broadcast.putValue("numChildren", numChildren);
+                        sendViaWebsocket(broadcast);
+                    }
+                });
             }
         });
     }
@@ -354,27 +385,37 @@ public class WebsocketEndpoint implements Endpoint {
     public void fireChildRemoved(Path path, String name, Object payload) {
         vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                JsonObject broadcast = new JsonObject();
-                broadcast.putValue(HeliumEvent.TYPE, CHILD_REMOVED);
-                broadcast.putValue(HeliumEvent.NAME, name);
-                broadcast.putValue(HeliumEvent.PATH, createPath(path));
-                broadcast.putValue(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, payload));
-                sendViaWebsocket(broadcast);
+                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, payload), new Handler<Message<Object>>() {
+                    @Override
+                    public void handle(Message<Object> event) {
+                        JsonObject broadcast = new JsonObject();
+                        broadcast.putValue(HeliumEvent.TYPE, CHILD_REMOVED);
+                        broadcast.putValue(HeliumEvent.NAME, name);
+                        broadcast.putValue(HeliumEvent.PATH, createPath(path));
+                        broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
+                        sendViaWebsocket(broadcast);
+                    }
+                });
             }
         });
     }
 
     @Override
     public void fireValue(String name, Path path, Path parent, Object value) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(value)), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                JsonObject broadcast = new JsonObject();
-                broadcast.putValue(HeliumEvent.TYPE, VALUE);
-                broadcast.putValue("name", name);
-                broadcast.putValue(HeliumEvent.PATH, createPath(path));
-                broadcast.putValue("parent", createPath(parent));
-                broadcast.putValue(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, value));
-                sendViaWebsocket(broadcast);
+                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
+                    @Override
+                    public void handle(Message<Object> event) {
+                        JsonObject broadcast = new JsonObject();
+                        broadcast.putValue(HeliumEvent.TYPE, VALUE);
+                        broadcast.putValue("name", name);
+                        broadcast.putValue(HeliumEvent.PATH, createPath(path));
+                        broadcast.putValue("parent", createPath(parent));
+                        broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
+                        sendViaWebsocket(broadcast);
+                    }
+                });
             }
         });
     }
@@ -382,33 +423,43 @@ public class WebsocketEndpoint implements Endpoint {
     @Override
     public void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
 
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(value)), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                JsonObject broadcast = new JsonObject();
-                broadcast.putValue(HeliumEvent.TYPE, CHILD_ADDED);
-                broadcast.putValue("name", name);
-                broadcast.putValue(HeliumEvent.PATH, createPath(path));
-                broadcast.putValue("parent", createPath(parent));
-                broadcast.putValue(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, value));
-                broadcast.putValue("hasChildren", hasChildren);
-                broadcast.putValue("numChildren", numChildren);
-                sendViaWebsocket(broadcast);
+                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
+                    @Override
+                    public void handle(Message<Object> event) {
+                        JsonObject broadcast = new JsonObject();
+                        broadcast.putValue(HeliumEvent.TYPE, CHILD_ADDED);
+                        broadcast.putValue("name", name);
+                        broadcast.putValue(HeliumEvent.PATH, createPath(path));
+                        broadcast.putValue("parent", createPath(parent));
+                        broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
+                        broadcast.putValue("hasChildren", hasChildren);
+                        broadcast.putValue("numChildren", numChildren);
+                        sendViaWebsocket(broadcast);
+                    }
+                });
             }
         });
     }
 
     public void fireQueryChildChanged(Path path, JsonObject parent, Object value) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(value)), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                JsonObject broadcast = new JsonObject();
-                broadcast.putValue(HeliumEvent.TYPE, QUERY_CHILD_CHANGED);
-                broadcast.putValue("name", path.lastElement());
-                broadcast.putValue(HeliumEvent.PATH, createPath(path.parent()));
-                broadcast.putValue("parent", createPath(path.parent().parent()));
-                broadcast.putValue(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, value));
-                broadcast.putValue("hasChildren", MapDbBackedNode.hasChildren(value));
-                broadcast.putValue("numChildren", MapDbBackedNode.childCount(value));
-                sendViaWebsocket(broadcast);
+                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
+                    @Override
+                    public void handle(Message<Object> event) {
+                        JsonObject broadcast = new JsonObject();
+                        broadcast.putValue(HeliumEvent.TYPE, QUERY_CHILD_CHANGED);
+                        broadcast.putValue("name", path.lastElement());
+                        broadcast.putValue(HeliumEvent.PATH, createPath(path.parent()));
+                        broadcast.putValue("parent", createPath(path.parent().parent()));
+                        broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
+                        broadcast.putValue("hasChildren", MapDbBackedNode.hasChildren(value));
+                        broadcast.putValue("numChildren", MapDbBackedNode.childCount(value));
+                        sendViaWebsocket(broadcast);
+                    }
+                });
             }
         });
     }
@@ -416,12 +467,17 @@ public class WebsocketEndpoint implements Endpoint {
     public void fireQueryChildRemoved(Path path, Object payload) {
         vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                JsonObject broadcast = new JsonObject();
-                broadcast.putValue(HeliumEvent.TYPE, QUERY_CHILD_REMOVED);
-                broadcast.putValue(HeliumEvent.NAME, path.lastElement());
-                broadcast.putValue(HeliumEvent.PATH, createPath(path.parent()));
-                broadcast.putValue(HeliumEvent.PAYLOAD, authorization.filterContent(auth, path, payload));
-                sendViaWebsocket(broadcast);
+                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, payload), new Handler<Message<Object>>() {
+                    @Override
+                    public void handle(Message<Object> event) {
+                        JsonObject broadcast = new JsonObject();
+                        broadcast.putValue(HeliumEvent.TYPE, QUERY_CHILD_REMOVED);
+                        broadcast.putValue(HeliumEvent.NAME, path.lastElement());
+                        broadcast.putValue(HeliumEvent.PATH, createPath(path.parent()));
+                        broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
+                        sendViaWebsocket(broadcast);
+                    }
+                });
             }
         });
     }
@@ -490,7 +546,7 @@ public class WebsocketEndpoint implements Endpoint {
 
     public void executeDisconnectEvents() {
         for (HeliumEvent event : disconnectEvents) {
-            vertx.eventBus().send(Distributor.DISTRIBUTE_HELIUM_EVENT, event);
+            vertx.eventBus().send(Authorizator.SUBSCRIPTION, event);
         }
     }
 
@@ -515,13 +571,15 @@ public class WebsocketEndpoint implements Endpoint {
         }
 
         for (String childNodeKey : node.keys()) {
-            Object object = node.get(childNodeKey);
-            boolean hasChildren = (object instanceof MapDbBackedNode) ? ((MapDbBackedNode) object).hasChildren() : false;
-            int indexOf = node.indexOf(childNodeKey);
-            int numChildren = (object instanceof MapDbBackedNode) ? ((MapDbBackedNode) object).length() : 0;
-            if (object != null && object != null) {
-                handler.fireChildAdded(childNodeKey, path, path.parent(), object, hasChildren,
-                        numChildren);
+            if (!Strings.isNullOrEmpty(childNodeKey)) {
+                Object object = node.get(childNodeKey);
+                boolean hasChildren = (object instanceof MapDbBackedNode) ? ((MapDbBackedNode) object).hasChildren() : false;
+                int indexOf = node.indexOf(childNodeKey);
+                int numChildren = (object instanceof MapDbBackedNode) ? ((MapDbBackedNode) object).length() : 0;
+                if (object != null && object != null) {
+                    handler.fireChildAdded(childNodeKey, path, path.parent(), object, hasChildren,
+                            numChildren);
+                }
             }
         }
     }

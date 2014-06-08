@@ -24,6 +24,9 @@ import journal.io.api.Journal.WriteType;
 import journal.io.api.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
 import java.io.File;
@@ -47,12 +50,17 @@ public class Journaling extends Verticle {
         } catch (Exception exp) {
             exp.printStackTrace();
         }
-        vertx.eventBus().registerHandler(SUBSCRIPTION, this::onReceive);
+        vertx.eventBus().registerHandler(SUBSCRIPTION, new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> event) {
+                onReceive(event.body());
+            }
+        });
     }
 
-    public void onReceive(Object message) {
+    public void onReceive(JsonObject message) {
         try {
-            HeliumEvent event = (HeliumEvent) message;
+            HeliumEvent event = HeliumEvent.of(message);
 
             long startTime = System.currentTimeMillis();
             if (!event.isFromHistory() || event.isNoAuth()) {

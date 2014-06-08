@@ -19,6 +19,7 @@ package io.helium.event;
 import io.helium.common.Path;
 import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.event.changelog.ChangeLog;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Optional;
@@ -31,9 +32,6 @@ import java.util.Optional;
 public class HeliumEvent extends JsonObject {
 
     public static final String NO_AUTH = "noAuth";
-    private static long sequence = 0;
-
-    private long localSequence = sequence++;
     /**
      * Payload of the event
      */
@@ -68,8 +66,6 @@ public class HeliumEvent extends JsonObject {
      * Name of the data element
      */
     public static final String NAME = "name";
-
-    private ChangeLog changeLog = new ChangeLog();
 
     private HeliumEventBuilder builder;
 
@@ -121,19 +117,6 @@ public class HeliumEvent extends JsonObject {
         if (payload.isPresent()) {
             putValue(HeliumEvent.PAYLOAD, payload.get());
         }
-        putNumber(HeliumEvent.CREATION_DATE, System.currentTimeMillis());
-    }
-
-    public HeliumEvent(HeliumEventType type, String path, Object data, Integer priority) {
-        putString(HeliumEvent.TYPE, type.toString());
-        putString(HeliumEvent.PATH, path);
-        putValue(HeliumEvent.PAYLOAD, data);
-        putNumber(HeliumEvent.CREATION_DATE, System.currentTimeMillis());
-    }
-
-    public HeliumEvent(HeliumEventType type, String path, Integer priority) {
-        putString(HeliumEvent.TYPE, type.toString());
-        putString(HeliumEvent.PATH, path);
         putNumber(HeliumEvent.CREATION_DATE, System.currentTimeMillis());
     }
 
@@ -221,7 +204,9 @@ public class HeliumEvent extends JsonObject {
     }
 
     public ChangeLog getChangeLog() {
-        return changeLog;
+        JsonArray log = getArray("changelog", new JsonArray());
+        putArray("changelog", log);
+        return ChangeLog.of(log);
     }
 
     public Optional<JsonObject> getAuth() {

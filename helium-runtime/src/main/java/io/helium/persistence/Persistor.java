@@ -24,7 +24,6 @@ import io.helium.persistence.actions.Set;
 import io.helium.persistence.actions.Update;
 import io.helium.persistence.mapdb.MapDbBackedNode;
 import io.helium.persistence.mapdb.MapDbPersistence;
-import io.helium.server.distributor.Distributor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -45,16 +44,22 @@ public class Persistor extends Verticle {
     private Remove remove;
     private Update update;
 
-    private MapDbPersistence persistence = new MapDbPersistence(vertx);
+    private MapDbPersistence persistence;
 
     public void start() {
+        persistence = new MapDbPersistence(vertx);
         push = new Push(persistence);
         update = new Update(persistence);
         set = new Set(persistence);
         remove = new Remove(persistence);
         initDefaults();
 
-        vertx.eventBus().registerHandler(SUBSCRIPTION, this::onReceive);
+        vertx.eventBus().registerHandler(SUBSCRIPTION, new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> event) {
+                onReceive(event.body());
+            }
+        });
         vertx.eventBus().registerHandler(GET, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
@@ -97,9 +102,9 @@ public class Persistor extends Verticle {
         }
     }
 
-    public void onReceive(Object message) {
+    public void onReceive(JsonObject message) {
         // Now open first transaction and get map from first transaction
-        HeliumEvent event = (HeliumEvent) message;
+        HeliumEvent event = HeliumEvent.of(message);
         switch (event.getType()) {
             case PUSH:
                 push.handle(event);
@@ -116,7 +121,6 @@ public class Persistor extends Verticle {
             default:
                 break;
         }
-        vertx.eventBus().publish(Distributor.DISTRIBUTE_HELIUM_EVENT, message);
     }
 
     public static JsonObject get(Path path) {

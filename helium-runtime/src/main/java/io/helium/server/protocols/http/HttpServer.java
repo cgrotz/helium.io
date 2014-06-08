@@ -16,6 +16,7 @@
 
 package io.helium.server.protocols.http;
 
+import io.helium.server.distributor.Endpoints;
 import io.helium.server.protocols.websocket.WebsocketEndpoint;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
@@ -33,12 +34,16 @@ public class HttpServer extends Verticle {
         this.basePath = httpConfig.getString("basepath", "http://localhost:8080/");
         this.host = httpConfig.getString("servername", "localhost");
 
-        vertx.createHttpServer().requestHandler(new RestHandler(vertx, basePath)).websocketHandler(socket -> {
-            WebsocketEndpoint endpoint = new WebsocketEndpoint(basePath, socket);
-            /*serverWebSocket.endHandler(() -> {
-                // TODO handle Close
-            });*/
-        }).listen(port);
+        vertx.createHttpServer()
+                .requestHandler(new RestHandler(vertx, basePath))
+                .websocketHandler(socket -> {
+                    WebsocketEndpoint endpoint = new WebsocketEndpoint(basePath, socket, vertx);
+                    Endpoints.get().addEndpoint(endpoint);
+                    /*socket.endHandler(() -> {
+                        // TODO handle Close
+                    });*/
+                })
+                .listen(port);
 
         System.out.println("Helium http server started");
         System.out.println("Open your browser and navigate to http://localhost:" + port + '/');

@@ -40,11 +40,11 @@ import java.util.UUID;
 
 public class Authorizator extends Verticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(Authorizator.class);
-    public final static JsonObject ANONYMOUS = new JsonObject().putBoolean("isAnonymous", true).putObject("permissions", new JsonObject());
+    public final static JsonObject ANONYMOUS = new JsonObject().putBoolean("isAnonymous", true);
 
-    public static final String FILTER_CONTENT = "filterContent";
-    public static final String SUBSCRIPTION = "authorize";
-    public static final String IS_AUTHORIZED = "isAuthorized";
+    public static final String FILTER_CONTENT = "authorizator.filter";
+    public static final String SUBSCRIPTION = "authorizator.authorize";
+    public static final String IS_AUTHORIZED = "authorizator.isAuthorized";
 
     private SandBoxedScriptingEnvironment scriptingEnvironment = new SandBoxedScriptingEnvironment();
     private Map<String, String> functions = Maps.newHashMap();
@@ -52,12 +52,17 @@ public class Authorizator extends Verticle {
     @Override
     public void start() {
         vertx.eventBus().registerHandler(SUBSCRIPTION, this::onReceive);
-        vertx.eventBus().registerHandler(FILTER_CONTENT, this::filter);
+        vertx.eventBus().registerHandler(FILTER_CONTENT, new Handler<Message>() {
+            @Override
+            public void handle(Message event) {
+                filter(event);
+            }
+        });
 
         vertx.eventBus().registerHandler(IS_AUTHORIZED, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
-                Operation operation = Operation.valueOf(event.body().getString("operation"));
+                Operation operation = Operation.get(event.body().getString("operation"));
                 Optional<JsonObject> auth;
                 if (event.body().containsField("auth")) {
                     auth = Optional.of(event.body().getObject("auth"));
@@ -69,7 +74,7 @@ public class Authorizator extends Verticle {
                 Object value = event.body().getValue("payload");
                 JsonObject localAuth = auth.orElse(ANONYMOUS);
                 try {
-                    RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/users")));
+                    RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/rules")));
                     if (localAuth.containsField("permissions")) {
                         RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
                         event.reply(evaluateRules(operation, path, value, localAuth, userRules));
@@ -108,13 +113,13 @@ public class Authorizator extends Verticle {
             distribute(message);
             return;
         }
-        LOGGER.trace("checking auth for (" + event.getSequence() + "): ", message);
+        LOGGER.trace("checking auth for: ", message);
         Path path = event.extractNodePath();
         if (event.getType() == HeliumEventType.PUSH) {
             DataSnapshot data = new DataSnapshot(event.getValue(HeliumEvent.PAYLOAD));
             vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, data), (Message<Boolean> event1) -> {
                 if (event1.body()) {
-                    distribute(message);
+                    distribute(message.body());
                     LOGGER.trace("authorized: ", message);
                 } else {
                     LOGGER.warn("not authorized: ", message);
@@ -125,7 +130,7 @@ public class Authorizator extends Verticle {
                 DataSnapshot data = new DataSnapshot(event.getValue(HeliumEvent.PAYLOAD));
                 vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, data), (Message<Boolean> event1) -> {
                     if (event1.body()) {
-                        distribute(message);
+                        distribute(message.body());
                         LOGGER.trace("authorized: ", message);
                     } else {
                         LOGGER.warn("not authorized: ", message);
@@ -134,7 +139,7 @@ public class Authorizator extends Verticle {
             } else {
                 vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, null), (Message<Boolean> event1) -> {
                     if (event1.body()) {
-                        distribute(message);
+                        distribute(message.body());
                         LOGGER.trace("authorized: ", message);
                     } else {
                         LOGGER.warn("not authorized: ", message);
@@ -142,7 +147,7 @@ public class Authorizator extends Verticle {
                 });
             }
         }
-        LOGGER.trace("onEvent (" + event.getSequence() + ")" + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
+        LOGGER.trace("onEvent " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
     }
 
     private void distribute(Object message) {
@@ -158,8 +163,8 @@ public class Authorizator extends Verticle {
         }
     }
 
-    private boolean evaluateRules(Operation op, Path path, Object data, JsonObject localAuth, RuleBasedAuthorizator globalRules) throws ScriptException, NoSuchMethodException {
-        String expression = globalRules.getExpressionForPathAndOperation(path, op);
+    private boolean evaluateRules(Operation op, Path path, Object data, JsonObject localAuth, RuleBasedAuthorizator rules) throws ScriptException, NoSuchMethodException {
+        String expression = rules.getExpressionForPathAndOperation(path, op);
         if ("false".equalsIgnoreCase(expression)) {
             return false;
         } else if ("true".equalsIgnoreCase(expression)) {
@@ -194,15 +199,15 @@ public class Authorizator extends Verticle {
     }
 
     public Object filterContent(Optional<JsonObject> auth, Path path, Object content) throws ScriptException, NoSuchMethodException {
-        if (content instanceof MapDbBackedNode) {
-            MapDbBackedNode org = (MapDbBackedNode) content;
+        if (content instanceof JsonObject) {
+            JsonObject org = (JsonObject) content;
             JsonObject node = new JsonObject();
-            for (String key : org.keys()) {
-                Object value = org.get(key);
+            for (String key : org.getFieldNames()) {
+                Object value = org.getValue(key);
                 Operation operation = Operation.READ;
                 JsonObject localAuth = auth.orElse(ANONYMOUS);
 
-                RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/users")));
+                RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/rules")));
                 if (localAuth.containsField("permissions")) {
                     RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
                     if (evaluateRules(operation, path, value, localAuth, userRules)) {
@@ -217,7 +222,7 @@ public class Authorizator extends Verticle {
             Operation operation = Operation.READ;
             JsonObject localAuth = auth.orElse(ANONYMOUS);
 
-            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/users")));
+            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/rules")));
             if (localAuth.containsField("permissions")) {
                 RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
                 if (evaluateRules(operation, path, content, localAuth, userRules)) {
@@ -238,7 +243,22 @@ public class Authorizator extends Verticle {
     }
 
     public static JsonObject filter(Optional<JsonObject> auth, Path nodePath, Object value) {
-        return new JsonObject().putObject("auth", new JsonObject(auth.get().toString())).putString("path", nodePath.toString()).putValue("payload", value);
+        JsonObject jsonObject = new JsonObject()
+                .putString("path", nodePath.toString());
+
+        if (value instanceof MapDbBackedNode) {
+            jsonObject.putValue("payload", ((MapDbBackedNode) value).toJsonObject());
+        } else if (value instanceof DataSnapshot) {
+            jsonObject.putValue("payload", ((DataSnapshot) value).val());
+        } else {
+            jsonObject.putValue("payload", value);
+        }
+
+
+        if (auth.isPresent()) {
+            jsonObject.putObject("auth", new JsonObject(auth.get().toString()));
+        }
+        return jsonObject;
     }
 
     public static JsonObject check(Operation operation, Optional<JsonObject> auth, Path path, Object value) {
@@ -246,7 +266,14 @@ public class Authorizator extends Verticle {
         if (auth.isPresent()) {
             event.putObject("auth", auth.get());
         }
-        event.putString("path", path.toString()).putValue("value", value);
+        event.putString("path", path.toString());
+        if (value instanceof MapDbBackedNode) {
+            event.putValue("payload", ((MapDbBackedNode) value).toJsonObject());
+        } else if (value instanceof DataSnapshot) {
+            event.putValue("payload", ((DataSnapshot) value).val());
+        } else {
+            event.putValue("payload", value);
+        }
         return event;
     }
 }

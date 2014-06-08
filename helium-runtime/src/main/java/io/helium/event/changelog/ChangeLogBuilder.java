@@ -20,22 +20,20 @@ import io.helium.common.Path;
 import io.helium.persistence.mapdb.MapDbBackedNode;
 
 public class ChangeLogBuilder {
-    private final long sequence;
     private MapDbBackedNode node;
     private Path parentPath;
     private Path path;
     private ChangeLog log;
 
-    public ChangeLogBuilder(ChangeLog log, long sequence, Path path, Path parentPath, MapDbBackedNode node) {
+    public ChangeLogBuilder(ChangeLog log, Path path, Path parentPath, MapDbBackedNode node) {
         this.log = log;
         this.path = path;
         this.parentPath = parentPath;
         this.node = node;
-        this.sequence = sequence;
     }
 
     public ChangeLogBuilder getChildLogBuilder(String childName) {
-        return new ChangeLogBuilder(log, sequence, path.append(childName), path,
+        return new ChangeLogBuilder(log, path.append(childName), path,
                 node.getNode(childName));
     }
 

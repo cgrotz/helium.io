@@ -17,41 +17,46 @@
 package io.helium.event.changelog;
 
 import io.helium.common.Path;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 
-public class ChangeLog extends JsonArray {
+public class ChangeLog {
+
+    private final JsonArray array;
 
     public ChangeLog(JsonArray body) {
-        this.list = body.toList();
-    }
-
-    public ChangeLog() {
-
+        this.array = body;
     }
 
     public void addLog(ChangeLogEvent event) {
-        add(event);
+        array.add(event);
     }
 
     public void addChildAddedLogEntry(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
-        add(new ChildAddedLogEvent(name, path, parent, value, numChildren));
+        array.add(new ChildAddedLogEvent(name, path, parent, value, numChildren));
     }
 
     public void addChildChangedLogEntry(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
         if (name != null) {
-            add(new ChildChangedLogEvent(name, path, parent, value, numChildren));
+            array.add(new ChildChangedLogEvent(name, path, parent, value, numChildren));
         }
     }
 
     public void addValueChangedLogEntry(String name, Path path, Path parent, Object value) {
-        add(new ValueChangedLogEvent(name, path, parent, value));
+        array.add(new ValueChangedLogEvent(name, path, parent, value));
     }
 
     public void addChildRemovedLogEntry(Path path, String name, Object value) {
-        add(new ChildRemovedLogEvent(path, name, value));
+        array.add(new ChildRemovedLogEvent(path, name, value));
     }
 
     public static ChangeLog of(JsonArray body) {
         return new ChangeLog(body);
+    }
+
+    public void forEach(Handler<Object> handler) {
+        array.forEach(element -> {
+            handler.handle(element);
+        });
     }
 }

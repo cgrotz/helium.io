@@ -19,7 +19,17 @@ package io.helium.event.changelog;
 import io.helium.common.Path;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.Map;
+
 public abstract class ChangeLogEvent extends JsonObject {
+
+    public ChangeLogEvent(Map<String, Object> stringObjectMap) {
+        super(stringObjectMap);
+    }
+
+    protected ChangeLogEvent() {
+
+    }
 
     public abstract Path getPath();
 }

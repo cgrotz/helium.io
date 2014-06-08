@@ -188,9 +188,11 @@ public class RestHandler implements Handler<HttpServerRequest> {
                             }
                         }
                     }
-                    handler.handle(Optional.empty());
+                    handler.handle(auth);
                 }
             });
+        } else {
+            handler.handle(auth);
         }
     }
 }

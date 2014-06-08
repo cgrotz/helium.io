@@ -31,7 +31,7 @@ public class Remove {
     public void handle(HeliumEvent event) {
         Path path = event.extractNodePath();
 
-        persistence.remove(event.getChangeLog(), event.getAuth(), path);
+        persistence.remove(event, event.getAuth(), path);
 
     }
 }

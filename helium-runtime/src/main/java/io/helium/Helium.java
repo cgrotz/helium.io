@@ -23,7 +23,6 @@ import io.helium.persistence.Journaling;
 import io.helium.persistence.Persistor;
 import io.helium.server.distributor.Distributor;
 import io.helium.server.protocols.http.HttpServer;
-import io.helium.server.protocols.mqtt.MqttServer;
 import org.vertx.java.platform.Verticle;
 
 import java.io.File;
@@ -51,7 +50,6 @@ public class Helium extends Verticle {
 
             // Servers
             container.deployVerticle(HttpServer.class.getName(), container.config());
-            container.deployVerticle(MqttServer.class.getName(), container.config());
 
         } catch (Exception e) {
             e.printStackTrace();

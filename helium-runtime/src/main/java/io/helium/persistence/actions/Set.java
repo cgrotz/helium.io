@@ -35,30 +35,19 @@ public class Set {
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object obj = event.getValue(HeliumEvent.PAYLOAD);
             if (obj == null) {
-                persistence.remove(event.getChangeLog(), event.getAuth(), path);
+                persistence.remove(event, event.getAuth(), path);
             } else if (obj instanceof MapDbBackedNode) {
                 payload = (MapDbBackedNode) obj;
                 if (payload instanceof MapDbBackedNode) {
-                    if (event.hasPriority()) {
-                        persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path,
-                                event.getPriority(), obj);
-                    } else {
-                        persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path, -1,
-                                obj);
-                    }
+                    persistence.applyNewValue(event, event.getAuth(), path, obj);
                 }
             } else if (obj == null) {
-                persistence.remove(event.getChangeLog(), event.getAuth(), path);
+                persistence.remove(event, event.getAuth(), path);
             } else {
-                if (event.hasPriority()) {
-                    persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path,
-                            event.getPriority(), obj);
-                } else {
-                    persistence.applyNewValue(event.getChangeLog(), event.getSequence(), event.getAuth(), path, -1, obj);
-                }
+                persistence.applyNewValue(event, event.getAuth(), path, obj);
             }
         } else {
-            persistence.remove(event.getChangeLog(), event.getAuth(), path);
+            persistence.remove(event, event.getAuth(), path);
         }
     }
 
