@@ -63,11 +63,15 @@ public class Persistor extends Verticle {
         vertx.eventBus().registerHandler(GET, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
-                Object value = persistence.get(Path.of(event.body().getString("path")));
-                if (value instanceof MapDbBackedNode) {
-                    event.reply(((MapDbBackedNode) value).toJsonObject());
+                if (MapDbBackedNode.exists(Path.of(event.body().getString("path")))) {
+                    event.reply(MapDbBackedNode.of(Path.of(event.body().getString("path"))).toJsonObject());
                 } else {
-                    event.reply(value);
+                    Object value = persistence.get(Path.of(event.body().getString("path")));
+                    if (value instanceof MapDbBackedNode) {
+                        event.reply(((MapDbBackedNode) value).toJsonObject());
+                    } else {
+                        event.reply(value);
+                    }
                 }
             }
         });
@@ -122,7 +126,6 @@ public class Persistor extends Verticle {
                 break;
         }
     }
-
     public static JsonObject get(Path path) {
         return new JsonObject().putString("path", path.toString());
     }

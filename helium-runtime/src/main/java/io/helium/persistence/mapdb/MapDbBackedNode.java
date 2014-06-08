@@ -8,34 +8,55 @@ import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.mapdb.HTreeMap;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.*;
 
 /**
  * Created by Christoph Grotz on 02.06.14.
  */
-public class MapDbBackedNode implements Serializable, Externalizable {
+public class MapDbBackedNode {
 
     private static final long serialVersionUID = 1L;
 
-    private static final DB db = DBMaker.newFileDB(new File("helium/heliumData"))
+    private static final DB db = DBMaker.newFileDB(new File("helium/data"))
             .closeOnJvmShutdown()
             .make();
 
-    private Map<String, Object> attributes;
-    private Map<String, MapDbBackedNode> nodes;
+    public static DB getDb() {
+        return db;
+    }
+
+    private HTreeMap<String, Object> attributes;
+    private HTreeMap<String, MapDbBackedNode> nodes;
     private List<String> keyOrder;
 
     private Path pathToNode;
     private Map<String, List<String>> keyListsMap;
 
+    private MapDbBackedNode() {
+        pathToNode = Path.of("/");
+        attributes = db.getHashMap("rootAttributes");
+        nodes = db.createHashMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
+        keyListsMap = db.getHashMap("orderedKeys");
+        if (keyListsMap.containsKey("rootKeys")) {
+            keyOrder = keyListsMap.get("rootKeys");
+        } else {
+            keyOrder = new ArrayList<String>();
+            keyListsMap.put("rootKeys", keyOrder);
+        }
+    }
+
     private MapDbBackedNode(Path pathToNode) {
         this.pathToNode = pathToNode;
         attributes = db.getHashMap(pathToNode + "Attributes");
-        nodes = db.getHashMap(pathToNode + "Nodes");
+        nodes = db.createHashMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
         keyListsMap = db.getHashMap("orderedKeys");
         if (keyListsMap.containsKey(pathToNode + "Keys")) {
             keyOrder = keyListsMap.get(pathToNode + "Keys");
@@ -44,21 +65,19 @@ public class MapDbBackedNode implements Serializable, Externalizable {
             keyListsMap.put(pathToNode + "Keys", keyOrder);
         }
     }
-
-
+/*
     public void writeExternal(ObjectOutput out) throws IOException {
         out.write(pathToNode.toString().getBytes());
         attributes = db.getHashMap(pathToNode + "Attributes");
-        nodes = db.getHashMap(pathToNode + "Nodes");
+        nodes = db.createHashMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
         keyListsMap = db.getHashMap("orderedKeys");
         if (keyListsMap.containsKey(pathToNode + "Keys")) {
             keyOrder = keyListsMap.get(pathToNode + "Keys");
         } else {
-            keyOrder = new ArrayList<>();
+            keyOrder = new ArrayList();
             keyListsMap.put(pathToNode + "Keys", keyOrder);
         }
     }
-
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         String source = in.readUTF();
@@ -69,10 +88,10 @@ public class MapDbBackedNode implements Serializable, Externalizable {
         if (keyListsMap.containsKey(pathToNode + "Keys")) {
             keyOrder = keyListsMap.get(pathToNode + "Keys");
         } else {
-            keyOrder = new ArrayList<>();
+            keyOrder = new ArrayList();
             keyListsMap.put(pathToNode + "Keys", keyOrder);
         }
-    }
+    }*/
 
     /**
      * Get an array of field names from a MapDbBackedNode.
@@ -333,11 +352,7 @@ public class MapDbBackedNode implements Serializable, Externalizable {
         if (Strings.isNullOrEmpty(key)) {
             throw new RuntimeException("Null pathToNode.");
         }
-        Object object = this.opt(key);
-        if (object == null) {
-            throw new RuntimeException("MapDbBackedNode[" + quote(key) + "] not found.");
-        }
-        return object;
+        return this.opt(key);
     }
 
 
@@ -346,6 +361,26 @@ public class MapDbBackedNode implements Serializable, Externalizable {
             return get(key);
         }
         return defaultValue;
+    }
+
+    /**
+     * Get an optional value associated with a pathToNode.
+     *
+     * @param key A pathToNode string.
+     * @return An object which is the value, or null if there is no value.
+     */
+    public Object opt(String key) {
+        if (Strings.isNullOrEmpty(key)) {
+            return null;
+        } else if (!keyOrder.contains(key)) {
+            return null;
+        } else if (this.attributes.containsKey(key)) {
+            return this.attributes.get(key);
+        } else if (this.nodes.containsKey(key)) {
+            return this.nodes.get(key);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -365,7 +400,7 @@ public class MapDbBackedNode implements Serializable, Externalizable {
                 || (object instanceof String && ((String) object).equalsIgnoreCase("true"))) {
             return true;
         }
-        throw new RuntimeException("MapDbBackedNode[" + quote(key) + "] is not a Boolean.");
+        return false;
     }
 
 
@@ -398,7 +433,7 @@ public class MapDbBackedNode implements Serializable, Externalizable {
             return object instanceof Number ? ((Number) object).doubleValue() : Double
                     .parseDouble((String) object);
         } catch (Exception e) {
-            throw new RuntimeException("MapDbBackedNode[" + quote(key) + "] is not a number.");
+            return 0.0;
         }
     }
 
@@ -416,7 +451,7 @@ public class MapDbBackedNode implements Serializable, Externalizable {
             return object instanceof Number ? ((Number) object).intValue() : Integer
                     .parseInt((String) object);
         } catch (Exception e) {
-            throw new RuntimeException("MapDbBackedNode[" + quote(key) + "] is not an int.");
+            return 0;
         }
     }
 
@@ -429,7 +464,9 @@ public class MapDbBackedNode implements Serializable, Externalizable {
      */
 
     public MapDbBackedNode getNode(String key) {
-        if (has(key)) {
+        if (pathToNode.append(key).root()) {
+            return root();
+        } else if (has(key)) {
             return (MapDbBackedNode) get(key);
         } else {
             MapDbBackedNode node = new MapDbBackedNode(pathToNode.append(key));
@@ -454,7 +491,7 @@ public class MapDbBackedNode implements Serializable, Externalizable {
             return object instanceof Number ? ((Number) object).longValue() : Long
                     .parseLong((String) object);
         } catch (Exception e) {
-            throw new RuntimeException("MapDbBackedNode[" + quote(key) + "] is not a long. " + toString(2));
+            return 0;
         }
     }
 
@@ -471,7 +508,7 @@ public class MapDbBackedNode implements Serializable, Externalizable {
         if (object instanceof String) {
             return (String) object;
         }
-        throw new RuntimeException("MapDbBackedNode[" + quote(key) + "] not a string. " + toString(2));
+        return null;
     }
 
     /**
@@ -484,35 +521,7 @@ public class MapDbBackedNode implements Serializable, Externalizable {
     public boolean has(String key) {
         return !Strings.isNullOrEmpty(key) && (
                 this.attributes.containsKey(key) ||
-                        this.nodes.containsKey(key));
-    }
-
-    /**
-     * Increment a property of a MapDbBackedNode. If there is no such property, create one with a value of 1. If
-     * there is such a property, and if it is an Integer, Long, Double, or Float, then add one to it.
-     *
-     * @param key A pathToNode string.
-     * @return this.
-     * @throws RuntimeException If there is already a property with this name that is not an Integer, Long, Double,
-     *                          or Float.
-     */
-
-    public MapDbBackedNode increment(String key) {
-        Object value = this.opt(key);
-        if (value == null) {
-            this.put(key, 1);
-        } else if (value instanceof Integer) {
-            this.put(key, ((Integer) value).intValue() + 1);
-        } else if (value instanceof Long) {
-            this.put(key, ((Long) value).longValue() + 1);
-        } else if (value instanceof Double) {
-            this.put(key, ((Double) value).doubleValue() + 1);
-        } else if (value instanceof Float) {
-            this.put(key, ((Float) value).floatValue() + 1);
-        } else {
-            throw new RuntimeException("Unable to increment [" + quote(key) + "]. " + toString(2));
-        }
-        return this;
+                        this.nodes.keySet().contains(key));
     }
 
     /**
@@ -520,7 +529,6 @@ public class MapDbBackedNode implements Serializable, Externalizable {
      *
      * @return An iterator of the keys.
      */
-
     public Iterator<String> keyIterator() {
         return (Lists.newArrayList(this.keyOrder)).iterator();
     }
@@ -546,187 +554,6 @@ public class MapDbBackedNode implements Serializable, Externalizable {
     }
 
     /**
-     * Get an optional value associated with a pathToNode.
-     *
-     * @param key A pathToNode string.
-     * @return An object which is the value, or null if there is no value.
-     */
-
-    public Object opt(String key) {
-        if (Strings.isNullOrEmpty(key)) {
-            return null;
-        } else if (!keyOrder.contains(key)) {
-            return null;
-        } else if (this.attributes.containsKey(key)) {
-            return this.attributes.get(key);
-        } else if (this.nodes.containsKey(key)) {
-            return this.nodes.get(key);
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Get an optional boolean associated with a pathToNode. It returns false if there is no such pathToNode, or if
-     * the value is not Boolean.TRUE or the String "true".
-     *
-     * @param key A pathToNode string.
-     * @return The truth.
-     */
-
-    public boolean optBoolean(String key) {
-        return this.optBoolean(key, false);
-    }
-
-    /**
-     * Get an optional boolean associated with a pathToNode. It returns the defaultValue if there is no such
-     * pathToNode, or if it is not a Boolean or the String "true" or "false" (case insensitive).
-     *
-     * @param key          A pathToNode string.
-     * @param defaultValue The default.
-     * @return The truth.
-     */
-
-    public boolean optBoolean(String key, boolean defaultValue) {
-        try {
-            return this.getBoolean(key);
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Get an optional double associated with a pathToNode, or NaN if there is no such pathToNode or if its value is
-     * not a number. If the value is a string, an attempt will be made to evaluate it as a number.
-     *
-     * @param key A string which is the pathToNode.
-     * @return An object which is the value.
-     */
-
-    public double optDouble(String key) {
-        return this.optDouble(key, Double.NaN);
-    }
-
-    /**
-     * Get an optional double associated with a pathToNode, or the defaultValue if there is no such pathToNode or if
-     * its value is not a number. If the value is a string, an attempt will be made to evaluate it as
-     * a number.
-     *
-     * @param key          A pathToNode string.
-     * @param defaultValue The default.
-     * @return An object which is the value.
-     */
-
-    public double optDouble(String key, double defaultValue) {
-        try {
-            return this.getDouble(key);
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Get an optional int value associated with a pathToNode, or zero if there is no such pathToNode or if the
-     * value is not a number. If the value is a string, an attempt will be made to evaluate it as a
-     * number.
-     *
-     * @param key A pathToNode string.
-     * @return An object which is the value.
-     */
-
-    public int optInt(String key) {
-        return this.optInt(key, 0);
-    }
-
-    /**
-     * Get an optional int value associated with a pathToNode, or the default if there is no such pathToNode or if
-     * the value is not a number. If the value is a string, an attempt will be made to evaluate it as
-     * a number.
-     *
-     * @param key          A pathToNode string.
-     * @param defaultValue The default.
-     * @return An object which is the value.
-     */
-
-    public int optInt(String key, int defaultValue) {
-        try {
-            return this.getInt(key);
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Get an optional MapDbBackedNode associated with a pathToNode. It returns null if there is no such pathToNode, or if its
-     * value is not a MapDbBackedNode.
-     *
-     * @param key A pathToNode string.
-     * @return A MapDbBackedNode which is the value.
-     */
-
-    public MapDbBackedNode optNode(String key) {
-        Object object = this.opt(key);
-        return object instanceof MapDbBackedNode ? (MapDbBackedNode) object : null;
-    }
-
-    /**
-     * Get an optional long value associated with a pathToNode, or zero if there is no such pathToNode or if the
-     * value is not a number. If the value is a string, an attempt will be made to evaluate it as a
-     * number.
-     *
-     * @param key A pathToNode string.
-     * @return An object which is the value.
-     */
-
-    public long optLong(String key) {
-        return this.optLong(key, 0);
-    }
-
-    /**
-     * Get an optional long value associated with a pathToNode, or the default if there is no such pathToNode or if
-     * the value is not a number. If the value is a string, an attempt will be made to evaluate it as
-     * a number.
-     *
-     * @param key          A pathToNode string.
-     * @param defaultValue The default.
-     * @return An object which is the value.
-     */
-
-    public long optLong(String key, long defaultValue) {
-        try {
-            return this.getLong(key);
-        } catch (Exception e) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Get an optional string associated with a pathToNode. It returns an empty string if there is no such
-     * pathToNode. If the value is not a string and is not null, then it is converted to a string.
-     *
-     * @param key A pathToNode string.
-     * @return A string which is the value.
-     */
-
-    public String optString(String key) {
-        return this.optString(key, "");
-    }
-
-    /**
-     * Get an optional string associated with a pathToNode. It returns the defaultValue if there is no such
-     * pathToNode.
-     *
-     * @param key          A pathToNode string.
-     * @param defaultValue The default.
-     * @return A string which is the value.
-     */
-
-    public String optString(String key, String defaultValue) {
-        Object object = this.opt(key);
-        return (object == null) ? defaultValue : object.toString();
-    }
-
-    /**
      * Put a pathToNode/boolean pair in the MapDbBackedNode.
      *
      * @param key   A pathToNode string.
@@ -734,7 +561,6 @@ public class MapDbBackedNode implements Serializable, Externalizable {
      * @return this.
      * @throws RuntimeException If the pathToNode is null.
      */
-
     public MapDbBackedNode put(String key, boolean value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
@@ -849,29 +675,6 @@ public class MapDbBackedNode implements Serializable, Externalizable {
             this.remove(key);
         }
         keyListsMap.put(key + "Keys", keyOrder);
-        return this;
-    }
-
-    /**
-     * Put a pathToNode/value pair in the MapDbBackedNode, but only if the pathToNode and the value are both non-null, and only
-     * if there is not already a member with that name.
-     *
-     * @param key
-     * @param value
-     * @return his.
-     * @throws RuntimeException if the pathToNode is a duplicate
-     */
-
-    public MapDbBackedNode putOnce(String key, Object value) {
-        if (Strings.isNullOrEmpty(key)) {
-            return this;
-        }
-        if (key != null && value != null) {
-            if (this.opt(key) != null) {
-                throw new RuntimeException("Duplicate pathToNode \"" + key + "\"");
-            }
-            this.put(key, value);
-        }
         return this;
     }
 
@@ -1147,10 +950,13 @@ public class MapDbBackedNode implements Serializable, Externalizable {
     }
 
     public static MapDbBackedNode of(Path path) {
-        MapDbBackedNode node = new MapDbBackedNode(Path.of("/"));
+        if (path.root()) {
+            return root();
+        }
+        MapDbBackedNode node = root();
         Path currentPath = Path.copy(path);
         for (int i = 0; i < path.toArray().length; i++) {
-            node = (MapDbBackedNode) node.getNode(currentPath.firstElement());
+            node = node.getNode(currentPath.firstElement());
             currentPath = currentPath.subpath(1);
         }
         return node;
@@ -1169,6 +975,15 @@ public class MapDbBackedNode implements Serializable, Externalizable {
     }
 
     public static boolean exists(Path path) {
-        return db.exists(path.toString());
+        return db.exists(path.toString() + "Attributes");
+    }
+
+    public Path getPathToNode() {
+        return pathToNode;
+    }
+
+    public static MapDbBackedNode root() {
+        MapDbBackedNode root = new MapDbBackedNode();
+        return root;
     }
 }

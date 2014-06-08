@@ -16,16 +16,12 @@
 
 package io.helium;
 
-import com.google.common.base.Strings;
-import com.google.common.io.Files;
 import io.helium.authorization.Authorizator;
 import io.helium.persistence.Journaling;
 import io.helium.persistence.Persistor;
 import io.helium.server.distributor.Distributor;
 import io.helium.server.protocols.http.HttpServer;
 import org.vertx.java.platform.Verticle;
-
-import java.io.File;
 
 /**
  * Main entry point for Helium
@@ -37,11 +33,6 @@ public class Helium extends Verticle {
     @Override
     public void start() {
         try {
-
-            String directory = container.config().getString("directory", "helium");
-            File file = new File(Strings.isNullOrEmpty(directory) ? "helium/journal" : directory);
-            Files.createParentDirs(new File(file, ".helium"));
-
             // Workers
             container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
             container.deployWorkerVerticle(Distributor.class.getName(), container.config());
@@ -51,6 +42,15 @@ public class Helium extends Verticle {
             // Servers
             container.deployVerticle(HttpServer.class.getName(), container.config());
 
+            /*
+            vertx.setPeriodic(1000, event -> {
+                MapDbBackedNode.getDb().commit();
+                MapDbBackedNode.getDb().compact();
+            });
+
+            vertx.setPeriodic(5000, event -> {
+                MapDbBackedNode.getDb().compact();
+            });*/
         } catch (Exception e) {
             e.printStackTrace();
         }

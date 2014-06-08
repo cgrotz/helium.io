@@ -29,7 +29,9 @@ public class MapDbPersistence {
     }
 
     public Object get(Path path) {
-        if (path == null || path.isEmtpy()) {
+        if (path.root()) {
+            return MapDbBackedNode.root();
+        } else if (path == null || path.isEmtpy()) {
             return MapDbBackedNode.of(path);
         } else {
             return MapDbBackedNode.of(path.parent()).getObjectForPath(path);

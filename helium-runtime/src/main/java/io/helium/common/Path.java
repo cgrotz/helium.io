@@ -172,4 +172,8 @@ public final class Path {
     public static Path copy(Path path) {
         return new Path(path.toString());
     }
+
+    public boolean root() {
+        return "/".equals(toString());
+    }
 }

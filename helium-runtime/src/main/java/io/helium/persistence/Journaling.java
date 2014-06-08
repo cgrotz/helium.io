@@ -17,7 +17,6 @@
 package io.helium.persistence;
 
 import com.google.common.base.Strings;
-import com.google.common.io.Files;
 import io.helium.event.HeliumEvent;
 import journal.io.api.Journal;
 import journal.io.api.Journal.WriteType;
@@ -42,9 +41,8 @@ public class Journaling extends Verticle {
     @Override
     public void start() {
         try {
-            String directory = container.config().getString("directory", "helium");
+            String directory = container.config().getString("directory", "helium/journal");
             File file = new File(Strings.isNullOrEmpty(directory) ? "helium/journal" : directory);
-            Files.createParentDirs(new File(file, ".helium"));
             journal.setDirectory(file);
             journal.open();
         } catch (Exception exp) {

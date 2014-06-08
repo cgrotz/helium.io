@@ -131,7 +131,11 @@ public class RestHandler implements Handler<HttpServerRequest> {
                                     new Handler<Message<Object>>() {
                                         @Override
                                         public void handle(Message<Object> event) {
-                                            req.response().end(event.body().toString());
+                                            if (event.body() != null) {
+                                                req.response().end(event.body().toString());
+                                            } else {
+                                                req.response().setStatusCode(404).end();
+                                            }
                                         }
                                     }
                             );
