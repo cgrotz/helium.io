@@ -31,7 +31,6 @@ var __extends = this.__extends || function (d, b) {
 			this.nodeParent = message.parent;
 			this.nodeHasChildren = message.hasChildren;
 			this.nodeNumChildren = message.numChildren;
-			this.nodePriority = message.priority;
 		}
 		Snapshot.prototype.val = function() {
 			return this.nodePayload;
@@ -60,9 +59,6 @@ var __extends = this.__extends || function (d, b) {
 		};
 		Snapshot.prototype.numChildren = function() {
 			return this.nodeNumChildren;
-		};
-		Snapshot.prototype.getPriority = function() {
-			return this.nodePriority;
 		};
 		return Snapshot;
 	})();
@@ -109,11 +105,10 @@ var __extends = this.__extends || function (d, b) {
 	    		data: data
 	    	});
 	    };
-	    HeliumRPC.prototype.set = function (path, data, priority) {
+	    HeliumRPC.prototype.set = function (path, data) {
 	        _super.prototype.sendRpc.call(this, 'set', {
 	    		path: path,
-	    		data: data,
-	    		priority: priority
+	    		data: data
 	    	});
 	    };
 	    HeliumRPC.prototype.update = function (path, data) {
@@ -133,12 +128,6 @@ var __extends = this.__extends || function (d, b) {
 	    		password: password
 	    	});
 	    };
-	    HeliumRPC.prototype.setPriority = function (path, priority) {
-	        _super.prototype.sendRpc.call(this, 'setPriority', {
-	    		path: path,
-	    		priority: priority
-	    	});
-	    };
 	    HeliumRPC.prototype.pushOnDisconnect = function (path, name, payload) {
 	        _super.prototype.sendRpc.call(this, 'pushOnDisconnect', {
 	    		path: path,
@@ -146,11 +135,10 @@ var __extends = this.__extends || function (d, b) {
 	    		payload: payload
 	    	});
 	    };
-	    HeliumRPC.prototype.setOnDisconnect = function (path, data,priority) {
+	    HeliumRPC.prototype.setOnDisconnect = function (path, data) {
 	        _super.prototype.sendRpc.call(this, 'setOnDisconnect', {
 	    		path: path,
-	    		data: data,
-	    		priority: priority
+	    		data: data
 	    	});
 	    };
 	    HeliumRPC.prototype.updateOnDisconnect = function (path, data) {
@@ -185,10 +173,6 @@ var __extends = this.__extends || function (d, b) {
 
 		HeliumOnDisconnect.prototype.update = function(payload) {
 			this.con.updateOnDisconnect(this.path, payload);
-		};
-
-		HeliumOnDisconnect.prototype.setWithPriority = function(payload, priority) {
-			this.con.setOnDisconnect(this.path, payload, priority);
 		};
 		HeliumOnDisconnect.prototype.remove = function() {
 			this.con.removeOnDisconnect(this.path);
@@ -289,20 +273,8 @@ var __extends = this.__extends || function (d, b) {
 			this.rpc.authenticate(username, password);
 			return this;
 		};
-		Helium.prototype.setWithPriority = function(data, priority) {
-			this.rpc.set(this.path, data, priority);
-			if (data != null) {
-				return new Helium(this.path);
-			} else {
-				return null;
-			}
-		};
 		Helium.prototype.remove = function() {
 			this.rpc.remove(this.path);
-		};
-		Helium.prototype.setPriority = function(priority) {
-			this.rpc.setPriority(this.path, priority);
-			return new Helium(this.path);
 		};
 		Helium.prototype.parent = function() {
 			new Helium(this.parentPath);
