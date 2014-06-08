@@ -25,8 +25,6 @@ import io.helium.persistence.Journaling;
 import io.helium.persistence.Persistor;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.mapdb.MapDbBackedNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
@@ -39,18 +37,18 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class Authorizator extends Verticle {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Authorizator.class);
     public final static JsonObject ANONYMOUS = new JsonObject().putBoolean("isAnonymous", true);
 
     public static final String FILTER_CONTENT = "authorizator.filter";
     public static final String SUBSCRIPTION = "authorizator.authorize";
     public static final String IS_AUTHORIZED = "authorizator.isAuthorized";
 
-    private SandBoxedScriptingEnvironment scriptingEnvironment = new SandBoxedScriptingEnvironment();
+    private SandBoxedScriptingEnvironment scriptingEnvironment;
     private Map<String, String> functions = Maps.newHashMap();
 
     @Override
     public void start() {
+        this.scriptingEnvironment = new SandBoxedScriptingEnvironment(container);
         vertx.eventBus().registerHandler(SUBSCRIPTION, this::onReceive);
         vertx.eventBus().registerHandler(FILTER_CONTENT, new Handler<Message>() {
             @Override
@@ -113,16 +111,16 @@ public class Authorizator extends Verticle {
             distribute(message);
             return;
         }
-        LOGGER.trace("checking auth for: ", message);
+        container.logger().trace("checking auth for: " + message);
         Path path = event.extractNodePath();
         if (event.getType() == HeliumEventType.PUSH) {
             DataSnapshot data = new DataSnapshot(event.getValue(HeliumEvent.PAYLOAD));
             vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, data), (Message<Boolean> event1) -> {
                 if (event1.body()) {
                     distribute(message.body());
-                    LOGGER.trace("authorized: ", message);
+                    container.logger().trace("authorized: " + message);
                 } else {
-                    LOGGER.warn("not authorized: ", message);
+                    container.logger().warn("not authorized: " + message);
                 }
             });
         } else if (event.getType() == HeliumEventType.SET) {
@@ -131,23 +129,23 @@ public class Authorizator extends Verticle {
                 vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, data), (Message<Boolean> event1) -> {
                     if (event1.body()) {
                         distribute(message.body());
-                        LOGGER.trace("authorized: ", message);
+                        container.logger().trace("authorized: " + message);
                     } else {
-                        LOGGER.warn("not authorized: ", message);
+                        container.logger().warn("not authorized: " + message);
                     }
                 });
             } else {
                 vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, null), (Message<Boolean> event1) -> {
                     if (event1.body()) {
                         distribute(message.body());
-                        LOGGER.trace("authorized: ", message);
+                        container.logger().trace("authorized: " + message);
                     } else {
-                        LOGGER.warn("not authorized: ", message);
+                        container.logger().warn("not authorized: " + message);
                     }
                 });
             }
         }
-        LOGGER.trace("onEvent " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
+        container.logger().trace("onEvent " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
     }
 
     private void distribute(Object message) {

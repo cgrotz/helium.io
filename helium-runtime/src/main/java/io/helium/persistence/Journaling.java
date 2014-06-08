@@ -21,8 +21,6 @@ import io.helium.event.HeliumEvent;
 import journal.io.api.Journal;
 import journal.io.api.Journal.WriteType;
 import journal.io.api.Location;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
@@ -32,7 +30,6 @@ import java.io.File;
 import java.util.Optional;
 
 public class Journaling extends Verticle {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Journaling.class);
     public static final String SUBSCRIPTION = "eventsource";
 
     private Journal journal = new Journal();
@@ -62,12 +59,12 @@ public class Journaling extends Verticle {
 
             long startTime = System.currentTimeMillis();
             if (!event.isFromHistory() || event.isNoAuth()) {
-                LOGGER.info("storing event: " + event);
+                container.logger().info("storing event: " + event);
                 Location write = journal.write(event.toString().getBytes(), WriteType.SYNC);
                 journal.sync();
                 currentLocation = Optional.of(write);
             }
-            LOGGER.info("onEvent " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
+            container.logger().info("onEvent " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
         } catch (Exception exp) {
             exp.printStackTrace();
         }

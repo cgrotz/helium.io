@@ -45,7 +45,7 @@ public class HttpServer extends Verticle {
         vertx.createHttpServer()
                 .requestHandler(new RestHandler(vertx, basePath))
                 .websocketHandler(socket -> {
-                    final WebsocketEndpoint endpoint = new WebsocketEndpoint(basePath, socket, vertx);
+                    final WebsocketEndpoint endpoint = new WebsocketEndpoint(basePath, socket, vertx, container);
                     Endpoints.get().addEndpoint(endpoint);
                     socket.endHandler(event -> {
                         Endpoints.get().removeEndpoint(endpoint);

@@ -24,8 +24,6 @@ import io.helium.persistence.actions.Set;
 import io.helium.persistence.actions.Update;
 import io.helium.persistence.mapdb.MapDbBackedNode;
 import io.helium.persistence.mapdb.MapDbPersistence;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
@@ -34,7 +32,6 @@ import org.vertx.java.platform.Verticle;
 import java.util.UUID;
 
 public class Persistor extends Verticle {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Persistor.class);
     public static final String SUBSCRIPTION = "persistence";
     public static final String GET = "get";
     public static final String REMOVE = "remove";
@@ -126,6 +123,7 @@ public class Persistor extends Verticle {
                 break;
         }
     }
+
     public static JsonObject get(Path path) {
         return new JsonObject().putString("path", path.toString());
     }

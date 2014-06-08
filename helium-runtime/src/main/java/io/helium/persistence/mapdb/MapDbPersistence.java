@@ -8,8 +8,6 @@ import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.persistence.ChildRemovedSubTreeVisitor;
 import io.helium.server.distributor.Distributor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.eventbus.Message;
@@ -21,7 +19,6 @@ import java.util.Optional;
  * Created by Christoph Grotz on 02.06.14.
  */
 public class MapDbPersistence {
-    private static final Logger logger = LoggerFactory.getLogger(MapDbPersistence.class);
     private final Vertx vertx;
 
     public MapDbPersistence(Vertx vertx) {

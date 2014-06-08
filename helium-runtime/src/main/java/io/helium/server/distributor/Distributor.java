@@ -21,8 +21,6 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.server.Endpoint;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -30,7 +28,6 @@ import org.vertx.java.platform.Verticle;
 
 public class Distributor extends Verticle {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Distributor.class);
     public static final String DISTRIBUTE_HELIUM_EVENT = "distribute.helium.event";
     public static final String DISTRIBUTE_EVENT = "distribute.event";
     public static final String DISTRIBUTE_CHANGE_LOG = "distribute.change.log";
