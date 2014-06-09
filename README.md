@@ -1,6 +1,6 @@
 **helium** is a real-time data backend for web applications using Websockets.
 
-Please visit the documentation page http://christophgrotz.github.io/helium for further information.
+Please visit the documentation page http://christophgrotz.github.io/helium.io for further information.
 
 
 
