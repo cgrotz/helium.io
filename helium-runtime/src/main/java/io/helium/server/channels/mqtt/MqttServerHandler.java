@@ -36,7 +36,9 @@ public class MqttServerHandler implements Handler<NetSocket> {
 
     @Override
     public void handle(NetSocket socket) {
-        endpoints.put(socket, new MqttEndpoint(socket, vertx, db));
+        MqttEndpoint endpoint = new MqttEndpoint(socket, vertx, db);
+        endpoints.put(socket, endpoint);
+        Endpoints.get().addEndpoint(endpoint);
         socket.closeHandler(new Handler<Void>() {
             @Override
             public void handle(Void event) {

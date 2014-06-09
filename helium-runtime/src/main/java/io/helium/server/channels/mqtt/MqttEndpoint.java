@@ -63,17 +63,19 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
 
     @Override
     public void distributeChangeLog(ChangeLog changeLog) {
-        changeLog.forEach(logE -> {
-            if (logE instanceof ChildAddedLogEvent) {
-                ChildAddedLogEvent logEvent = (ChildAddedLogEvent) logE;
+        changeLog.forEach(obj -> {
+            JsonObject logE = (JsonObject) obj;
+
+            if (logE.getString("type").equals(ChildAddedLogEvent.class.getSimpleName())) {
+                ChildAddedLogEvent logEvent = ChildAddedLogEvent.of(logE);
                 if (hasListener(logEvent.getPath().append(logEvent.getName()), CHILD_ADDED)) {
                     fireChildAdded(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
                             logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren()
                     );
                 }
             }
-            if (logE instanceof ValueChangedLogEvent) {
-                ValueChangedLogEvent logEvent = (ValueChangedLogEvent) logE;
+            if (logE.getString("type").equals(ValueChangedLogEvent.class.getSimpleName())) {
+                ValueChangedLogEvent logEvent = ValueChangedLogEvent.of(logE);
                 if (hasListener(logEvent.getPath(), VALUE)) {
                     fireValue(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
                             logEvent.getValue());
@@ -228,12 +230,12 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
                         extractAuthentication(connect, new Handler<Optional<JsonObject>>() {
                             @Override
                             public void handle(Optional<JsonObject> event) {
-                                if (event.isPresent()) {
+                                //if (event.isPresent()) {
                                     auth = event;
                                     socket.write(new Buffer(encoder.encodeConnack(ConnackCode.Accepted)));
-                                } else {
+                                /*} else {
                                     socket.write(new Buffer(encoder.encodeConnack(ConnackCode.NotAuthorized)));
-                                }
+                                }*/
                             }
                         });
                         break;
@@ -351,7 +353,7 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
                 @Override
                 public void handle(Message<JsonObject> event) {
                     JsonObject user = event.body();
-                    handler.handle(Optional.of(user));
+                    handler.handle(Optional.ofNullable(user));
                 }
             });
         }
