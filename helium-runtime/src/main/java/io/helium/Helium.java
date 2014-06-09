@@ -40,8 +40,12 @@ public class Helium extends Verticle {
             container.deployWorkerVerticle(EventSource.class.getName(), container.config());
             container.deployWorkerVerticle(Persistor.class.getName(), container.config());
 
-            // Servers
+            // Channels
             container.deployVerticle(HttpServer.class.getName(), container.config());
+            //container.deployVerticle(MqttServer.class.getName(), container.config());
+
+            // TODO Administration
+            //container.deployVerticle(Administration.class.getName(), container.config());
 
             vertx.setPeriodic(5000, event -> {
                 MapDbBackedNode.getDb().compact();
