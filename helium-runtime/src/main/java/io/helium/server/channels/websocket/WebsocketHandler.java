@@ -1,4 +1,4 @@
-package io.helium.server.protocols.websocket;
+package io.helium.server.channels.websocket;
 
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.ServerWebSocket;

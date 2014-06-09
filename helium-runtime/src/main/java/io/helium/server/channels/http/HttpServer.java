@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package io.helium.server.protocols.http;
+package io.helium.server.channels.http;
 
+import io.helium.server.channels.websocket.WebsocketEndpoint;
 import io.helium.server.distributor.Endpoints;
-import io.helium.server.protocols.websocket.WebsocketEndpoint;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Future;

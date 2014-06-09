@@ -1,4 +1,4 @@
-package io.helium.server.protocols.http;
+package io.helium.server.channels.http;
 
 import com.google.common.base.Charsets;
 import io.helium.authorization.Authorizator;

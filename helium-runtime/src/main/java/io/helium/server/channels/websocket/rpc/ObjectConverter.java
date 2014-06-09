@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.server.protocols.websocket.rpc;
+package io.helium.server.channels.websocket.rpc;
 
 public class ObjectConverter {
 

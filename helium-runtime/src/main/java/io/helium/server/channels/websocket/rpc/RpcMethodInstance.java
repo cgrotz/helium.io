@@ -1,4 +1,4 @@
-package io.helium.server.protocols.websocket.rpc;
+package io.helium.server.channels.websocket.rpc;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;

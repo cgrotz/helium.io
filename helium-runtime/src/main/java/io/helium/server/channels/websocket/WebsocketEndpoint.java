@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.server.protocols.websocket;
+package io.helium.server.channels.websocket;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
@@ -31,8 +31,8 @@ import io.helium.persistence.Persistor;
 import io.helium.persistence.mapdb.MapDbBackedNode;
 import io.helium.persistence.queries.QueryEvaluator;
 import io.helium.server.Endpoint;
+import io.helium.server.channels.websocket.rpc.Rpc;
 import io.helium.server.distributor.Distributor;
-import io.helium.server.protocols.websocket.rpc.Rpc;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.buffer.Buffer;

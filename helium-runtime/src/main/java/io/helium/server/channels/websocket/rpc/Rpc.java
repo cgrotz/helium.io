@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package io.helium.server.protocols.websocket.rpc;
+package io.helium.server.channels.websocket.rpc;
 
 import com.google.common.collect.Maps;
-import io.helium.server.protocols.websocket.WebsocketEndpoint;
+import io.helium.server.channels.websocket.WebsocketEndpoint;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 

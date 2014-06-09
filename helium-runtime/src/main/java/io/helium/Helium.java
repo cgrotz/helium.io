@@ -20,8 +20,9 @@ import io.helium.authorization.Authorizator;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
 import io.helium.persistence.mapdb.MapDbBackedNode;
+import io.helium.server.channels.http.HttpServer;
+import io.helium.server.channels.mqtt.MqttServer;
 import io.helium.server.distributor.Distributor;
-import io.helium.server.protocols.http.HttpServer;
 import org.vertx.java.platform.Verticle;
 
 /**
@@ -42,7 +43,7 @@ public class Helium extends Verticle {
 
             // Channels
             container.deployVerticle(HttpServer.class.getName(), container.config());
-            //container.deployVerticle(MqttServer.class.getName(), container.config());
+            container.deployVerticle(MqttServer.class.getName(), container.config());
 
             // TODO Administration
             //container.deployVerticle(Administration.class.getName(), container.config());
