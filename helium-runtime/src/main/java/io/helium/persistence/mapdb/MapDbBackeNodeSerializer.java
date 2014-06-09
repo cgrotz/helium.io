@@ -24,7 +24,7 @@ public class MapDbBackeNodeSerializer implements Serializer<MapDbBackedNode>, Se
             if (path.root()) {
                 return MapDbBackedNode.root();
             } else {
-                return MapDbBackedNode.of(path);
+                return new MapDbBackedNode(path);
             }
         } catch (java.lang.StackOverflowError e) {
             System.out.println(pathToNode);

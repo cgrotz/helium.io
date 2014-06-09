@@ -16,7 +16,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Christoph Grotz on 02.06.14.
@@ -26,6 +29,7 @@ public class MapDbBackedNode {
     private static final long serialVersionUID = 1L;
 
     private static final DB db = DBMaker.newFileDB(new File("helium/data"))
+            .transactionDisable()
             .closeOnJvmShutdown()
             .make();
 
@@ -35,35 +39,18 @@ public class MapDbBackedNode {
 
     private HTreeMap<String, Object> attributes;
     private HTreeMap<String, MapDbBackedNode> nodes;
-    private List<String> keyOrder;
-
     private Path pathToNode;
-    private Map<String, List<String>> keyListsMap;
 
     private MapDbBackedNode() {
         pathToNode = Path.of("/");
         attributes = db.getHashMap("rootAttributes");
         nodes = db.createHashMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
-        keyListsMap = db.getHashMap("orderedKeys");
-        if (keyListsMap.containsKey("rootKeys")) {
-            keyOrder = keyListsMap.get("rootKeys");
-        } else {
-            keyOrder = new ArrayList<String>();
-            keyListsMap.put("rootKeys", keyOrder);
-        }
     }
 
-    private MapDbBackedNode(Path pathToNode) {
+    MapDbBackedNode(Path pathToNode) {
         this.pathToNode = pathToNode;
         attributes = db.getHashMap(pathToNode + "Attributes");
         nodes = db.createHashMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
-        keyListsMap = db.getHashMap("orderedKeys");
-        if (keyListsMap.containsKey(pathToNode + "Keys")) {
-            keyOrder = keyListsMap.get(pathToNode + "Keys");
-        } else {
-            keyOrder = new ArrayList<String>();
-            keyListsMap.put(pathToNode + "Keys", keyOrder);
-        }
     }
 /*
     public void writeExternal(ObjectOutput out) throws IOException {
@@ -372,8 +359,6 @@ public class MapDbBackedNode {
     public Object opt(String key) {
         if (Strings.isNullOrEmpty(key)) {
             return null;
-        } else if (!keyOrder.contains(key)) {
-            return null;
         } else if (this.attributes.containsKey(key)) {
             return this.attributes.get(key);
         } else if (this.nodes.containsKey(key)) {
@@ -467,12 +452,11 @@ public class MapDbBackedNode {
         if (pathToNode.append(key).root()) {
             return root();
         } else if (has(key)) {
+            Object value = get(key);
             return (MapDbBackedNode) get(key);
         } else {
             MapDbBackedNode node = new MapDbBackedNode(pathToNode.append(key));
             nodes.put(key, node);
-            keyOrder.add(key);
-            keyListsMap.put(pathToNode.toString(), keyOrder);
             return node;
         }
     }
@@ -530,7 +514,7 @@ public class MapDbBackedNode {
      * @return An iterator of the keys.
      */
     public Iterator<String> keyIterator() {
-        return (Lists.newArrayList(this.keyOrder)).iterator();
+        return keys().iterator();
     }
 
     /**
@@ -540,7 +524,10 @@ public class MapDbBackedNode {
      */
 
     public List<String> keys() {
-        return Lists.newArrayList(this.keyOrder);
+        List keys = Lists.newArrayList();
+        keys.addAll(this.attributes.keySet());
+        keys.addAll(this.nodes.keySet());
+        return keys;
     }
 
     /**
@@ -667,14 +654,9 @@ public class MapDbBackedNode {
             } else {
                 this.attributes.put(key, value);
             }
-            if (keyOrder.contains(key)) {
-                keyOrder.remove(key);
-            }
-            this.keyOrder.add(key);
         } else {
             this.remove(key);
         }
-        keyListsMap.put(key + "Keys", keyOrder);
         return this;
     }
 
@@ -686,8 +668,6 @@ public class MapDbBackedNode {
      */
 
     public Object remove(String key) {
-        this.keyOrder.remove(key);
-        this.keyListsMap.put(key + "Keys", keyOrder);
         if (this.nodes.containsKey(key)) {
             return this.nodes.remove(key);
         } else if (this.attributes.containsKey(key)) {
@@ -792,26 +772,6 @@ public class MapDbBackedNode {
             throw new RuntimeException(exception);
         }
     }
-
-
-    public int indexOf(String name) {
-        return keyOrder.indexOf(name);
-    }
-
-
-    public void setIndexOf(String name, int index) {
-        if (index <= 0) {
-            return;
-        }
-        keyOrder.remove(name);
-        if (index < keyOrder.size()) {
-            keyOrder.add(index, name);
-        } else {
-            keyOrder.add(name);
-        }
-        this.keyListsMap.put(pathToNode + "Keys", keyOrder);
-    }
-
 
     public Object getObjectForPath(Path path) {
         MapDbBackedNode parent = getNodeForPath(ChangeLog.of(new JsonArray()), path.parent());
@@ -933,8 +893,6 @@ public class MapDbBackedNode {
     public void clear() {
         nodes.clear();
         attributes.clear();
-        keyOrder.clear();
-        this.keyListsMap.put(pathToNode + "Keys", keyOrder);
     }
 
 

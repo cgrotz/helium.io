@@ -85,7 +85,7 @@ public class WebsocketEndpoint implements Endpoint {
     @Rpc.Method
     public void attachListener(@Rpc.Param("path") String path,
                                @Rpc.Param("event_type") String eventType) {
-        container.logger().info("attachListener");
+        container.logger().trace("attachListener");
         addListener(new Path(HeliumEvent.extractPath(path)), eventType);
         if ("child_added".equals(eventType)) {
             ChangeLog log = ChangeLog.of(new JsonArray());
@@ -101,13 +101,13 @@ public class WebsocketEndpoint implements Endpoint {
     @Rpc.Method
     public void detachListener(@Rpc.Param("path") String path,
                                @Rpc.Param("event_type") String eventType) {
-        container.logger().info("detachListener");
+        container.logger().trace("detachListener");
         removeListener(new Path(HeliumEvent.extractPath(path)), eventType);
     }
 
     @Rpc.Method
     public void attachQuery(@Rpc.Param("path") String path, @Rpc.Param("query") String query) {
-        container.logger().info("attachQuery");
+        container.logger().trace("attachQuery");
         addQuery(new Path(HeliumEvent.extractPath(path)), query);
         syncPathWithQuery(ChangeLog.of(new JsonArray()), new Path(HeliumEvent.extractPath(path)), this,
                 new QueryEvaluator(container), query);
@@ -115,20 +115,20 @@ public class WebsocketEndpoint implements Endpoint {
 
     @Rpc.Method
     public void detachQuery(@Rpc.Param("path") String path, @Rpc.Param("query") String query) {
-        container.logger().info("detachQuery");
+        container.logger().trace("detachQuery");
         removeQuery(new Path(HeliumEvent.extractPath(path)), query);
     }
 
     @Rpc.Method
     public void event(@Rpc.Param("path") String path, @Rpc.Param("data") JsonObject data) {
-        container.logger().info("event");
+        container.logger().trace("event");
         vertx.eventBus().send(Distributor.DISTRIBUTE_EVENT, new JsonObject().putString("path", path).putObject("payload", data));
     }
 
     @Rpc.Method
     public void push(@Rpc.Param("path") String path, @Rpc.Param("name") String name,
                      @Rpc.Param("data") JsonObject data) {
-        container.logger().info("push");
+        container.logger().trace("push");
         HeliumEvent event = new HeliumEvent(HeliumEventType.PUSH, path + "/" + name, data);
         if (auth.isPresent())
             event.setAuth(auth.get());
@@ -137,7 +137,7 @@ public class WebsocketEndpoint implements Endpoint {
 
     @Rpc.Method
     public void set(@Rpc.Param("path") String path, @Rpc.Param("data") Object data) {
-        container.logger().info("set");
+        container.logger().trace("set");
         HeliumEvent event = new HeliumEvent(HeliumEventType.SET, path, data);
         if (auth.isPresent())
             event.setAuth(auth.get());
@@ -146,7 +146,7 @@ public class WebsocketEndpoint implements Endpoint {
 
     @Rpc.Method
     public void update(@Rpc.Param("path") String path, @Rpc.Param("data") JsonObject data) {
-        container.logger().info("update");
+        container.logger().trace("update");
         HeliumEvent event = new HeliumEvent(HeliumEventType.UPDATE, path, data);
         if (auth.isPresent())
             event.setAuth(auth.get());
@@ -156,7 +156,7 @@ public class WebsocketEndpoint implements Endpoint {
     @Rpc.Method
     public void pushOnDisconnect(@Rpc.Param("path") String path, @Rpc.Param("name") String name,
                                  @Rpc.Param("payload") JsonObject payload) {
-        container.logger().info("pushOnDisconnect");
+        container.logger().trace("pushOnDisconnect");
         HeliumEvent event = new HeliumEvent(HeliumEventType.PUSH, path + "/" + name,
                 payload);
         if (auth.isPresent())
@@ -166,7 +166,7 @@ public class WebsocketEndpoint implements Endpoint {
 
     @Rpc.Method
     public void setOnDisconnect(@Rpc.Param("path") String path, @Rpc.Param("data") JsonObject data) {
-        container.logger().info("setOnDisconnect");
+        container.logger().trace("setOnDisconnect");
         HeliumEvent event = new HeliumEvent(HeliumEventType.SET, path, data);
         if (auth.isPresent())
             event.setAuth(auth.get());
@@ -175,7 +175,7 @@ public class WebsocketEndpoint implements Endpoint {
 
     @Rpc.Method
     public void updateOnDisconnect(@Rpc.Param("path") String path, @Rpc.Param("data") JsonObject data) {
-        container.logger().info("updateOnDisconnect");
+        container.logger().trace("updateOnDisconnect");
         HeliumEvent event = new HeliumEvent(HeliumEventType.UPDATE, path, data);
         if (auth.isPresent())
             event.setAuth(auth.get());
@@ -184,7 +184,7 @@ public class WebsocketEndpoint implements Endpoint {
 
     @Rpc.Method
     public void removeOnDisconnect(@Rpc.Param("path") String path) {
-        container.logger().info("removeOnDisconnect");
+        container.logger().trace("removeOnDisconnect");
         HeliumEvent event = new HeliumEvent(HeliumEventType.REMOVE, path);
         if (auth.isPresent())
             event.setAuth(auth.get());
@@ -193,7 +193,7 @@ public class WebsocketEndpoint implements Endpoint {
 
     @Rpc.Method
     public void authenticate(@Rpc.Param("username") String username, @Rpc.Param("password") String password) {
-        container.logger().info("authenticate");
+        container.logger().trace("authenticate");
         extractAuthentication(username, password, new Handler<Optional<JsonObject>>() {
             @Override
             public void handle(Optional<JsonObject> event) {
@@ -260,7 +260,7 @@ public class WebsocketEndpoint implements Endpoint {
                 ChangeLog changeLog = event.getChangeLog();
                 distributeChangeLog(changeLog);
             }
-            container.logger().info("distribute " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
+            container.logger().trace("distribute " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
         }
     }
 
@@ -357,7 +357,12 @@ public class WebsocketEndpoint implements Endpoint {
     }
 
     private void sendViaWebsocket(JsonObject broadcast) {
-        socket.writeTextFrame(broadcast.toString());
+        try {
+            socket.writeTextFrame(broadcast.toString());
+        } catch (IllegalStateException e) {
+            // Websocket was probably closed
+            socket.close();
+        }
     }
 
     public void fireChildChanged(String name, Path path, Path parent, Object node,
@@ -491,7 +496,7 @@ public class WebsocketEndpoint implements Endpoint {
 
                     broadcast.putValue(HeliumEvent.PATH, createPath(path));
                     broadcast.putValue(HeliumEvent.PAYLOAD, payload);
-                    container.logger().info("Distributing Message (basePath: '" + basePath + "',path: '" + path + "') : "
+                    container.logger().trace("Distributing Message (basePath: '" + basePath + "',path: '" + path + "') : "
                             + broadcast.toString());
                     sendViaWebsocket(broadcast);
                 }
@@ -574,7 +579,6 @@ public class WebsocketEndpoint implements Endpoint {
             if (!Strings.isNullOrEmpty(childNodeKey)) {
                 Object object = node.get(childNodeKey);
                 boolean hasChildren = (object instanceof MapDbBackedNode) ? ((MapDbBackedNode) object).hasChildren() : false;
-                int indexOf = node.indexOf(childNodeKey);
                 int numChildren = (object instanceof MapDbBackedNode) ? ((MapDbBackedNode) object).length() : 0;
                 if (object != null && object != null) {
                     handler.fireChildAdded(childNodeKey, path, path.parent(), object, hasChildren,

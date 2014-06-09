@@ -19,6 +19,7 @@ package io.helium;
 import io.helium.authorization.Authorizator;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
+import io.helium.persistence.mapdb.MapDbBackedNode;
 import io.helium.server.distributor.Distributor;
 import io.helium.server.protocols.http.HttpServer;
 import org.vertx.java.platform.Verticle;
@@ -42,15 +43,9 @@ public class Helium extends Verticle {
             // Servers
             container.deployVerticle(HttpServer.class.getName(), container.config());
 
-            /*
-            vertx.setPeriodic(1000, event -> {
-                MapDbBackedNode.getDb().commit();
-                MapDbBackedNode.getDb().compact();
-            });
-
             vertx.setPeriodic(5000, event -> {
                 MapDbBackedNode.getDb().compact();
-            });*/
+            });
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
         }
