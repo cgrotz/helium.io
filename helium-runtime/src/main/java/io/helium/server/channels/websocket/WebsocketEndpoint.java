@@ -27,6 +27,7 @@ import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.*;
 import io.helium.persistence.DataSnapshot;
+import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
 import io.helium.persistence.mapdb.MapDbBackedNode;
 import io.helium.persistence.queries.QueryEvaluator;
@@ -132,7 +133,16 @@ public class WebsocketEndpoint implements Endpoint {
         HeliumEvent event = new HeliumEvent(HeliumEventType.PUSH, path + "/" + name, data);
         if (auth.isPresent())
             event.setAuth(auth.get());
-        vertx.eventBus().send(Authorizator.SUBSCRIPTION, event);
+
+        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
+            if (event1.body()) {
+                vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
+                vertx.eventBus().send(Persistor.SUBSCRIPTION_PUSH, event);
+                container.logger().trace("authorized: " + event);
+            } else {
+                container.logger().warn("not authorized: " + event);
+            }
+        });
     }
 
     @Rpc.Method
@@ -141,7 +151,16 @@ public class WebsocketEndpoint implements Endpoint {
         HeliumEvent event = new HeliumEvent(HeliumEventType.SET, path, data);
         if (auth.isPresent())
             event.setAuth(auth.get());
-        vertx.eventBus().send(Authorizator.SUBSCRIPTION, event);
+
+        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
+            if (event1.body()) {
+                vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
+                vertx.eventBus().send(Persistor.SUBSCRIPTION_SET, event);
+                container.logger().trace("authorized: " + event);
+            } else {
+                container.logger().warn("not authorized: " + event);
+            }
+        });
     }
 
     @Rpc.Method
@@ -150,7 +169,16 @@ public class WebsocketEndpoint implements Endpoint {
         HeliumEvent event = new HeliumEvent(HeliumEventType.UPDATE, path, data);
         if (auth.isPresent())
             event.setAuth(auth.get());
-        vertx.eventBus().send(Authorizator.SUBSCRIPTION, event);
+
+        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, Path.of(path), null), (Message<Boolean> event1) -> {
+            if (event1.body()) {
+                vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
+                vertx.eventBus().send(Persistor.SUBSCRIPTION_UPDATE, event);
+                container.logger().trace("authorized: " + event);
+            } else {
+                container.logger().warn("not authorized: " + event);
+            }
+        });
     }
 
     @Rpc.Method
@@ -551,7 +579,15 @@ public class WebsocketEndpoint implements Endpoint {
 
     public void executeDisconnectEvents() {
         for (HeliumEvent event : disconnectEvents) {
-            vertx.eventBus().send(Authorizator.SUBSCRIPTION, event);
+            vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, Path.of(event.getPath()), event.getPayload()), (Message<Boolean> event1) -> {
+                if (event1.body()) {
+                    vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
+                    vertx.eventBus().send(event.getType().eventBus, event);
+                    container.logger().trace("authorized: " + event);
+                } else {
+                    container.logger().warn("not authorized: " + event);
+                }
+            });
         }
     }
 

@@ -6,9 +6,9 @@ import com.google.common.collect.Sets;
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
+import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -33,24 +33,33 @@ public class MapDbBackedNode {
             .closeOnJvmShutdown()
             .make();
 
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                db.close();
+            }
+        });
+    }
+
     public static DB getDb() {
         return db;
     }
 
-    private HTreeMap<String, Object> attributes;
-    private HTreeMap<String, MapDbBackedNode> nodes;
+    private BTreeMap<String, Object> attributes;
+    private BTreeMap<String, MapDbBackedNode> nodes;
     private Path pathToNode;
 
     private MapDbBackedNode() {
         pathToNode = Path.of("/");
-        attributes = db.getHashMap("rootAttributes");
-        nodes = db.createHashMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
+        attributes = db.getTreeMap("rootAttributes");
+        nodes = db.createTreeMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
     }
 
     MapDbBackedNode(Path pathToNode) {
         this.pathToNode = pathToNode;
-        attributes = db.getHashMap(pathToNode + "Attributes");
-        nodes = db.createHashMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
+        attributes = db.getTreeMap(pathToNode + "Attributes");
+        nodes = db.createTreeMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
     }
 /*
     public void writeExternal(ObjectOutput out) throws IOException {
@@ -468,7 +477,6 @@ public class MapDbBackedNode {
      * @return The long value.
      * @throws RuntimeException if the pathToNode is not found or if the value cannot be converted to a long.
      */
-
     public long getLong(String key) {
         Object object = this.get(key);
         try {

@@ -5,10 +5,11 @@ import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.event.HeliumEventType;
+import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChildAddedLogEvent;
 import io.helium.event.changelog.ValueChangedLogEvent;
+import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
 import io.helium.server.DataTypeConverter;
 import io.helium.server.Endpoint;
@@ -231,8 +232,8 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
                             @Override
                             public void handle(Optional<JsonObject> event) {
                                 //if (event.isPresent()) {
-                                    auth = event;
-                                    socket.write(new Buffer(encoder.encodeConnack(ConnackCode.Accepted)));
+                                auth = event;
+                                socket.write(new Buffer(encoder.encodeConnack(ConnackCode.Accepted)));
                                 /*} else {
                                     socket.write(new Buffer(encoder.encodeConnack(ConnackCode.NotAuthorized)));
                                 }*/
@@ -266,16 +267,23 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
                     }
                     case PUBLISH: {
                         Publish publish = (Publish) command.get();
-                        Object optional = DataTypeConverter.convert(publish.getArray());
+                        Object data = DataTypeConverter.convert(publish.getArray());
                         if (publish.isRetainFlag()) {
-                            HeliumEvent heliumEvent = new HeliumEvent(HeliumEventType.SET, publish.getTopic(), optional);
+                            Path nodePath = Path.of(publish.getTopic());
+                            HeliumEvent heliumEvent = HeliumEventBuilder.set(nodePath, data).withAuth(auth).build();
                             if (auth.isPresent())
                                 heliumEvent.setAuth(auth.get());
-                            vertx.eventBus().send(Authorizator.SUBSCRIPTION, heliumEvent);
+
+                            vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
+                                if (event1.body()) {
+                                    vertx.eventBus().send(EventSource.PERSIST_EVENT, heliumEvent);
+                                    vertx.eventBus().send(heliumEvent.getType().eventBus, heliumEvent);
+                                }
+                            });
                         } else {
                             vertx.eventBus().send(Distributor.DISTRIBUTE_EVENT, new JsonObject()
                                     .putString("path", publish.getTopic())
-                                    .putValue("payload", optional));
+                                    .putValue("payload", data));
                             ;
                         }
 

@@ -16,11 +16,26 @@
 
 package io.helium.event;
 
+import io.helium.persistence.Persistor;
+
 /**
  * Helium Event Types
  *
  * @author Christoph Grotz
  */
 public enum HeliumEventType {
-    PUSH, SET, REMOVE, UPDATE, GET, EVENT
+    PUSH(Persistor.SUBSCRIPTION_PUSH),
+    SET(Persistor.SUBSCRIPTION_SET),
+    REMOVE(Persistor.SUBSCRIPTION_DELETE),
+    UPDATE(Persistor.SUBSCRIPTION_UPDATE),
+    GET(Persistor.GET),
+    EVENT(null);
+
+    public final String eventBus;
+
+    private HeliumEventType(String eventBus) {
+        this.eventBus = eventBus;
+    }
+
+
 }

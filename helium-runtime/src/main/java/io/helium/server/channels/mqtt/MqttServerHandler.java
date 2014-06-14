@@ -32,6 +32,12 @@ public class MqttServerHandler implements Handler<NetSocket> {
     public MqttServerHandler(Vertx vertx, Container container) {
         this.vertx = vertx;
         this.container = container;
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                db.close();
+            }
+        });
     }
 
     @Override

@@ -7,6 +7,7 @@ import io.helium.authorization.Operation;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.builder.HeliumEventBuilder;
+import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
 import io.helium.server.DataTypeConverter;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -62,16 +63,21 @@ public class RestHandler implements Handler<HttpServerRequest> {
     private void delete(HttpServerRequest req) {
         Path nodePath = Path.of(req.uri());
         extractAuthentication(req, auth -> {
-            vertx.eventBus().send(Authorizator.SUBSCRIPTION,
-                    HeliumEventBuilder.delete(nodePath).withAuth(auth).build(),
-                    (Message<JsonObject> msg) -> {
-                        if (msg.body().getBoolean("authorized", false)) {
+            HeliumEvent event = HeliumEventBuilder.delete(nodePath).withAuth(auth).build();
+            if (auth.isPresent())
+                event.setAuth(auth.get());
+
+            vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, nodePath, null), (Message<Boolean> event1) -> {
+                if (event1.body()) {
+                    vertx.eventBus().send(Persistor.SUBSCRIPTION_DELETE, event, new Handler<Message>() {
+                        @Override
+                        public void handle(Message event) {
                             req.response().end();
-                        } else {
-                            req.response().setStatusCode(UNAUTHORIZED.code()).end();
                         }
-                    }
-            );
+                    });
+                    vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
+                }
+            });
         });
     }
 
@@ -79,16 +85,17 @@ public class RestHandler implements Handler<HttpServerRequest> {
         req.bodyHandler(buffer -> {
             Path nodePath = Path.of(req.uri());
             extractAuthentication(req, auth -> {
-                vertx.eventBus().send(Authorizator.SUBSCRIPTION,
-                        HeliumEventBuilder.set(nodePath, DataTypeConverter.convert(buffer)).withAuth(auth).build(),
-                        (Message<JsonObject> msg) -> {
-                            if (msg.body().getBoolean("authorized", false)) {
-                                req.response().end();
-                            } else {
-                                req.response().setStatusCode(UNAUTHORIZED.code()).end();
-                            }
-                        }
-                );
+                Object data = DataTypeConverter.convert(buffer);
+                HeliumEvent event = HeliumEventBuilder.set(nodePath, data).withAuth(auth).build();
+                if (auth.isPresent())
+                    event.setAuth(auth.get());
+
+                vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
+                    if (event1.body()) {
+                        vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
+                        vertx.eventBus().send(event.getType().eventBus, event);
+                    }
+                });
             });
         });
         req.resume();
@@ -105,16 +112,17 @@ public class RestHandler implements Handler<HttpServerRequest> {
             }
             Path nodePath = Path.of(uri);
             extractAuthentication(req, auth -> {
-                vertx.eventBus().send(Authorizator.SUBSCRIPTION,
-                        HeliumEventBuilder.set(nodePath, DataTypeConverter.convert(buffer)).withAuth(auth).build(),
-                        (Message<JsonObject> msg) -> {
-                            if (msg.body().getBoolean("authorized", false)) {
-                                req.response().putHeader(HttpHeaders.Names.LOCATION, uri).end();
-                            } else {
-                                req.response().setStatusCode(UNAUTHORIZED.code()).end();
-                            }
-                        }
-                );
+                Object data = DataTypeConverter.convert(buffer);
+                HeliumEvent event = HeliumEventBuilder.set(nodePath, data).withAuth(auth).build();
+                if (auth.isPresent())
+                    event.setAuth(auth.get());
+
+                vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
+                    if (event1.body()) {
+                        vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
+                        vertx.eventBus().send(event.getType().eventBus, event);
+                    }
+                });
             });
         });
         req.resume();

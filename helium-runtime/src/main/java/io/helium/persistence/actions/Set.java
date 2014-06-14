@@ -20,6 +20,8 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.persistence.mapdb.MapDbBackedNode;
 import io.helium.persistence.mapdb.MapDbPersistence;
+import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.json.JsonObject;
 
 public class Set {
 
@@ -29,7 +31,8 @@ public class Set {
         this.persistence = persistence;
     }
 
-    public void handle(HeliumEvent event) {
+    public void handle(Message<JsonObject> msg) {
+        HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
         MapDbBackedNode payload;
         if (event.containsField(HeliumEvent.PAYLOAD)) {

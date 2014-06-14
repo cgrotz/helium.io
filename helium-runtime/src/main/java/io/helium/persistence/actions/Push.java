@@ -19,6 +19,7 @@ package io.helium.persistence.actions;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.persistence.mapdb.MapDbPersistence;
+import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.UUID;
@@ -31,7 +32,8 @@ public class Push {
         this.persistence = persistence;
     }
 
-    public void handle(HeliumEvent event) {
+    public void handle(Message<JsonObject> msg) {
+        HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
         Object payload;
         if (event.containsField(HeliumEvent.PAYLOAD)) {

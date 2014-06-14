@@ -203,6 +203,10 @@ public class HeliumEvent extends JsonObject {
         return getValue(HeliumEvent.PAYLOAD);
     }
 
+    public String getPath() {
+        return getString(HeliumEvent.PATH);
+    }
+
     public ChangeLog getChangeLog() {
         JsonArray log = getArray("changelog", new JsonArray());
         putArray("changelog", log);

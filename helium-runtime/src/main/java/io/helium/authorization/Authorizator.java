@@ -19,10 +19,7 @@ package io.helium.authorization;
 import com.google.common.collect.Maps;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.event.HeliumEventType;
 import io.helium.persistence.DataSnapshot;
-import io.helium.persistence.EventSource;
-import io.helium.persistence.Persistor;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.mapdb.MapDbBackedNode;
 import org.vertx.java.core.Handler;
@@ -40,7 +37,6 @@ public class Authorizator extends Verticle {
     public final static JsonObject ANONYMOUS = new JsonObject().putBoolean("isAnonymous", true);
 
     public static final String FILTER_CONTENT = "authorizator.filter";
-    public static final String SUBSCRIPTION = "authorizator.authorize";
     public static final String IS_AUTHORIZED = "authorizator.isAuthorized";
 
     private SandBoxedScriptingEnvironment scriptingEnvironment;
@@ -49,7 +45,6 @@ public class Authorizator extends Verticle {
     @Override
     public void start() {
         this.scriptingEnvironment = new SandBoxedScriptingEnvironment(container);
-        vertx.eventBus().registerHandler(SUBSCRIPTION, this::onReceive);
         vertx.eventBus().registerHandler(FILTER_CONTENT, new Handler<Message>() {
             @Override
             public void handle(Message event) {
@@ -102,55 +97,6 @@ public class Authorizator extends Verticle {
         } catch (NoSuchMethodException | ScriptException e) {
             container.logger().error("failed filtering", e);
         }
-    }
-
-    public void onReceive(Message<JsonObject> message) {
-        long startTime = System.currentTimeMillis();
-        HeliumEvent event = HeliumEvent.of(message.body());
-        if (event.isFromHistory()) {
-            distribute(message);
-            return;
-        }
-        container.logger().trace("checking auth for: " + message);
-        Path path = event.extractNodePath();
-        if (event.getType() == HeliumEventType.PUSH) {
-            DataSnapshot data = new DataSnapshot(event.getValue(HeliumEvent.PAYLOAD));
-            vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, data), (Message<Boolean> event1) -> {
-                if (event1.body()) {
-                    distribute(message.body());
-                    container.logger().trace("authorized: " + message);
-                } else {
-                    container.logger().warn("not authorized: " + message);
-                }
-            });
-        } else if (event.getType() == HeliumEventType.SET) {
-            if (event.containsField(HeliumEvent.PAYLOAD)) {
-                DataSnapshot data = new DataSnapshot(event.getValue(HeliumEvent.PAYLOAD));
-                vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, data), (Message<Boolean> event1) -> {
-                    if (event1.body()) {
-                        distribute(message.body());
-                        container.logger().trace("authorized: " + message);
-                    } else {
-                        container.logger().warn("not authorized: " + message);
-                    }
-                });
-            } else {
-                vertx.eventBus().send(IS_AUTHORIZED, check(Operation.WRITE, getAuth(event), path, null), (Message<Boolean> event1) -> {
-                    if (event1.body()) {
-                        distribute(message.body());
-                        container.logger().trace("authorized: " + message);
-                    } else {
-                        container.logger().warn("not authorized: " + message);
-                    }
-                });
-            }
-        }
-        container.logger().trace("onEvent " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
-    }
-
-    private void distribute(Object message) {
-        vertx.eventBus().send(EventSource.SUBSCRIPTION, message);
-        vertx.eventBus().send(Persistor.SUBSCRIPTION, message);
     }
 
     private Optional<JsonObject> getAuth(HeliumEvent event) {

@@ -17,7 +17,6 @@
 package io.helium.persistence;
 
 import io.helium.common.Path;
-import io.helium.event.HeliumEvent;
 import io.helium.persistence.actions.Push;
 import io.helium.persistence.actions.Remove;
 import io.helium.persistence.actions.Set;
@@ -32,7 +31,12 @@ import org.vertx.java.platform.Verticle;
 import java.util.UUID;
 
 public class Persistor extends Verticle {
-    public static final String SUBSCRIPTION = "persistence";
+
+    public static final String SUBSCRIPTION_PUSH = "push";
+    public static final String SUBSCRIPTION_SET = "set";
+    public static final String SUBSCRIPTION_DELETE = "remove";
+    public static final String SUBSCRIPTION_UPDATE = "update";
+
     public static final String GET = "get";
     public static final String REMOVE = "remove";
 
@@ -51,12 +55,11 @@ public class Persistor extends Verticle {
         remove = new Remove(persistence);
         initDefaults();
 
-        vertx.eventBus().registerHandler(SUBSCRIPTION, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                onReceive(event.body());
-            }
-        });
+        vertx.eventBus().registerHandler(SUBSCRIPTION_PUSH, push::handle);
+        vertx.eventBus().registerHandler(SUBSCRIPTION_DELETE, remove::handle);
+        vertx.eventBus().registerHandler(SUBSCRIPTION_SET, set::handle);
+        vertx.eventBus().registerHandler(SUBSCRIPTION_UPDATE, update::handle);
+
         vertx.eventBus().registerHandler(GET, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
@@ -100,27 +103,6 @@ public class Persistor extends Verticle {
                     .put(".read", "function(auth, path, data, root){\n" +
                             "  return auth.isAdmin;\n" +
                             "}\n");
-        }
-    }
-
-    public void onReceive(JsonObject message) {
-        // Now open first transaction and get map from first transaction
-        HeliumEvent event = HeliumEvent.of(message);
-        switch (event.getType()) {
-            case PUSH:
-                push.handle(event);
-                break;
-            case UPDATE:
-                update.handle(event);
-                break;
-            case SET:
-                set.handle(event);
-                break;
-            case REMOVE:
-                remove.handle(event);
-                break;
-            default:
-                break;
         }
     }
 

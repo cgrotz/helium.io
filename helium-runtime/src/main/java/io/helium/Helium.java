@@ -19,11 +19,12 @@ package io.helium;
 import io.helium.authorization.Authorizator;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
-import io.helium.persistence.mapdb.MapDbBackedNode;
 import io.helium.server.channels.http.HttpServer;
 import io.helium.server.channels.mqtt.MqttServer;
 import io.helium.server.distributor.Distributor;
 import org.vertx.java.platform.Verticle;
+
+import java.io.File;
 
 /**
  * Main entry point for Helium
@@ -36,6 +37,7 @@ public class Helium extends Verticle {
     public void start() {
         try {
             // Workers
+            new File("helium/journal").mkdirs();
             container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
             container.deployWorkerVerticle(Distributor.class.getName(), container.config());
             container.deployWorkerVerticle(EventSource.class.getName(), container.config());
@@ -47,10 +49,6 @@ public class Helium extends Verticle {
 
             // TODO Administration
             //container.deployVerticle(Administration.class.getName(), container.config());
-
-            vertx.setPeriodic(5000, event -> {
-                MapDbBackedNode.getDb().compact();
-            });
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
         }

@@ -9,7 +9,7 @@ import org.vertx.java.core.json.JsonObject;
 public class DataTypeConverter {
 
     public static Object convert(Buffer content) {
-        return convert(content);
+        return convert(content.toString());
     }
 
     public static Object convert(String content) {

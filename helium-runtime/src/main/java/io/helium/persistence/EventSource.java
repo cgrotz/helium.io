@@ -26,10 +26,11 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 
 public class EventSource extends Verticle {
-    public static final String SUBSCRIPTION = EventSource.class.getSimpleName() + ".journal";
+    public static final String PERSIST_EVENT = EventSource.class.getSimpleName() + ".journal";
 
     private journal.io.api.Journal journal = new journal.io.api.Journal();
     private Optional<Location> currentLocation = Optional.empty();
@@ -41,10 +42,20 @@ public class EventSource extends Verticle {
             File file = new File(Strings.isNullOrEmpty(directory) ? "helium/journal" : directory);
             journal.setDirectory(file);
             journal.open();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        journal.close();
+                    } catch (IOException exp) {
+                        container.logger().error("Failed closing journal", exp);
+                    }
+                }
+            });
         } catch (Exception exp) {
             container.logger().error("Failed starting journal", exp);
         }
-        vertx.eventBus().registerHandler(SUBSCRIPTION, new Handler<Message<JsonObject>>() {
+        vertx.eventBus().registerHandler(PERSIST_EVENT, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
                 onReceive(event.body());
