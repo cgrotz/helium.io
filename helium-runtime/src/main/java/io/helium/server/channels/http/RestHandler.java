@@ -1,6 +1,7 @@
 package io.helium.server.channels.http;
 
 import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
 import io.helium.common.Path;
@@ -40,7 +41,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
     public void handle(HttpServerRequest req) {
         try {
             Path nodePath = new Path(HeliumEvent.extractPath(req.uri().replaceAll("\\.json", "")));
-            if (req.uri().endsWith("helium.js")) {
+            if (req.uri().endsWith("js/helium.js")) {
                 req.response().end(loadJsFile());
             } else if (req.method().equalsIgnoreCase(HttpMethod.GET.name())) {
                 get(req, nodePath);
@@ -150,17 +151,16 @@ public class RestHandler implements Handler<HttpServerRequest> {
     }
 
     public static String loadJsFile() throws IOException {
-        URL uuid = Thread.currentThread().getContextClassLoader().getResource("uuid.js");
-        URL rpc = Thread.currentThread().getContextClassLoader().getResource("rpc.js");
-        URL reconnectingWebSocket = Thread.currentThread().getContextClassLoader()
-                .getResource("reconnecting-websocket.min.js");
-        URL helium = Thread.currentThread().getContextClassLoader().getResource("helium.js");
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        URL uuid = cl.getResource("js/uuid.js");
+        URL rpc = cl.getResource("js/rpc.js");
+        URL reconnectingWebSocket = cl.getResource("js/reconnecting-websocket.min.js");
+        URL helium = cl.getResource("js/helium.js");
 
-        String uuidContent = com.google.common.io.Resources.toString(uuid, Charsets.UTF_8);
-        String reconnectingWebSocketContent = com.google.common.io.Resources.toString(
-                reconnectingWebSocket, Charsets.UTF_8);
-        String rpcContent = com.google.common.io.Resources.toString(rpc, Charsets.UTF_8);
-        String heliumContent = com.google.common.io.Resources.toString(helium, Charsets.UTF_8);
+        String uuidContent = Resources.toString(uuid, Charsets.UTF_8);
+        String reconnectingWebSocketContent = Resources.toString(reconnectingWebSocket, Charsets.UTF_8);
+        String rpcContent = Resources.toString(rpc, Charsets.UTF_8);
+        String heliumContent = Resources.toString(helium, Charsets.UTF_8);
 
         return uuidContent + "\r\n" + reconnectingWebSocketContent + "\r\n" + rpcContent + "\r\n"
                 + heliumContent;
