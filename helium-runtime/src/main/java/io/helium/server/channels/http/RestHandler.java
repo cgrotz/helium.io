@@ -42,7 +42,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
     public void handle(HttpServerRequest req) {
         try {
             Path nodePath = new Path(HeliumEvent.extractPath(req.uri().replaceAll("\\.json", "")));
-            if (req.uri().endsWith("js/helium.js")) {
+            if (req.uri().endsWith("helium.js")) {
                 req.response().end(loadJsFile());
             } else if (req.method().equalsIgnoreCase(HttpMethod.GET.name())) {
                 get(req, nodePath);

@@ -1,4 +1,4 @@
-package io.helium.persistence.mapdb;
+package io.helium.persistence.infinispan;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -6,95 +6,72 @@ import com.google.common.collect.Sets;
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
-import org.mapdb.BTreeMap;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
+import org.infinispan.Cache;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Created by Christoph Grotz on 02.06.14.
+ * Created by Christoph Grotz on 14.06.14.
  */
-public class MapDbBackedNode {
-
-    private static final long serialVersionUID = 1L;
-
-    private static final DB db = DBMaker.newFileDB(new File("helium/data"))
-            .transactionDisable()
-            .closeOnJvmShutdown()
-            .make();
-
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                db.close();
-            }
-        });
-    }
-
-    public static DB getDb() {
-        return db;
-    }
-
-    private BTreeMap<String, Object> attributes;
-    private BTreeMap<String, MapDbBackedNode> nodes;
+public class Node implements Externalizable {
     private Path pathToNode;
 
-    private MapDbBackedNode() {
+    private Cache<String, Object> attributes;
+    private Cache<String, Node> nodes;
+
+    public Node() {
+        initRoot();
+    }
+
+    private void initRoot() {
         pathToNode = Path.of("/");
-        attributes = db.getTreeMap("rootAttributes");
-        nodes = db.createTreeMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
+        attributes = InfinispanPersistence.cacheManager.getCache("rootAttributes", true);
+        nodes = InfinispanPersistence.cacheManager.getCache("rootNodes", true);
     }
 
-    MapDbBackedNode(Path pathToNode) {
-        this.pathToNode = pathToNode;
-        attributes = db.getTreeMap(pathToNode + "Attributes");
-        nodes = db.createTreeMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
+    public Node(Path path) {
+        init(path);
     }
-/*
+
+    private void init(Path path) {
+        pathToNode = path;
+        attributes = InfinispanPersistence.cacheManager.getCache(pathToNode + "Attributes", true);
+        nodes = InfinispanPersistence.cacheManager.getCache(pathToNode + "Nodes", true);
+    }
+
+    @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.write(pathToNode.toString().getBytes());
-        attributes = db.getHashMap(pathToNode + "Attributes");
-        nodes = db.createHashMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
-        keyListsMap = db.getHashMap("orderedKeys");
-        if (keyListsMap.containsKey(pathToNode + "Keys")) {
-            keyOrder = keyListsMap.get(pathToNode + "Keys");
-        } else {
-            keyOrder = new ArrayList();
-            keyListsMap.put(pathToNode + "Keys", keyOrder);
-        }
+        out.writeUTF(pathToNode.toString());
     }
 
+    @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        String source = in.readUTF();
-        pathToNode = new Path(source);
-        attributes = db.getHashMap(pathToNode + "Attributes");
-        nodes = db.getHashMap(pathToNode + "Nodes");
-        keyListsMap = db.getHashMap("orderedKeys");
-        if (keyListsMap.containsKey(pathToNode + "Keys")) {
-            keyOrder = keyListsMap.get(pathToNode + "Keys");
-        } else {
-            keyOrder = new ArrayList();
-            keyListsMap.put(pathToNode + "Keys", keyOrder);
+        String pathToNode = in.readUTF();
+        try {
+            Path path = Path.of(pathToNode);
+            if (path.root()) {
+                this.initRoot();
+            } else {
+                this.init(path);
+            }
+        } catch (java.lang.StackOverflowError e) {
+            System.out.println(pathToNode);
+            throw e;
         }
-    }*/
+    }
 
     /**
-     * Get an array of field names from a MapDbBackedNode.
+     * Get an array of field names from a Node.
      *
      * @return An array of field names, or null if there are no names.
      */
-    public static String[] getNames(MapDbBackedNode jo) {
+    public static String[] getNames(Node jo) {
         int length = jo.length();
         if (length == 0) {
             return null;
@@ -291,7 +268,7 @@ public class MapDbBackedNode {
      * conforming text. If the object does not contain a toJSONString method (which is the most common
      * case), then a text will be produced by other means. If the value is an array or Collection,
      * then a JSONArray will be made from it and its toJSONString method will be called. If the value
-     * is a MAP, then a MapDbBackedNode will be made from it and its toJSONString method will be called.
+     * is a MAP, then a Node will be made from it and its toJSONString method will be called.
      * Otherwise, the value's toString method will be called, and the result will be quoted.
      * <p>
      * <p>
@@ -317,8 +294,8 @@ public class MapDbBackedNode {
             throws RuntimeException, IOException {
         if (value == null || value.equals(null)) {
             writer.write("null");
-        } else if (value instanceof MapDbBackedNode) {
-            ((MapDbBackedNode) value).write(writer, indentFactor, indent);
+        } else if (value instanceof Node) {
+            ((Node) value).write(writer, indentFactor, indent);
         } else if (value instanceof Number) {
             writer.write(numberToString((Number) value));
         } else if (value instanceof Boolean) {
@@ -450,21 +427,21 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Get the MapDbBackedNode value associated with a pathToNode.
+     * Get the Node value associated with a pathToNode.
      *
      * @param key A pathToNode string.
-     * @return A MapDbBackedNode which is the value.
-     * @throws RuntimeException if the pathToNode is not found or if the value is not a MapDbBackedNode.
+     * @return A Node which is the value.
+     * @throws RuntimeException if the pathToNode is not found or if the value is not a Node.
      */
 
-    public MapDbBackedNode getNode(String key) {
+    public Node getNode(String key) {
         if (pathToNode.append(key).root()) {
             return root();
         } else if (has(key)) {
             Object value = get(key);
-            return (MapDbBackedNode) get(key);
+            return (Node) get(key);
         } else {
-            MapDbBackedNode node = new MapDbBackedNode(pathToNode.append(key));
+            Node node = new Node(pathToNode.append(key));
             nodes.put(key, node);
             return node;
         }
@@ -504,10 +481,10 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Determine if the MapDbBackedNode contains a specific pathToNode.
+     * Determine if the Node contains a specific pathToNode.
      *
      * @param key A pathToNode string.
-     * @return true if the pathToNode exists in the MapDbBackedNode.
+     * @return true if the pathToNode exists in the Node.
      */
 
     public boolean has(String key) {
@@ -517,7 +494,7 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Get an enumeration of the keys of the MapDbBackedNode.
+     * Get an enumeration of the keys of the Node.
      *
      * @return An iterator of the keys.
      */
@@ -526,7 +503,7 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Get a set of keys of the MapDbBackedNode.
+     * Get a set of keys of the Node.
      *
      * @return A keySet.
      */
@@ -539,9 +516,9 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Get the number of keys stored in the MapDbBackedNode.
+     * Get the number of keys stored in the Node.
      *
-     * @return The number of keys in the MapDbBackedNode.
+     * @return The number of keys in the Node.
      */
 
     public int length() {
@@ -549,14 +526,14 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Put a pathToNode/boolean pair in the MapDbBackedNode.
+     * Put a pathToNode/boolean pair in the Node.
      *
      * @param key   A pathToNode string.
      * @param value A boolean which is the value.
      * @return this.
      * @throws RuntimeException If the pathToNode is null.
      */
-    public MapDbBackedNode put(String key, boolean value) {
+    public Node put(String key, boolean value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -565,7 +542,7 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Put a pathToNode/double pair in the MapDbBackedNode.
+     * Put a pathToNode/double pair in the Node.
      *
      * @param key   A pathToNode string.
      * @param value A double which is the value.
@@ -573,7 +550,7 @@ public class MapDbBackedNode {
      * @throws RuntimeException If the pathToNode is null or if the number is invalid.
      */
 
-    public MapDbBackedNode put(String key, double value) {
+    public Node put(String key, double value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -582,7 +559,7 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Put a pathToNode/int pair in the MapDbBackedNode.
+     * Put a pathToNode/int pair in the Node.
      *
      * @param key   A pathToNode string.
      * @param value An int which is the value.
@@ -590,7 +567,7 @@ public class MapDbBackedNode {
      * @throws RuntimeException If the pathToNode is null.
      */
 
-    public MapDbBackedNode put(String key, int value) {
+    public Node put(String key, int value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -599,7 +576,7 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Put a pathToNode/long pair in the MapDbBackedNode.
+     * Put a pathToNode/long pair in the Node.
      *
      * @param key   A pathToNode string.
      * @param value A long which is the value.
@@ -607,7 +584,7 @@ public class MapDbBackedNode {
      * @throws RuntimeException If the pathToNode is null.
      */
 
-    public MapDbBackedNode put(String key, long value) {
+    public Node put(String key, long value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -616,17 +593,17 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Put a pathToNode/value pair in the MapDbBackedNode. If the value is null, then the pathToNode will be removed from the
-     * MapDbBackedNode if it is present.
+     * Put a pathToNode/value pair in the Node. If the value is null, then the pathToNode will be removed from the
+     * Node if it is present.
      *
      * @param key   A pathToNode string.
      * @param value An object which is the value. It should be of one of these types: Boolean, Double,
-     *              Integer, JSONArray, MapDbBackedNode, Long, String, or the null object.
+     *              Integer, JSONArray, Node, Long, String, or the null object.
      * @return this.
      * @throws RuntimeException If the value is non-finite number or if the pathToNode is null.
      */
 
-    public MapDbBackedNode put(String key, Object value) {
+    public Node put(String key, Object value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -634,7 +611,7 @@ public class MapDbBackedNode {
     }
 
 
-    public MapDbBackedNode put(String key, MapDbBackedNode node) {
+    public Node put(String key, Node node) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -642,7 +619,7 @@ public class MapDbBackedNode {
     }
 
 
-    public MapDbBackedNode putWithIndex(String key, Object value) {
+    public Node putWithIndex(String key, Object value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -651,12 +628,12 @@ public class MapDbBackedNode {
         }
         if (value != null) {
             testValidity(value);
-            if (value instanceof MapDbBackedNode) {
-                this.nodes.put(key, (MapDbBackedNode) value);
+            if (value instanceof Node) {
+                this.nodes.put(key, (Node) value);
             } else if (value instanceof JsonObject) {
                 JsonObject node = (JsonObject) value;
                 node.getFieldNames().forEach(valueKey -> {
-                    MapDbBackedNode nodeToFill = MapDbBackedNode.of(pathToNode.append(key));
+                    Node nodeToFill = Node.of(pathToNode.append(key));
                     nodeToFill.put(valueKey, node.getValue(valueKey));
                 });
             } else {
@@ -686,7 +663,7 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Make a JSON text of this MapDbBackedNode. For compactness, no whitespace is added. If this would not
+     * Make a JSON text of this Node. For compactness, no whitespace is added. If this would not
      * result in a syntactically correct JSON text, then null will be returned instead.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
@@ -705,7 +682,7 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Make a prettyprinted JSON text of this MapDbBackedNode.
+     * Make a prettyprinted JSON text of this Node.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      *
@@ -724,7 +701,7 @@ public class MapDbBackedNode {
     }
 
     /**
-     * Write the contents of the MapDbBackedNode as JSON text to a writer. For compactness, no whitespace is
+     * Write the contents of the Node as JSON text to a writer. For compactness, no whitespace is
      * added.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
@@ -782,33 +759,33 @@ public class MapDbBackedNode {
     }
 
     public Object getObjectForPath(Path path) {
-        MapDbBackedNode parent = getNodeForPath(ChangeLog.of(new JsonArray()), path.parent());
+        Node parent = getNodeForPath(ChangeLog.of(new JsonArray()), path.parent());
         return parent.get(path.lastElement());
     }
 
 
-    public MapDbBackedNode getNodeForPath(ChangeLog log, Path path) {
+    public Node getNodeForPath(ChangeLog log, Path path) {
         Path fullPath = pathToNode.append(path);
-        MapDbBackedNode lastNode = null;
+        Node lastNode = null;
         for (int i = 0; i < fullPath.toArray().length; i++) {
             Path nodePath = fullPath.prefix(0);
-            MapDbBackedNode node = MapDbBackedNode.of(nodePath);
+            Node node = Node.of(nodePath);
             if (lastNode == null) {
                 node = lastNode;
             } else {
                 lastNode.put(nodePath.lastElement(), node);
             }
         }
-        return MapDbBackedNode.of(fullPath);
+        return Node.of(fullPath);
     }
 
 
-    public void populate(ChangeLogBuilder logBuilder, MapDbBackedNode payload) {
+    public void populate(ChangeLogBuilder logBuilder, Node payload) {
         for (String key : payload.keys()) {
             Object value = payload.get(key);
-            if (value instanceof MapDbBackedNode) {
-                MapDbBackedNode childNode = MapDbBackedNode.of(pathToNode.append(key));
-                childNode.populate(logBuilder.getChildLogBuilder(key), (MapDbBackedNode) value);
+            if (value instanceof Node) {
+                Node childNode = Node.of(pathToNode.append(key));
+                childNode.populate(logBuilder.getChildLogBuilder(key), (Node) value);
                 if (has(key)) {
                     put(key, childNode);
                     logBuilder.addNew(key, childNode);
@@ -831,13 +808,13 @@ public class MapDbBackedNode {
     }
 
 
-    public Collection<MapDbBackedNode> getChildren() {
-        Set<MapDbBackedNode> nodes = Sets.newHashSet();
+    public Collection<Node> getChildren() {
+        Set<Node> nodes = Sets.newHashSet();
         Iterator<?> itr = keyIterator();
         while (itr.hasNext()) {
             Object key = itr.next();
-            if (get((String) key) instanceof MapDbBackedNode) {
-                nodes.add((MapDbBackedNode) get((String) key));
+            if (get((String) key) instanceof Node) {
+                nodes.add((Node) get((String) key));
             }
         }
         return nodes;
@@ -854,8 +831,8 @@ public class MapDbBackedNode {
             return true;
         } else if (has(path.firstElement())) {
             Object object = get(path.firstElement());
-            if (object instanceof MapDbBackedNode) {
-                MapDbBackedNode node = (MapDbBackedNode) object;
+            if (object instanceof Node) {
+                Node node = (Node) object;
                 return node.pathExists(path.subpath(1));
             } else if (path.isSimple()) {
                 return true;
@@ -868,10 +845,10 @@ public class MapDbBackedNode {
     }
 
 
-    public MapDbBackedNode getLastLeafNode(Path path) {
+    public Node getLastLeafNode(Path path) {
         if (has(path.firstElement())) {
             if (path.isSimple()) {
-                if (get(path.firstElement()) instanceof MapDbBackedNode) {
+                if (get(path.firstElement()) instanceof Node) {
                     return getNode(path.firstElement());
                 } else {
                     return this;
@@ -889,8 +866,8 @@ public class MapDbBackedNode {
         visitor.visitNode(path, this);
         for (String key : keys()) {
             Object value = get(key);
-            if (value instanceof MapDbBackedNode) {
-                ((MapDbBackedNode) value).accept(path.append(key), visitor);
+            if (value instanceof Node) {
+                ((Node) value).accept(path.append(key), visitor);
             } else {
                 visitor.visitProperty(path, this, key, value);
             }
@@ -915,11 +892,11 @@ public class MapDbBackedNode {
         return values;
     }
 
-    public static MapDbBackedNode of(Path path) {
+    public static Node of(Path path) {
         if (path.root()) {
             return root();
         }
-        MapDbBackedNode node = root();
+        Node node = root();
         Path currentPath = Path.copy(path);
         for (int i = 0; i < path.toArray().length; i++) {
             node = node.getNode(currentPath.firstElement());
@@ -929,11 +906,11 @@ public class MapDbBackedNode {
     }
 
     public static long childCount(Object node) {
-        return (node instanceof MapDbBackedNode) ? ((MapDbBackedNode) node).getChildren().size() : 0;
+        return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
     }
 
     public static boolean hasChildren(Object node) {
-        return (node instanceof MapDbBackedNode) ? ((MapDbBackedNode) node).hasChildren() : false;
+        return (node instanceof Node) ? ((Node) node).hasChildren() : false;
     }
 
     public JsonObject toJsonObject() {
@@ -941,15 +918,18 @@ public class MapDbBackedNode {
     }
 
     public static boolean exists(Path path) {
-        return db.exists(path.toString() + "Attributes");
+        Node root = root();
+        root.getNodeForPath(new ChangeLog(new JsonArray()), path);
+        return InfinispanPersistence.cacheManager.cacheExists(path.toString() + "Attributes");
     }
 
     public Path getPathToNode() {
         return pathToNode;
     }
 
-    public static MapDbBackedNode root() {
-        MapDbBackedNode root = new MapDbBackedNode();
+    public static Node root() {
+        Node root = new Node();
         return root;
     }
+
 }

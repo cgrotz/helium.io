@@ -21,8 +21,8 @@ import io.helium.persistence.actions.Push;
 import io.helium.persistence.actions.Remove;
 import io.helium.persistence.actions.Set;
 import io.helium.persistence.actions.Update;
-import io.helium.persistence.mapdb.MapDbBackedNode;
-import io.helium.persistence.mapdb.MapDbPersistence;
+import io.helium.persistence.infinispan.InfinispanPersistence;
+import io.helium.persistence.infinispan.Node;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
@@ -45,10 +45,10 @@ public class Persistor extends Verticle {
     private Remove remove;
     private Update update;
 
-    private MapDbPersistence persistence;
+    private InfinispanPersistence persistence;
 
     public void start() {
-        persistence = new MapDbPersistence(vertx);
+        persistence = new InfinispanPersistence(vertx);
         push = new Push(persistence);
         update = new Update(persistence);
         set = new Set(persistence);
@@ -63,12 +63,12 @@ public class Persistor extends Verticle {
         vertx.eventBus().registerHandler(GET, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
-                if (MapDbBackedNode.exists(Path.of(event.body().getString("path")))) {
-                    event.reply(MapDbBackedNode.of(Path.of(event.body().getString("path"))).toJsonObject());
+                if (Node.exists(Path.of(event.body().getString("path")))) {
+                    event.reply(Node.of(Path.of(event.body().getString("path"))).toJsonObject());
                 } else {
                     Object value = persistence.get(Path.of(event.body().getString("path")));
-                    if (value instanceof MapDbBackedNode) {
-                        event.reply(((MapDbBackedNode) value).toJsonObject());
+                    if (value instanceof Node) {
+                        event.reply(((Node) value).toJsonObject());
                     } else {
                         event.reply(value);
                     }
@@ -81,12 +81,12 @@ public class Persistor extends Verticle {
 
         if (!persistence.exists(Path.of("/users"))) {
             String uuid = UUID.randomUUID().toString();
-            MapDbBackedNode user = MapDbBackedNode.of(Path.of("/users").append(uuid.replaceAll("-", "")));
+            Node user = Node.of(Path.of("/users").append(uuid.replaceAll("-", "")));
             user.put("username", "admin").put("password", "admin").put("isAdmin", true);
         }
 
         if (!persistence.exists(Path.of("/rules"))) {
-            MapDbBackedNode rules = MapDbBackedNode.of(Path.of("/rules"));
+            Node rules = Node.of(Path.of("/rules"));
             rules.put(".write", "function(auth, path, data, root){\n" +
                     "   return auth.isAdmin;\n" +
                     "}\n");

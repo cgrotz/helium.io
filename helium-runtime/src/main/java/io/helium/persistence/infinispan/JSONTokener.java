@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.persistence.mapdb;
+package io.helium.persistence.infinispan;
 
 import java.io.*;
 

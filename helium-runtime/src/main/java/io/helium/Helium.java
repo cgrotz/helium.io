@@ -24,8 +24,6 @@ import io.helium.server.channels.mqtt.MqttServer;
 import io.helium.server.distributor.Distributor;
 import org.vertx.java.platform.Verticle;
 
-import java.io.File;
-
 /**
  * Main entry point for Helium
  *
@@ -37,7 +35,6 @@ public class Helium extends Verticle {
     public void start() {
         try {
             // Workers
-            new File("helium/journal").mkdirs();
             container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
             container.deployWorkerVerticle(Distributor.class.getName(), container.config());
             container.deployWorkerVerticle(EventSource.class.getName(), container.config());

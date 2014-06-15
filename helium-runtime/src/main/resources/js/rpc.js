@@ -47,24 +47,28 @@ var RPC = (function() {
 		this.websocket.messageListeners.push(callback);
 	};
 	RPC.prototype.onmessage = function(evt) {
-		var data = JSON.parse(evt.data);
-		if(data.type == 'rpc')
-		{
-			if (data.state == 'ok' && this.handlers[data.id]) {
-				this.handlers[data.id](data.resp);
-				delete this.handlers[data.id];
-			} else if (data.state == 'error' && this.errors[data.id]) {
-				this.errors[data.id](data.resp);
-				delete this.errors[data.id];
-			}
-		}
-		else
-		{
-			for(var i = 0; i < this.messageListeners.length; i++)
-			{
-				this.messageListeners[i](data);
-			}
-		}
+        try {
+            var data = JSON.parse(evt.data);
+            if(data.type == 'rpc')
+            {
+                if (data.state == 'ok' && this.handlers[data.id]) {
+                    this.handlers[data.id](data.resp);
+                    delete this.handlers[data.id];
+                } else if (data.state == 'error' && this.errors[data.id]) {
+                    this.errors[data.id](data.resp);
+                    delete this.errors[data.id];
+                }
+            }
+            else
+            {
+                for(var i = 0; i < this.messageListeners.length; i++)
+                {
+                    this.messageListeners[i](data);
+                }
+            }
+        }
+        catch(e) {
+        }
 	};
 	RPC.prototype.onerror = function(evt) {
 	};

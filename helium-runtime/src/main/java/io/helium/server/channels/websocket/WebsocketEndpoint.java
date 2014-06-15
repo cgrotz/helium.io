@@ -29,7 +29,7 @@ import io.helium.event.changelog.*;
 import io.helium.persistence.DataSnapshot;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
-import io.helium.persistence.mapdb.MapDbBackedNode;
+import io.helium.persistence.infinispan.Node;
 import io.helium.persistence.queries.QueryEvaluator;
 import io.helium.server.Endpoint;
 import io.helium.server.channels.websocket.rpc.Rpc;
@@ -330,15 +330,15 @@ public class WebsocketEndpoint implements Endpoint {
 
     private void processQuery(HeliumEvent event) {
         Path nodePath = event.extractNodePath();
-        if (MapDbBackedNode.exists(nodePath)) {
+        if (Node.exists(nodePath)) {
             nodePath = nodePath.parent();
         }
 
         if (hasQuery(nodePath.parent())) {
             for (Entry<String, String> queryEntry : queryEvaluator.getQueries()) {
                 if (event.getPayload() != null) {
-                    JsonObject value = MapDbBackedNode.of(nodePath).toJsonObject();
-                    JsonObject parent = MapDbBackedNode.of(nodePath.parent()).toJsonObject();
+                    JsonObject value = Node.of(nodePath).toJsonObject();
+                    JsonObject parent = Node.of(nodePath.parent()).toJsonObject();
                     boolean matches = queryEvaluator.evaluateQueryOnValue(value, queryEntry.getValue());
                     boolean containsNode = queryEvaluator.queryContainsNode(new Path(queryEntry.getKey()),
                             queryEntry.getValue(), nodePath);
@@ -375,8 +375,8 @@ public class WebsocketEndpoint implements Endpoint {
                         broadcast.putValue(HeliumEvent.PATH, createPath(path.parent()));
                         broadcast.putValue("parent", createPath(path.parent().parent()));
                         broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
-                        broadcast.putValue("hasChildren", MapDbBackedNode.hasChildren(value));
-                        broadcast.putValue("numChildren", MapDbBackedNode.childCount(value));
+                        broadcast.putValue("hasChildren", Node.hasChildren(value));
+                        broadcast.putValue("numChildren", Node.childCount(value));
                         sendViaWebsocket(broadcast);
                     }
                 });
@@ -488,8 +488,8 @@ public class WebsocketEndpoint implements Endpoint {
                         broadcast.putValue(HeliumEvent.PATH, createPath(path.parent()));
                         broadcast.putValue("parent", createPath(path.parent().parent()));
                         broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
-                        broadcast.putValue("hasChildren", MapDbBackedNode.hasChildren(value));
-                        broadcast.putValue("numChildren", MapDbBackedNode.childCount(value));
+                        broadcast.putValue("hasChildren", Node.hasChildren(value));
+                        broadcast.putValue("numChildren", Node.childCount(value));
                         sendViaWebsocket(broadcast);
                     }
                 });
@@ -600,22 +600,24 @@ public class WebsocketEndpoint implements Endpoint {
     }
 
     public void send(String msg) {
-        socket.write(new Buffer(msg));
+        if (!Strings.isNullOrEmpty(msg)) {
+            socket.write(new Buffer(msg));
+        }
     }
 
     public void syncPath(ChangeLog log, Path path, Endpoint handler) {
-        MapDbBackedNode node;
-        if (MapDbBackedNode.exists(path)) {
-            node = MapDbBackedNode.of(path);
+        Node node;
+        if (Node.exists(path)) {
+            node = Node.of(path);
         } else {
-            node = MapDbBackedNode.of(path.parent());
+            node = Node.of(path.parent());
         }
 
         for (String childNodeKey : node.keys()) {
             if (!Strings.isNullOrEmpty(childNodeKey)) {
                 Object object = node.get(childNodeKey);
-                boolean hasChildren = (object instanceof MapDbBackedNode) ? ((MapDbBackedNode) object).hasChildren() : false;
-                int numChildren = (object instanceof MapDbBackedNode) ? ((MapDbBackedNode) object).length() : 0;
+                boolean hasChildren = (object instanceof Node) ? ((Node) object).hasChildren() : false;
+                int numChildren = (object instanceof Node) ? ((Node) object).length() : 0;
                 if (object != null && object != null) {
                     handler.fireChildAdded(childNodeKey, path, path.parent(), object, hasChildren,
                             numChildren);
@@ -627,11 +629,11 @@ public class WebsocketEndpoint implements Endpoint {
 
     public void syncPathWithQuery(ChangeLog log, Path path, WebsocketEndpoint handler,
                                   QueryEvaluator queryEvaluator, String query) {
-        MapDbBackedNode node;
-        if (MapDbBackedNode.exists(path)) {
-            node = MapDbBackedNode.of(path);
+        Node node;
+        if (Node.exists(path)) {
+            node = Node.of(path);
         } else {
-            node = MapDbBackedNode.of(path.parent());
+            node = Node.of(path.parent());
         }
 
         for (String childNodeKey : node.keys()) {
@@ -645,7 +647,7 @@ public class WebsocketEndpoint implements Endpoint {
     }
 
     public void syncPropertyValue(ChangeLog log, Path path, Endpoint handler) {
-        MapDbBackedNode node = MapDbBackedNode.of(path.parent());
+        Node node = Node.of(path.parent());
         String childNodeKey = path.lastElement();
         if (node.has(path.lastElement())) {
             Object object = node.get(path.lastElement());

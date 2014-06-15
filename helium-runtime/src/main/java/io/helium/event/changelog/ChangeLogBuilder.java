@@ -17,15 +17,15 @@
 package io.helium.event.changelog;
 
 import io.helium.common.Path;
-import io.helium.persistence.mapdb.MapDbBackedNode;
+import io.helium.persistence.infinispan.Node;
 
 public class ChangeLogBuilder {
-    private MapDbBackedNode node;
+    private Node node;
     private Path parentPath;
     private Path path;
     private ChangeLog log;
 
-    public ChangeLogBuilder(ChangeLog log, Path path, Path parentPath, MapDbBackedNode node) {
+    public ChangeLogBuilder(ChangeLog log, Path path, Path parentPath, Node node) {
         this.log = log;
         this.path = path;
         this.parentPath = parentPath;
@@ -46,7 +46,7 @@ public class ChangeLogBuilder {
         log.addChildAddedLogEntry(name, path, parentPath, value, hasChildren(value), childCount(value));
     }
 
-    public void addChangedNode(String name, MapDbBackedNode value) {
+    public void addChangedNode(String name, Node value) {
         log.addChildChangedLogEntry(name, path, parentPath, value, hasChildren(value), childCount(value));
     }
 
@@ -56,10 +56,10 @@ public class ChangeLogBuilder {
 
 
     private long childCount(Object node) {
-        return (node instanceof MapDbBackedNode) ? ((MapDbBackedNode) node).getChildren().size() : 0;
+        return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
     }
 
     private boolean hasChildren(Object node) {
-        return (node instanceof MapDbBackedNode) ? ((MapDbBackedNode) node).hasChildren() : false;
+        return (node instanceof Node) ? ((Node) node).hasChildren() : false;
     }
 }

@@ -14,12 +14,12 @@
  * under the License.
  */
 
-package io.helium.persistence.mapdb;
+package io.helium.persistence.infinispan;
 
 import io.helium.common.Path;
 
 public interface NodeVisitor {
-    public void visitNode(Path path, MapDbBackedNode node);
+    public void visitNode(Path path, Node node);
 
-    public void visitProperty(Path path, MapDbBackedNode node, String key, Object value);
+    public void visitProperty(Path path, Node node, String key, Object value);
 }

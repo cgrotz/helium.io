@@ -18,15 +18,15 @@ package io.helium.persistence.actions;
 
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.persistence.mapdb.MapDbPersistence;
+import io.helium.persistence.infinispan.InfinispanPersistence;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
 public class Remove {
 
-    private MapDbPersistence persistence;
+    private InfinispanPersistence persistence;
 
-    public Remove(MapDbPersistence persistence) {
+    public Remove(InfinispanPersistence persistence) {
         this.persistence = persistence;
     }
 
