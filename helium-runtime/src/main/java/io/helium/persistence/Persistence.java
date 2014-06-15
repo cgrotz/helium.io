@@ -16,12 +16,24 @@
 
 package io.helium.persistence;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import io.helium.common.Path;
+import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.persistence.actions.*;
 import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.mapdb.NodeFactory;
+import org.vertx.java.core.AsyncResult;
+import org.vertx.java.core.AsyncResultHandler;
+import org.vertx.java.core.Future;
+import org.vertx.java.core.Handler;
+import org.vertx.java.core.file.AsyncFile;
+import org.vertx.java.core.json.JsonObject;
 
 import java.io.File;
+import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 public class Persistence extends CommonPersistenceVerticle {
@@ -32,19 +44,43 @@ public class Persistence extends CommonPersistenceVerticle {
     public static final String UPDATE = "io.helium.persistor.update";
     public static final String GET = "io.helium.persistor.get";
 
-    public void start() {
+    @Override
+    public void start(Future<Void> startedResult) {
         NodeFactory.get().dir(new File(container.config().getString("directory")));
-        initDefaults();
 
+        container.deployVerticle(Get.class.getName());
         container.deployVerticle(Push.class.getName());
         container.deployVerticle(Set.class.getName());
         container.deployVerticle(Delete.class.getName());
-        container.deployVerticle(Update.class.getName());
-        container.deployVerticle(Get.class.getName());
+        container.deployVerticle(Update.class.getName(), new Handler<AsyncResult<String>>() {
+            @Override
+            public void handle(AsyncResult<String> event) {
+                try {
+                    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                    URL demo = cl.getResource("demo.json");
+                    String demoData = Resources.toString(demo, Charsets.UTF_8);
+                    loadJsonObject(Path.of("/"), new JsonObject(demoData));
+                    startedResult.complete();
+                }
+                catch(Exception e){
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
-    private void initDefaults() {
-
+    private void loadJsonObject(Path path, JsonObject data) {
+        for(String key : data.getFieldNames()) {
+            Object value = data.getField(key);
+            if(value instanceof JsonObject) {
+                loadJsonObject(path.append(key), (JsonObject)value);
+            }
+            else {
+                Node node = Node.of(path);
+                node.put(key, value);
+            }
+        }
+        /*
         if (!exists(Path.of("/users"))) {
             String uuid = UUID.randomUUID().toString();
             Node user = Node.of(Path.of("/users").append(uuid.replaceAll("-", "")));
@@ -69,6 +105,6 @@ public class Persistence extends CommonPersistenceVerticle {
                     .put(".read", "function(auth, path, data, root){\n" +
                             "  return auth.isAdmin;\n" +
                             "}\n");
-        }
+        }*/
     }
 }

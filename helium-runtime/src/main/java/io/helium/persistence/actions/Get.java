@@ -13,7 +13,7 @@ import org.vertx.java.core.json.JsonObject;
 public class Get extends CommonPersistenceVerticle{
 
     @Override
-    public void start(Future<Void> startedResult) {
+    public void start() {
         vertx.eventBus().registerHandler( Persistence.GET, this::handle );
     }
 

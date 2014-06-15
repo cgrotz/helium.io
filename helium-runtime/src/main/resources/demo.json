@@ -1,0 +1,21 @@
+{
+    "rules": {
+        ".read": true,
+        ".write": "function(auth, path, data, root){\n   return auth.isAdmin;\n}\n",
+        "rules": {
+            ".read": "function(auth, path, data, root){\n  return auth.isAdmin;\n}\n",
+            ".write": "function(auth, path, data, root){\n  return auth.isAdmin;\n}\n"
+        },
+        "users": {
+            ".read": "function(auth, path, data, root){\n  return auth.isAdmin;\n}\n",
+            ".write": "function(auth, path, data, root){\n  return auth.isAdmin;\n}\n"
+        }
+    },
+    "users": {
+        "c448c0f1e87149b9bc7b99a8cf127159": {
+            "isAdmin": true,
+            "password": "c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec",
+            "username": "admin"
+        }
+    }
+}

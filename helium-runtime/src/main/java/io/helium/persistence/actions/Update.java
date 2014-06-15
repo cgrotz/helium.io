@@ -35,22 +35,16 @@ import java.util.Optional;
 public class Update extends CommonPersistenceVerticle {
 
     @Override
-    public void start(Future<Void> startedResult) {
+    public void start() {
         vertx.eventBus().registerHandler( Persistence.UPDATE, this::handle );
     }
 
     public void handle(Message<JsonObject> msg) {
         HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
-        Node payload;
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object obj = event.getValue(HeliumEvent.PAYLOAD);
-            if (obj instanceof Node) {
-                payload = (Node) obj;
-                if (payload instanceof Node) {
-                    updateValue(event, event.getAuth(), path, obj);
-                }
-            }
+            updateValue(event, event.getAuth(), path, obj);
         } else {
             delete(event, event.getAuth(), path);
         }

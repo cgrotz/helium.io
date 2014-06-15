@@ -28,7 +28,7 @@ import java.util.UUID;
 public class Push extends CommonPersistenceVerticle {
 
     @Override
-    public void start(Future<Void> startedResult) {
+    public void start() {
         vertx.eventBus().registerHandler( Persistence.PUSH, this::handle );
     }
 

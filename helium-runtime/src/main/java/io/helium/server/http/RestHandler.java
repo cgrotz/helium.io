@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
+import io.helium.common.PasswordHelper;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.builder.HeliumEventBuilder;
@@ -183,7 +184,9 @@ public class RestHandler implements Handler<HttpServerRequest> {
             String username = authentication.getString("username");
             String password = authentication.getString("password");
 
-            vertx.eventBus().send(Persistence.GET, Get.request(Path.of("/users")), new Handler<Message<JsonObject>>() {
+            vertx.eventBus().send(Persistence.GET,
+                    Get.request(Path.of("/users")),
+                    new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> event) {
                     JsonObject users = event.body();
@@ -194,7 +197,8 @@ public class RestHandler implements Handler<HttpServerRequest> {
                             if (node.containsField("username") && node.containsField("password")) {
                                 String localUsername = node.getString("username");
                                 String localPassword = node.getString("password");
-                                if (username.equals(localUsername) && password.equals(localPassword)) {
+                                if (username.equals(localUsername) &&
+                                        PasswordHelper.comparePassword(localPassword,password)) {
                                     handler.handle(Optional.of(node));
                                     return;
                                 }

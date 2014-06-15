@@ -26,7 +26,7 @@ import org.vertx.java.core.json.JsonObject;
 public class Delete extends CommonPersistenceVerticle{
 
     @Override
-    public void start(Future<Void> startedResult) {
+    public void start() {
         vertx.eventBus().registerHandler( Persistence.DELETE, this::handle );
     }
 

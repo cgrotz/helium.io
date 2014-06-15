@@ -27,6 +27,7 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
 import javax.script.ScriptException;
+import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
@@ -182,6 +183,7 @@ public class Authorizator extends Verticle {
         String decodedAuthorizationToken = new String(Base64.getDecoder().decode(authorizationToken.substring(6)));
         String username = decodedAuthorizationToken.substring(0, decodedAuthorizationToken.indexOf(":"));
         String password = decodedAuthorizationToken.substring(decodedAuthorizationToken.indexOf(":") + 1);
+
         return new JsonObject().putString("username", username).putString("password", password);
     }
 

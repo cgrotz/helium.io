@@ -36,7 +36,7 @@ public class Node {
         nodes = NodeFactory.get().getDb().createTreeMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
     }
 
-    private Node(Path pathToNode) {
+    protected Node(Path pathToNode) {
         this.pathToNode = pathToNode;
         attributes = NodeFactory.get().getDb().getTreeMap(pathToNode + "Attributes");
         nodes = NodeFactory.get().getDb().createTreeMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();

@@ -27,27 +27,19 @@ import org.vertx.java.core.json.JsonObject;
 public class Set extends CommonPersistenceVerticle {
 
     @Override
-    public void start(Future<Void> startedResult) {
+    public void start() {
         vertx.eventBus().registerHandler( Persistence.SET, this::handle );
     }
 
     public void handle(Message<JsonObject> msg) {
         HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
-        Node payload;
         if (event.containsField(HeliumEvent.PAYLOAD)) {
-            Object obj = event.getValue(HeliumEvent.PAYLOAD);
-            if (obj == null) {
-                delete(event, event.getAuth(), path);
-            } else if (obj instanceof Node) {
-                payload = (Node) obj;
-                if (payload instanceof Node) {
-                    applyNewValue(event, event.getAuth(), path, obj);
-                }
-            } else if (obj == null) {
+            Object payload = event.getValue(HeliumEvent.PAYLOAD);
+            if (payload == null) {
                 delete(event, event.getAuth(), path);
             } else {
-                applyNewValue(event, event.getAuth(), path, obj);
+                applyNewValue(event, event.getAuth(), path, payload);
             }
         } else {
             delete(event, event.getAuth(), path);

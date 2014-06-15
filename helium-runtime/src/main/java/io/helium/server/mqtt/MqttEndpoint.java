@@ -3,6 +3,7 @@ package io.helium.server.mqtt;
 import com.google.common.collect.Lists;
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
+import io.helium.common.PasswordHelper;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.builder.HeliumEventBuilder;
@@ -377,7 +378,8 @@ public class MqttEndpoint implements Handler<Buffer> {
                             if (node.containsField("username") && node.containsField("password")) {
                                 String localUsername = node.getString("username");
                                 String localPassword = node.getString("password");
-                                if (username.get().equals(localUsername) && password.get().equals(localPassword)) {
+                                if (username.get().equals(localUsername) &&
+                                        PasswordHelper.comparePassword(localPassword, password.get())) {
                                     handler.handle(Optional.of(node));
                                 }
                             }

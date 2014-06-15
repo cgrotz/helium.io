@@ -100,6 +100,10 @@ public class HeliumEventBuilder {
         return start().type(HeliumEventType.SET).path(path.toString()).withPayload(value);
     }
 
+    public static HeliumEventBuilder update(Path path, Object value) {
+        return start().type(HeliumEventType.UPDATE).path(path.toString()).withPayload(value);
+    }
+
     public static HeliumEventBuilder push(Path path, Object value) {
         return start().type(HeliumEventType.PUSH).path(path.toString()).withPayload(value);
     }
