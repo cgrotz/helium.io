@@ -19,8 +19,10 @@ package io.helium;
 import io.helium.authorization.Authorizator;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
+import io.helium.persistence.mapdb.MapDbBackedNode;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
+import org.vertx.java.core.Handler;
 import org.vertx.java.platform.Verticle;
 
 import java.io.File;
@@ -47,6 +49,13 @@ public class Helium extends Verticle {
 
             // TODO Administration
             //container.deployVerticle(Administration.class.getName(), container.config());
+
+            vertx.setPeriodic(1000, new Handler<Long>() {
+                @Override
+                public void handle(Long event) {
+                    MapDbBackedNode.getDb().commit();
+                }
+            });
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
         }

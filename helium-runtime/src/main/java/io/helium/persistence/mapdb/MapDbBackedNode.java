@@ -29,7 +29,8 @@ public class MapDbBackedNode {
     private static final long serialVersionUID = 1L;
 
     private static final DB db = DBMaker.newFileDB(new File("helium/data"))
-            .transactionDisable()
+            .asyncWriteEnable()
+            .asyncWriteQueueSize(10)
             .closeOnJvmShutdown()
             .make();
 
@@ -37,7 +38,15 @@ public class MapDbBackedNode {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
+            try {
+                System.out.println("Shutdown MapDB Data Store");
+                db.commit();
+                db.compact();
                 db.close();
+            }
+            catch( Exception e) {
+                e.printStackTrace();
+            }
             }
         });
     }

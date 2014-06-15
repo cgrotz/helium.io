@@ -16,7 +16,8 @@ import java.io.File;
  */
 public class MqttServerHandler implements Handler<NetSocket> {
     private final DB db = DBMaker.newFileDB(new File("helium/mqttEndpoints"))
-            .transactionDisable()
+            .asyncWriteEnable()
+            .asyncWriteQueueSize(10)
             .closeOnJvmShutdown()
             .make();
 
@@ -31,7 +32,15 @@ public class MqttServerHandler implements Handler<NetSocket> {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                db.close();
+                try {
+                    System.out.println("Shutdown MapDB Mqtt Endpoint Store");
+                    db.commit();
+                    db.compact();
+                    db.close();
+                }
+                catch( Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
     }

@@ -155,10 +155,10 @@ public class Authorizator extends Verticle {
                 if (localAuth.containsField("permissions")) {
                     RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
                     if (evaluateRules(operation, path, value, localAuth, userRules)) {
-                        node.putValue(key, filterContent(auth, path, value));
+                        node.putValue(key, filterContent(auth, path.append(key), value));
                     }
                 } else if (evaluateRules(operation, path, value, localAuth, globalRules)) {
-                    node.putValue(key, filterContent(auth, path, value));
+                    node.putValue(key, filterContent(auth, path.append(key), value));
                 }
             }
             return node;
