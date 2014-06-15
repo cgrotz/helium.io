@@ -39,7 +39,6 @@ public class MqttServerHandler implements Handler<NetSocket> {
                     db.close();
                 }
                 catch( Exception e) {
-                    e.printStackTrace();
                 }
             }
         });

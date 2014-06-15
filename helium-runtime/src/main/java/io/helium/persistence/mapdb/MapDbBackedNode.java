@@ -45,7 +45,6 @@ public class MapDbBackedNode {
                 db.close();
             }
             catch( Exception e) {
-                e.printStackTrace();
             }
             }
         });
