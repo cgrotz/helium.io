@@ -54,4 +54,37 @@ public class SimpleTest extends TestVerticle {
         get("/helium.js").then().assertThat().statusCode(200);
         VertxAssert.testComplete();
     }
+
+
+    @Test
+    public void getRoot() {
+        File directory = Files.createTempDir();
+
+        // Workers
+        container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
+        container.deployWorkerVerticle(EventSource.class.getName(),
+                container.config().getObject("journal", new JsonObject().putString("directory",(new File(directory,"journal").getAbsolutePath()))));
+        container.deployWorkerVerticle(Persistor.class.getName(),
+                container.config().getObject("mapdb", new JsonObject().putString("directory",(new File(directory,"nodes").getAbsolutePath()))),
+                1, true,
+                event -> {
+                    vertx.setPeriodic(1000, new Handler<Long>() {
+                        @Override
+                        public void handle(Long event) {
+                            DB db = NodeFactory.get().getDb();
+                            if( db != null)
+                                db.commit();
+                        }
+                    });
+                });
+
+        // Channels
+        container.deployVerticle(HttpServer.class.getName(), container.config());
+        container.deployVerticle(MqttServer.class.getName(),
+                container.config().getObject("mqtt", new JsonObject().putString("directory",(new File(directory,"mqtt").getAbsolutePath()))));
+
+
+        get("/").then().assertThat().statusCode(200);
+        VertxAssert.testComplete();
+    }
 }
