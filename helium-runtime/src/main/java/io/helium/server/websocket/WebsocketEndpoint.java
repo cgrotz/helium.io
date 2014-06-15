@@ -27,7 +27,8 @@ import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.*;
 import io.helium.persistence.EventSource;
-import io.helium.persistence.Persistor;
+import io.helium.persistence.Persistence;
+import io.helium.persistence.actions.Get;
 import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.queries.QueryEvaluator;
 import io.helium.common.EndpointConstants;
@@ -168,7 +169,7 @@ public class WebsocketEndpoint {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistor.PUSH, event);
+                vertx.eventBus().send(Persistence.PUSH, event);
                 container.logger().trace("authorized: " + event);
             } else {
                 container.logger().warn("not authorized: " + event);
@@ -186,7 +187,7 @@ public class WebsocketEndpoint {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistor.SET, event);
+                vertx.eventBus().send(Persistence.SET, event);
                 container.logger().trace("authorized: " + event);
             } else {
                 container.logger().warn("not authorized: " + event);
@@ -204,7 +205,7 @@ public class WebsocketEndpoint {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), null), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistor.UPDATE, event);
+                vertx.eventBus().send(Persistence.UPDATE, event);
                 container.logger().trace("authorized: " + event);
             } else {
                 container.logger().warn("not authorized: " + event);
@@ -274,7 +275,7 @@ public class WebsocketEndpoint {
     }
 
     private void extractAuthentication(String username, String password, Handler<Optional<JsonObject>> handler) {
-        vertx.eventBus().send(Persistor.GET, Persistor.get(Path.of("/users")), new Handler<Message<JsonObject>>() {
+        vertx.eventBus().send(Persistence.GET, Get.request(Path.of("/users")), new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
                 JsonObject users = event.body();

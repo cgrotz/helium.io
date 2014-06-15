@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package io.helium.persistence.mapdb;
+package io.helium.persistence.visitor;
 
 import io.helium.common.Path;
+import io.helium.persistence.mapdb.Node;
 
 public interface NodeVisitor {
     public void visitNode(Path path, Node node);

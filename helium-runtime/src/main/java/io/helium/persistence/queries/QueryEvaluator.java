@@ -19,7 +19,7 @@ package io.helium.persistence.queries;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import io.helium.common.Path;
-import io.helium.persistence.SandBoxedScriptingEnvironment;
+import io.helium.common.SandBoxedScriptingEnvironment;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 

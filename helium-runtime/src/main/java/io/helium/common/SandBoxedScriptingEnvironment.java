@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.persistence;
+package io.helium.common;
 
 import org.vertx.java.platform.Container;
 

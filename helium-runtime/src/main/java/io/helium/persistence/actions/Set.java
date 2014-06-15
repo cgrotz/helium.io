@@ -18,17 +18,17 @@ package io.helium.persistence.actions;
 
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
+import io.helium.persistence.Persistence;
 import io.helium.persistence.mapdb.Node;
-import io.helium.persistence.mapdb.MapDbPersistence;
+import org.vertx.java.core.Future;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
-public class Set {
+public class Set extends CommonPersistenceVerticle {
 
-    private MapDbPersistence persistence;
-
-    public Set(MapDbPersistence persistence) {
-        this.persistence = persistence;
+    @Override
+    public void start(Future<Void> startedResult) {
+        vertx.eventBus().registerHandler( Persistence.SET, this::handle );
     }
 
     public void handle(Message<JsonObject> msg) {
@@ -38,19 +38,19 @@ public class Set {
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object obj = event.getValue(HeliumEvent.PAYLOAD);
             if (obj == null) {
-                persistence.remove(event, event.getAuth(), path);
+                remove(event, event.getAuth(), path);
             } else if (obj instanceof Node) {
                 payload = (Node) obj;
                 if (payload instanceof Node) {
-                    persistence.applyNewValue(event, event.getAuth(), path, obj);
+                    applyNewValue(event, event.getAuth(), path, obj);
                 }
             } else if (obj == null) {
-                persistence.remove(event, event.getAuth(), path);
+                remove(event, event.getAuth(), path);
             } else {
-                persistence.applyNewValue(event, event.getAuth(), path, obj);
+                applyNewValue(event, event.getAuth(), path, obj);
             }
         } else {
-            persistence.remove(event, event.getAuth(), path);
+            remove(event, event.getAuth(), path);
         }
     }
 

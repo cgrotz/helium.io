@@ -3,7 +3,7 @@ package io.helium;
 import com.google.common.io.Files;
 import io.helium.authorization.Authorizator;
 import io.helium.persistence.EventSource;
-import io.helium.persistence.Persistor;
+import io.helium.persistence.Persistence;
 import io.helium.persistence.mapdb.NodeFactory;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
@@ -31,7 +31,7 @@ public class SimpleTest extends TestVerticle {
         container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
         container.deployWorkerVerticle(EventSource.class.getName(),
                 container.config().getObject("journal", new JsonObject().putString("directory",(new File(directory,"journal").getAbsolutePath()))));
-        container.deployWorkerVerticle(Persistor.class.getName(),
+        container.deployWorkerVerticle(Persistence.class.getName(),
                 container.config().getObject("mapdb", new JsonObject().putString("directory",(new File(directory,"nodes").getAbsolutePath()))),
                 1, true,
                 event -> {
@@ -64,7 +64,7 @@ public class SimpleTest extends TestVerticle {
         container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
         container.deployWorkerVerticle(EventSource.class.getName(),
                 container.config().getObject("journal", new JsonObject().putString("directory",(new File(directory,"journal").getAbsolutePath()))));
-        container.deployWorkerVerticle(Persistor.class.getName(),
+        container.deployWorkerVerticle(Persistence.class.getName(),
                 container.config().getObject("mapdb", new JsonObject().putString("directory",(new File(directory,"nodes").getAbsolutePath()))),
                 1, true,
                 event -> {

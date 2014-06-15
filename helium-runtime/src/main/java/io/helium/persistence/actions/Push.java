@@ -18,18 +18,18 @@ package io.helium.persistence.actions;
 
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.persistence.mapdb.MapDbPersistence;
+import io.helium.persistence.Persistence;
+import org.vertx.java.core.Future;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.UUID;
 
-public class Push {
+public class Push extends CommonPersistenceVerticle {
 
-    private MapDbPersistence persistence;
-
-    public Push(MapDbPersistence persistence) {
-        this.persistence = persistence;
+    @Override
+    public void start(Future<Void> startedResult) {
+        vertx.eventBus().registerHandler( Persistence.PUSH, this::handle );
     }
 
     public void handle(Message<JsonObject> msg) {
@@ -49,11 +49,10 @@ public class Push {
             nodeName = UUID.randomUUID().toString().replaceAll("-", "");
         }
         if (path.isEmtpy()) {
-            persistence.applyNewValue(event, event.getAuth(), new Path(nodeName),
+            applyNewValue(event, event.getAuth(), new Path(nodeName),
                     payload);
         } else {
-            persistence.applyNewValue(event, event.getAuth(), path, payload);
+            applyNewValue(event, event.getAuth(), path, payload);
         }
     }
-
 }

@@ -16,21 +16,16 @@
 
 package io.helium;
 
-import com.google.common.io.Files;
 import io.helium.authorization.Authorizator;
 import io.helium.persistence.EventSource;
-import io.helium.persistence.Persistor;
-import io.helium.persistence.mapdb.Node;
+import io.helium.persistence.Persistence;
 import io.helium.persistence.mapdb.NodeFactory;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
 import org.mapdb.DB;
-import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
-
-import java.io.File;
 
 /**
  * Main entry point for Helium
@@ -46,7 +41,7 @@ public class Helium extends Verticle {
             container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
             container.deployWorkerVerticle(EventSource.class.getName(),
                     container.config().getObject("journal", new JsonObject().putString("directory", "helium/journal")));
-            container.deployWorkerVerticle(Persistor.class.getName(),
+            container.deployWorkerVerticle(Persistence.class.getName(),
                 container.config().getObject("mapdb", new JsonObject().putString("directory", "helium/nodes")),
                 1, true,
                 event -> {
@@ -64,9 +59,6 @@ public class Helium extends Verticle {
             container.deployVerticle(HttpServer.class.getName(), container.config());
             container.deployVerticle(MqttServer.class.getName(),
                     container.config().getObject("mqtt", new JsonObject().putString("directory","helium/mqtt")));
-
-            // TODO Administration
-            //container.deployVerticle(Administration.class.getName(), container.config());
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
         }

@@ -16,19 +16,27 @@
 
 package io.helium.persistence.actions;
 
+import io.helium.authorization.Authorizator;
+import io.helium.authorization.Operation;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
+import io.helium.event.changelog.ChangeLog;
+import io.helium.event.changelog.ChangeLogBuilder;
+import io.helium.persistence.Persistence;
 import io.helium.persistence.mapdb.Node;
-import io.helium.persistence.mapdb.MapDbPersistence;
+import io.helium.persistence.mapdb.NodeFactory;
+import org.vertx.java.core.Future;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
-public class Update {
+import java.util.Optional;
 
-    private MapDbPersistence persistence;
+public class Update extends CommonPersistenceVerticle {
 
-    public Update(MapDbPersistence persistence) {
-        this.persistence = persistence;
+    @Override
+    public void start(Future<Void> startedResult) {
+        vertx.eventBus().registerHandler( Persistence.UPDATE, this::handle );
     }
 
     public void handle(Message<JsonObject> msg) {
@@ -40,13 +48,67 @@ public class Update {
             if (obj instanceof Node) {
                 payload = (Node) obj;
                 if (payload instanceof Node) {
-                    persistence.updateValue(event, event.getAuth(), path, obj);
+                    updateValue(event, event.getAuth(), path, obj);
                 }
             }
         } else {
-            persistence.remove(event, event.getAuth(), path);
+            remove(event, event.getAuth(), path);
         }
-
     }
 
+    public void updateValue(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path, Object payload) {
+        vertx.eventBus().send(Authorizator.CHECK,
+                Authorizator.check(Operation.WRITE, auth, path, payload),
+                new Handler<Message<Boolean>>() {
+                    @Override
+                    public void handle(Message<Boolean> event) {
+                        if (event.body()) {
+                            Node node;
+                            boolean created = false;
+                            if (!exists(path)) {
+                                created = true;
+                            }
+                            Node parent;
+                            if (exists(path.parent())) {
+                                parent = Node.of(path.parent());
+                            } else {
+                                parent = Node.of(path.parent().parent());
+                            }
+                            ChangeLog log = heliumEvent.getChangeLog();
+                            if (payload instanceof Node) {
+                                if (parent.has(path.lastElement())) {
+                                    node = parent.getNode(path.lastElement());
+                                } else {
+                                    node = Node.of(path.append(path.lastElement()));
+                                    parent.put(path.lastElement(), node);
+                                }
+                                node.populate(new ChangeLogBuilder(log, path, path.parent(), node), (Node) payload);
+                                if (created) {
+                                    log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                            .parent(), payload, false, 0);
+                                } else {
+                                    log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                            .parent(), payload, false, 0);
+                                }
+                            } else {
+                                parent.putWithIndex(path.lastElement(), payload);
+
+                                if (created) {
+                                    log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                            .parent(), payload, false, 0);
+                                } else {
+                                    log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                            .parent(), payload, false, 0);
+                                    log.addValueChangedLogEntry(path.lastElement(), path, path.parent(), payload);
+                                }
+                                log.addChildChangedLogEntry(path.parent().lastElement(), path.parent().parent(),
+                                        path.parent().parent().parent(), parent, false, 0);
+
+                            }
+                            NodeFactory.get().getDb().commit();
+                        }
+                    }
+                }
+        );
+    }
 }

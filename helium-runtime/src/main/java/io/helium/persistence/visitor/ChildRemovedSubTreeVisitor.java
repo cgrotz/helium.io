@@ -1,9 +1,8 @@
-package io.helium.persistence;
+package io.helium.persistence.visitor;
 
 import io.helium.common.Path;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.persistence.mapdb.Node;
-import io.helium.persistence.mapdb.NodeVisitor;
 
 public class ChildRemovedSubTreeVisitor implements NodeVisitor {
     private ChangeLog log;

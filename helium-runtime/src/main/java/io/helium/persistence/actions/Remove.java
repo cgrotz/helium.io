@@ -18,23 +18,22 @@ package io.helium.persistence.actions;
 
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.persistence.mapdb.MapDbPersistence;
+import io.helium.persistence.Persistence;
+import org.vertx.java.core.Future;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
-public class Remove {
+public class Remove extends CommonPersistenceVerticle{
 
-    private MapDbPersistence persistence;
-
-    public Remove(MapDbPersistence persistence) {
-        this.persistence = persistence;
+    @Override
+    public void start(Future<Void> startedResult) {
+        vertx.eventBus().registerHandler( Persistence.DELETE, this::handle );
     }
 
     public void handle(Message<JsonObject> msg) {
         HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
 
-        persistence.remove(event, event.getAuth(), path);
-
+        remove(event, event.getAuth(), path);
     }
 }

@@ -10,9 +10,10 @@ import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChildAddedLogEvent;
 import io.helium.event.changelog.ValueChangedLogEvent;
 import io.helium.persistence.EventSource;
-import io.helium.persistence.Persistor;
+import io.helium.persistence.Persistence;
 import io.helium.common.DataTypeConverter;
 import io.helium.common.EndpointConstants;
+import io.helium.persistence.actions.Get;
 import io.helium.server.mqtt.decoder.MqttDecoder;
 import io.helium.server.mqtt.encoder.Encoder;
 import io.helium.server.mqtt.protocol.*;
@@ -365,7 +366,7 @@ public class MqttEndpoint implements Handler<Buffer> {
         Optional<String> username = connect.getUsername();
         Optional<String> password = connect.getPassword();
         if (username.isPresent() && password.isPresent()) {
-            vertx.eventBus().send(Persistor.GET, Persistor.get(Path.of("/users")), new Handler<Message<JsonObject>>() {
+            vertx.eventBus().send(Persistence.GET, Get.request(Path.of("/users")), new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> event) {
                     JsonObject users = event.body();
@@ -385,7 +386,7 @@ public class MqttEndpoint implements Handler<Buffer> {
                 }
             });
         } else if (clientId != null) {
-            vertx.eventBus().send(Persistor.GET, Persistor.get(Path.of("/users/" + clientId)), new Handler<Message<JsonObject>>() {
+            vertx.eventBus().send(Persistence.GET, Get.request(Path.of("/users/" + clientId)), new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> event) {
                     JsonObject user = event.body();

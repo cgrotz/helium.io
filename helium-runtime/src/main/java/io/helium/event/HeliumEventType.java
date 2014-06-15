@@ -16,7 +16,7 @@
 
 package io.helium.event;
 
-import io.helium.persistence.Persistor;
+import io.helium.persistence.Persistence;
 
 /**
  * Helium Event Types
@@ -24,11 +24,11 @@ import io.helium.persistence.Persistor;
  * @author Christoph Grotz
  */
 public enum HeliumEventType {
-    PUSH(Persistor.PUSH),
-    SET(Persistor.SET),
-    REMOVE(Persistor.DELETE),
-    UPDATE(Persistor.UPDATE),
-    GET(Persistor.GET),
+    PUSH(Persistence.PUSH),
+    SET(Persistence.SET),
+    REMOVE(Persistence.DELETE),
+    UPDATE(Persistence.UPDATE),
+    GET(Persistence.GET),
     EVENT(null);
 
     public final String eventBus;
