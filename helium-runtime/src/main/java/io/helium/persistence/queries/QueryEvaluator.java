@@ -76,7 +76,7 @@ public class QueryEvaluator {
         attached_queries.put(path.toString(), query);
     }
 
-    public void removeQuery(Path path, String query) {
+    public void deleteQuery(Path path, String query) {
         attached_queries.remove(path.toString(), query);
     }
 
@@ -92,7 +92,7 @@ public class QueryEvaluator {
         return nodesForQuery.put(new QueryEntry(path, query).toString(), pathToNode.toString());
     }
 
-    public boolean removeNodeFromQuery(Path path, String query, Path pathToNode) {
+    public boolean deleteNodeFromQuery(Path path, String query, Path pathToNode) {
         return nodesForQuery.remove(new QueryEntry(path, query).toString(), pathToNode.toString());
     }
 

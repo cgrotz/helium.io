@@ -26,7 +26,7 @@ import io.helium.persistence.Persistence;
 public enum HeliumEventType {
     PUSH(Persistence.PUSH),
     SET(Persistence.SET),
-    REMOVE(Persistence.DELETE),
+    DELETE(Persistence.DELETE),
     UPDATE(Persistence.UPDATE),
     GET(Persistence.GET),
     EVENT(null);

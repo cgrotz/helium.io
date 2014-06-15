@@ -46,8 +46,8 @@ public class ChangeLog {
         array.add(new ValueChangedLogEvent(name, path, parent, value));
     }
 
-    public void addChildRemovedLogEntry(Path path, String name, Object value) {
-        array.add(new ChildRemovedLogEvent(path, name, value));
+    public void addChildDeletedLogEntry(Path path, String name, Object value) {
+        array.add(new ChildDeletedLogEvent(path, name, value));
     }
 
     public static ChangeLog of(JsonArray body) {

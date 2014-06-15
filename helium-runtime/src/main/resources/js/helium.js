@@ -117,8 +117,8 @@ var __extends = this.__extends || function (d, b) {
 	    		data: data
 	    	});
 	    };
-	    HeliumRPC.prototype.remove = function (path) {
-	        _super.prototype.sendRpc.call(this, 'remove', {
+	    HeliumRPC.prototype.delete = function (path) {
+	        _super.prototype.sendRpc.call(this, 'delete', {
 	    		path: path
 	    	});
 	    };
@@ -147,8 +147,8 @@ var __extends = this.__extends || function (d, b) {
 	    		data: data
 	    	});
 	    };
-	    HeliumRPC.prototype.removeOnDisconnect = function (path) {
-	        _super.prototype.sendRpc.call(this, 'removeOnDisconnect', {
+	    HeliumRPC.prototype.deleteOnDisconnect = function (path) {
+	        _super.prototype.sendRpc.call(this, 'deleteOnDisconnect', {
 	    		path: path
 	    	});
 	    };
@@ -174,8 +174,8 @@ var __extends = this.__extends || function (d, b) {
 		HeliumOnDisconnect.prototype.update = function(payload) {
 			this.con.updateOnDisconnect(this.path, payload);
 		};
-		HeliumOnDisconnect.prototype.remove = function() {
-			this.con.removeOnDisconnect(this.path);
+		HeliumOnDisconnect.prototype.delete = function() {
+			this.con.deleteOnDisconnect(this.path);
 		};
 		return HeliumOnDisconnect;
 	})();
@@ -236,13 +236,13 @@ var __extends = this.__extends || function (d, b) {
 			this.events_once[event_type] = null;
 			this.rpc.detachListener(this.path, event_type);
 		};
-		Helium.prototype.query = function(query, child_added, child_changed, child_removed) {
+		Helium.prototype.query = function(query, child_added, child_changed, child_deleted) {
 			this.events['query_child_added'] = child_added;
 			this.events['query_child_changed'] = child_changed;
-			this.events['query_child_removed'] = child_removed;
+			this.events['query_child_deleted'] = child_deleted;
 			this.rpc.attachQuery(this.path, stringify(query));
 		};
-		Helium.prototype.remove_query = function(query) {
+		Helium.prototype.delete_query = function(query) {
 			this.rpc.detachQuery(this.path, stringify(query));
 		};
 		Helium.prototype.send = function(data) {
@@ -273,8 +273,8 @@ var __extends = this.__extends || function (d, b) {
 			this.rpc.authenticate(username, password);
 			return this;
 		};
-		Helium.prototype.remove = function() {
-			this.rpc.remove(this.path);
+		Helium.prototype.delete = function() {
+			this.rpc.delete(this.path);
 		};
 		Helium.prototype.parent = function() {
 			new Helium(this.parentPath);

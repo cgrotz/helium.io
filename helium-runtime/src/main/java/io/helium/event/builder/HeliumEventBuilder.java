@@ -105,7 +105,7 @@ public class HeliumEventBuilder {
     }
 
     public static HeliumEventBuilder delete(Path path) {
-        return start().type(HeliumEventType.REMOVE).path(path.toString());
+        return start().type(HeliumEventType.DELETE).path(path.toString());
     }
 
     public static HeliumEventBuilder get(Path path) {

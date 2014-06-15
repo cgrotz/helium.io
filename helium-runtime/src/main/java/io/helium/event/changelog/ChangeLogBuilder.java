@@ -50,8 +50,8 @@ public class ChangeLogBuilder {
         log.addChildChangedLogEntry(name, path, parentPath, value, hasChildren(value), childCount(value));
     }
 
-    public void addRemoved(String name, Object value) {
-        log.addChildRemovedLogEntry(path, name, value);
+    public void addDeleted(String name, Object value) {
+        log.addChildDeletedLogEntry(path, name, value);
     }
 
 

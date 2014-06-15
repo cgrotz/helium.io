@@ -52,7 +52,7 @@ public class Update extends CommonPersistenceVerticle {
                 }
             }
         } else {
-            remove(event, event.getAuth(), path);
+            delete(event, event.getAuth(), path);
         }
     }
 

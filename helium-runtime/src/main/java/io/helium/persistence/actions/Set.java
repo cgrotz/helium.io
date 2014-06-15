@@ -38,19 +38,19 @@ public class Set extends CommonPersistenceVerticle {
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object obj = event.getValue(HeliumEvent.PAYLOAD);
             if (obj == null) {
-                remove(event, event.getAuth(), path);
+                delete(event, event.getAuth(), path);
             } else if (obj instanceof Node) {
                 payload = (Node) obj;
                 if (payload instanceof Node) {
                     applyNewValue(event, event.getAuth(), path, obj);
                 }
             } else if (obj == null) {
-                remove(event, event.getAuth(), path);
+                delete(event, event.getAuth(), path);
             } else {
                 applyNewValue(event, event.getAuth(), path, obj);
             }
         } else {
-            remove(event, event.getAuth(), path);
+            delete(event, event.getAuth(), path);
         }
     }
 

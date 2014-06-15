@@ -28,7 +28,7 @@ public class Persistence extends CommonPersistenceVerticle {
 
     public static final String PUSH = "io.helium.persistor.push";
     public static final String SET = "io.helium.persistor.set";
-    public static final String DELETE = "io.helium.persistor.remove";
+    public static final String DELETE = "io.helium.persistor.delete";
     public static final String UPDATE = "io.helium.persistor.update";
     public static final String GET = "io.helium.persistor.get";
 
@@ -38,7 +38,7 @@ public class Persistence extends CommonPersistenceVerticle {
 
         container.deployVerticle(Push.class.getName());
         container.deployVerticle(Set.class.getName());
-        container.deployVerticle(Remove.class.getName());
+        container.deployVerticle(Delete.class.getName());
         container.deployVerticle(Update.class.getName());
         container.deployVerticle(Get.class.getName());
     }

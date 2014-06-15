@@ -23,7 +23,7 @@ import org.vertx.java.core.Future;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
-public class Remove extends CommonPersistenceVerticle{
+public class Delete extends CommonPersistenceVerticle{
 
     @Override
     public void start(Future<Void> startedResult) {
@@ -34,6 +34,6 @@ public class Remove extends CommonPersistenceVerticle{
         HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
 
-        remove(event, event.getAuth(), path);
+        delete(event, event.getAuth(), path);
     }
 }

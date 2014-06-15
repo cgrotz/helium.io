@@ -7,7 +7,7 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
-import io.helium.persistence.visitor.ChildRemovedSubTreeVisitor;
+import io.helium.persistence.visitor.ChildDeletedSubTreeVisitor;
 import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.mapdb.NodeFactory;
 import org.vertx.java.core.Handler;
@@ -114,7 +114,7 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                             logBuilder.addNew(key, value);
                         }
                         if (value == null) {
-                            logBuilder.addRemoved(key, node.get(key));
+                            logBuilder.addDeleted(key, node.get(key));
                         }
                         node.put(key, value);
                     }
@@ -156,7 +156,7 @@ public abstract class CommonPersistenceVerticle extends Verticle {
     }
 
 
-    protected void remove(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path) {
+    protected void delete(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path) {
         Node parent = Node.of(path.parent());
         Object value = parent.get(path.lastElement());
 
@@ -165,10 +165,10 @@ public abstract class CommonPersistenceVerticle extends Verticle {
             public void handle(Message<Boolean> event) {
                 if (event.body()) {
                     if (value instanceof Node) {
-                        ((Node) value).accept(path, new ChildRemovedSubTreeVisitor(heliumEvent.getChangeLog()));
+                        ((Node) value).accept(path, new ChildDeletedSubTreeVisitor(heliumEvent.getChangeLog()));
                     }
-                    parent.remove(path.lastElement());
-                    heliumEvent.getChangeLog().addChildRemovedLogEntry(path.parent(), path.lastElement(), value);
+                    parent.delete(path.lastElement());
+                    heliumEvent.getChangeLog().addChildDeletedLogEntry(path.parent(), path.lastElement(), value);
                     vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, heliumEvent.getChangeLog());
                     vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
                     NodeFactory.get().getDb().commit();

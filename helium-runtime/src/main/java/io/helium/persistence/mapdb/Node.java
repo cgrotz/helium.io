@@ -596,7 +596,7 @@ public class Node {
     }
 
     /**
-     * Put a pathToNode/value pair in the MapDbBackedNode. If the value is null, then the pathToNode will be removed from the
+     * Put a pathToNode/value pair in the MapDbBackedNode. If the value is null, then the pathToNode will be deleted from the
      * MapDbBackedNode if it is present.
      *
      * @param key   A pathToNode string.
@@ -643,19 +643,19 @@ public class Node {
                 this.attributes.put(key, value);
             }
         } else {
-            this.remove(key);
+            this.delete(key);
         }
         return this;
     }
 
     /**
-     * Remove a name and its value, if present.
+     * Delete a name and its value, if present.
      *
-     * @param key The name to be removed.
+     * @param key The name to be deleted.
      * @return The value that was associated with the name, or null if there was no value.
      */
 
-    public Object remove(String key) {
+    public Object delete(String key) {
         if (this.nodes.containsKey(key)) {
             return this.nodes.remove(key);
         } else if (this.attributes.containsKey(key)) {
@@ -803,7 +803,7 @@ public class Node {
                     logBuilder.addNew(key, value);
                 }
                 if (value == null) {
-                    logBuilder.addRemoved(key, get(key));
+                    logBuilder.addDeleted(key, get(key));
                 }
                 put(key, value);
             }

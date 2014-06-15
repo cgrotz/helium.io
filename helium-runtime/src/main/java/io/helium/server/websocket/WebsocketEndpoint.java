@@ -149,7 +149,7 @@ public class WebsocketEndpoint {
     @Rpc.Method
     public void detachQuery(@Rpc.Param("path") String path, @Rpc.Param("query") String query) {
         container.logger().trace("detachQuery");
-        removeQuery(new Path(HeliumEvent.extractPath(path)), query);
+        deleteQuery(new Path(HeliumEvent.extractPath(path)), query);
     }
 
     @Rpc.Method
@@ -243,9 +243,9 @@ public class WebsocketEndpoint {
     }
 
     @Rpc.Method
-    public void removeOnDisconnect(@Rpc.Param("path") String path) {
-        container.logger().trace("removeOnDisconnect");
-        HeliumEvent event = new HeliumEvent(HeliumEventType.REMOVE, path);
+    public void deleteOnDisconnect(@Rpc.Param("path") String path) {
+        container.logger().trace("deleteOnDisconnect");
+        HeliumEvent event = new HeliumEvent(HeliumEventType.DELETE, path);
         if (auth.isPresent())
             event.setAuth(auth.get());
         this.disconnectEvents.add(event);
@@ -351,10 +351,10 @@ public class WebsocketEndpoint {
                             logEvent.getValue());
                 }
             }
-            if (logE.getString("type").equals(ChildRemovedLogEvent.class.getSimpleName())) {
-                ChildRemovedLogEvent logEvent = ChildRemovedLogEvent.of(logE);
-                if (hasListener(logEvent.getPath(), EndpointConstants.CHILD_REMOVED)) {
-                    fireChildRemoved(logEvent.getPath(), logEvent.getName(), logEvent.getValue());
+            if (logE.getString("type").equals(ChildDeletedLogEvent.class.getSimpleName())) {
+                ChildDeletedLogEvent logEvent = ChildDeletedLogEvent.of(logE);
+                if (hasListener(logEvent.getPath(), EndpointConstants.CHILD_DELETED)) {
+                    fireChildDeleted(logEvent.getPath(), logEvent.getName(), logEvent.getValue());
                 }
             }
         });
@@ -383,13 +383,13 @@ public class WebsocketEndpoint {
                             fireQueryChildChanged(nodePath, parent, value);
                         }
                     } else if (containsNode) {
-                        fireQueryChildRemoved(nodePath, value);
-                        queryEvaluator.removeNodeFromQuery(nodePath.parent(), queryEntry.getValue(),
+                        fireQueryChildDeleted(nodePath, value);
+                        queryEvaluator.deleteNodeFromQuery(nodePath.parent(), queryEntry.getValue(),
                                 nodePath);
                     }
                 } else {
-                    fireQueryChildRemoved(nodePath, null);
-                    queryEvaluator.removeNodeFromQuery(nodePath.parent(), queryEntry.getValue(), nodePath);
+                    fireQueryChildDeleted(nodePath, null);
+                    queryEvaluator.deleteNodeFromQuery(nodePath.parent(), queryEntry.getValue(), nodePath);
                 }
             }
         }
@@ -447,14 +447,14 @@ public class WebsocketEndpoint {
         });
     }
 
-    public void fireChildRemoved(Path path, String name, Object payload) {
+    public void fireChildDeleted(Path path, String name, Object payload) {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, payload), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
                 vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, payload), new Handler<Message<Object>>() {
                     @Override
                     public void handle(Message<Object> event) {
                         JsonObject broadcast = new JsonObject();
-                        broadcast.putValue(HeliumEvent.TYPE, EndpointConstants.CHILD_REMOVED);
+                        broadcast.putValue(HeliumEvent.TYPE, EndpointConstants.CHILD_DELETED);
                         broadcast.putValue(HeliumEvent.NAME, name);
                         broadcast.putValue(HeliumEvent.PATH, createPath(path));
                         broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
@@ -527,14 +527,14 @@ public class WebsocketEndpoint {
         });
     }
 
-    public void fireQueryChildRemoved(Path path, Object payload) {
+    public void fireQueryChildDeleted(Path path, Object payload) {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, payload), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
                 vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, payload), new Handler<Message<Object>>() {
                     @Override
                     public void handle(Message<Object> event) {
                         JsonObject broadcast = new JsonObject();
-                        broadcast.putValue(HeliumEvent.TYPE, EndpointConstants.QUERY_CHILD_REMOVED);
+                        broadcast.putValue(HeliumEvent.TYPE, EndpointConstants.QUERY_CHILD_DELETED);
                         broadcast.putValue(HeliumEvent.NAME, path.lastElement());
                         broadcast.putValue(HeliumEvent.PATH, createPath(path.parent()));
                         broadcast.putValue(HeliumEvent.PAYLOAD, event.body());
@@ -595,8 +595,8 @@ public class WebsocketEndpoint {
         queryEvaluator.addQuery(path, query);
     }
 
-    public void removeQuery(Path path, String query) {
-        queryEvaluator.removeQuery(path, query);
+    public void deleteQuery(Path path, String query) {
+        queryEvaluator.deleteQuery(path, query);
     }
 
     public boolean hasQuery(Path path) {

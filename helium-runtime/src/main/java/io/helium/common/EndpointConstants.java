@@ -14,7 +14,7 @@ public class EndpointConstants {
     public static final String DISTRIBUTE_EVENT = "io.helium.distribute.event";
     public static final String DISTRIBUTE_CHANGE_LOG = "io.helium.distribute.change.log";
 
-    public static final String QUERY_CHILD_REMOVED = "query_child_removed";
+    public static final String QUERY_CHILD_DELETED = "query_child_deleted";
 
     public static final String QUERY_CHILD_CHANGED = "query_child_changed";
 
@@ -26,5 +26,5 @@ public class EndpointConstants {
 
     public static final String CHILD_ADDED = "child_added";
 
-    public static final String CHILD_REMOVED = "child_removed";
+    public static final String CHILD_DELETED = "child_deleted";
 }

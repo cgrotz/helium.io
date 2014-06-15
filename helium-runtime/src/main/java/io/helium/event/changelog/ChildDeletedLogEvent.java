@@ -21,24 +21,24 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
 
-public class ChildRemovedLogEvent extends ChangeLogEvent {
+public class ChildDeletedLogEvent extends ChangeLogEvent {
 
-    public ChildRemovedLogEvent(Path path, String name, Object value) {
+    public ChildDeletedLogEvent(Path path, String name, Object value) {
         putString("type", getClass().getSimpleName());
         putString("path", path.toString());
         putString("name", name);
         putValue("value", value);
     }
 
-    public ChildRemovedLogEvent(Map<String, Object> stringObjectMap) {
+    public ChildDeletedLogEvent(Map<String, Object> stringObjectMap) {
         super(stringObjectMap);
     }
 
-    public static ChildRemovedLogEvent of(JsonObject logE) {
-        return new ChildRemovedLogEvent(logE.toMap());
+    public static ChildDeletedLogEvent of(JsonObject logE) {
+        return new ChildDeletedLogEvent(logE.toMap());
     }
 
-    private ChildRemovedLogEvent() {
+    private ChildDeletedLogEvent() {
 
     }
 
