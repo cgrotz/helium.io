@@ -123,11 +123,11 @@ public class WebsocketEndpoint implements Endpoint {
         addListener(new Path(HeliumEvent.extractPath(path)), eventType);
         if ("child_added".equals(eventType)) {
             ChangeLog log = ChangeLog.of(new JsonArray());
-            syncPath(log, Path.of(HeliumEvent.extractPath(path)), this);
+            syncPath(log, Path.of(HeliumEvent.extractPath(path)));
             distributeChangeLog(log);
         } else if ("value".equals(eventType)) {
             ChangeLog log = ChangeLog.of(new JsonArray());
-            syncPropertyValue(log, new Path(HeliumEvent.extractPath(path)), this);
+            syncPropertyValue(log, new Path(HeliumEvent.extractPath(path)));
             distributeChangeLog(log);
         }
     }
@@ -263,11 +263,11 @@ public class WebsocketEndpoint implements Endpoint {
                     for (String eventType : attached_listeners.get(path))
                         if ("child_added".equals(eventType)) {
                             ChangeLog log = ChangeLog.of(new JsonArray());
-                            syncPath(log, Path.of(HeliumEvent.extractPath(path)), WebsocketEndpoint.this);
+                            syncPath(log, Path.of(HeliumEvent.extractPath(path)));
                             distributeChangeLog(log);
                         } else if ("value".equals(eventType)) {
                             ChangeLog log = ChangeLog.of(new JsonArray());
-                            syncPropertyValue(log, new Path(HeliumEvent.extractPath(path)), WebsocketEndpoint.this);
+                            syncPropertyValue(log, new Path(HeliumEvent.extractPath(path)));
                             distributeChangeLog(log);
                         }
                 }
@@ -466,7 +466,6 @@ public class WebsocketEndpoint implements Endpoint {
         });
     }
 
-    @Override
     public void fireValue(String name, Path path, Path parent, Object value) {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
@@ -486,7 +485,6 @@ public class WebsocketEndpoint implements Endpoint {
         });
     }
 
-    @Override
     public void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
 
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
@@ -636,7 +634,7 @@ public class WebsocketEndpoint implements Endpoint {
         socket.write(new Buffer(msg));
     }
 
-    public void syncPath(ChangeLog log, Path path, Endpoint handler) {
+    public void syncPath(ChangeLog log, Path path) {
         MapDbBackedNode node;
         if (MapDbBackedNode.exists(path)) {
             node = MapDbBackedNode.of(path);
@@ -650,7 +648,7 @@ public class WebsocketEndpoint implements Endpoint {
                 boolean hasChildren = (object instanceof MapDbBackedNode) ? ((MapDbBackedNode) object).hasChildren() : false;
                 int numChildren = (object instanceof MapDbBackedNode) ? ((MapDbBackedNode) object).length() : 0;
                 if (object != null && object != null) {
-                    handler.fireChildAdded(childNodeKey, path, path.parent(), object, hasChildren,
+                    fireChildAdded(childNodeKey, path, path.parent(), object, hasChildren,
                             numChildren);
                 }
             }
@@ -677,15 +675,15 @@ public class WebsocketEndpoint implements Endpoint {
         }
     }
 
-    public void syncPropertyValue(ChangeLog log, Path path, Endpoint handler) {
+    public void syncPropertyValue(ChangeLog log, Path path) {
         MapDbBackedNode node = MapDbBackedNode.of(path.parent());
         String childNodeKey = path.lastElement();
         if (node.has(path.lastElement())) {
             Object object = node.get(path.lastElement());
-            handler.fireValue(childNodeKey, path, path.parent(), object
+            fireValue(childNodeKey, path, path.parent(), object
             );
         } else {
-            handler.fireValue(childNodeKey, path, path.parent(), "");
+            fireValue(childNodeKey, path, path.parent(), "");
         }
     }
 

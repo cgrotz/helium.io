@@ -116,7 +116,6 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
         });
     }
 
-    @Override
     public void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
         try {
             vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value),
@@ -152,7 +151,6 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
         }
     }
 
-    @Override
     public void fireValue(String name, Path path, Path parent, Object value) {
         try {
             vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value),

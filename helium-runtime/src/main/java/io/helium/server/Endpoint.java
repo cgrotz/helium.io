@@ -20,15 +20,11 @@ public interface Endpoint {
 
     public static final String QUERY_CHILD_ADDED = "query_child_added";
 
-    public static final String CHILD_REMOVED = "child_removed";
-
     public static final String VALUE = "value";
 
     public static final String CHILD_CHANGED = "child_changed";
 
     public static final String CHILD_ADDED = "child_added";
 
-    void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren);
-
-    void fireValue(String name, Path path, Path parent, Object value);
+    public static final String CHILD_REMOVED = "child_removed";
 }
