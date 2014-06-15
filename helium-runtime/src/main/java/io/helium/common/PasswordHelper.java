@@ -1,6 +1,7 @@
 package io.helium.common;
 
 import com.google.common.base.Strings;
+import sun.security.util.Password;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -10,8 +11,17 @@ import java.util.Arrays;
  * Created by Christoph Grotz on 15.06.14.
  */
 public class PasswordHelper {
-    private static final MessageDigest md;
-    static {
+
+    private static PasswordHelper instance = null;
+    public static PasswordHelper get() {
+        if ( instance == null ) {
+            instance = new PasswordHelper();
+        }
+        return instance;
+    }
+
+    private final MessageDigest md;
+    private PasswordHelper() {
         try {
             md = MessageDigest.getInstance("SHA-512");
         }
@@ -20,7 +30,8 @@ public class PasswordHelper {
         }
     }
 
-    public static String encode(String password) {
+
+    public String encode(String password) {
         try {
             byte[] encoded = md.digest(password.getBytes("UTF-8"));
             return convertToHex(encoded);
@@ -29,14 +40,14 @@ public class PasswordHelper {
         }
     }
 
-    public static boolean comparePassword(String encodedPassword, String password) {
+    public boolean comparePassword(String encodedPassword, String password) {
         if(Strings.isNullOrEmpty(password) || Strings.isNullOrEmpty(encodedPassword)) {
             throw new IllegalStateException("password cannot be null");
         }
         return encodedPassword.equals(encode(password));
     }
 
-    private static String convertToHex(byte[] data)
+    private String convertToHex(byte[] data)
     {
         StringBuffer buf = new StringBuffer();
 

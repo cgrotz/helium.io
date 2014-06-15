@@ -17,6 +17,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
+import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonObject;
@@ -81,6 +82,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
                 }
             });
         });
+        req.response().end();
     }
 
     private void put(HttpServerRequest req) {
@@ -99,33 +101,39 @@ public class RestHandler implements Handler<HttpServerRequest> {
                     }
                 });
             });
+            req.response().end();
         });
         req.resume();
     }
 
     private void post(HttpServerRequest req) {
-        req.bodyHandler(buffer -> {
-            String uri;
-            String uuid = UUID.randomUUID().toString().replaceAll("-", "");
-            if (req.uri().endsWith("/")) {
-                uri = req.uri() + uuid;
-            } else {
-                uri = req.uri() + "/" + uuid;
-            }
-            Path nodePath = Path.of(uri);
-            extractAuthentication(req, auth -> {
-                Object data = DataTypeConverter.convert(buffer);
-                HeliumEvent event = HeliumEventBuilder.set(nodePath, data).withAuth(auth).build();
-                if (auth.isPresent())
-                    event.setAuth(auth.get());
+        req.bodyHandler(new Handler<Buffer>() {
+            @Override
+            public void handle(final Buffer buffer) {
+                String uri;
+                String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+                if (req.uri().endsWith("/")) {
+                    uri = req.uri() + uuid;
+                } else {
+                    uri = req.uri() + "/" + uuid;
+                }
+                Path nodePath = Path.of(uri);
+                extractAuthentication(req, auth -> {
+                    Object data = DataTypeConverter.convert(buffer);
+                    HeliumEvent event = HeliumEventBuilder.set(nodePath, data).withAuth(auth).build();
+                    if (auth.isPresent())
+                        event.setAuth(auth.get());
 
-                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
-                    if (event1.body()) {
-                        vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                        vertx.eventBus().send(event.getType().eventBus, event);
-                    }
+                    vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
+                        if (event1.body()) {
+                            vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
+                            vertx.eventBus().send(event.getType().eventBus, event);
+
+                        }
+                    });
                 });
-            });
+                req.response().end();
+            }
         });
         req.resume();
     }
@@ -198,7 +206,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
                                 String localUsername = node.getString("username");
                                 String localPassword = node.getString("password");
                                 if (username.equals(localUsername) &&
-                                        PasswordHelper.comparePassword(localPassword,password)) {
+                                        PasswordHelper.get().comparePassword(localPassword,password)) {
                                     handler.handle(Optional.of(node));
                                     return;
                                 }

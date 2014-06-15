@@ -1,14 +1,23 @@
 {
     "rules": {
         ".read": true,
-        ".write": "function(auth, path, data, root){\n   return auth.isAdmin;\n}\n",
+        ".write": "function(auth, path, data){    return auth.isAdmin; }",
         "rules": {
-            ".read": "function(auth, path, data, root){\n  return auth.isAdmin;\n}\n",
-            ".write": "function(auth, path, data, root){\n  return auth.isAdmin;\n}\n"
+            ".read": "function(auth, path, data){   return auth.isAdmin; }",
+            ".write": "function(auth, path, data){   return auth.isAdmin; } "
         },
         "users": {
-            ".read": "function(auth, path, data, root){\n  return auth.isAdmin;\n}\n",
-            ".write": "function(auth, path, data, root){\n  return auth.isAdmin;\n}\n"
+            ".read": "function(auth, path, data){   return auth.isAdmin; }",
+            ".write": "function(auth, path, data){   return auth.isAdmin; }",
+            "+": {
+                ".read": "function(auth, path, data){   return auth.isAdmin; }",
+                ".write": "function(auth, path, data){   return auth.isAdmin; }",
+                "password": {
+                    ".read": "function(auth, path, data){   return auth.isAdmin; }",
+                    ".write": "function(auth, path, data){   return auth.isAdmin; }",
+                    ".validate": "function(auth, path, data) { return passwordHelper.encode(data.val()); }"
+                }
+            }
         }
     },
     "users": {

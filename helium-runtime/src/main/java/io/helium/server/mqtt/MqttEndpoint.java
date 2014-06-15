@@ -379,7 +379,7 @@ public class MqttEndpoint implements Handler<Buffer> {
                                 String localUsername = node.getString("username");
                                 String localPassword = node.getString("password");
                                 if (username.get().equals(localUsername) &&
-                                        PasswordHelper.comparePassword(localPassword, password.get())) {
+                                        PasswordHelper.get().comparePassword(localPassword, password.get())) {
                                     handler.handle(Optional.of(node));
                                 }
                             }

@@ -859,6 +859,10 @@ public class Node {
             } else {
                 return getNode(path.firstElement()).getLastLeafNode(path.subpath(1));
             }
+        } else if( has("+") && !path.isSimple()) {
+            return getNode("+").getLastLeafNode(path.subpath(1));
+        } else if( has("*") && !path.isSimple()) {
+            return getNode("*");
         } else {
             return this;
         }

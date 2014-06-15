@@ -287,7 +287,7 @@ public class WebsocketEndpoint {
                         if (node.containsField("username") && node.containsField("password")) {
                             String localUsername = node.getString("username");
                             String localPassword = node.getString("password");
-                            if (username.equals(localUsername) && PasswordHelper.comparePassword(localPassword, password)) {
+                            if (username.equals(localUsername) && PasswordHelper.get().comparePassword(localPassword, password)) {
                                 handler.handle(Optional.of(node));
                                 return;
                             }

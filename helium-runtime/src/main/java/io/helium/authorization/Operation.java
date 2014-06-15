@@ -17,7 +17,7 @@
 package io.helium.authorization;
 
 public enum Operation {
-    READ(".read"), WRITE(".write");
+    READ(".read"), WRITE(".write"), VALIDATE(".validate");
 
     private String op;
 
@@ -34,6 +34,8 @@ public enum Operation {
             return READ;
         else if (WRITE.op.equals(op))
             return WRITE;
+        else if (VALIDATE.op.equals(op))
+            return VALIDATE;
         else
             throw new IllegalStateException(op + " not found");
     }

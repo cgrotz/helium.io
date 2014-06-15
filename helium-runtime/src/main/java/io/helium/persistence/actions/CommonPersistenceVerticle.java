@@ -51,10 +51,11 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                                 parent = Node.of(path.parent().parent());
                             }
 
-                            if (payload instanceof Node) {
-                                Node node = (Node) payload;
-                                populate(new ChangeLogBuilder(heliumEvent.getChangeLog(), path, path.parent(), node), path, auth, node,
-                                        (Node) payload);
+                            if (payload instanceof JsonObject) {
+                                Node node = Node.of(path);
+                                populate(new ChangeLogBuilder(heliumEvent.getChangeLog(), path, path.parent(), node),
+                                        path, auth, node,
+                                        (JsonObject) payload);
                                 parent.putWithIndex(path.lastElement(), node);
                             } else {
                                 parent.putWithIndex(path.lastElement(), payload);
@@ -84,10 +85,10 @@ public abstract class CommonPersistenceVerticle extends Verticle {
     }
 
 
-    protected void populate(ChangeLogBuilder logBuilder, Path path, Optional<JsonObject> auth, Node node, Node payload) {
-        for (String key : payload.keys()) {
-            Object value = payload.get(key);
-            if (value instanceof Node) {
+    protected void populate(ChangeLogBuilder logBuilder, Path path, Optional<JsonObject> auth, Node node, JsonObject payload) {
+        for (String key : payload.getFieldNames()) {
+            Object value = payload.getField(key);
+            if (value instanceof JsonObject) {
                 vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), new Handler<Message<Boolean>>() {
                     @Override
                     public void handle(Message<Boolean> event) {
@@ -101,22 +102,30 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                                 logBuilder.addChangedNode(key, childNode);
                             }
                             populate(logBuilder.getChildLogBuilder(key), path.append(key), auth, childNode,
-                                    (Node) value);
+                                    (JsonObject) value);
                         }
                     }
                 });
             } else {
                 vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
                     if (event.body()) {
-                        if (node.has(key)) {
-                            logBuilder.addChange(key, value);
-                        } else {
-                            logBuilder.addNew(key, value);
-                        }
-                        if (value == null) {
-                            logBuilder.addDeleted(key, node.get(key));
-                        }
-                        node.put(key, value);
+                        vertx.eventBus().send(Authorizator.VALIDATE,
+                            Authorizator.validate(auth, path.append(key), value),
+                            new Handler<Message<Object>>() {
+                                @Override
+                                public void handle(Message<Object> event) {
+                                    if (node.has(key)) {
+                                        logBuilder.addChange(key, event.body());
+                                    } else {
+                                        logBuilder.addNew(key, event.body());
+                                    }
+                                    if (event.body() == null) {
+                                        logBuilder.addDeleted(key, node.get(key));
+                                    }
+                                    node.put(key, event.body());
+                                }
+                            }
+                        );
                     }
                 });
             }

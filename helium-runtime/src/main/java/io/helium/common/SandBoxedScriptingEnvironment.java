@@ -42,6 +42,7 @@ public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
         ProtectionDomain domain = new ProtectionDomain(new CodeSource(null, (Certificate[]) null),
                 perms);
         accessControlContext = new AccessControlContext(new ProtectionDomain[]{domain});
+        engine.getContext().setAttribute("passwordHelper", PasswordHelper.get(), ScriptContext.ENGINE_SCOPE);
     }
 
     @Override

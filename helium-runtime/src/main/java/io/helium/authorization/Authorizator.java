@@ -10,7 +10,7 @@
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
+ * License for the specific language governing rules and limitations
  * under the License.
  */
 
@@ -38,6 +38,7 @@ public class Authorizator extends Verticle {
 
     public static final String FILTER = "io.helium.authorizator.filter";
     public static final String CHECK = "io.helium.authorizator.check";
+    public static final String VALIDATE = "io.helium.authorizator.validate";
 
     private SandBoxedScriptingEnvironment scriptingEnvironment;
     private Map<String, String> functions = Maps.newHashMap();
@@ -49,6 +50,34 @@ public class Authorizator extends Verticle {
             @Override
             public void handle(Message event) {
                 filter(event);
+            }
+        });
+        vertx.eventBus().registerHandler(VALIDATE, new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> event) {
+                Operation operation = Operation.get(event.body().getString("operation"));
+                Optional<JsonObject> auth;
+                if (event.body().containsField("auth")) {
+                    auth = Optional.of(event.body().getObject("auth"));
+                } else {
+                    auth = Optional.empty();
+                }
+
+                Path path = Path.of(event.body().getString("path"));
+                Object value = event.body().getValue("payload");
+                JsonObject localAuth = auth.orElse(ANONYMOUS);
+                try {
+                    RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
+                    if (localAuth.containsField("rules")) {
+                        RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
+                        event.reply(evaluateValidation(operation, path, value, localAuth, userRules));
+                        return;
+                    }
+                    event.reply(evaluateValidation(operation, path, value, localAuth, globalRules));
+                    return;
+                } catch (NoSuchMethodException | ScriptException e) {
+                    event.reply(value);
+                }
             }
         });
 
@@ -68,8 +97,8 @@ public class Authorizator extends Verticle {
                 JsonObject localAuth = auth.orElse(ANONYMOUS);
                 try {
                     RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
-                    if (localAuth.containsField("permissions")) {
-                        RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
+                    if (localAuth.containsField("rules")) {
+                        RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
                         event.reply(evaluateRules(operation, path, value, localAuth, userRules));
                         return;
                     }
@@ -124,6 +153,17 @@ public class Authorizator extends Verticle {
         }
     }
 
+    private Object evaluateValidation(Operation op, Path path, Object data, JsonObject localAuth, RuleBasedAuthorizator rules) throws ScriptException, NoSuchMethodException {
+        String expression = rules.getExpressionForPathAndOperation(path, op);
+        if(expression.equals("false")) {
+            return data;
+        }
+        else {
+            Object evaledAuth = eval(localAuth.toString());
+            return invoke(expression, evaledAuth, path, data);
+        }
+    }
+
     private Object eval(String code) throws ScriptException, NoSuchMethodException {
         scriptingEnvironment.eval("function convert(){ return " + code + ";}");
         Object retValue = scriptingEnvironment.invokeFunction("convert");
@@ -139,7 +179,7 @@ public class Authorizator extends Verticle {
             scriptingEnvironment.eval("var " + functionName + " = " + code + ";");
             functions.put(code, functionName);
         }
-        return (Boolean) scriptingEnvironment.invokeFunction(functionName, evaledAuth, path, new DataSnapshot(data));
+        return scriptingEnvironment.invokeFunction(functionName, evaledAuth, path, new DataSnapshot(data));
     }
 
     public Object filterContent(Optional<JsonObject> auth, Path path, Object content) throws ScriptException, NoSuchMethodException {
@@ -152,8 +192,8 @@ public class Authorizator extends Verticle {
                 JsonObject localAuth = auth.orElse(ANONYMOUS);
 
                 RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
-                if (localAuth.containsField("permissions")) {
-                    RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
+                if (localAuth.containsField("rules")) {
+                    RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
                     if (evaluateRules(operation, path, value, localAuth, userRules)) {
                         node.putValue(key, filterContent(auth, path.append(key), value));
                     }
@@ -167,8 +207,8 @@ public class Authorizator extends Verticle {
             JsonObject localAuth = auth.orElse(ANONYMOUS);
 
             RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
-            if (localAuth.containsField("permissions")) {
-                RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
+            if (localAuth.containsField("rules")) {
+                RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
                 if (evaluateRules(operation, path, content, localAuth, userRules)) {
                     return content;
                 }
@@ -208,6 +248,22 @@ public class Authorizator extends Verticle {
 
     public static JsonObject check(Operation operation, Optional<JsonObject> auth, Path path, Object value) {
         JsonObject event = new JsonObject().putString("operation", operation.getOp());
+        if (auth.isPresent()) {
+            event.putObject("auth", auth.get());
+        }
+        event.putString("path", path.toString());
+        if (value instanceof Node) {
+            event.putValue("payload", ((Node) value).toJsonObject());
+        } else if (value instanceof DataSnapshot) {
+            event.putValue("payload", ((DataSnapshot) value).val());
+        } else {
+            event.putValue("payload", value);
+        }
+        return event;
+    }
+
+    public static JsonObject validate(Optional<JsonObject> auth, Path path, Object value) {
+        JsonObject event = new JsonObject().putString("operation", Operation.VALIDATE.getOp());
         if (auth.isPresent()) {
             event.putObject("auth", auth.get());
         }

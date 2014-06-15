@@ -17,6 +17,7 @@
 package io.helium.event.changelog;
 
 import io.helium.common.Path;
+import io.helium.persistence.mapdb.Node;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
@@ -28,7 +29,12 @@ public class ValueChangedLogEvent extends ChangeLogEvent {
         putString("name", name);
         putString("path", path.toString());
         putString("parent", parent.toString());
-        putValue("value", value);
+        if(value instanceof Node) {
+            putValue("value", ((Node)value).toJsonObject());
+        }
+        else {
+            putValue("value", value);
+        }
     }
 
     public ValueChangedLogEvent(Map<String, Object> stringObjectMap) {
