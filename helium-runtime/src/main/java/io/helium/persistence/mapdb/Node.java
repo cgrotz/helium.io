@@ -24,50 +24,24 @@ import java.util.Set;
 /**
  * Created by Christoph Grotz on 02.06.14.
  */
-public class MapDbBackedNode {
+public class Node {
 
     private static final long serialVersionUID = 1L;
 
-    private static final DB db = DBMaker.newFileDB(new File("helium/data"))
-            .asyncWriteEnable()
-            .asyncWriteQueueSize(10)
-            .closeOnJvmShutdown()
-            .make();
-
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-            try {
-                System.out.println("Shutdown MapDB Data Store");
-                db.commit();
-                db.compact();
-                db.close();
-            }
-            catch( Exception e) {
-            }
-            }
-        });
-    }
-
-    public static DB getDb() {
-        return db;
-    }
-
     private BTreeMap<String, Object> attributes;
-    private BTreeMap<String, MapDbBackedNode> nodes;
+    private BTreeMap<String, Node> nodes;
     private Path pathToNode;
 
-    private MapDbBackedNode() {
+    private Node() {
         pathToNode = Path.of("/");
-        attributes = db.getTreeMap("rootAttributes");
-        nodes = db.createTreeMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
+        attributes = NodeFactory.get().getDb().getTreeMap("rootAttributes");
+        nodes = NodeFactory.get().getDb().createTreeMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
     }
 
-    MapDbBackedNode(Path pathToNode) {
+    private Node(Path pathToNode) {
         this.pathToNode = pathToNode;
-        attributes = db.getTreeMap(pathToNode + "Attributes");
-        nodes = db.createTreeMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
+        attributes = NodeFactory.get().getDb().getTreeMap(pathToNode + "Attributes");
+        nodes = NodeFactory.get().getDb().createTreeMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
     }
 /*
     public void writeExternal(ObjectOutput out) throws IOException {
@@ -102,7 +76,7 @@ public class MapDbBackedNode {
      *
      * @return An array of field names, or null if there are no names.
      */
-    public static String[] getNames(MapDbBackedNode jo) {
+    public static String[] getNames(Node jo) {
         int length = jo.length();
         if (length == 0) {
             return null;
@@ -325,8 +299,8 @@ public class MapDbBackedNode {
             throws RuntimeException, IOException {
         if (value == null || value.equals(null)) {
             writer.write("null");
-        } else if (value instanceof MapDbBackedNode) {
-            ((MapDbBackedNode) value).write(writer, indentFactor, indent);
+        } else if (value instanceof Node) {
+            ((Node) value).write(writer, indentFactor, indent);
         } else if (value instanceof Number) {
             writer.write(numberToString((Number) value));
         } else if (value instanceof Boolean) {
@@ -465,14 +439,14 @@ public class MapDbBackedNode {
      * @throws RuntimeException if the pathToNode is not found or if the value is not a MapDbBackedNode.
      */
 
-    public MapDbBackedNode getNode(String key) {
+    public Node getNode(String key) {
         if (pathToNode.append(key).root()) {
             return root();
         } else if (has(key)) {
             Object value = get(key);
-            return (MapDbBackedNode) get(key);
+            return (Node) get(key);
         } else {
-            MapDbBackedNode node = new MapDbBackedNode(pathToNode.append(key));
+            Node node = new Node(pathToNode.append(key));
             nodes.put(key, node);
             return node;
         }
@@ -564,7 +538,7 @@ public class MapDbBackedNode {
      * @return this.
      * @throws RuntimeException If the pathToNode is null.
      */
-    public MapDbBackedNode put(String key, boolean value) {
+    public Node put(String key, boolean value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -581,7 +555,7 @@ public class MapDbBackedNode {
      * @throws RuntimeException If the pathToNode is null or if the number is invalid.
      */
 
-    public MapDbBackedNode put(String key, double value) {
+    public Node put(String key, double value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -598,7 +572,7 @@ public class MapDbBackedNode {
      * @throws RuntimeException If the pathToNode is null.
      */
 
-    public MapDbBackedNode put(String key, int value) {
+    public Node put(String key, int value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -615,7 +589,7 @@ public class MapDbBackedNode {
      * @throws RuntimeException If the pathToNode is null.
      */
 
-    public MapDbBackedNode put(String key, long value) {
+    public Node put(String key, long value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -634,7 +608,7 @@ public class MapDbBackedNode {
      * @throws RuntimeException If the value is non-finite number or if the pathToNode is null.
      */
 
-    public MapDbBackedNode put(String key, Object value) {
+    public Node put(String key, Object value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -642,7 +616,7 @@ public class MapDbBackedNode {
     }
 
 
-    public MapDbBackedNode put(String key, MapDbBackedNode node) {
+    public Node put(String key, Node node) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -650,7 +624,7 @@ public class MapDbBackedNode {
     }
 
 
-    public MapDbBackedNode putWithIndex(String key, Object value) {
+    public Node putWithIndex(String key, Object value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -659,12 +633,12 @@ public class MapDbBackedNode {
         }
         if (value != null) {
             testValidity(value);
-            if (value instanceof MapDbBackedNode) {
-                this.nodes.put(key, (MapDbBackedNode) value);
+            if (value instanceof Node) {
+                this.nodes.put(key, (Node) value);
             } else if (value instanceof JsonObject) {
                 JsonObject node = (JsonObject) value;
                 node.getFieldNames().forEach(valueKey -> {
-                    MapDbBackedNode nodeToFill = MapDbBackedNode.of(pathToNode.append(key));
+                    Node nodeToFill = Node.of(pathToNode.append(key));
                     nodeToFill.put(valueKey, node.getValue(valueKey));
                 });
             } else {
@@ -790,33 +764,33 @@ public class MapDbBackedNode {
     }
 
     public Object getObjectForPath(Path path) {
-        MapDbBackedNode parent = getNodeForPath(ChangeLog.of(new JsonArray()), path.parent());
+        Node parent = getNodeForPath(ChangeLog.of(new JsonArray()), path.parent());
         return parent.get(path.lastElement());
     }
 
 
-    public MapDbBackedNode getNodeForPath(ChangeLog log, Path path) {
+    public Node getNodeForPath(ChangeLog log, Path path) {
         Path fullPath = pathToNode.append(path);
-        MapDbBackedNode lastNode = null;
+        Node lastNode = null;
         for (int i = 0; i < fullPath.toArray().length; i++) {
             Path nodePath = fullPath.prefix(0);
-            MapDbBackedNode node = MapDbBackedNode.of(nodePath);
+            Node node = Node.of(nodePath);
             if (lastNode == null) {
                 node = lastNode;
             } else {
                 lastNode.put(nodePath.lastElement(), node);
             }
         }
-        return MapDbBackedNode.of(fullPath);
+        return Node.of(fullPath);
     }
 
 
-    public void populate(ChangeLogBuilder logBuilder, MapDbBackedNode payload) {
+    public void populate(ChangeLogBuilder logBuilder, Node payload) {
         for (String key : payload.keys()) {
             Object value = payload.get(key);
-            if (value instanceof MapDbBackedNode) {
-                MapDbBackedNode childNode = MapDbBackedNode.of(pathToNode.append(key));
-                childNode.populate(logBuilder.getChildLogBuilder(key), (MapDbBackedNode) value);
+            if (value instanceof Node) {
+                Node childNode = Node.of(pathToNode.append(key));
+                childNode.populate(logBuilder.getChildLogBuilder(key), (Node) value);
                 if (has(key)) {
                     put(key, childNode);
                     logBuilder.addNew(key, childNode);
@@ -839,13 +813,13 @@ public class MapDbBackedNode {
     }
 
 
-    public Collection<MapDbBackedNode> getChildren() {
-        Set<MapDbBackedNode> nodes = Sets.newHashSet();
+    public Collection<Node> getChildren() {
+        Set<Node> nodes = Sets.newHashSet();
         Iterator<?> itr = keyIterator();
         while (itr.hasNext()) {
             Object key = itr.next();
-            if (get((String) key) instanceof MapDbBackedNode) {
-                nodes.add((MapDbBackedNode) get((String) key));
+            if (get((String) key) instanceof Node) {
+                nodes.add((Node) get((String) key));
             }
         }
         return nodes;
@@ -862,8 +836,8 @@ public class MapDbBackedNode {
             return true;
         } else if (has(path.firstElement())) {
             Object object = get(path.firstElement());
-            if (object instanceof MapDbBackedNode) {
-                MapDbBackedNode node = (MapDbBackedNode) object;
+            if (object instanceof Node) {
+                Node node = (Node) object;
                 return node.pathExists(path.subpath(1));
             } else if (path.isSimple()) {
                 return true;
@@ -876,10 +850,10 @@ public class MapDbBackedNode {
     }
 
 
-    public MapDbBackedNode getLastLeafNode(Path path) {
+    public Node getLastLeafNode(Path path) {
         if (has(path.firstElement())) {
             if (path.isSimple()) {
-                if (get(path.firstElement()) instanceof MapDbBackedNode) {
+                if (get(path.firstElement()) instanceof Node) {
                     return getNode(path.firstElement());
                 } else {
                     return this;
@@ -897,8 +871,8 @@ public class MapDbBackedNode {
         visitor.visitNode(path, this);
         for (String key : keys()) {
             Object value = get(key);
-            if (value instanceof MapDbBackedNode) {
-                ((MapDbBackedNode) value).accept(path.append(key), visitor);
+            if (value instanceof Node) {
+                ((Node) value).accept(path.append(key), visitor);
             } else {
                 visitor.visitProperty(path, this, key, value);
             }
@@ -923,11 +897,11 @@ public class MapDbBackedNode {
         return values;
     }
 
-    public static MapDbBackedNode of(Path path) {
+    public static Node of(Path path) {
         if (path.root()) {
             return root();
         }
-        MapDbBackedNode node = root();
+        Node node = root();
         Path currentPath = Path.copy(path);
         for (int i = 0; i < path.toArray().length; i++) {
             node = node.getNode(currentPath.firstElement());
@@ -937,11 +911,11 @@ public class MapDbBackedNode {
     }
 
     public static long childCount(Object node) {
-        return (node instanceof MapDbBackedNode) ? ((MapDbBackedNode) node).getChildren().size() : 0;
+        return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
     }
 
     public static boolean hasChildren(Object node) {
-        return (node instanceof MapDbBackedNode) ? ((MapDbBackedNode) node).hasChildren() : false;
+        return (node instanceof Node) ? ((Node) node).hasChildren() : false;
     }
 
     public JsonObject toJsonObject() {
@@ -949,15 +923,15 @@ public class MapDbBackedNode {
     }
 
     public static boolean exists(Path path) {
-        return db.exists(path.toString() + "Attributes");
+        return NodeFactory.get().getDb().exists(path.toString() + "Attributes");
     }
 
     public Path getPathToNode() {
         return pathToNode;
     }
 
-    public static MapDbBackedNode root() {
-        MapDbBackedNode root = new MapDbBackedNode();
+    public static Node root() {
+        Node root = new Node();
         return root;
     }
 }

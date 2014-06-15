@@ -15,11 +15,7 @@ import java.io.File;
  * Created by Christoph Grotz on 25.05.14.
  */
 public class MqttServerHandler implements Handler<NetSocket> {
-    private final DB db = DBMaker.newFileDB(new File("helium/mqttEndpoints"))
-            .asyncWriteEnable()
-            .asyncWriteQueueSize(10)
-            .closeOnJvmShutdown()
-            .make();
+    private final DB db;
 
     private final MqttDecoder decoder = new MqttDecoder();
     private final Encoder encoder = new Encoder();
@@ -29,14 +25,24 @@ public class MqttServerHandler implements Handler<NetSocket> {
     public MqttServerHandler(Vertx vertx, Container container) {
         this.vertx = vertx;
         this.container = container;
+        File file = new File(container.config().getString("directory"));
+        file.getParentFile().mkdirs();
+        this.db = DBMaker.newFileDB(file)
+                .asyncWriteEnable()
+                .asyncWriteQueueSize(10)
+                .closeOnJvmShutdown()
+                .make();
+
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                 try {
-                    System.out.println("Shutdown MapDB Mqtt Endpoint Store");
-                    db.commit();
-                    db.compact();
-                    db.close();
+                    if(!db.isClosed()) {
+                        System.out.println("Shutdown MapDB Mqtt Endpoint Store");
+                        db.commit();
+                        db.compact();
+                        db.close();
+                    }
                 }
                 catch( Exception e) {
                 }

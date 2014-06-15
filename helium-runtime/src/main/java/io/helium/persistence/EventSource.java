@@ -40,6 +40,7 @@ public class EventSource extends Verticle {
         try {
             String directory = container.config().getString("directory", "helium/journal");
             File file = new File(Strings.isNullOrEmpty(directory) ? "helium/journal" : directory);
+            file.mkdirs();
             journal.setDirectory(file);
             journal.open();
             Runtime.getRuntime().addShutdownHook(new Thread() {

@@ -19,7 +19,7 @@ package io.helium.persistence.mapdb;
 import io.helium.common.Path;
 
 public interface NodeVisitor {
-    public void visitNode(Path path, MapDbBackedNode node);
+    public void visitNode(Path path, Node node);
 
-    public void visitProperty(Path path, MapDbBackedNode node, String key, Object value);
+    public void visitProperty(Path path, Node node, String key, Object value);
 }

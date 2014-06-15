@@ -17,17 +17,17 @@
 package io.helium.authorization;
 
 import io.helium.common.Path;
-import io.helium.persistence.mapdb.MapDbBackedNode;
+import io.helium.persistence.mapdb.Node;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Optional;
 
 public class RuleBasedAuthorizator {
 
-    private Optional<MapDbBackedNode> nodeRule = Optional.empty();
+    private Optional<Node> nodeRule = Optional.empty();
     private Optional<JsonObject> jsonObjectRule = Optional.empty();
 
-    public RuleBasedAuthorizator(MapDbBackedNode rule) {
+    public RuleBasedAuthorizator(Node rule) {
         this.nodeRule = Optional.of(rule);
     }
 
@@ -46,7 +46,7 @@ public class RuleBasedAuthorizator {
 
     private String getExpressionForPathAndOperationJsonObjectBased(Path path, Operation op) {
         if (nodeRule.isPresent()) {
-            MapDbBackedNode node = nodeRule.get().getLastLeafNode(path);
+            Node node = nodeRule.get().getLastLeafNode(path);
             if (node != null && node.has(op.getOp()) && node.get(op.getOp()) != null) {
                 Object value = node.get(op.getOp());
                 return value.toString();

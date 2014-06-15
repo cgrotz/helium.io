@@ -16,13 +16,18 @@
 
 package io.helium;
 
+import com.google.common.io.Files;
 import io.helium.authorization.Authorizator;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
-import io.helium.persistence.mapdb.MapDbBackedNode;
+import io.helium.persistence.mapdb.Node;
+import io.helium.persistence.mapdb.NodeFactory;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
+import org.mapdb.DB;
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
 import java.io.File;
@@ -38,24 +43,30 @@ public class Helium extends Verticle {
     public void start() {
         try {
             // Workers
-            new File("helium/journal").mkdirs();
             container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
-            container.deployWorkerVerticle(EventSource.class.getName(), container.config());
-            container.deployWorkerVerticle(Persistor.class.getName(), container.config());
+            container.deployWorkerVerticle(EventSource.class.getName(),
+                    container.config().getObject("journal", new JsonObject().putString("directory", "helium/journal")));
+            container.deployWorkerVerticle(Persistor.class.getName(),
+                container.config().getObject("mapdb", new JsonObject().putString("directory", "helium/nodes")),
+                1, true,
+                event -> {
+                    vertx.setPeriodic(1000, new Handler<Long>() {
+                        @Override
+                        public void handle(Long event) {
+                            DB db = NodeFactory.get().getDb();
+                            if( db != null)
+                                db.commit();
+                        }
+                    });
+                });
 
             // Channels
             container.deployVerticle(HttpServer.class.getName(), container.config());
-            container.deployVerticle(MqttServer.class.getName(), container.config());
+            container.deployVerticle(MqttServer.class.getName(),
+                    container.config().getObject("mqtt", new JsonObject().putString("directory","helium/mqtt")));
 
             // TODO Administration
             //container.deployVerticle(Administration.class.getName(), container.config());
-
-            vertx.setPeriodic(1000, new Handler<Long>() {
-                @Override
-                public void handle(Long event) {
-                    MapDbBackedNode.getDb().commit();
-                }
-            });
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
         }

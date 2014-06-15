@@ -21,7 +21,7 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.common.DataSnapshot;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
-import io.helium.persistence.mapdb.MapDbBackedNode;
+import io.helium.persistence.mapdb.Node;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
@@ -67,7 +67,7 @@ public class Authorizator extends Verticle {
                 Object value = event.body().getValue("payload");
                 JsonObject localAuth = auth.orElse(ANONYMOUS);
                 try {
-                    RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/rules")));
+                    RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
                     if (localAuth.containsField("permissions")) {
                         RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
                         event.reply(evaluateRules(operation, path, value, localAuth, userRules));
@@ -151,7 +151,7 @@ public class Authorizator extends Verticle {
                 Operation operation = Operation.READ;
                 JsonObject localAuth = auth.orElse(ANONYMOUS);
 
-                RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/rules")));
+                RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
                 if (localAuth.containsField("permissions")) {
                     RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
                     if (evaluateRules(operation, path, value, localAuth, userRules)) {
@@ -166,7 +166,7 @@ public class Authorizator extends Verticle {
             Operation operation = Operation.READ;
             JsonObject localAuth = auth.orElse(ANONYMOUS);
 
-            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbBackedNode.of(Path.of("/rules")));
+            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
             if (localAuth.containsField("permissions")) {
                 RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("permissions"));
                 if (evaluateRules(operation, path, content, localAuth, userRules)) {
@@ -190,8 +190,8 @@ public class Authorizator extends Verticle {
         JsonObject jsonObject = new JsonObject()
                 .putString("path", nodePath.toString());
 
-        if (value instanceof MapDbBackedNode) {
-            jsonObject.putValue("payload", ((MapDbBackedNode) value).toJsonObject());
+        if (value instanceof Node) {
+            jsonObject.putValue("payload", ((Node) value).toJsonObject());
         } else if (value instanceof DataSnapshot) {
             jsonObject.putValue("payload", ((DataSnapshot) value).val());
         } else {
@@ -211,8 +211,8 @@ public class Authorizator extends Verticle {
             event.putObject("auth", auth.get());
         }
         event.putString("path", path.toString());
-        if (value instanceof MapDbBackedNode) {
-            event.putValue("payload", ((MapDbBackedNode) value).toJsonObject());
+        if (value instanceof Node) {
+            event.putValue("payload", ((Node) value).toJsonObject());
         } else if (value instanceof DataSnapshot) {
             event.putValue("payload", ((DataSnapshot) value).val());
         } else {

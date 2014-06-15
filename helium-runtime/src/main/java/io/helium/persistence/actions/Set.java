@@ -18,7 +18,7 @@ package io.helium.persistence.actions;
 
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.persistence.mapdb.MapDbBackedNode;
+import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.mapdb.MapDbPersistence;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
@@ -34,14 +34,14 @@ public class Set {
     public void handle(Message<JsonObject> msg) {
         HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
-        MapDbBackedNode payload;
+        Node payload;
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object obj = event.getValue(HeliumEvent.PAYLOAD);
             if (obj == null) {
                 persistence.remove(event, event.getAuth(), path);
-            } else if (obj instanceof MapDbBackedNode) {
-                payload = (MapDbBackedNode) obj;
-                if (payload instanceof MapDbBackedNode) {
+            } else if (obj instanceof Node) {
+                payload = (Node) obj;
+                if (payload instanceof Node) {
                     persistence.applyNewValue(event, event.getAuth(), path, obj);
                 }
             } else if (obj == null) {
