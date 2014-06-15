@@ -19,7 +19,6 @@ package io.helium.authorization;
 import com.google.common.collect.Maps;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.common.DataSnapshot;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.mapdb.Node;
 import org.vertx.java.core.Handler;
@@ -116,7 +115,7 @@ public class Authorizator extends Verticle {
 
         } else {
             Object evaledAuth = eval(localAuth.toString());
-            Boolean result = (Boolean) invoke(expression, evaledAuth, path);
+            Boolean result = (Boolean) invoke(expression, evaledAuth, path, data);
             if (result == null) {
                 return false;
             }
@@ -130,7 +129,7 @@ public class Authorizator extends Verticle {
         return retValue;
     }
 
-    private Object invoke(String code, Object evaledAuth, Path path) throws ScriptException, NoSuchMethodException {
+    private Object invoke(String code, Object evaledAuth, Path path, Object data) throws ScriptException, NoSuchMethodException {
         String functionName;
         if (functions.containsKey(code)) {
             functionName = functions.get(code);
@@ -139,7 +138,7 @@ public class Authorizator extends Verticle {
             scriptingEnvironment.eval("var " + functionName + " = " + code + ";");
             functions.put(code, functionName);
         }
-        return (Boolean) scriptingEnvironment.invokeFunction(functionName, evaledAuth, path);
+        return (Boolean) scriptingEnvironment.invokeFunction(functionName, evaledAuth, path, new DataSnapshot(data));
     }
 
     public Object filterContent(Optional<JsonObject> auth, Path path, Object content) throws ScriptException, NoSuchMethodException {

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.common;
+package io.helium.authorization;
 
 import org.vertx.java.core.json.JsonObject;
 

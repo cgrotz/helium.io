@@ -26,7 +26,6 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.changelog.*;
-import io.helium.common.DataSnapshot;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
 import io.helium.persistence.mapdb.Node;
@@ -427,7 +426,7 @@ public class WebsocketEndpoint {
 
     public void fireChildChanged(String name, Path path, Path parent, Object node,
                                  boolean hasChildren, long numChildren) {
-        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(node)), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, node), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
                 vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, node), new Handler<Message<Object>>() {
                     @Override
@@ -448,7 +447,7 @@ public class WebsocketEndpoint {
     }
 
     public void fireChildRemoved(Path path, String name, Object payload) {
-        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, payload), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
                 vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, payload), new Handler<Message<Object>>() {
                     @Override
@@ -528,7 +527,7 @@ public class WebsocketEndpoint {
     }
 
     public void fireQueryChildRemoved(Path path, Object payload) {
-        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, payload), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
                 vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, payload), new Handler<Message<Object>>() {
                     @Override
@@ -547,7 +546,7 @@ public class WebsocketEndpoint {
 
     public void distributeEvent(Path path, JsonObject payload) {
         if (hasListener(path, "event")) {
-            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
+            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, payload), (Handler<Message<Boolean>>) event -> {
                 if (event.body()) {
                     JsonObject broadcast = new JsonObject();
                     broadcast.putValue(HeliumEvent.TYPE, "event");
