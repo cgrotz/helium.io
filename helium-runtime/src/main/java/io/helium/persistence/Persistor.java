@@ -32,13 +32,11 @@ import java.util.UUID;
 
 public class Persistor extends Verticle {
 
-    public static final String SUBSCRIPTION_PUSH = "push";
-    public static final String SUBSCRIPTION_SET = "set";
-    public static final String SUBSCRIPTION_DELETE = "remove";
-    public static final String SUBSCRIPTION_UPDATE = "update";
-
-    public static final String GET = "get";
-    public static final String REMOVE = "remove";
+    public static final String PUSH = "io.helium.persistor.push";
+    public static final String SET = "io.helium.persistor.set";
+    public static final String DELETE = "io.helium.persistor.remove";
+    public static final String UPDATE = "io.helium.persistor.update";
+    public static final String GET = "io.helium.persistor.get";
 
     private Push push;
     private Set set;
@@ -55,10 +53,10 @@ public class Persistor extends Verticle {
         remove = new Remove(persistence);
         initDefaults();
 
-        vertx.eventBus().registerHandler(SUBSCRIPTION_PUSH, push::handle);
-        vertx.eventBus().registerHandler(SUBSCRIPTION_DELETE, remove::handle);
-        vertx.eventBus().registerHandler(SUBSCRIPTION_SET, set::handle);
-        vertx.eventBus().registerHandler(SUBSCRIPTION_UPDATE, update::handle);
+        vertx.eventBus().registerHandler(PUSH, push::handle);
+        vertx.eventBus().registerHandler(DELETE, remove::handle);
+        vertx.eventBus().registerHandler(SET, set::handle);
+        vertx.eventBus().registerHandler(UPDATE, update::handle);
 
         vertx.eventBus().registerHandler(GET, new Handler<Message<JsonObject>>() {
             @Override

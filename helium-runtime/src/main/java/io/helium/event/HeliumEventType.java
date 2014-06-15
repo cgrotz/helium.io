@@ -24,10 +24,10 @@ import io.helium.persistence.Persistor;
  * @author Christoph Grotz
  */
 public enum HeliumEventType {
-    PUSH(Persistor.SUBSCRIPTION_PUSH),
-    SET(Persistor.SUBSCRIPTION_SET),
-    REMOVE(Persistor.SUBSCRIPTION_DELETE),
-    UPDATE(Persistor.SUBSCRIPTION_UPDATE),
+    PUSH(Persistor.PUSH),
+    SET(Persistor.SET),
+    REMOVE(Persistor.DELETE),
+    UPDATE(Persistor.UPDATE),
     GET(Persistor.GET),
     EVENT(null);
 

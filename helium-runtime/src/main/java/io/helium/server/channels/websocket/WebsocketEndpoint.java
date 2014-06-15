@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
 import io.helium.common.Path;
@@ -33,7 +34,6 @@ import io.helium.persistence.mapdb.MapDbBackedNode;
 import io.helium.persistence.queries.QueryEvaluator;
 import io.helium.server.Endpoint;
 import io.helium.server.channels.websocket.rpc.Rpc;
-import io.helium.server.distributor.Distributor;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.buffer.Buffer;
@@ -80,6 +80,39 @@ public class WebsocketEndpoint implements Endpoint {
                 rpc.handle(event.toString(), WebsocketEndpoint.this);
             }
         });
+
+        Handler<Message<JsonArray>> distributeChangeLogHandler = new Handler<Message<JsonArray>>() {
+            @Override
+            public void handle(Message<JsonArray> message) {
+                distributeChangeLog(ChangeLog.of(message.body()));
+            }
+        };
+        vertx.eventBus().registerHandler(DISTRIBUTE_CHANGE_LOG, distributeChangeLogHandler);
+
+        Handler<Message<JsonObject>> distributeEventHandler = new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                distributeEvent(new Path(HeliumEvent.extractPath(message.body().getString("path"))), message.body().getObject("payload"));
+            }
+        };
+        vertx.eventBus().registerHandler(DISTRIBUTE_EVENT, distributeEventHandler);
+
+        Handler<Message<JsonObject>> distributeHeliumEventHandler = new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                distribute(HeliumEvent.of(message.body()));
+            }
+        };
+        vertx.eventBus().registerHandler(DISTRIBUTE_HELIUM_EVENT, distributeHeliumEventHandler);
+
+        socket.closeHandler(new Handler<Void>() {
+            @Override
+            public void handle(Void event) {
+                vertx.eventBus().unregisterHandler(DISTRIBUTE_CHANGE_LOG, distributeChangeLogHandler);
+                vertx.eventBus().unregisterHandler(DISTRIBUTE_EVENT, distributeEventHandler);
+                vertx.eventBus().unregisterHandler(DISTRIBUTE_HELIUM_EVENT, distributeHeliumEventHandler);
+            }
+        });
     }
 
 
@@ -123,7 +156,7 @@ public class WebsocketEndpoint implements Endpoint {
     @Rpc.Method
     public void event(@Rpc.Param("path") String path, @Rpc.Param("data") JsonObject data) {
         container.logger().trace("event");
-        vertx.eventBus().send(Distributor.DISTRIBUTE_EVENT, new JsonObject().putString("path", path).putObject("payload", data));
+        vertx.eventBus().send(DISTRIBUTE_EVENT, new JsonObject().putString("path", path).putObject("payload", data));
     }
 
     @Rpc.Method
@@ -134,10 +167,10 @@ public class WebsocketEndpoint implements Endpoint {
         if (auth.isPresent())
             event.setAuth(auth.get());
 
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistor.SUBSCRIPTION_PUSH, event);
+                vertx.eventBus().send(Persistor.PUSH, event);
                 container.logger().trace("authorized: " + event);
             } else {
                 container.logger().warn("not authorized: " + event);
@@ -152,10 +185,10 @@ public class WebsocketEndpoint implements Endpoint {
         if (auth.isPresent())
             event.setAuth(auth.get());
 
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistor.SUBSCRIPTION_SET, event);
+                vertx.eventBus().send(Persistor.SET, event);
                 container.logger().trace("authorized: " + event);
             } else {
                 container.logger().warn("not authorized: " + event);
@@ -170,10 +203,10 @@ public class WebsocketEndpoint implements Endpoint {
         if (auth.isPresent())
             event.setAuth(auth.get());
 
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, Path.of(path), null), (Message<Boolean> event1) -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), null), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistor.SUBSCRIPTION_UPDATE, event);
+                vertx.eventBus().send(Persistor.UPDATE, event);
                 container.logger().trace("authorized: " + event);
             } else {
                 container.logger().warn("not authorized: " + event);
@@ -364,9 +397,9 @@ public class WebsocketEndpoint implements Endpoint {
     }
 
     public void fireQueryChildAdded(Path path, JsonObject parent, Object value) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
+                vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
                     @Override
                     public void handle(Message<Object> event) {
                         JsonObject broadcast = new JsonObject();
@@ -395,9 +428,9 @@ public class WebsocketEndpoint implements Endpoint {
 
     public void fireChildChanged(String name, Path path, Path parent, Object node,
                                  boolean hasChildren, long numChildren) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(node)), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(node)), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, node), new Handler<Message<Object>>() {
+                vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, node), new Handler<Message<Object>>() {
                     @Override
                     public void handle(Message<Object> event) {
                         JsonObject broadcast = new JsonObject();
@@ -416,9 +449,9 @@ public class WebsocketEndpoint implements Endpoint {
     }
 
     public void fireChildRemoved(Path path, String name, Object payload) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, payload), new Handler<Message<Object>>() {
+                vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, payload), new Handler<Message<Object>>() {
                     @Override
                     public void handle(Message<Object> event) {
                         JsonObject broadcast = new JsonObject();
@@ -435,9 +468,9 @@ public class WebsocketEndpoint implements Endpoint {
 
     @Override
     public void fireValue(String name, Path path, Path parent, Object value) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
+                vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
                     @Override
                     public void handle(Message<Object> event) {
                         JsonObject broadcast = new JsonObject();
@@ -456,9 +489,9 @@ public class WebsocketEndpoint implements Endpoint {
     @Override
     public void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
 
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
+                vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
                     @Override
                     public void handle(Message<Object> event) {
                         JsonObject broadcast = new JsonObject();
@@ -477,9 +510,9 @@ public class WebsocketEndpoint implements Endpoint {
     }
 
     public void fireQueryChildChanged(Path path, JsonObject parent, Object value) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
+                vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, value), new Handler<Message<Object>>() {
                     @Override
                     public void handle(Message<Object> event) {
                         JsonObject broadcast = new JsonObject();
@@ -498,9 +531,9 @@ public class WebsocketEndpoint implements Endpoint {
     }
 
     public void fireQueryChildRemoved(Path path, Object payload) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
             if (event.body()) {
-                vertx.eventBus().send(Authorizator.FILTER_CONTENT, Authorizator.filter(auth, path, payload), new Handler<Message<Object>>() {
+                vertx.eventBus().send(Authorizator.FILTER, Authorizator.filter(auth, path, payload), new Handler<Message<Object>>() {
                     @Override
                     public void handle(Message<Object> event) {
                         JsonObject broadcast = new JsonObject();
@@ -517,7 +550,7 @@ public class WebsocketEndpoint implements Endpoint {
 
     public void distributeEvent(Path path, JsonObject payload) {
         if (hasListener(path, "event")) {
-            vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
+            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, new DataSnapshot(payload)), (Handler<Message<Boolean>>) event -> {
                 if (event.body()) {
                     JsonObject broadcast = new JsonObject();
                     broadcast.putValue(HeliumEvent.TYPE, "event");
@@ -579,7 +612,7 @@ public class WebsocketEndpoint implements Endpoint {
 
     public void executeDisconnectEvents() {
         for (HeliumEvent event : disconnectEvents) {
-            vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, Path.of(event.getPath()), event.getPayload()), (Message<Boolean> event1) -> {
+            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(event.getPath()), event.getPayload()), (Message<Boolean> event1) -> {
                 if (event1.body()) {
                     vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
                     vertx.eventBus().send(event.getType().eventBus, event);

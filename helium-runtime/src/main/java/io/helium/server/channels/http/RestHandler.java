@@ -67,9 +67,9 @@ public class RestHandler implements Handler<HttpServerRequest> {
             if (auth.isPresent())
                 event.setAuth(auth.get());
 
-            vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, nodePath, null), (Message<Boolean> event1) -> {
+            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, null), (Message<Boolean> event1) -> {
                 if (event1.body()) {
-                    vertx.eventBus().send(Persistor.SUBSCRIPTION_DELETE, event, new Handler<Message>() {
+                    vertx.eventBus().send(Persistor.DELETE, event, new Handler<Message>() {
                         @Override
                         public void handle(Message event) {
                             req.response().end();
@@ -90,7 +90,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
                 if (auth.isPresent())
                     event.setAuth(auth.get());
 
-                vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
+                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
                     if (event1.body()) {
                         vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
                         vertx.eventBus().send(event.getType().eventBus, event);
@@ -117,7 +117,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
                 if (auth.isPresent())
                     event.setAuth(auth.get());
 
-                vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
+                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
                     if (event1.body()) {
                         vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
                         vertx.eventBus().send(event.getType().eventBus, event);
@@ -131,11 +131,11 @@ public class RestHandler implements Handler<HttpServerRequest> {
     private void get(HttpServerRequest req, Path path) {
         extractAuthentication(req, auth -> {
             vertx.eventBus().send(Persistor.GET, Persistor.get(path), (Message<Object> msg) -> {
-                vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, msg.body()), new Handler<Message<Boolean>>() {
+                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, msg.body()), new Handler<Message<Boolean>>() {
                     @Override
                     public void handle(Message<Boolean> event) {
                         if (event.body()) {
-                            vertx.eventBus().send(Authorizator.FILTER_CONTENT,
+                            vertx.eventBus().send(Authorizator.FILTER,
                                     Authorizator.filter(auth, path, msg.body()),
                                     new Handler<Message<Object>>() {
                                         @Override

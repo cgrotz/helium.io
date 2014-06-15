@@ -21,7 +21,6 @@ import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
 import io.helium.server.channels.http.HttpServer;
 import io.helium.server.channels.mqtt.MqttServer;
-import io.helium.server.distributor.Distributor;
 import org.vertx.java.platform.Verticle;
 
 import java.io.File;
@@ -39,7 +38,6 @@ public class Helium extends Verticle {
             // Workers
             new File("helium/journal").mkdirs();
             container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
-            container.deployWorkerVerticle(Distributor.class.getName(), container.config());
             container.deployWorkerVerticle(EventSource.class.getName(), container.config());
             container.deployWorkerVerticle(Persistor.class.getName(), container.config());
 

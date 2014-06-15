@@ -7,7 +7,7 @@ import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.persistence.ChildRemovedSubTreeVisitor;
-import io.helium.server.distributor.Distributor;
+import io.helium.server.Endpoint;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.eventbus.Message;
@@ -44,7 +44,7 @@ public class MapDbPersistence {
         MapDbBackedNode parent = MapDbBackedNode.of(path.parent());
         Object value = parent.get(path.lastElement());
 
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, path, value), new Handler<Message<Boolean>>() {
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path, value), new Handler<Message<Boolean>>() {
             @Override
             public void handle(Message<Boolean> event) {
                 if (event.body()) {
@@ -53,8 +53,8 @@ public class MapDbPersistence {
                     }
                     parent.remove(path.lastElement());
                     heliumEvent.getChangeLog().addChildRemovedLogEntry(path.parent(), path.lastElement(), value);
-                    vertx.eventBus().send(Distributor.DISTRIBUTE_CHANGE_LOG, heliumEvent.getChangeLog());
-                    vertx.eventBus().publish(Distributor.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
+                    vertx.eventBus().publish(Endpoint.DISTRIBUTE_CHANGE_LOG, heliumEvent.getChangeLog());
+                    vertx.eventBus().publish(Endpoint.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
                     MapDbBackedNode.getDb().commit();
                 }
             }
@@ -62,7 +62,7 @@ public class MapDbPersistence {
     }
 
     public void updateValue(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path, Object payload) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED,
+        vertx.eventBus().send(Authorizator.CHECK,
                 Authorizator.check(Operation.WRITE, auth, path, payload),
                 new Handler<Message<Boolean>>() {
                     @Override
@@ -119,7 +119,7 @@ public class MapDbPersistence {
 
 
     public void applyNewValue(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path, Object payload) {
-        vertx.eventBus().send(Authorizator.IS_AUTHORIZED,
+        vertx.eventBus().send(Authorizator.CHECK,
                 Authorizator.check(Operation.WRITE, auth, path, payload),
                 new Handler<Message<Boolean>>() {
                     @Override
@@ -161,7 +161,7 @@ public class MapDbPersistence {
                                 }
                             }
 
-                            vertx.eventBus().publish(Distributor.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
+                            vertx.eventBus().publish(Endpoint.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
                             //MapDbBackedNode.getDb().commit();
                         }
                     }
@@ -182,7 +182,7 @@ public class MapDbPersistence {
         for (String key : payload.keys()) {
             Object value = payload.get(key);
             if (value instanceof MapDbBackedNode) {
-                vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, path.append(key), value), new Handler<Message<Boolean>>() {
+                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), new Handler<Message<Boolean>>() {
                     @Override
                     public void handle(Message<Boolean> event) {
                         if (event.body()) {
@@ -200,7 +200,7 @@ public class MapDbPersistence {
                     }
                 });
             } else {
-                vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
+                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
                     if (event.body()) {
                         if (node.has(key)) {
                             logBuilder.addChange(key, value);

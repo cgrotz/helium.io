@@ -16,7 +16,6 @@ import io.helium.server.Endpoint;
 import io.helium.server.channels.mqtt.decoder.MqttDecoder;
 import io.helium.server.channels.mqtt.encoder.Encoder;
 import io.helium.server.channels.mqtt.protocol.*;
-import io.helium.server.distributor.Distributor;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.mapdb.DB;
@@ -24,6 +23,7 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.net.NetSocket;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -55,14 +55,45 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
         this.vertx = vertx;
         this.db = db;
         this.topics = db.getHashSet(clientId + "Topics");
+
+        Handler<Message<JsonArray>> distributeChangeLogHandler = new Handler<Message<JsonArray>>() {
+            @Override
+            public void handle(Message<JsonArray> message) {
+                distributeChangeLog(ChangeLog.of(message.body()));
+            }
+        };
+        vertx.eventBus().registerHandler(DISTRIBUTE_CHANGE_LOG, distributeChangeLogHandler);
+
+        Handler<Message<JsonObject>> distributeEventHandler = new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                distributeEvent(new Path(HeliumEvent.extractPath(message.body().getString("path"))), message.body().getObject("payload"));
+            }
+        };
+        vertx.eventBus().registerHandler(DISTRIBUTE_EVENT, distributeEventHandler);
+
+        Handler<Message<JsonObject>> distributeHeliumEventHandler = new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                distribute(HeliumEvent.of(message.body()));
+            }
+        };
+        vertx.eventBus().registerHandler(DISTRIBUTE_HELIUM_EVENT, distributeHeliumEventHandler);
+
+        socket.closeHandler(new Handler<Void>() {
+            @Override
+            public void handle(Void event) {
+                vertx.eventBus().unregisterHandler(DISTRIBUTE_CHANGE_LOG, distributeChangeLogHandler);
+                vertx.eventBus().unregisterHandler(DISTRIBUTE_EVENT, distributeEventHandler);
+                vertx.eventBus().unregisterHandler(DISTRIBUTE_HELIUM_EVENT, distributeHeliumEventHandler);
+            }
+        });
     }
 
-    @Override
     public void distribute(HeliumEvent event) {
         distributeChangeLog(event.getChangeLog());
     }
 
-    @Override
     public void distributeChangeLog(ChangeLog changeLog) {
         changeLog.forEach(obj -> {
             JsonObject logE = (JsonObject) obj;
@@ -88,12 +119,12 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
     @Override
     public void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
         try {
-            vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, value),
+            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value),
                     new Handler<Message<Boolean>>() {
                         @Override
                         public void handle(Message<Boolean> event) {
                             if (event.body()) {
-                                vertx.eventBus().send(Authorizator.FILTER_CONTENT,
+                                vertx.eventBus().send(Authorizator.FILTER,
                                         Authorizator.filter(auth, path, value),
                                         new Handler<Message<Object>>() {
                                             @Override
@@ -124,12 +155,12 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
     @Override
     public void fireValue(String name, Path path, Path parent, Object value) {
         try {
-            vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, value),
+            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value),
                     new Handler<Message<Boolean>>() {
                         @Override
                         public void handle(Message<Boolean> event) {
                             if (event.body()) {
-                                vertx.eventBus().send(Authorizator.FILTER_CONTENT,
+                                vertx.eventBus().send(Authorizator.FILTER,
                                         Authorizator.filter(auth, path, value),
                                         new Handler<Message<Object>>() {
                                             @Override
@@ -161,11 +192,10 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
         return matchesSubscribedTopics(path);
     }
 
-    @Override
     public void distributeEvent(Path path, JsonObject payload) {
         if (matchesSubscribedTopics(path)) {
             try {
-                vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.READ, auth, path, payload),
+                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, payload),
                         new Handler<Message<Boolean>>() {
                             @Override
                             public void handle(Message<Boolean> event) {
@@ -274,14 +304,14 @@ public class MqttEndpoint implements Endpoint, Handler<Buffer> {
                             if (auth.isPresent())
                                 heliumEvent.setAuth(auth.get());
 
-                            vertx.eventBus().send(Authorizator.IS_AUTHORIZED, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
+                            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
                                 if (event1.body()) {
                                     vertx.eventBus().send(EventSource.PERSIST_EVENT, heliumEvent);
                                     vertx.eventBus().send(heliumEvent.getType().eventBus, heliumEvent);
                                 }
                             });
                         } else {
-                            vertx.eventBus().send(Distributor.DISTRIBUTE_EVENT, new JsonObject()
+                            vertx.eventBus().send(DISTRIBUTE_EVENT, new JsonObject()
                                     .putString("path", publish.getTopic())
                                     .putValue("payload", data));
                             ;

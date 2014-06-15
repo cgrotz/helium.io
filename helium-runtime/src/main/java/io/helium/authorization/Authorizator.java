@@ -36,8 +36,8 @@ import java.util.UUID;
 public class Authorizator extends Verticle {
     public final static JsonObject ANONYMOUS = new JsonObject().putBoolean("isAnonymous", true);
 
-    public static final String FILTER_CONTENT = "authorizator.filter";
-    public static final String IS_AUTHORIZED = "authorizator.isAuthorized";
+    public static final String FILTER = "io.helium.authorizator.filter";
+    public static final String CHECK = "io.helium.authorizator.check";
 
     private SandBoxedScriptingEnvironment scriptingEnvironment;
     private Map<String, String> functions = Maps.newHashMap();
@@ -45,14 +45,14 @@ public class Authorizator extends Verticle {
     @Override
     public void start() {
         this.scriptingEnvironment = new SandBoxedScriptingEnvironment(container);
-        vertx.eventBus().registerHandler(FILTER_CONTENT, new Handler<Message>() {
+        vertx.eventBus().registerHandler(FILTER, new Handler<Message>() {
             @Override
             public void handle(Message event) {
                 filter(event);
             }
         });
 
-        vertx.eventBus().registerHandler(IS_AUTHORIZED, new Handler<Message<JsonObject>>() {
+        vertx.eventBus().registerHandler(CHECK, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
                 Operation operation = Operation.get(event.body().getString("operation"));

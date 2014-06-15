@@ -17,7 +17,6 @@
 package io.helium.server.channels.http;
 
 import io.helium.server.channels.websocket.WebsocketEndpoint;
-import io.helium.server.distributor.Endpoints;
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Future;
@@ -46,10 +45,6 @@ public class HttpServer extends Verticle {
                 .requestHandler(new RestHandler(vertx, basePath))
                 .websocketHandler(socket -> {
                     final WebsocketEndpoint endpoint = new WebsocketEndpoint(basePath, socket, vertx, container);
-                    Endpoints.get().addEndpoint(endpoint);
-                    socket.endHandler(event -> {
-                        Endpoints.get().removeEndpoint(endpoint);
-                    });
                 })
                 .listen(port, new AsyncResultHandler<org.vertx.java.core.http.HttpServer>() {
                     @Override
