@@ -19,8 +19,8 @@ package io.helium;
 import io.helium.authorization.Authorizator;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistor;
-import io.helium.server.channels.http.HttpServer;
-import io.helium.server.channels.mqtt.MqttServer;
+import io.helium.server.http.HttpServer;
+import io.helium.server.mqtt.MqttServer;
 import org.vertx.java.platform.Verticle;
 
 import java.io.File;

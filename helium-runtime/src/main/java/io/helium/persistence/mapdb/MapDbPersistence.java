@@ -7,7 +7,7 @@ import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.persistence.ChildRemovedSubTreeVisitor;
-import io.helium.server.Endpoint;
+import io.helium.common.EndpointConstants;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.eventbus.Message;
@@ -53,8 +53,8 @@ public class MapDbPersistence {
                     }
                     parent.remove(path.lastElement());
                     heliumEvent.getChangeLog().addChildRemovedLogEntry(path.parent(), path.lastElement(), value);
-                    vertx.eventBus().publish(Endpoint.DISTRIBUTE_CHANGE_LOG, heliumEvent.getChangeLog());
-                    vertx.eventBus().publish(Endpoint.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
+                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, heliumEvent.getChangeLog());
+                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
                     MapDbBackedNode.getDb().commit();
                 }
             }
@@ -161,7 +161,7 @@ public class MapDbPersistence {
                                 }
                             }
 
-                            vertx.eventBus().publish(Endpoint.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
+                            vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
                             //MapDbBackedNode.getDb().commit();
                         }
                     }

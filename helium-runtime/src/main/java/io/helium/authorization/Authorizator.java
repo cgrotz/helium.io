@@ -19,7 +19,7 @@ package io.helium.authorization;
 import com.google.common.collect.Maps;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.persistence.DataSnapshot;
+import io.helium.common.DataSnapshot;
 import io.helium.persistence.SandBoxedScriptingEnvironment;
 import io.helium.persistence.mapdb.MapDbBackedNode;
 import org.vertx.java.core.Handler;
