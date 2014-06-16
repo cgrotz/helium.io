@@ -46,19 +46,16 @@ public class Persistence extends CommonPersistenceVerticle {
         container.deployVerticle(Post.class.getName());
         container.deployVerticle(Put.class.getName());
         container.deployVerticle(Delete.class.getName());
-        container.deployVerticle(Update.class.getName(), new Handler<AsyncResult<String>>() {
-            @Override
-            public void handle(AsyncResult<String> event) {
-                try {
-                    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                    URL demo = cl.getResource("demo.json");
-                    String demoData = Resources.toString(demo, Charsets.UTF_8);
-                    loadJsonObject(Path.of("/"), new JsonObject(demoData));
-                    startedResult.complete();
-                }
-                catch(Exception e){
-                    throw new RuntimeException(e);
-                }
+        container.deployVerticle(Update.class.getName(), event -> {
+            try {
+                ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                URL demo = cl.getResource("demo.json");
+                String demoData = Resources.toString(demo, Charsets.UTF_8);
+                loadJsonObject(Path.of("/"), new JsonObject(demoData));
+                startedResult.complete();
+            }
+            catch(Exception e){
+                throw new RuntimeException(e);
             }
         });
     }
