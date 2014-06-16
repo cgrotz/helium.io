@@ -35,50 +35,47 @@ public abstract class CommonPersistenceVerticle extends Verticle {
     protected void applyNewValue(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path, Object payload) {
         vertx.eventBus().send(Authorizator.CHECK,
                 Authorizator.check(Operation.WRITE, auth, path, payload),
-                new Handler<Message<Boolean>>() {
-                    @Override
-                    public void handle(Message<Boolean> event) {
-                        if (event.body()) {
-                            boolean created = false;
-                            if (!exists(path)) {
-                                created = true;
-                            }
-
-                            Node parent;
-                            if (exists(path.parent())) {
-                                parent = Node.of(path.parent());
-                            } else {
-                                parent = Node.of(path.parent().parent());
-                            }
-
-                            if (payload instanceof JsonObject) {
-                                Node node = Node.of(path);
-                                populate(new ChangeLogBuilder(heliumEvent.getChangeLog(), path, path.parent(), node),
-                                        path, auth, node,
-                                        (JsonObject) payload);
-                                parent.putWithIndex(path.lastElement(), node);
-                            } else {
-                                parent.putWithIndex(path.lastElement(), payload);
-                            }
-
-                            if (created) {
-                                heliumEvent.getChangeLog().addChildAddedLogEntry(path.lastElement(),
-                                        path.parent(), path.parent().parent(), payload, false, 0);
-                            } else {
-                                addChangeEvent(heliumEvent.getChangeLog(), path);
-                            }
-                            {
-                                Path currentPath = path;
-                                while (!currentPath.isSimple()) {
-                                    heliumEvent.getChangeLog().addValueChangedLogEntry(currentPath.lastElement(), currentPath,
-                                            currentPath.parent(), getObjectForPath(currentPath));
-                                    currentPath = currentPath.parent();
-                                }
-                            }
-
-                            vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
-                            //MapDbBackedNode.getDb().commit();
+                (Message<Boolean> event) -> {
+                    if (event.body()) {
+                        boolean created = false;
+                        if (!exists(path)) {
+                            created = true;
                         }
+
+                        Node parent;
+                        if (exists(path.parent())) {
+                            parent = Node.of(path.parent());
+                        } else {
+                            parent = Node.of(path.parent().parent());
+                        }
+
+                        if (payload instanceof JsonObject) {
+                            Node node = Node.of(path);
+                            populate(new ChangeLogBuilder(heliumEvent.getChangeLog(), path, path.parent(), node),
+                                    path, auth, node,
+                                    (JsonObject) payload);
+                            parent.putWithIndex(path.lastElement(), node);
+                        } else {
+                            parent.putWithIndex(path.lastElement(), payload);
+                        }
+
+                        if (created) {
+                            heliumEvent.getChangeLog().addChildAddedLogEntry(path.lastElement(),
+                                    path.parent(), path.parent().parent(), payload, false, 0);
+                        } else {
+                            addChangeEvent(heliumEvent.getChangeLog(), path);
+                        }
+                        {
+                            Path currentPath = path;
+                            while (!currentPath.isSimple()) {
+                                heliumEvent.getChangeLog().addValueChangedLogEntry(currentPath.lastElement(), currentPath,
+                                        currentPath.parent(), getObjectForPath(currentPath));
+                                currentPath = currentPath.parent();
+                            }
+                        }
+
+                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
+                        //MapDbBackedNode.getDb().commit();
                     }
                 }
         );
@@ -89,21 +86,18 @@ public abstract class CommonPersistenceVerticle extends Verticle {
         for (String key : payload.getFieldNames()) {
             Object value = payload.getField(key);
             if (value instanceof JsonObject) {
-                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), new Handler<Message<Boolean>>() {
-                    @Override
-                    public void handle(Message<Boolean> event) {
-                        if (event.body()) {
-                            Node childNode = Node.of(path.append(key));
-                            if (node.has(key)) {
-                                node.put(key, childNode);
-                                logBuilder.addNew(key, childNode);
-                            } else {
-                                node.put(key, childNode);
-                                logBuilder.addChangedNode(key, childNode);
-                            }
-                            populate(logBuilder.getChildLogBuilder(key), path.append(key), auth, childNode,
-                                    (JsonObject) value);
+                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
+                    if (event.body()) {
+                        Node childNode = Node.of(path.append(key));
+                        if (node.has(key)) {
+                            node.put(key, childNode);
+                            logBuilder.addNew(key, childNode);
+                        } else {
+                            node.put(key, childNode);
+                            logBuilder.addChangedNode(key, childNode);
                         }
+                        populate(logBuilder.getChildLogBuilder(key), path.append(key), auth, childNode,
+                                (JsonObject) value);
                     }
                 });
             } else {
@@ -111,20 +105,17 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                     if (event.body()) {
                         vertx.eventBus().send(Authorizator.VALIDATE,
                             Authorizator.validate(auth, path.append(key), value),
-                            new Handler<Message<Object>>() {
-                                @Override
-                                public void handle(Message<Object> event) {
+                                (Message<Object> event1) -> {
                                     if (node.has(key)) {
-                                        logBuilder.addChange(key, event.body());
+                                        logBuilder.addChange(key, event1.body());
                                     } else {
-                                        logBuilder.addNew(key, event.body());
+                                        logBuilder.addNew(key, event1.body());
                                     }
-                                    if (event.body() == null) {
+                                    if (event1.body() == null) {
                                         logBuilder.addDeleted(key, node.get(key));
                                     }
-                                    node.put(key, event.body());
+                                    node.put(key, event1.body());
                                 }
-                            }
                         );
                     }
                 });
@@ -169,19 +160,16 @@ public abstract class CommonPersistenceVerticle extends Verticle {
         Node parent = Node.of(path.parent());
         Object value = parent.get(path.lastElement());
 
-        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path, value), new Handler<Message<Boolean>>() {
-            @Override
-            public void handle(Message<Boolean> event) {
-                if (event.body()) {
-                    if (value instanceof Node) {
-                        ((Node) value).accept(path, new ChildDeletedSubTreeVisitor(heliumEvent.getChangeLog()));
-                    }
-                    parent.delete(path.lastElement());
-                    heliumEvent.getChangeLog().addChildDeletedLogEntry(path.parent(), path.lastElement(), value);
-                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, heliumEvent.getChangeLog());
-                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
-                    NodeFactory.get().getDb().commit();
+        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path, value), (Message<Boolean> event) -> {
+            if (event.body()) {
+                if (value instanceof Node) {
+                    ((Node) value).accept(path, new ChildDeletedSubTreeVisitor(heliumEvent.getChangeLog()));
                 }
+                parent.delete(path.lastElement());
+                heliumEvent.getChangeLog().addChildDeletedLogEntry(path.parent(), path.lastElement(), value);
+                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, heliumEvent.getChangeLog());
+                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
+                NodeFactory.get().getDb().commit();
             }
         });
     }

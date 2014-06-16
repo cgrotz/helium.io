@@ -56,17 +56,14 @@ public class EventSource extends Verticle {
         } catch (Exception exp) {
             container.logger().error("Failed starting journal", exp);
         }
-        vertx.eventBus().registerHandler(PERSIST_EVENT, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                onReceive(event.body());
-            }
+        vertx.eventBus().registerHandler(PERSIST_EVENT, event -> {
+            onReceive(event);
         });
     }
 
-    public void onReceive(JsonObject message) {
+    public void onReceive(Message<JsonObject> message) {
         try {
-            HeliumEvent event = HeliumEvent.of(message);
+            HeliumEvent event = HeliumEvent.of(message.body());
 
             long startTime = System.currentTimeMillis();
             if (!event.isFromHistory() || event.isNoAuth()) {
