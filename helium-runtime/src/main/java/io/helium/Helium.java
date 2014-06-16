@@ -23,6 +23,7 @@ import io.helium.persistence.mapdb.NodeFactory;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
 import org.mapdb.DB;
+import org.vertx.java.core.Future;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
@@ -33,9 +34,8 @@ import org.vertx.java.platform.Verticle;
  * @author Christoph Grotz
  */
 public class Helium extends Verticle {
-
     @Override
-    public void start() {
+    public void start(Future<Void> startedResult) {
         try {
             // Workers
             container.deployWorkerVerticle(Authorizator.class.getName(), defaultAuthorizatorConfig());
@@ -59,17 +59,20 @@ public class Helium extends Verticle {
             container.deployVerticle(HttpServer.class.getName(), container.config().getObject("http", defaultHttpConfig() ));
             container.deployVerticle(MqttServer.class.getName(),
                     container.config().getObject("mqtt", defaultMqttConfig()));
+
+            startedResult.complete();
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
+            startedResult.setFailure(e);
         }
     }
 
     private JsonObject defaultMqttConfig() {
-        return new JsonObject().putNumber("port", 1883).putString("directory","helium/mqtt");
+        return new JsonObject().putNumber("port", 1883).putString("directory", "helium/mqtt");
     }
 
     private JsonObject defaultHttpConfig() {
-        return new JsonObject().putNumber("port",8080)
+        return new JsonObject().putNumber("port", 8080)
                 .putString("basepath", "http://localhost:8080/");
     }
 
