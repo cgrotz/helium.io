@@ -32,14 +32,9 @@ public class HttpServer extends Verticle {
     @Override
     public void start(Future<Void> startedResult) {
         JsonObject httpConfig = container.config().getObject("http", new JsonObject());
-/*
-        this.host = container.env().getOrDefault("OPENSHIFT_VERTX_IP","127.0.0.1");
-        this.port = Integer.parseInt(container.env().getOrDefault("OPENSHIFT_VERTX_PORT","8080"));
-        this.basePath = "http://helium-skiptag.rhcloud.com/";// "http://"+host+":"+port+"/";
-*/
+
         this.port = httpConfig.getInteger("port", 8080);
         this.basePath = httpConfig.getString("basepath", "http://localhost:8080/");
-        this.host = httpConfig.getString("servername", "localhost");
 
         vertx.createHttpServer()
                 .requestHandler(new RestHandler(vertx, basePath))

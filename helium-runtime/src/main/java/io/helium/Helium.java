@@ -38,11 +38,11 @@ public class Helium extends Verticle {
     public void start() {
         try {
             // Workers
-            container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
+            container.deployWorkerVerticle(Authorizator.class.getName(), defaultAuthorizatorConfig());
             container.deployWorkerVerticle(EventSource.class.getName(),
-                    container.config().getObject("journal", new JsonObject().putString("directory", "helium/journal")));
+                    container.config().getObject("journal", defaultJournalConfig()));
             container.deployWorkerVerticle(Persistence.class.getName(),
-                container.config().getObject("mapdb", new JsonObject().putString("directory", "helium/nodes")),
+                container.config().getObject("mapdb", createPersistenceDefaultConfig()),
                 1, true,
                 event -> {
                     vertx.setPeriodic(1000, new Handler<Long>() {
@@ -56,11 +56,32 @@ public class Helium extends Verticle {
                 });
 
             // Channels
-            container.deployVerticle(HttpServer.class.getName(), container.config());
+            container.deployVerticle(HttpServer.class.getName(), container.config().getObject("http", defaultHttpConfig() ));
             container.deployVerticle(MqttServer.class.getName(),
-                    container.config().getObject("mqtt", new JsonObject().putString("directory","helium/mqtt")));
+                    container.config().getObject("mqtt", defaultMqttConfig()));
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
         }
+    }
+
+    private JsonObject defaultMqttConfig() {
+        return new JsonObject().putNumber("port", 1883).putString("directory","helium/mqtt");
+    }
+
+    private JsonObject defaultHttpConfig() {
+        return new JsonObject().putNumber("port",8080)
+                .putString("basepath", "http://localhost:8080/");
+    }
+
+    private JsonObject defaultAuthorizatorConfig() {
+        return container.config();
+    }
+
+    private JsonObject createPersistenceDefaultConfig() {
+        return new JsonObject().putString("directory", "helium/nodes");
+    }
+
+    private JsonObject defaultJournalConfig() {
+        return new JsonObject().putString("directory", "helium/journal");
     }
 }

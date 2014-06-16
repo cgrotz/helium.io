@@ -1,0 +1,16 @@
+{
+    "journal": {
+        "directory": "helium/journal"
+    },
+    "mapdb": {
+        "directory": "helium/nodes"
+    },
+    "http": {
+        "port": 8080,
+        "basepath": "http://localhost:8080
+    },
+    "mqtt": {
+        "port": 1883,
+        "directory": "helium/mqtt"
+    }
+}

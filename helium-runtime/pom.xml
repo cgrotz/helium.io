@@ -35,7 +35,7 @@
 
         <!-- Set createFatJar to true if you want to create a fat executable jar which contains the Vert.x binaries
         along with the module so it can be run with java -jar <jarname> -->
-        <vertx.createFatJar>false</vertx.createFatJar>
+        <vertx.createFatJar>true</vertx.createFatJar>
 
         <!--Vertx module name-->
         <module.name>${project.groupId}~${project.artifactId}~${project.version}</module.name>
@@ -62,6 +62,12 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
+            <version>${vertx.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-hazelcast</artifactId>
             <version>${vertx.version}</version>
             <scope>compile</scope>
         </dependency>
@@ -176,6 +182,13 @@
                         <phase>prepare-package</phase>
                         <goals>
                             <goal>pullInDeps</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>FatJar</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>fatJar</goal>
                         </goals>
                     </execution>
                 </executions>
