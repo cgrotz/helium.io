@@ -27,25 +27,20 @@ public class HttpServer extends Verticle {
 
     private int port;
     private String basePath;
-    private String host;
 
     @Override
     public void start(Future<Void> startedResult) {
-        JsonObject httpConfig = container.config().getObject("http", new JsonObject());
+        try {
+            this.port = container.config().getInteger("port", 8080);
+            this.basePath = container.config().getString("basepath", "http://localhost:8080/");
 
-        this.port = httpConfig.getInteger("port", 8080);
-        this.basePath = httpConfig.getString("basepath", "http://localhost:8080/");
-
-        vertx.createHttpServer()
-                .requestHandler(new RestHandler(vertx, basePath))
-                .websocketHandler(socket -> {
-                    final WebsocketEndpoint endpoint = new WebsocketEndpoint(basePath, socket, vertx, container);
-                })
-                .listen(port, new AsyncResultHandler<org.vertx.java.core.http.HttpServer>() {
-                    @Override
-                    public void handle(AsyncResult<org.vertx.java.core.http.HttpServer> event) {
-                        startedResult.complete();
-                    }
-                });
+            vertx.createHttpServer()
+                    .requestHandler(new RestHandler(vertx, basePath))
+                    .websocketHandler(socket -> new WebsocketEndpoint(basePath, socket, vertx, container))
+                    .listen(port, event -> startedResult.complete());
+        }
+        catch(Exception e) {
+            startedResult.setFailure(e);
+        }
     }
 }

@@ -46,69 +46,61 @@ public class Authorizator extends Verticle {
     @Override
     public void start() {
         this.scriptingEnvironment = new SandBoxedScriptingEnvironment(container);
-        vertx.eventBus().registerHandler(FILTER, new Handler<Message>() {
-            @Override
-            public void handle(Message event) {
-                filter(event);
-            }
-        });
-        vertx.eventBus().registerHandler(VALIDATE, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                Operation operation = Operation.get(event.body().getString("operation"));
-                Optional<JsonObject> auth;
-                if (event.body().containsField("auth")) {
-                    auth = Optional.of(event.body().getObject("auth"));
-                } else {
-                    auth = Optional.empty();
-                }
+        vertx.eventBus().registerHandler(FILTER, this::filter );
+        vertx.eventBus().registerHandler(VALIDATE, this::validate);
+        vertx.eventBus().registerHandler(CHECK, this::check);
+    }
 
-                Path path = Path.of(event.body().getString("path"));
-                Object value = event.body().getValue("payload");
-                JsonObject localAuth = auth.orElse(ANONYMOUS);
-                try {
-                    RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
-                    if (localAuth.containsField("rules")) {
-                        RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
-                        event.reply(evaluateValidation(operation, path, value, localAuth, userRules));
-                        return;
-                    }
-                    event.reply(evaluateValidation(operation, path, value, localAuth, globalRules));
-                    return;
-                } catch (NoSuchMethodException | ScriptException e) {
-                    event.reply(value);
-                }
-            }
-        });
+    private void check(Message<JsonObject> message) {
+        Operation operation = Operation.get(message.body().getString("operation"));
+        Optional<JsonObject> auth;
+        if (message.body().containsField("auth")) {
+            auth = Optional.of(message.body().getObject("auth"));
+        } else {
+            auth = Optional.empty();
+        }
 
-        vertx.eventBus().registerHandler(CHECK, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                Operation operation = Operation.get(event.body().getString("operation"));
-                Optional<JsonObject> auth;
-                if (event.body().containsField("auth")) {
-                    auth = Optional.of(event.body().getObject("auth"));
-                } else {
-                    auth = Optional.empty();
-                }
-
-                Path path = Path.of(event.body().getString("path"));
-                Object value = event.body().getValue("payload");
-                JsonObject localAuth = auth.orElse(ANONYMOUS);
-                try {
-                    RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
-                    if (localAuth.containsField("rules")) {
-                        RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
-                        event.reply(evaluateRules(operation, path, value, localAuth, userRules));
-                        return;
-                    }
-                    event.reply(evaluateRules(operation, path, value, localAuth, globalRules));
-                    return;
-                } catch (NoSuchMethodException | ScriptException e) {
-                    event.reply(Boolean.FALSE);
-                }
+        Path path = Path.of(message.body().getString("path"));
+        Object value = message.body().getValue("payload");
+        JsonObject localAuth = auth.orElse(ANONYMOUS);
+        try {
+            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
+            if (localAuth.containsField("rules")) {
+                RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
+                message.reply(evaluateRules(operation, path, value, localAuth, userRules));
+                return;
             }
-        });
+            message.reply(evaluateRules(operation, path, value, localAuth, globalRules));
+            return;
+        } catch (NoSuchMethodException | ScriptException e) {
+            message.reply(Boolean.FALSE);
+        }
+    }
+
+    private void validate(Message<JsonObject> message) {
+        Operation operation = Operation.get(message.body().getString("operation"));
+        Optional<JsonObject> auth;
+        if (message.body().containsField("auth")) {
+            auth = Optional.of(message.body().getObject("auth"));
+        } else {
+            auth = Optional.empty();
+        }
+
+        Path path = Path.of(message.body().getString("path"));
+        Object value = message.body().getValue("payload");
+        JsonObject localAuth = auth.orElse(ANONYMOUS);
+        try {
+            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
+            if (localAuth.containsField("rules")) {
+                RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
+                message.reply(evaluateValidation(operation, path, value, localAuth, userRules));
+                return;
+            }
+            message.reply(evaluateValidation(operation, path, value, localAuth, globalRules));
+            return;
+        } catch (NoSuchMethodException | ScriptException e) {
+            message.reply(value);
+        }
     }
 
     private void filter(Message<JsonObject> message) {
@@ -125,14 +117,6 @@ public class Authorizator extends Verticle {
             message.reply(filterContent(auth, path, payload));
         } catch (NoSuchMethodException | ScriptException e) {
             container.logger().error("failed filtering", e);
-        }
-    }
-
-    private Optional<JsonObject> getAuth(HeliumEvent event) {
-        if (event.containsField(HeliumEvent.AUTH)) {
-            return Optional.of(event.getObject(HeliumEvent.AUTH));
-        } else {
-            return Optional.empty();
         }
     }
 
@@ -182,7 +166,7 @@ public class Authorizator extends Verticle {
         return scriptingEnvironment.invokeFunction(functionName, evaledAuth, path, new DataSnapshot(data));
     }
 
-    public Object filterContent(Optional<JsonObject> auth, Path path, Object content) throws ScriptException, NoSuchMethodException {
+    private Object filterContent(Optional<JsonObject> auth, Path path, Object content) throws ScriptException, NoSuchMethodException {
         if (content instanceof JsonObject) {
             JsonObject org = (JsonObject) content;
             JsonObject node = new JsonObject();
