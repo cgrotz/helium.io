@@ -24,7 +24,7 @@ import org.vertx.java.core.Future;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
-public class Set extends CommonPersistenceVerticle {
+public class Put extends CommonPersistenceVerticle {
 
     @Override
     public void start() {

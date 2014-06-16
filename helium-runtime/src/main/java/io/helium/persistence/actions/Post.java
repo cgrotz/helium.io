@@ -25,7 +25,7 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.util.UUID;
 
-public class Push extends CommonPersistenceVerticle {
+public class Post extends CommonPersistenceVerticle {
 
     @Override
     public void start() {
