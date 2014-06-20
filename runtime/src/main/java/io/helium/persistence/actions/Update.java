@@ -46,67 +46,63 @@ public class Update extends CommonPersistenceVerticle {
         Path path = event.extractNodePath();
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object obj = event.getValue(HeliumEvent.PAYLOAD);
-            updateValue(event, event.getAuth(), path, obj);
+            updateValue(event.getAuth(), path, obj, changeLog -> vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLog));
         } else {
-            delete(event.getAuth(), path, new Handler<ChangeLog>() {
-                @Override
-                public void handle(ChangeLog event) {
-                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event);
-                }
-            });
+            delete(event.getAuth(), path, event1 -> vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1));
         }
     }
 
-    public void updateValue(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path, Object payload) {
+    public void updateValue(Optional<JsonObject> auth, Path path, Object payload, Handler<ChangeLog> handler) {
         vertx.eventBus().send(Authorizator.CHECK,
-                Authorizator.check(Operation.WRITE, auth, path, payload),
-                (Message<Boolean> event) -> {
-                    if (event.body()) {
-                        Node node;
-                        boolean created = false;
-                        if (!exists(path)) {
-                            created = true;
-                        }
-                        Node parent;
-                        if (exists(path.parent())) {
-                            parent = Node.of(path.parent());
-                        } else {
-                            parent = Node.of(path.parent().parent());
-                        }
-                        ChangeLog log = new ChangeLog(new JsonArray());
-                        if (payload instanceof Node) {
-                            if (parent.has(path.lastElement())) {
-                                node = parent.getNode(path.lastElement());
-                            } else {
-                                node = Node.of(path.append(path.lastElement()));
-                                parent.put(path.lastElement(), node);
-                            }
-                            node.populate(new ChangeLogBuilder(log, path, path.parent(), node), (Node) payload);
-                            if (created) {
-                                log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                        .parent(), payload, false, 0);
-                            } else {
-                                log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                        .parent(), payload, false, 0);
-                            }
-                        } else {
-                            parent.putWithIndex(path.lastElement(), payload);
-
-                            if (created) {
-                                log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                        .parent(), payload, false, 0);
-                            } else {
-                                log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                        .parent(), payload, false, 0);
-                                log.addValueChangedLogEntry(path.lastElement(), path, path.parent(), payload);
-                            }
-                            log.addChildChangedLogEntry(path.parent().lastElement(), path.parent().parent(),
-                                    path.parent().parent().parent(), parent, false, 0);
-
-                        }
-                        NodeFactory.get().getDb().commit();
+            Authorizator.check(Operation.WRITE, auth, path, payload),
+            (Message<Boolean> event) -> {
+                if (event.body()) {
+                    Node node;
+                    boolean created = false;
+                    if (!exists(path)) {
+                        created = true;
                     }
+                    Node parent;
+                    if (exists(path.parent())) {
+                        parent = Node.of(path.parent());
+                    } else {
+                        parent = Node.of(path.parent().parent());
+                    }
+                    ChangeLog log = new ChangeLog(new JsonArray());
+                    if (payload instanceof Node) {
+                        if (parent.has(path.lastElement())) {
+                            node = parent.getNode(path.lastElement());
+                        } else {
+                            node = Node.of(path.append(path.lastElement()));
+                            parent.put(path.lastElement(), node);
+                        }
+                        node.populate(new ChangeLogBuilder(log, path, path.parent(), node), (Node) payload);
+                        if (created) {
+                            log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                    .parent(), payload, false, 0);
+                        } else {
+                            log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                    .parent(), payload, false, 0);
+                        }
+                    } else {
+                        parent.putWithIndex(path.lastElement(), payload);
+
+                        if (created) {
+                            log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                    .parent(), payload, false, 0);
+                        } else {
+                            log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
+                                    .parent(), payload, false, 0);
+                            log.addValueChangedLogEntry(path.lastElement(), path, path.parent(), payload);
+                        }
+                        log.addChildChangedLogEntry(path.parent().lastElement(), path.parent().parent(),
+                                path.parent().parent().parent(), parent, false, 0);
+
+                    }
+                    NodeFactory.get().getDb().commit();
+                    handler.handle(log);
                 }
+            }
         );
     }
 }

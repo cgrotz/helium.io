@@ -40,26 +40,17 @@ public class Put extends CommonPersistenceVerticle {
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object payload = event.getValue(HeliumEvent.PAYLOAD);
             if (payload == null) {
-                delete( event.getAuth(), path, new Handler<ChangeLog>() {
-                    @Override
-                    public void handle(ChangeLog event) {
-                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event);
-                    }
+                delete( event.getAuth(), path, event1 -> {
+                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1);
                 });
             } else {
-                applyNewValue(event.getAuth(), path, payload, new Handler<ChangeLog>() {
-                    @Override
-                    public void handle(ChangeLog event) {
-                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event);
-                    }
+                applyNewValue(event.getAuth(), path, payload, event1 -> {
+                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1);
                 });
             }
         } else {
-            delete( event.getAuth(), path, new Handler<ChangeLog>() {
-                @Override
-                public void handle(ChangeLog event) {
-                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event);
-                }
+            delete( event.getAuth(), path, event1 -> {
+                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1);
             });
         }
     }

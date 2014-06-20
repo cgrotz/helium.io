@@ -37,11 +37,8 @@ public class Delete extends CommonPersistenceVerticle{
         HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
 
-        delete( event.getAuth(), path, new Handler<ChangeLog>() {
-            @Override
-            public void handle(ChangeLog changeLog) {
-                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLog);
-            }
+        delete( event.getAuth(), path, changeLog -> {
+            vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLog);
         });
     }
 }

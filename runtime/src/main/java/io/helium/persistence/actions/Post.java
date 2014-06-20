@@ -52,18 +52,12 @@ public class Post extends CommonPersistenceVerticle {
             nodeName = UUID.randomUUID().toString().replaceAll("-", "");
         }
         if (path.isEmtpy()) {
-            applyNewValue(event.getAuth(), new Path(nodeName), payload, new Handler<ChangeLog>() {
-                @Override
-                public void handle(ChangeLog event) {
-                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event);
-                }
+            applyNewValue(event.getAuth(), new Path(nodeName), payload, event1 -> {
+                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1);
             });
         } else {
-            applyNewValue(event.getAuth(), path, payload, new Handler<ChangeLog>() {
-                @Override
-                public void handle(ChangeLog event) {
-                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event);
-                }
+            applyNewValue(event.getAuth(), path, payload, event1 -> {
+                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1);
             });
         }
     }
