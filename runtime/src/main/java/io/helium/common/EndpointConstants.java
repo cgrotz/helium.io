@@ -10,7 +10,6 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class EndpointConstants {
 
-    public static final String DISTRIBUTE_HELIUM_EVENT = "io.helium.distribute.helium.event";
     public static final String DISTRIBUTE_EVENT = "io.helium.distribute.event";
     public static final String DISTRIBUTE_CHANGE_LOG = "io.helium.distribute.change.log";
 

@@ -97,20 +97,11 @@ public class WebsocketEndpoint {
         };
         vertx.eventBus().registerHandler(EndpointConstants.DISTRIBUTE_EVENT, distributeEventHandler);
 
-        Handler<Message<JsonObject>> distributeHeliumEventHandler = new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                distribute(HeliumEvent.of(message.body()));
-            }
-        };
-        vertx.eventBus().registerHandler(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, distributeHeliumEventHandler);
-
         socket.closeHandler(new Handler<Void>() {
             @Override
             public void handle(Void event) {
                 vertx.eventBus().unregisterHandler(EndpointConstants.DISTRIBUTE_CHANGE_LOG, distributeChangeLogHandler);
                 vertx.eventBus().unregisterHandler(EndpointConstants.DISTRIBUTE_EVENT, distributeEventHandler);
-                vertx.eventBus().unregisterHandler(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, distributeHeliumEventHandler);
             }
         });
     }
@@ -303,73 +294,61 @@ public class WebsocketEndpoint {
         rpc.handle(msg, this);
     }
 
-    public void distribute(HeliumEvent event) {
+    public void distributeChangeLog(ChangeLog changeLog) {
         if (open) {
+            // TODO process ChangeLog
             long startTime = System.currentTimeMillis();
-            if (event.getType() == HeliumEventType.EVENT) {
-                JsonObject jsonObject;
-                Object object = event.getValue(HeliumEvent.PAYLOAD);
-                if (object instanceof JsonObject) {
-                    jsonObject = (JsonObject) object;
-                    distributeEvent(event.extractNodePath(), jsonObject);
-                } else if (object instanceof String) {
-                    jsonObject = new JsonObject(HeliumEvent.PAYLOAD);
-                    distributeEvent(event.extractNodePath(), new JsonObject((String) object));
+
+            changeLog.forEach(obj -> {
+                JsonObject logE = (JsonObject) obj;
+
+                if (logE.getString("type").equals(ChildAddedLogEvent.class.getSimpleName())) {
+                    ChildAddedLogEvent logEvent = ChildAddedLogEvent.of(logE);
+                    processQuery(logEvent);
+                    if (hasListener(logEvent.path(), EndpointConstants.CHILD_ADDED)) {
+                        fireChildAdded(logEvent.name(), logEvent.path(), logEvent.parent(),
+                                logEvent.value(), logEvent.hasChildren(), logEvent.numChildren()
+                        );
+                    }
                 }
-            } else {
-                processQuery(event);
-                ChangeLog changeLog = event.getChangeLog();
-                distributeChangeLog(changeLog);
-            }
-            container.logger().trace("distribute " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
+                if (logE.getString("type").equals(ChildChangedLogEvent.class.getSimpleName())) {
+                    ChildChangedLogEvent logEvent = ChildChangedLogEvent.of(logE);
+                    processQuery(logEvent);
+                    if (hasListener(logEvent.path(), EndpointConstants.CHILD_CHANGED)) {
+                        fireChildChanged(logEvent.name(), logEvent.path(), logEvent.parent(),
+                                logEvent.value(), logEvent.hasChildren(), logEvent.numChildren()
+                        );
+                    }
+                }
+                if (logE.getString("type").equals(ValueChangedLogEvent.class.getSimpleName())) {
+                    ValueChangedLogEvent logEvent = ValueChangedLogEvent.of(logE);
+                    processQuery(logEvent);
+                    if (hasListener(logEvent.path(), EndpointConstants.VALUE)) {
+                        fireValue(logEvent.name(), logEvent.path(), logEvent.parent(),
+                                logEvent.value());
+                    }
+                }
+                if (logE.getString("type").equals(ChildDeletedLogEvent.class.getSimpleName())) {
+                    ChildDeletedLogEvent logEvent = ChildDeletedLogEvent.of(logE);
+                    processQuery(logEvent);
+                    if (hasListener(logEvent.path(), EndpointConstants.CHILD_DELETED)) {
+                        fireChildDeleted(logEvent.path(), logEvent.name(), logEvent.value());
+                    }
+                }
+            });
+            container.logger().trace("distribute " + (System.currentTimeMillis() - startTime) + "ms");
         }
     }
 
-    public void distributeChangeLog(ChangeLog changeLog) {
-        changeLog.forEach(obj -> {
-            JsonObject logE = (JsonObject) obj;
-
-            if (logE.getString("type").equals(ChildAddedLogEvent.class.getSimpleName())) {
-                ChildAddedLogEvent logEvent = ChildAddedLogEvent.of(logE);
-                if (hasListener(logEvent.getPath(), EndpointConstants.CHILD_ADDED)) {
-                    fireChildAdded(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
-                            logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren()
-                    );
-                }
-            }
-            if (logE.getString("type").equals(ChildChangedLogEvent.class.getSimpleName())) {
-                ChildChangedLogEvent logEvent = ChildChangedLogEvent.of(logE);
-                if (hasListener(logEvent.getPath(), EndpointConstants.CHILD_CHANGED)) {
-                    fireChildChanged(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
-                            logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren()
-                    );
-                }
-            }
-            if (logE.getString("type").equals(ValueChangedLogEvent.class.getSimpleName())) {
-                ValueChangedLogEvent logEvent = ValueChangedLogEvent.of(logE);
-                if (hasListener(logEvent.getPath(), EndpointConstants.VALUE)) {
-                    fireValue(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
-                            logEvent.getValue());
-                }
-            }
-            if (logE.getString("type").equals(ChildDeletedLogEvent.class.getSimpleName())) {
-                ChildDeletedLogEvent logEvent = ChildDeletedLogEvent.of(logE);
-                if (hasListener(logEvent.getPath(), EndpointConstants.CHILD_DELETED)) {
-                    fireChildDeleted(logEvent.getPath(), logEvent.getName(), logEvent.getValue());
-                }
-            }
-        });
-    }
-
-    private void processQuery(HeliumEvent event) {
-        Path nodePath = event.extractNodePath();
+    private void processQuery(ChangeLogEvent event) {
+        Path nodePath = event.path();
         if (Node.exists(nodePath)) {
             nodePath = nodePath.parent();
         }
 
         if (hasQuery(nodePath.parent())) {
             for (Entry<String, String> queryEntry : queryEvaluator.getQueries()) {
-                if (event.getPayload() != null) {
+                if (event.value() != null) {
                     JsonObject value = Node.of(nodePath).toJsonObject();
                     JsonObject parent = Node.of(nodePath.parent()).toJsonObject();
                     boolean matches = queryEvaluator.evaluateQueryOnValue(value, queryEntry.getValue());

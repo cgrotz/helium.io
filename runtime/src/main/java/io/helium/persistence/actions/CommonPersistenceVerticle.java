@@ -12,6 +12,7 @@ import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.mapdb.NodeFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
@@ -32,11 +33,15 @@ public abstract class CommonPersistenceVerticle extends Verticle {
         }
     }
 
-    protected void applyNewValue(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path, Object payload) {
+    protected void applyNewValue( Optional<JsonObject> auth,
+                                 Path path,
+                                 Object payload,
+                                 Handler<ChangeLog> handler ) {
         vertx.eventBus().send(Authorizator.CHECK,
                 Authorizator.check(Operation.WRITE, auth, path, payload),
                 (Message<Boolean> event) -> {
                     if (event.body()) {
+                        ChangeLog changeLog = new ChangeLog(new JsonArray());
                         boolean created = false;
                         if (!exists(path)) {
                             created = true;
@@ -51,7 +56,7 @@ public abstract class CommonPersistenceVerticle extends Verticle {
 
                         if (payload instanceof JsonObject) {
                             Node node = Node.of(path);
-                            populate(new ChangeLogBuilder(heliumEvent.getChangeLog(), path, path.parent(), node),
+                            populate(new ChangeLogBuilder(changeLog, path, path.parent(), node),
                                     path, auth, node,
                                     (JsonObject) payload);
                             parent.putWithIndex(path.lastElement(), node);
@@ -60,21 +65,20 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                         }
 
                         if (created) {
-                            heliumEvent.getChangeLog().addChildAddedLogEntry(path.lastElement(),
+                            changeLog.addChildAddedLogEntry(path.lastElement(),
                                     path.parent(), path.parent().parent(), payload, false, 0);
                         } else {
-                            addChangeEvent(heliumEvent.getChangeLog(), path);
+                            addChangeEvent(changeLog, path);
                         }
                         {
                             Path currentPath = path;
                             while (!currentPath.isSimple()) {
-                                heliumEvent.getChangeLog().addValueChangedLogEntry(currentPath.lastElement(), currentPath,
+                                changeLog.addValueChangedLogEntry(currentPath.lastElement(), currentPath,
                                         currentPath.parent(), getObjectForPath(currentPath));
                                 currentPath = currentPath.parent();
                             }
                         }
-
-                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
+                        handler.handle(changeLog);
                         //MapDbBackedNode.getDb().commit();
                     }
                 }
@@ -156,20 +160,20 @@ public abstract class CommonPersistenceVerticle extends Verticle {
     }
 
 
-    protected void delete(HeliumEvent heliumEvent, Optional<JsonObject> auth, Path path) {
+    protected void delete(Optional<JsonObject> auth, Path path, Handler<ChangeLog> handler) {
         Node parent = Node.of(path.parent());
         Object value = parent.get(path.lastElement());
 
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path, value), (Message<Boolean> event) -> {
             if (event.body()) {
+                ChangeLog changeLog = new ChangeLog(new JsonArray());
                 if (value instanceof Node) {
-                    ((Node) value).accept(path, new ChildDeletedSubTreeVisitor(heliumEvent.getChangeLog()));
+                    ((Node) value).accept(path, new ChildDeletedSubTreeVisitor(changeLog));
                 }
                 parent.delete(path.lastElement());
-                heliumEvent.getChangeLog().addChildDeletedLogEntry(path.parent(), path.lastElement(), value);
-                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, heliumEvent.getChangeLog());
-                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, heliumEvent);
+                changeLog.addChildDeletedLogEntry(path.parent(), path.lastElement(), value);
                 NodeFactory.get().getDb().commit();
+                handler.handle(changeLog);
             }
         });
     }

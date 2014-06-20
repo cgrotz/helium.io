@@ -18,6 +18,7 @@ package io.helium.persistence.actions;
 
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
+import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
@@ -28,6 +29,7 @@ import io.helium.persistence.mapdb.NodeFactory;
 import org.vertx.java.core.Future;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Optional;
@@ -46,7 +48,12 @@ public class Update extends CommonPersistenceVerticle {
             Object obj = event.getValue(HeliumEvent.PAYLOAD);
             updateValue(event, event.getAuth(), path, obj);
         } else {
-            delete(event, event.getAuth(), path);
+            delete(event.getAuth(), path, new Handler<ChangeLog>() {
+                @Override
+                public void handle(ChangeLog event) {
+                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event);
+                }
+            });
         }
     }
 
@@ -66,7 +73,7 @@ public class Update extends CommonPersistenceVerticle {
                         } else {
                             parent = Node.of(path.parent().parent());
                         }
-                        ChangeLog log = heliumEvent.getChangeLog();
+                        ChangeLog log = new ChangeLog(new JsonArray());
                         if (payload instanceof Node) {
                             if (parent.has(path.lastElement())) {
                                 node = parent.getNode(path.lastElement());

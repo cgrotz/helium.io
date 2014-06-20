@@ -31,5 +31,7 @@ public abstract class ChangeLogEvent extends JsonObject {
 
     }
 
-    public abstract Path getPath();
+    public abstract Path path();
+
+    public abstract Object value();
 }

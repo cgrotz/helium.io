@@ -44,27 +44,27 @@ public class ChildChangedLogEvent extends ChangeLogEvent {
 
     }
 
-    public String getName() {
+    public String name() {
         return getString("name");
     }
 
-    public Path getPath() {
+    public Path path() {
         return Path.of(getString("name"));
     }
 
-    public Path getParent() {
+    public Path parent() {
         return Path.of(getString("parent"));
     }
 
-    public Object getValue() {
+    public Object value() {
         return getValue("value");
     }
 
-    public int getNumChildren() {
+    public int numChildren() {
         return getInteger("numChildren");
     }
 
-    public boolean getHasChildren() {
+    public boolean hasChildren() {
         return (getInteger("numChildren") > 0);
     }
 }

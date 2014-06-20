@@ -74,27 +74,15 @@ public class MqttEndpoint implements Handler<Buffer> {
         };
         vertx.eventBus().registerHandler(EndpointConstants.DISTRIBUTE_EVENT, distributeEventHandler);
 
-        Handler<Message<JsonObject>> distributeHeliumEventHandler = new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                distribute(HeliumEvent.of(message.body()));
-            }
-        };
-        vertx.eventBus().registerHandler(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, distributeHeliumEventHandler);
-
         socket.closeHandler(new Handler<Void>() {
             @Override
             public void handle(Void event) {
                 vertx.eventBus().unregisterHandler(EndpointConstants.DISTRIBUTE_CHANGE_LOG, distributeChangeLogHandler);
                 vertx.eventBus().unregisterHandler(EndpointConstants.DISTRIBUTE_EVENT, distributeEventHandler);
-                vertx.eventBus().unregisterHandler(EndpointConstants.DISTRIBUTE_HELIUM_EVENT, distributeHeliumEventHandler);
             }
         });
     }
 
-    public void distribute(HeliumEvent event) {
-        distributeChangeLog(event.getChangeLog());
-    }
 
     public void distributeChangeLog(ChangeLog changeLog) {
         changeLog.forEach(obj -> {
@@ -102,17 +90,17 @@ public class MqttEndpoint implements Handler<Buffer> {
 
             if (logE.getString("type").equals(ChildAddedLogEvent.class.getSimpleName())) {
                 ChildAddedLogEvent logEvent = ChildAddedLogEvent.of(logE);
-                if (hasListener(logEvent.getPath().append(logEvent.getName()), EndpointConstants.CHILD_ADDED)) {
-                    fireChildAdded(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
-                            logEvent.getValue(), logEvent.getHasChildren(), logEvent.getNumChildren()
+                if (hasListener(logEvent.path().append(logEvent.name()), EndpointConstants.CHILD_ADDED)) {
+                    fireChildAdded(logEvent.name(), logEvent.path(), logEvent.parent(),
+                            logEvent.value(), logEvent.hasChildren(), logEvent.numChildren()
                     );
                 }
             }
             if (logE.getString("type").equals(ValueChangedLogEvent.class.getSimpleName())) {
                 ValueChangedLogEvent logEvent = ValueChangedLogEvent.of(logE);
-                if (hasListener(logEvent.getPath(), EndpointConstants.VALUE)) {
-                    fireValue(logEvent.getName(), logEvent.getPath(), logEvent.getParent(),
-                            logEvent.getValue());
+                if (hasListener(logEvent.path(), EndpointConstants.VALUE)) {
+                    fireValue(logEvent.name(), logEvent.path(), logEvent.parent(),
+                            logEvent.value());
                 }
             }
         });

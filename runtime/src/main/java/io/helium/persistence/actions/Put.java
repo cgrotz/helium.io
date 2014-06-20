@@ -16,11 +16,14 @@
 
 package io.helium.persistence.actions;
 
+import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
+import io.helium.event.changelog.ChangeLog;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.mapdb.Node;
 import org.vertx.java.core.Future;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
@@ -37,12 +40,27 @@ public class Put extends CommonPersistenceVerticle {
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object payload = event.getValue(HeliumEvent.PAYLOAD);
             if (payload == null) {
-                delete(event, event.getAuth(), path);
+                delete( event.getAuth(), path, new Handler<ChangeLog>() {
+                    @Override
+                    public void handle(ChangeLog event) {
+                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event);
+                    }
+                });
             } else {
-                applyNewValue(event, event.getAuth(), path, payload);
+                applyNewValue(event.getAuth(), path, payload, new Handler<ChangeLog>() {
+                    @Override
+                    public void handle(ChangeLog event) {
+                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event);
+                    }
+                });
             }
         } else {
-            delete(event, event.getAuth(), path);
+            delete( event.getAuth(), path, new Handler<ChangeLog>() {
+                @Override
+                public void handle(ChangeLog event) {
+                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event);
+                }
+            });
         }
     }
 

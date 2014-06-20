@@ -18,8 +18,6 @@ package io.helium.event;
 
 import io.helium.common.Path;
 import io.helium.event.builder.HeliumEventBuilder;
-import io.helium.event.changelog.ChangeLog;
-import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Optional;
@@ -205,12 +203,6 @@ public class HeliumEvent extends JsonObject {
 
     public String getPath() {
         return getString(HeliumEvent.PATH);
-    }
-
-    public ChangeLog getChangeLog() {
-        JsonArray log = getArray("changelog", new JsonArray());
-        putArray("changelog", log);
-        return ChangeLog.of(log);
     }
 
     public Optional<JsonObject> getAuth() {

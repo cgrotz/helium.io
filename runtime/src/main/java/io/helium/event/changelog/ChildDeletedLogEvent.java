@@ -42,15 +42,15 @@ public class ChildDeletedLogEvent extends ChangeLogEvent {
 
     }
 
-    public Object getValue() {
+    public Object value() {
         return getValue("value");
     }
 
-    public String getName() {
+    public String name() {
         return getString("name");
     }
 
-    public Path getPath() {
+    public Path path() {
         return Path.of(getString("path"));
     }
 }
