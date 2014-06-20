@@ -26,6 +26,7 @@ import io.helium.common.PasswordHelper;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
+import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.event.changelog.*;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistence;
@@ -237,7 +238,7 @@ public class WebsocketEndpoint {
     @Rpc.Method
     public void deleteOnDisconnect(@Rpc.Param("path") String path) {
         container.logger().trace("deleteOnDisconnect");
-        HeliumEvent event = new HeliumEvent(HeliumEventType.DELETE, path);
+        HeliumEvent event = HeliumEventBuilder.delete(Path.of(path)).build();
         if (auth.isPresent())
             event.setAuth(auth.get());
         this.disconnectEvents.add(event);
@@ -624,9 +625,9 @@ public class WebsocketEndpoint {
         for (String childNodeKey : node.keys()) {
             if (!Strings.isNullOrEmpty(childNodeKey)) {
                 Object object = node.get(childNodeKey);
-                boolean hasChildren = (object instanceof Node) ? ((Node) object).hasChildren() : false;
+                boolean hasChildren = (object instanceof Node) && ((Node) object).hasChildren();
                 int numChildren = (object instanceof Node) ? ((Node) object).length() : 0;
-                if (object != null && object != null) {
+                if (object != null) {
                     fireChildAdded(childNodeKey, path, path.parent(), object, hasChildren,
                             numChildren);
                 }

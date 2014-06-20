@@ -360,16 +360,13 @@ public class MqttEndpoint implements Handler<Buffer> {
                 public void handle(Message<JsonObject> event) {
                     JsonObject users = event.body();
                     for (String key : users.getFieldNames()) {
-                        Object value = users.getObject(key);
-                        if (value instanceof JsonObject) {
-                            JsonObject node = (JsonObject) value;
-                            if (node.containsField("username") && node.containsField("password")) {
-                                String localUsername = node.getString("username");
-                                String localPassword = node.getString("password");
-                                if (username.get().equals(localUsername) &&
-                                        PasswordHelper.get().comparePassword(localPassword, password.get())) {
-                                    handler.handle(Optional.of(node));
-                                }
+                        JsonObject node = users.getObject(key);
+                        if (node.containsField("username") && node.containsField("password")) {
+                            String localUsername = node.getString("username");
+                            String localPassword = node.getString("password");
+                            if (username.get().equals(localUsername) &&
+                                    PasswordHelper.get().comparePassword(localPassword, password.get())) {
+                                handler.handle(Optional.of(node));
                             }
                         }
                     }

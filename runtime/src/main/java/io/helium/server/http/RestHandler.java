@@ -174,7 +174,6 @@ public class RestHandler implements Handler<HttpServerRequest> {
         URL rpc = cl.getResource("js/rpc.js");
         URL reconnectingWebSocket = cl.getResource("js/reconnecting-websocket.min.js");
         URL helium = cl.getResource("js/helium.js");
-
         String uuidContent = Resources.toString(uuid, Charsets.UTF_8);
         String reconnectingWebSocketContent = Resources.toString(reconnectingWebSocket, Charsets.UTF_8);
         String rpcContent = Resources.toString(rpc, Charsets.UTF_8);

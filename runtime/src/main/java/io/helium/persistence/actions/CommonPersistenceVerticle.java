@@ -26,7 +26,7 @@ public abstract class CommonPersistenceVerticle extends Verticle {
     protected Object get(Path path) {
         if (path.root()) {
             return Node.root();
-        } else if (path == null || path.isEmtpy()) {
+        } else if ( path.isEmtpy()) {
             return Node.of(path);
         } else {
             return Node.of(path.parent()).getObjectForPath(path);

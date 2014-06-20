@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class Authorizator extends Verticle {
-    public final static JsonObject ANONYMOUS = new JsonObject().putBoolean("isAnonymous", true);
+    private final static JsonObject ANONYMOUS = new JsonObject().putBoolean("isAnonymous", true);
 
     public static final String FILTER = "io.helium.authorizator.filter";
     public static final String CHECK = "io.helium.authorizator.check";
@@ -68,10 +68,10 @@ public class Authorizator extends Verticle {
             if (localAuth.containsField("rules")) {
                 RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
                 message.reply(evaluateRules(operation, path, value, localAuth, userRules));
-                return;
             }
-            message.reply(evaluateRules(operation, path, value, localAuth, globalRules));
-            return;
+            else {
+                message.reply(evaluateRules(operation, path, value, localAuth, globalRules));
+            }
         } catch (NoSuchMethodException | ScriptException e) {
             message.reply(Boolean.FALSE);
         }
@@ -94,10 +94,10 @@ public class Authorizator extends Verticle {
             if (localAuth.containsField("rules")) {
                 RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
                 message.reply(evaluateValidation(operation, path, value, localAuth, userRules));
-                return;
             }
-            message.reply(evaluateValidation(operation, path, value, localAuth, globalRules));
-            return;
+            else {
+                message.reply(evaluateValidation(operation, path, value, localAuth, globalRules));
+            }
         } catch (NoSuchMethodException | ScriptException e) {
             message.reply(value);
         }
@@ -150,8 +150,7 @@ public class Authorizator extends Verticle {
 
     private Object eval(String code) throws ScriptException, NoSuchMethodException {
         scriptingEnvironment.eval("function convert(){ return " + code + ";}");
-        Object retValue = scriptingEnvironment.invokeFunction("convert");
-        return retValue;
+        return scriptingEnvironment.invokeFunction("convert");
     }
 
     private Object invoke(String code, Object evaledAuth, Path path, Object data) throws ScriptException, NoSuchMethodException {

@@ -51,9 +51,14 @@ public class Persistence extends CommonPersistenceVerticle {
                 try {
                     ClassLoader cl = Thread.currentThread().getContextClassLoader();
                     URL demo = cl.getResource("demo.json");
-                    String demoData = Resources.toString(demo, Charsets.UTF_8);
-                    loadJsonObject(Path.of("/"), new JsonObject(demoData));
-                    startedResult.complete();
+                    if(demo != null) {
+                        String demoData = Resources.toString(demo, Charsets.UTF_8);
+                        loadJsonObject(Path.of("/"), new JsonObject(demoData));
+                        startedResult.complete();
+                    }
+                    else {
+                        throw new IllegalStateException("demo.json not found");
+                    }
                 }
                 catch(Exception e){
                     startedResult.setFailure(e);

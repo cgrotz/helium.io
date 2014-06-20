@@ -43,19 +43,8 @@ public class HeliumEventBuilder {
         return this.underConstruction;
     }
 
-    public JsonObject withNode() {
-        HeliumEvent node = new HeliumEvent(this);
-        underConstruction.putObject(HeliumEvent.PAYLOAD, node);
-        return node;
-    }
-
     public HeliumEventBuilder withPayload(Object payload) {
         underConstruction.putValue(HeliumEvent.PAYLOAD, payload);
-        return this;
-    }
-
-    public HeliumEventBuilder creationDate(Date date) {
-        underConstruction.putNumber(HeliumEvent.CREATION_DATE, date.getTime());
         return this;
     }
 
@@ -66,11 +55,6 @@ public class HeliumEventBuilder {
 
     public HeliumEventBuilder path(String path) {
         underConstruction.putString(HeliumEvent.PATH, path);
-        return this;
-    }
-
-    public HeliumEventBuilder fromHistory() {
-        underConstruction.putBoolean(HeliumEvent.FROM_HISTORY, true);
         return this;
     }
 
@@ -88,11 +72,6 @@ public class HeliumEventBuilder {
 
     public HeliumEventBuilder name(String name) {
         underConstruction.putString(HeliumEvent.NAME, name);
-        return this;
-    }
-
-    public HeliumEventBuilder noAuthCheck() {
-        underConstruction.putBoolean(HeliumEvent.NO_AUTH, true);
         return this;
     }
 

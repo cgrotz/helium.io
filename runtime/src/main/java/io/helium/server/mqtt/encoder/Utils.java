@@ -17,8 +17,7 @@ public class Utils {
 
     static byte readMessageType(ByteBuf in) {
         byte h1 = in.readByte();
-        byte messageType = (byte) ((h1 & 0x00F0) >> 4);
-        return messageType;
+        return (byte) ((h1 & 0x00F0) >> 4);
     }
 
     static boolean checkHeaderAvailability(ByteBuf in) {

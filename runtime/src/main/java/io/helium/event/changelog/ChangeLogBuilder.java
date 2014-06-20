@@ -60,6 +60,6 @@ public class ChangeLogBuilder {
     }
 
     private boolean hasChildren(Object node) {
-        return (node instanceof Node) ? ((Node) node).hasChildren() : false;
+        return (node instanceof Node) && ((Node) node).hasChildren();
     }
 }

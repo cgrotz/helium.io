@@ -722,7 +722,7 @@ public class Node {
 
             if (length == 1) {
                 String key = keys.next();
-                writer.write(quote(key.toString()));
+                writer.write(quote(key));
                 writer.write(':');
                 if (indentFactor > 0) {
                     writer.write(' ');
@@ -740,7 +740,7 @@ public class Node {
                             writer.write('\n');
                         }
                         indent(writer, newindent);
-                        writer.write(quote(key.toString()));
+                        writer.write(quote(key));
                         writer.write(':');
                         if (indentFactor > 0) {
                             writer.write(' ');
@@ -774,7 +774,7 @@ public class Node {
             Path nodePath = fullPath.prefix(0);
             Node node = Node.of(nodePath);
             if (lastNode == null) {
-                node = lastNode;
+                lastNode = node;
             } else {
                 lastNode.put(nodePath.lastElement(), node);
             }
@@ -828,26 +828,6 @@ public class Node {
         return !getChildren().isEmpty();
     }
 
-
-    public boolean pathExists(Path path) {
-        if (path.isEmtpy()) {
-            return true;
-        } else if (has(path.firstElement())) {
-            Object object = get(path.firstElement());
-            if (object instanceof Node) {
-                Node node = (Node) object;
-                return node.pathExists(path.subpath(1));
-            } else if (path.isSimple()) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-
     public Node getLastLeafNode(Path path) {
         if (has(path.firstElement())) {
             if (path.isSimple()) {
@@ -881,24 +861,6 @@ public class Node {
         }
     }
 
-
-    public void clear() {
-        nodes.clear();
-        attributes.clear();
-    }
-
-
-    public Collection<Object> values() {
-        Set<Object> values = Sets.newHashSet();
-        nodes.values().forEach(val -> {
-            values.add(val);
-        });
-        attributes.values().forEach(val -> {
-            values.add(val);
-        });
-        return values;
-    }
-
     public static Node of(Path path) {
         if (path.root()) {
             return root();
@@ -917,7 +879,7 @@ public class Node {
     }
 
     public static boolean hasChildren(Object node) {
-        return (node instanceof Node) ? ((Node) node).hasChildren() : false;
+        return (node instanceof Node) && ((Node) node).hasChildren();
     }
 
     public JsonObject toJsonObject() {
@@ -933,7 +895,6 @@ public class Node {
     }
 
     public static Node root() {
-        Node root = new Node();
-        return root;
+        return new Node();
     }
 }
