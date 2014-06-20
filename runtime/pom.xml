@@ -22,7 +22,7 @@
         <artifactId>helium</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>
-    <artifactId>helium-runtime</artifactId>
+    <artifactId>runtime</artifactId>
     <name>Helium Runtime based on Vertx Server</name>
 
     <properties>
@@ -143,8 +143,8 @@
     </repositories>
 
     <build>
+        <finalName>helium</finalName>
         <plugins>
-
             <!-- The vert.x Maven plugin -->
             <plugin>
                 <groupId>io.vertx</groupId>

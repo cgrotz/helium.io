@@ -53,7 +53,7 @@
     </developers>
 
     <modules>
-        <module>helium-runtime</module>
+        <module>runtime</module>
     </modules>
 
     <properties>
