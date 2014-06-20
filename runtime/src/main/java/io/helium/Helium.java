@@ -38,9 +38,8 @@ public class Helium extends Verticle {
     public void start(Future<Void> startedResult) {
         try {
             // Workers
-            container.deployWorkerVerticle(Authorizator.class.getName(), defaultAuthorizatorConfig());
-            container.deployWorkerVerticle(EventSource.class.getName(),
-                    container.config().getObject("journal", defaultJournalConfig()));
+            container.deployWorkerVerticle(Authorizator.class.getName(), container.config().getObject("authorizator", defaultAuthorizatorConfig()));
+            container.deployWorkerVerticle(EventSource.class.getName(), container.config().getObject("journal", defaultJournalConfig()));
             container.deployWorkerVerticle(Persistence.class.getName(),
                 container.config().getObject("mapdb", createPersistenceDefaultConfig()),
                 1, true,
@@ -57,9 +56,7 @@ public class Helium extends Verticle {
 
             // Channels
             container.deployVerticle(HttpServer.class.getName(), container.config().getObject("http", defaultHttpConfig() ));
-            container.deployVerticle(MqttServer.class.getName(),
-                    container.config().getObject("mqtt", defaultMqttConfig()));
-
+            container.deployVerticle(MqttServer.class.getName(), container.config().getObject("mqtt", defaultMqttConfig()));
             startedResult.complete();
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
