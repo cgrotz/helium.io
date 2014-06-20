@@ -28,8 +28,6 @@ public class MqttServerHandler implements Handler<NetSocket> {
         File file = new File(container.config().getString("directory"));
         file.getParentFile().mkdirs();
         this.db = DBMaker.newFileDB(file)
-                .asyncWriteEnable()
-                .asyncWriteQueueSize(10)
                 .closeOnJvmShutdown()
                 .make();
 

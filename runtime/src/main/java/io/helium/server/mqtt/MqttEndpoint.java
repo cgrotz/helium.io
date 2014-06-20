@@ -8,13 +8,14 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.event.changelog.ChangeLog;
-import io.helium.event.changelog.ChildAddedLogEvent;
-import io.helium.event.changelog.ValueChangedLogEvent;
+import io.helium.event.changelog.ChildAdded;
+import io.helium.event.changelog.ValueChanged;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistence;
 import io.helium.common.DataTypeConverter;
 import io.helium.common.EndpointConstants;
 import io.helium.persistence.actions.Get;
+import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.helium.server.mqtt.decoder.MqttDecoder;
 import io.helium.server.mqtt.encoder.Encoder;
 import io.helium.server.mqtt.protocol.*;
@@ -88,16 +89,16 @@ public class MqttEndpoint implements Handler<Buffer> {
         changeLog.forEach(obj -> {
             JsonObject logE = (JsonObject) obj;
 
-            if (logE.getString("type").equals(ChildAddedLogEvent.class.getSimpleName())) {
-                ChildAddedLogEvent logEvent = ChildAddedLogEvent.of(logE);
+            if (logE.getString("type").equals(ChildAdded.class.getSimpleName())) {
+                ChildAdded logEvent = ChildAdded.of(logE);
                 if (hasListener(logEvent.path().append(logEvent.name()), EndpointConstants.CHILD_ADDED)) {
                     fireChildAdded(logEvent.name(), logEvent.path(), logEvent.parent(),
                             logEvent.value(), logEvent.hasChildren(), logEvent.numChildren()
                     );
                 }
             }
-            if (logE.getString("type").equals(ValueChangedLogEvent.class.getSimpleName())) {
-                ValueChangedLogEvent logEvent = ValueChangedLogEvent.of(logE);
+            if (logE.getString("type").equals(ValueChanged.class.getSimpleName())) {
+                ValueChanged logEvent = ValueChanged.of(logE);
                 if (hasListener(logEvent.path(), EndpointConstants.VALUE)) {
                     fireValue(logEvent.name(), logEvent.path(), logEvent.parent(),
                             logEvent.value());
@@ -295,7 +296,12 @@ public class MqttEndpoint implements Handler<Buffer> {
                             vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
                                 if (event1.body()) {
                                     vertx.eventBus().send(EventSource.PERSIST_EVENT, heliumEvent);
-                                    vertx.eventBus().send(heliumEvent.getType().eventBus, heliumEvent);
+                                    vertx.eventBus().send(heliumEvent.getType().eventBus, heliumEvent, (Message<JsonArray> changeLogMsg) -> {
+                                        if(changeLogMsg.body().size() > 0) {
+                                            vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
+                                            vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                                        }
+                                    });
                                 }
                             });
                         } else {

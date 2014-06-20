@@ -22,9 +22,9 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
 
-public class ValueChangedLogEvent extends ChangeLogEvent {
+public class ValueChanged extends ChangeLogEvent {
 
-    public ValueChangedLogEvent(String name, Path path, Path parent, Object value) {
+    public ValueChanged(String name, Path path, Path parent, Object value) {
         putString("type", getClass().getSimpleName());
         putString("name", name);
         putString("path", path.toString());
@@ -37,15 +37,15 @@ public class ValueChangedLogEvent extends ChangeLogEvent {
         }
     }
 
-    public ValueChangedLogEvent(Map<String, Object> stringObjectMap) {
+    public ValueChanged(Map<String, Object> stringObjectMap) {
         super(stringObjectMap);
     }
 
-    public static ValueChangedLogEvent of(JsonObject logE) {
-        return new ValueChangedLogEvent(logE.toMap());
+    public static ValueChanged of(JsonObject logE) {
+        return new ValueChanged(logE.toMap());
     }
 
-    private ValueChangedLogEvent() {
+    private ValueChanged() {
 
     }
 
@@ -54,7 +54,7 @@ public class ValueChangedLogEvent extends ChangeLogEvent {
     }
 
     public Path path() {
-        return Path.of(getString("name"));
+        return Path.of(getString("path"));
     }
 
     public Path parent() {

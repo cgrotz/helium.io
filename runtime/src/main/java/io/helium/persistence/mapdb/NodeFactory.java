@@ -15,12 +15,7 @@ public class NodeFactory {
     private static Optional<NodeFactory> instance = Optional.empty();
 
     public static NodeFactory get() {
-        instance = instance.of(instance.orElseGet(new Supplier<NodeFactory>() {
-            @Override
-            public NodeFactory get() {
-                return new NodeFactory();
-            }
-        }));
+        instance = instance.of(instance.orElseGet(() -> new NodeFactory()));
         return instance.get();
     }
 
@@ -48,16 +43,9 @@ public class NodeFactory {
 
     public DB getDb() {
         if(directory.isPresent()) {
-            db = db.of(db.orElseGet(new Supplier<DB>() {
-                @Override
-                public DB get() {
-                    return DBMaker.newFileDB(directory.get())
-                            .asyncWriteEnable()
-                            .asyncWriteQueueSize(10)
-                            .closeOnJvmShutdown()
-                            .make();
-                }
-            }));
+            db = db.of(db.orElseGet(() -> DBMaker.newFileDB(directory.get())
+                    .closeOnJvmShutdown()
+                    .make()));
             return db.get();
         }
         return null;

@@ -19,11 +19,7 @@ package io.helium.persistence.actions;
 import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.event.changelog.ChangeLog;
 import io.helium.persistence.Persistence;
-import io.helium.persistence.mapdb.Node;
-import org.vertx.java.core.Future;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
@@ -35,22 +31,26 @@ public class Put extends CommonPersistenceVerticle {
     }
 
     public void handle(Message<JsonObject> msg) {
+        long start = System.currentTimeMillis();
         HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object payload = event.getValue(HeliumEvent.PAYLOAD);
             if (payload == null) {
-                delete( event.getAuth(), path, event1 -> {
-                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1);
+                delete( event.getAuth(), path, changeLog -> {
+                    msg.reply(changeLog);
+                    container.logger().info("Put Action took: "+(System.currentTimeMillis()-start)+"ms");
                 });
             } else {
-                applyNewValue(event.getAuth(), path, payload, event1 -> {
-                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1);
+                applyNewValue(event.getAuth(), path, payload, changeLog -> {
+                    msg.reply(changeLog);
+                    container.logger().info("Put Action took: "+(System.currentTimeMillis()-start)+"ms");
                 });
             }
         } else {
-            delete( event.getAuth(), path, event1 -> {
-                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1);
+            delete( event.getAuth(), path, changeLog -> {
+                msg.reply(changeLog);
+                container.logger().info("Put Action took: "+(System.currentTimeMillis()-start)+"ms");
             });
         }
     }

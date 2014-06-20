@@ -42,13 +42,20 @@ public class Update extends CommonPersistenceVerticle {
     }
 
     public void handle(Message<JsonObject> msg) {
+        long start = System.currentTimeMillis();
         HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object obj = event.getValue(HeliumEvent.PAYLOAD);
-            updateValue(event.getAuth(), path, obj, changeLog -> vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLog));
+            updateValue(event.getAuth(), path, obj, changeLog -> {
+                msg.reply( changeLog );
+                container.logger().info("Update Action took: "+(System.currentTimeMillis()-start)+"ms");
+            });
         } else {
-            delete(event.getAuth(), path, event1 -> vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1));
+            delete(event.getAuth(), path, changeLog -> {
+                msg.reply( changeLog );
+                container.logger().info("Update Action took: "+(System.currentTimeMillis()-start)+"ms");
+            });
         }
     }
 
@@ -74,9 +81,8 @@ public class Update extends CommonPersistenceVerticle {
                             node = parent.getNode(path.lastElement());
                         } else {
                             node = Node.of(path.append(path.lastElement()));
-                            parent.put(path.lastElement(), node);
                         }
-                        node.populate(new ChangeLogBuilder(log, path, path.parent(), node), (Node) payload);
+                        populateNode(node, new ChangeLogBuilder(log, path, path.parent(), node), (Node) payload);
                         if (created) {
                             log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
                                     .parent(), payload, false, 0);
@@ -85,8 +91,6 @@ public class Update extends CommonPersistenceVerticle {
                                     .parent(), payload, false, 0);
                         }
                     } else {
-                        parent.putWithIndex(path.lastElement(), payload);
-
                         if (created) {
                             log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
                                     .parent(), payload, false, 0);
@@ -104,5 +108,29 @@ public class Update extends CommonPersistenceVerticle {
                 }
             }
         );
+    }
+
+    private void populateNode(Node node, ChangeLogBuilder logBuilder, Node payload) {
+        for (String key : payload.keys()) {
+            Object value = payload.get(key);
+            if (value instanceof Node) {
+                Node childNode = Node.of(node.getPathToNode().append(key));
+                populateNode(childNode, logBuilder.getChildLogBuilder(key), (Node) value);
+                if (node.has(key)) {
+                    logBuilder.addNew(key, childNode);
+                } else {
+                    logBuilder.addChangedNode(key, childNode);
+                }
+            } else {
+                if (node.has(key)) {
+                    logBuilder.addChange(key, value);
+                } else {
+                    logBuilder.addNew(key, value);
+                }
+                if (value == null) {
+                    logBuilder.addDeleted(key, node.get(key));
+                }
+            }
+        }
     }
 }

@@ -18,14 +18,18 @@ public class Get extends CommonPersistenceVerticle{
     }
 
     public void handle(Message<JsonObject> event) {
+        long start = System.currentTimeMillis();
         if (Node.exists(Path.of(event.body().getString("path")))) {
             event.reply(Node.of(Path.of(event.body().getString("path"))).toJsonObject());
+            container.logger().info("Get Action took: "+(System.currentTimeMillis()-start)+"ms");
         } else {
             Object value = get(Path.of(event.body().getString("path")));
             if (value instanceof Node) {
                 event.reply(((Node) value).toJsonObject());
+                container.logger().info("Get Action took: "+(System.currentTimeMillis()-start)+"ms");
             } else {
                 event.reply(value);
+                container.logger().info("Get Action took: "+(System.currentTimeMillis()-start)+"ms");
             }
         }
     }

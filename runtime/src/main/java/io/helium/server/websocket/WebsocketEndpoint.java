@@ -32,6 +32,7 @@ import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.actions.Get;
 import io.helium.persistence.mapdb.Node;
+import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.helium.persistence.queries.QueryEvaluator;
 import io.helium.common.EndpointConstants;
 import io.helium.server.websocket.rpc.Rpc;
@@ -162,7 +163,12 @@ public class WebsocketEndpoint {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistence.PUSH, event);
+                vertx.eventBus().send(Persistence.PUSH, event, (Message<JsonArray> changeLogMsg) -> {
+                    if(changeLogMsg.body().size() > 0) {
+                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
+                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                    }
+                });
                 container.logger().trace("authorized: " + event);
             } else {
                 container.logger().warn("not authorized: " + event);
@@ -180,7 +186,12 @@ public class WebsocketEndpoint {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistence.SET, event);
+                vertx.eventBus().send(Persistence.SET, event, (Message<JsonArray> changeLogMsg) -> {
+                    if(changeLogMsg.body().size() > 0) {
+                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
+                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                    }
+                });
                 container.logger().trace("authorized: " + event);
             } else {
                 container.logger().warn("not authorized: " + event);
@@ -198,7 +209,12 @@ public class WebsocketEndpoint {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), null), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistence.UPDATE, event);
+                vertx.eventBus().send(Persistence.UPDATE, event, (Message<JsonArray> changeLogMsg) -> {
+                    if(changeLogMsg.body().size() > 0) {
+                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
+                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                    }
+                });
                 container.logger().trace("authorized: " + event);
             } else {
                 container.logger().warn("not authorized: " + event);
@@ -272,16 +288,18 @@ public class WebsocketEndpoint {
             @Override
             public void handle(Message<JsonObject> event) {
                 JsonObject users = event.body();
-                for (String key : users.getFieldNames()) {
-                    Object value = users.getObject(key);
-                    if (value instanceof JsonObject) {
-                        JsonObject node = (JsonObject) value;
-                        if (node.containsField("username") && node.containsField("password")) {
-                            String localUsername = node.getString("username");
-                            String localPassword = node.getString("password");
-                            if (username.equals(localUsername) && PasswordHelper.get().comparePassword(localPassword, password)) {
-                                handler.handle(Optional.of(node));
-                                return;
+                if(users != null) {
+                    for (String key : users.getFieldNames()) {
+                        Object value = users.getObject(key);
+                        if (value instanceof JsonObject) {
+                            JsonObject node = (JsonObject) value;
+                            if (node.containsField("username") && node.containsField("password")) {
+                                String localUsername = node.getString("username");
+                                String localPassword = node.getString("password");
+                                if (username.equals(localUsername) && PasswordHelper.get().comparePassword(localPassword, password)) {
+                                    handler.handle(Optional.of(node));
+                                    return;
+                                }
                             }
                         }
                     }
@@ -303,8 +321,8 @@ public class WebsocketEndpoint {
             changeLog.forEach(obj -> {
                 JsonObject logE = (JsonObject) obj;
 
-                if (logE.getString("type").equals(ChildAddedLogEvent.class.getSimpleName())) {
-                    ChildAddedLogEvent logEvent = ChildAddedLogEvent.of(logE);
+                if (logE.getString("type").equals(ChildAdded.class.getSimpleName())) {
+                    ChildAdded logEvent = ChildAdded.of(logE);
                     processQuery(logEvent);
                     if (hasListener(logEvent.path(), EndpointConstants.CHILD_ADDED)) {
                         fireChildAdded(logEvent.name(), logEvent.path(), logEvent.parent(),
@@ -312,8 +330,8 @@ public class WebsocketEndpoint {
                         );
                     }
                 }
-                if (logE.getString("type").equals(ChildChangedLogEvent.class.getSimpleName())) {
-                    ChildChangedLogEvent logEvent = ChildChangedLogEvent.of(logE);
+                if (logE.getString("type").equals(ChildChanged.class.getSimpleName())) {
+                    ChildChanged logEvent = ChildChanged.of(logE);
                     processQuery(logEvent);
                     if (hasListener(logEvent.path(), EndpointConstants.CHILD_CHANGED)) {
                         fireChildChanged(logEvent.name(), logEvent.path(), logEvent.parent(),
@@ -321,16 +339,16 @@ public class WebsocketEndpoint {
                         );
                     }
                 }
-                if (logE.getString("type").equals(ValueChangedLogEvent.class.getSimpleName())) {
-                    ValueChangedLogEvent logEvent = ValueChangedLogEvent.of(logE);
+                if (logE.getString("type").equals(ValueChanged.class.getSimpleName())) {
+                    ValueChanged logEvent = ValueChanged.of(logE);
                     processQuery(logEvent);
                     if (hasListener(logEvent.path(), EndpointConstants.VALUE)) {
                         fireValue(logEvent.name(), logEvent.path(), logEvent.parent(),
                                 logEvent.value());
                     }
                 }
-                if (logE.getString("type").equals(ChildDeletedLogEvent.class.getSimpleName())) {
-                    ChildDeletedLogEvent logEvent = ChildDeletedLogEvent.of(logE);
+                if (logE.getString("type").equals(ChildDeleted.class.getSimpleName())) {
+                    ChildDeleted logEvent = ChildDeleted.of(logE);
                     processQuery(logEvent);
                     if (hasListener(logEvent.path(), EndpointConstants.CHILD_DELETED)) {
                         fireChildDeleted(logEvent.path(), logEvent.name(), logEvent.value());

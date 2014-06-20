@@ -41,33 +41,6 @@ public class Node {
         attributes = NodeFactory.get().getDb().getTreeMap(pathToNode + "Attributes");
         nodes = NodeFactory.get().getDb().createTreeMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
     }
-/*
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.write(pathToNode.toString().getBytes());
-        attributes = db.getHashMap(pathToNode + "Attributes");
-        nodes = db.createHashMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
-        keyListsMap = db.getHashMap("orderedKeys");
-        if (keyListsMap.containsKey(pathToNode + "Keys")) {
-            keyOrder = keyListsMap.get(pathToNode + "Keys");
-        } else {
-            keyOrder = new ArrayList();
-            keyListsMap.put(pathToNode + "Keys", keyOrder);
-        }
-    }
-
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        String source = in.readUTF();
-        pathToNode = new Path(source);
-        attributes = db.getHashMap(pathToNode + "Attributes");
-        nodes = db.getHashMap(pathToNode + "Nodes");
-        keyListsMap = db.getHashMap("orderedKeys");
-        if (keyListsMap.containsKey(pathToNode + "Keys")) {
-            keyOrder = keyListsMap.get(pathToNode + "Keys");
-        } else {
-            keyOrder = new ArrayList();
-            keyListsMap.put(pathToNode + "Keys", keyOrder);
-        }
-    }*/
 
     /**
      * Get an array of field names from a MapDbBackedNode.
@@ -536,7 +509,7 @@ public class Node {
      * @return this.
      * @throws RuntimeException If the pathToNode is null.
      */
-    public Node put(String key, boolean value) {
+    Node put(String key, boolean value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -553,7 +526,7 @@ public class Node {
      * @throws RuntimeException If the pathToNode is null or if the number is invalid.
      */
 
-    public Node put(String key, double value) {
+    Node put(String key, double value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -570,7 +543,7 @@ public class Node {
      * @throws RuntimeException If the pathToNode is null.
      */
 
-    public Node put(String key, int value) {
+    Node put(String key, int value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -587,7 +560,7 @@ public class Node {
      * @throws RuntimeException If the pathToNode is null.
      */
 
-    public Node put(String key, long value) {
+    Node put(String key, long value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -606,7 +579,7 @@ public class Node {
      * @throws RuntimeException If the value is non-finite number or if the pathToNode is null.
      */
 
-    public Node put(String key, Object value) {
+    Node put(String key, Object value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -614,7 +587,7 @@ public class Node {
     }
 
 
-    public Node put(String key, Node node) {
+    Node put(String key, Node node) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -622,7 +595,7 @@ public class Node {
     }
 
 
-    public Node putWithIndex(String key, Object value) {
+    Node putWithIndex(String key, Object value) {
         if (Strings.isNullOrEmpty(key)) {
             return this;
         }
@@ -655,7 +628,7 @@ public class Node {
      * @return The value that was associated with the name, or null if there was no value.
      */
 
-    public Object delete(String key) {
+    Object delete(String key) {
         if (this.nodes.containsKey(key)) {
             return this.nodes.remove(key);
         } else if (this.attributes.containsKey(key)) {
@@ -781,35 +754,6 @@ public class Node {
         }
         return Node.of(fullPath);
     }
-
-
-    public void populate(ChangeLogBuilder logBuilder, Node payload) {
-        for (String key : payload.keys()) {
-            Object value = payload.get(key);
-            if (value instanceof Node) {
-                Node childNode = Node.of(pathToNode.append(key));
-                childNode.populate(logBuilder.getChildLogBuilder(key), (Node) value);
-                if (has(key)) {
-                    put(key, childNode);
-                    logBuilder.addNew(key, childNode);
-                } else {
-                    put(key, childNode);
-                    logBuilder.addChangedNode(key, childNode);
-                }
-            } else {
-                if (has(key)) {
-                    logBuilder.addChange(key, value);
-                } else {
-                    logBuilder.addNew(key, value);
-                }
-                if (value == null) {
-                    logBuilder.addDeleted(key, get(key));
-                }
-                put(key, value);
-            }
-        }
-    }
-
 
     public Collection<Node> getChildren() {
         Set<Node> nodes = Sets.newHashSet();

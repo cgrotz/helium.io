@@ -21,9 +21,9 @@ import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
 
-public class ChildChangedLogEvent extends ChangeLogEvent {
+public class ChildChanged extends ChangeLogEvent {
 
-    public ChildChangedLogEvent(String name, Path path, Path parent, Object value, long numChildren) {
+    public ChildChanged(String name, Path path, Path parent, Object value, long numChildren) {
         putString("type", getClass().getSimpleName());
         putString("name", name);
         putString("path", path.toString());
@@ -32,15 +32,15 @@ public class ChildChangedLogEvent extends ChangeLogEvent {
         putNumber("numChildren", numChildren);
     }
 
-    public ChildChangedLogEvent(Map<String, Object> stringObjectMap) {
+    public ChildChanged(Map<String, Object> stringObjectMap) {
         super(stringObjectMap);
     }
 
-    public static ChildChangedLogEvent of(JsonObject logE) {
-        return new ChildChangedLogEvent(logE.toMap());
+    public static ChildChanged of(JsonObject logE) {
+        return new ChildChanged(logE.toMap());
     }
 
-    private ChildChangedLogEvent() {
+    private ChildChanged() {
 
     }
 

@@ -36,6 +36,7 @@ public class Post extends CommonPersistenceVerticle {
     }
 
     public void handle(Message<JsonObject> msg) {
+        long start = System.currentTimeMillis();
         HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
         Object payload;
@@ -52,12 +53,14 @@ public class Post extends CommonPersistenceVerticle {
             nodeName = UUID.randomUUID().toString().replaceAll("-", "");
         }
         if (path.isEmtpy()) {
-            applyNewValue(event.getAuth(), new Path(nodeName), payload, event1 -> {
-                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1);
+            applyNewValue(event.getAuth(), new Path(nodeName), payload, changeLog -> {
+                msg.reply( changeLog );
+                container.logger().info("Post Action took: "+(System.currentTimeMillis()-start)+"ms");
             });
         } else {
-            applyNewValue(event.getAuth(), path, payload, event1 -> {
-                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, event1);
+            applyNewValue(event.getAuth(), path, payload, changeLog -> {
+                msg.reply( changeLog );
+                container.logger().info("Post Action took: "+(System.currentTimeMillis()-start)+"ms");
             });
         }
     }

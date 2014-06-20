@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
+import io.helium.common.EndpointConstants;
 import io.helium.common.PasswordHelper;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
@@ -12,6 +13,7 @@ import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistence;
 import io.helium.common.DataTypeConverter;
 import io.helium.persistence.actions.Get;
+import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -20,6 +22,7 @@ import org.vertx.java.core.Vertx;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.IOException;
@@ -78,7 +81,9 @@ public class RestHandler implements Handler<HttpServerRequest> {
                             req.response().end();
                         }
                     });
-                    vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
+                    vertx.eventBus().send(EventSource.PERSIST_EVENT, event, (Message<JsonArray> changeLogMsg) -> {
+                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                    });
                 }
             });
         });
@@ -97,7 +102,12 @@ public class RestHandler implements Handler<HttpServerRequest> {
                 vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
                     if (event1.body()) {
                         vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                        vertx.eventBus().send(event.getType().eventBus, event);
+                        vertx.eventBus().send(event.getType().eventBus, event, (Message<JsonArray> changeLogMsg) -> {
+                            if(changeLogMsg.body().size() > 0) {
+                                vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
+                                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                            }
+                        });
                     }
                 });
             });
@@ -127,7 +137,12 @@ public class RestHandler implements Handler<HttpServerRequest> {
                     vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
                         if (event1.body()) {
                             vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                            vertx.eventBus().send(event.getType().eventBus, event);
+                            vertx.eventBus().send(event.getType().eventBus, event, (Message<JsonArray> changeLogMsg) -> {
+                                if(changeLogMsg.body().size() > 0) {
+                                    vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
+                                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                                }
+                            });
 
                         }
                     });

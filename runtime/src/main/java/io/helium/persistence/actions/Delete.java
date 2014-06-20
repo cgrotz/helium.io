@@ -34,11 +34,13 @@ public class Delete extends CommonPersistenceVerticle{
     }
 
     public void handle(Message<JsonObject> msg) {
+        long start = System.currentTimeMillis();
         HeliumEvent event = HeliumEvent.of(msg.body());
         Path path = event.extractNodePath();
 
         delete( event.getAuth(), path, changeLog -> {
-            vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLog);
+            msg.reply( changeLog );
+            container.logger().info("Delete Action took: "+(System.currentTimeMillis()-start)+"ms");
         });
     }
 }

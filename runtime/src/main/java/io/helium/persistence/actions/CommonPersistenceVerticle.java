@@ -2,14 +2,10 @@ package io.helium.persistence.actions;
 
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
-import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
-import io.helium.event.HeliumEvent;
-import io.helium.event.changelog.ChangeLog;
-import io.helium.event.changelog.ChangeLogBuilder;
-import io.helium.persistence.visitor.ChildDeletedSubTreeVisitor;
+import io.helium.event.changelog.*;
 import io.helium.persistence.mapdb.Node;
-import io.helium.persistence.mapdb.NodeFactory;
+import io.helium.persistence.visitor.ChildDeletedSubTreeVisitor;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
@@ -42,10 +38,6 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                 (Message<Boolean> event) -> {
                     if (event.body()) {
                         ChangeLog changeLog = new ChangeLog(new JsonArray());
-                        boolean created = false;
-                        if (!exists(path)) {
-                            created = true;
-                        }
 
                         Node parent;
                         if (exists(path.parent())) {
@@ -59,27 +51,24 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                             populate(new ChangeLogBuilder(changeLog, path, path.parent(), node),
                                     path, auth, node,
                                     (JsonObject) payload);
-                            parent.putWithIndex(path.lastElement(), node);
-                        } else {
-                            parent.putWithIndex(path.lastElement(), payload);
                         }
 
-                        if (created) {
+                        if (!exists(path)) {
                             changeLog.addChildAddedLogEntry(path.lastElement(),
                                     path.parent(), path.parent().parent(), payload, false, 0);
-                        } else {
+                        } else if(!payload.equals(parent.get(path.lastElement()))) {
                             addChangeEvent(changeLog, path);
                         }
-                        {
-                            Path currentPath = path;
-                            while (!currentPath.isSimple()) {
+
+                        Path currentPath = path;
+                        while (!currentPath.isSimple()) {
+                            if(!payload.equals(parent.get(path.lastElement()))) {
                                 changeLog.addValueChangedLogEntry(currentPath.lastElement(), currentPath,
                                         currentPath.parent(), getObjectForPath(currentPath));
                                 currentPath = currentPath.parent();
                             }
                         }
                         handler.handle(changeLog);
-                        //MapDbBackedNode.getDb().commit();
                     }
                 }
         );
@@ -94,10 +83,8 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                     if (event.body()) {
                         Node childNode = Node.of(path.append(key));
                         if (node.has(key)) {
-                            node.put(key, childNode);
                             logBuilder.addNew(key, childNode);
                         } else {
-                            node.put(key, childNode);
                             logBuilder.addChangedNode(key, childNode);
                         }
                         populate(logBuilder.getChildLogBuilder(key), path.append(key), auth, childNode,
@@ -118,7 +105,6 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                                     if (event1.body() == null) {
                                         logBuilder.addDeleted(key, node.get(key));
                                     }
-                                    node.put(key, event1.body());
                                 }
                         );
                     }
@@ -138,13 +124,6 @@ public abstract class CommonPersistenceVerticle extends Verticle {
 
     private void addChangeEvent(ChangeLog log, Path path) {
         Object payload = getObjectForPath(path);
-        Node parent;
-        if (exists(path.parent())) {
-            parent = Node.of(path.parent());
-        } else {
-            parent = Node.of(path.parent().parent());
-        }
-
         log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
                 .parent(), payload, Node.hasChildren(payload), Node.childCount(payload));
 
@@ -170,9 +149,7 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                 if (value instanceof Node) {
                     ((Node) value).accept(path, new ChildDeletedSubTreeVisitor(changeLog));
                 }
-                parent.delete(path.lastElement());
                 changeLog.addChildDeletedLogEntry(path.parent(), path.lastElement(), value);
-                NodeFactory.get().getDb().commit();
                 handler.handle(changeLog);
             }
         });

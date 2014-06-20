@@ -41,45 +41,14 @@ public class Persistence extends CommonPersistenceVerticle {
     @Override
     public void start(Future<Void> startedResult) {
         try{
-            NodeFactory.get().dir(new File(container.config().getString("directory")));
-
             container.deployVerticle(Get.class.getName());
             container.deployVerticle(Post.class.getName());
             container.deployVerticle(Put.class.getName());
             container.deployVerticle(Delete.class.getName());
-            container.deployVerticle(Update.class.getName(), event -> {
-                try {
-                    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                    URL demo = cl.getResource("demo.json");
-                    if(demo != null) {
-                        String demoData = Resources.toString(demo, Charsets.UTF_8);
-                        loadJsonObject(Path.of("/"), new JsonObject(demoData));
-                        startedResult.complete();
-                    }
-                    else {
-                        throw new IllegalStateException("demo.json not found");
-                    }
-                }
-                catch(Exception e){
-                    startedResult.setFailure(e);
-                }
-            });
+            container.deployVerticle(Update.class.getName());
         }
         catch(Exception e) {
             startedResult.setFailure(e);
-        }
-    }
-
-    private void loadJsonObject(Path path, JsonObject data) {
-        for(String key : data.getFieldNames()) {
-            Object value = data.getField(key);
-            if(value instanceof JsonObject) {
-                loadJsonObject(path.append(key), (JsonObject)value);
-            }
-            else {
-                Node node = Node.of(path);
-                node.put(key, value);
-            }
         }
     }
 }

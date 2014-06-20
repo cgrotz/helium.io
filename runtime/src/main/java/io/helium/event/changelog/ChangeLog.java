@@ -17,7 +17,6 @@
 package io.helium.event.changelog;
 
 import io.helium.common.Path;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 
 public class ChangeLog extends JsonArray{
@@ -35,21 +34,22 @@ public class ChangeLog extends JsonArray{
     }
 
     public void addChildAddedLogEntry(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
-        add(new ChildAddedLogEvent(name, path, parent, value, numChildren));
+        add(new ChildAdded(name, path, parent, value, numChildren));
     }
 
     public void addChildChangedLogEntry(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
         if (name != null) {
-            add(new ChildChangedLogEvent(name, path, parent, value, numChildren));
+            add(new ChildChanged(name, path, parent, value, numChildren));
         }
     }
 
     public void addValueChangedLogEntry(String name, Path path, Path parent, Object value) {
-        add(new ValueChangedLogEvent(name, path, parent, value));
+        if(value != null)
+            add(new ValueChanged(name, path, parent, value));
     }
 
     public void addChildDeletedLogEntry(Path path, String name, Object value) {
-        add(new ChildDeletedLogEvent(path, name, value));
+        add(new ChildDeleted(path, name, value));
     }
 
     public static ChangeLog of(JsonArray body) {
