@@ -5,23 +5,22 @@ import org.mapdb.DBMaker;
 
 import java.io.File;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * Created by Christoph Grotz on 15.06.14.
  */
-public class NodeFactory {
+public class MapDbService {
 
-    private static Optional<NodeFactory> instance = Optional.empty();
+    private static Optional<MapDbService> instance = Optional.empty();
 
-    public static NodeFactory get() {
-        instance = instance.of(instance.orElseGet(() -> new NodeFactory()));
+    public static MapDbService get() {
+        instance = instance.of(instance.orElseGet(() -> new MapDbService()));
         return instance.get();
     }
 
     private Optional<DB> db = Optional.empty();
 
-    private NodeFactory() {
+    private MapDbService() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {

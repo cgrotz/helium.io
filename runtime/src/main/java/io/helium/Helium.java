@@ -20,13 +20,10 @@ import io.helium.authorization.Authorizator;
 import io.helium.management.ManagementConsole;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistence;
-import io.helium.persistence.mapdb.NodeFactory;
 import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
-import org.mapdb.DB;
 import org.vertx.java.core.Future;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 

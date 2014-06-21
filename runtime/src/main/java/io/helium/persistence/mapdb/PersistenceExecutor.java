@@ -2,23 +2,17 @@ package io.helium.persistence.mapdb;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import io.helium.authorization.Authorizator;
-import io.helium.authorization.Operation;
-import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.changelog.*;
-import io.helium.persistence.visitor.ChildDeletedSubTreeVisitor;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
-import sun.nio.ch.ThreadPool;
 
 import java.io.File;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Created by Christoph Grotz on 20.06.14.
@@ -30,7 +24,7 @@ public class PersistenceExecutor extends Verticle {
     private int count = 0;
     @Override
     public void start() {
-        NodeFactory.get().dir(new File(container.config().getString("directory")));
+        MapDbService.get().dir(new File(container.config().getString("directory")));
         vertx.eventBus().registerHandler(PERSIST_CHANGE_LOG, this::applyChangeLog );
 
         try {
@@ -87,8 +81,8 @@ public class PersistenceExecutor extends Verticle {
         });
         if(count > 5) {
             long start = System.currentTimeMillis();
-            NodeFactory.get().getDb().commit();
-            container.logger().info("Commiting took: "+(System.currentTimeMillis()-start)+"ms");
+            MapDbService.get().getDb().commit();
+            container.logger().info("Commiting took: " + (System.currentTimeMillis() - start) + "ms");
             count = 0;
         }
         count++;
@@ -109,7 +103,7 @@ public class PersistenceExecutor extends Verticle {
     private void childDeleted(ChildDeleted logEvent) {
         Node parent = Node.of(logEvent.path().parent());
         parent.delete(logEvent.path().lastElement());
-        NodeFactory.get().getDb().commit();
+        MapDbService.get().getDb().commit();
     }
 
     private void valueChanged(ValueChanged logEvent) {

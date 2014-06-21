@@ -4,11 +4,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import io.helium.common.Path;
-import io.helium.event.changelog.ChangeLog;
-import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.persistence.visitor.NodeVisitor;
 import org.mapdb.BTreeMap;
-import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.IOException;
@@ -32,34 +29,14 @@ public class Node {
 
     private Node() {
         pathToNode = Path.of("/");
-        attributes = NodeFactory.get().getDb().getTreeMap("rootAttributes");
-        nodes = NodeFactory.get().getDb().createTreeMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
+        attributes = MapDbService.get().getDb().getTreeMap("rootAttributes");
+        nodes = MapDbService.get().getDb().createTreeMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
     }
 
     protected Node(Path pathToNode) {
         this.pathToNode = pathToNode;
-        attributes = NodeFactory.get().getDb().getTreeMap(pathToNode + "Attributes");
-        nodes = NodeFactory.get().getDb().createTreeMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
-    }
-
-    /**
-     * Get an array of field names from a MapDbBackedNode.
-     *
-     * @return An array of field names, or null if there are no names.
-     */
-    public static String[] getNames(Node jo) {
-        int length = jo.length();
-        if (length == 0) {
-            return null;
-        }
-        Iterator<String> iterator = jo.keyIterator();
-        String[] names = new String[length];
-        int i = 0;
-        while (iterator.hasNext()) {
-            names[i] = iterator.next();
-            i += 1;
-        }
-        return names;
+        attributes = MapDbService.get().getDb().getTreeMap(pathToNode + "Attributes");
+        nodes = MapDbService.get().getDb().createTreeMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
     }
 
     /**
@@ -168,57 +145,6 @@ public class Node {
     }
 
     /**
-     * Try to convert a string into a number, boolean, or null. If the string can't be converted,
-     * return the string.
-     *
-     * @param string A String.
-     * @return A simple JSON value.
-     */
-    public static Object stringToValue(String string) {
-        Double d;
-        if (string.equals("")) {
-            return string;
-        }
-        if (string.equalsIgnoreCase("true")) {
-            return Boolean.TRUE;
-        }
-        if (string.equalsIgnoreCase("false")) {
-            return Boolean.FALSE;
-        }
-        if (string.equalsIgnoreCase("null")) {
-            return null;
-        }
-
-		/*
-         * If it might be a number, try converting it. If a number cannot be produced, then the value
-		 * will just be a string.
-		 */
-
-        char b = string.charAt(0);
-        if ((b >= '0' && b <= '9') || b == '-') {
-            try {
-                if (string.indexOf('.') > -1 || string.indexOf('e') > -1 || string.indexOf('E') > -1) {
-                    d = Double.valueOf(string);
-                    if (!d.isInfinite() && !d.isNaN()) {
-                        return d;
-                    }
-                } else {
-                    Long myLong = new Long(string);
-                    if (string.equals(myLong.toString())) {
-                        if (myLong.longValue() == myLong.intValue()) {
-                            return new Integer(myLong.intValue());
-                        } else {
-                            return myLong;
-                        }
-                    }
-                }
-            } catch (Exception ignore) {
-            }
-        }
-        return string;
-    }
-
-    /**
      * Throw an exception if the object is a NaN or infinite number.
      *
      * @param o The object to test.
@@ -236,34 +162,6 @@ public class Node {
                 }
             }
         }
-    }
-
-    /**
-     * Make a JSON text of an Object value. If the object has an value.toJSONString() method, then
-     * that method will be used to produce the JSON text. The method is required to produce a strictly
-     * conforming text. If the object does not contain a toJSONString method (which is the most common
-     * case), then a text will be produced by other means. If the value is an array or Collection,
-     * then a JSONArray will be made from it and its toJSONString method will be called. If the value
-     * is a MAP, then a MapDbBackedNode will be made from it and its toJSONString method will be called.
-     * Otherwise, the value's toString method will be called, and the result will be quoted.
-     * <p>
-     * <p>
-     * Warning: This method assumes that the data structure is acyclical.
-     *
-     * @param value The value to be serialized.
-     * @return a printable, displayable, transmittable representation of the object, beginning with
-     * <code>{</code>&nbsp;<small>(left brace)</small> and ending with <code>}</code>
-     * &nbsp;<small>(right brace)</small>.
-     * @throws RuntimeException If the value is or contains an invalid number.
-     */
-    public static String valueToString(Object value) {
-        if (value == null || value.equals(null)) {
-            return "null";
-        }
-        if (value instanceof Number) {
-            return numberToString((Number) value);
-        }
-        return quote(value.toString());
     }
 
     static final Writer writeValue(Writer writer, Object value, int indentFactor, int indent)
@@ -331,85 +229,12 @@ public class Node {
     }
 
     /**
-     * Get the boolean value associated with a pathToNode.
-     *
-     * @param key A pathToNode string.
-     * @return The truth.
-     * @throws RuntimeException if the value is not a Boolean or the String "true" or "false".
-     */
-
-    public boolean getBoolean(String key) {
-        Object object = this.get(key);
-        if (object.equals(Boolean.FALSE)
-                || (object instanceof String && ((String) object).equalsIgnoreCase("false"))) {
-            return false;
-        } else if (object.equals(Boolean.TRUE)
-                || (object instanceof String && ((String) object).equalsIgnoreCase("true"))) {
-            return true;
-        }
-        return false;
-    }
-
-
-    public boolean getBoolean(String key, boolean def) {
-        if (this.has(key)) {
-            Object object = this.get(key);
-            if (object.equals(Boolean.FALSE)
-                    || (object instanceof String && ((String) object).equalsIgnoreCase("false"))) {
-                return false;
-            } else if (object.equals(Boolean.TRUE)
-                    || (object instanceof String && ((String) object).equalsIgnoreCase("true"))) {
-                return true;
-            }
-        }
-        return def;
-    }
-
-    /**
-     * Get the double value associated with a pathToNode.
-     *
-     * @param key A pathToNode string.
-     * @return The numeric value.
-     * @throws RuntimeException if the pathToNode is not found or if the value is not a Number object and cannot be
-     *                          converted to a number.
-     */
-
-    public double getDouble(String key) {
-        Object object = this.get(key);
-        try {
-            return object instanceof Number ? ((Number) object).doubleValue() : Double
-                    .parseDouble((String) object);
-        } catch (Exception e) {
-            return 0.0;
-        }
-    }
-
-    /**
-     * Get the int value associated with a pathToNode.
-     *
-     * @param key A pathToNode string.
-     * @return The integer value.
-     * @throws RuntimeException if the pathToNode is not found or if the value cannot be converted to an integer.
-     */
-
-    public int getInt(String key) {
-        Object object = this.get(key);
-        try {
-            return object instanceof Number ? ((Number) object).intValue() : Integer
-                    .parseInt((String) object);
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    /**
      * Get the MapDbBackedNode value associated with a pathToNode.
      *
      * @param key A pathToNode string.
      * @return A MapDbBackedNode which is the value.
      * @throws RuntimeException if the pathToNode is not found or if the value is not a MapDbBackedNode.
      */
-
     public Node getNode(String key) {
         if (pathToNode.append(key).root()) {
             return root();
@@ -420,23 +245,6 @@ public class Node {
             Node node = new Node(pathToNode.append(key));
             nodes.put(key, node);
             return node;
-        }
-    }
-
-    /**
-     * Get the long value associated with a pathToNode.
-     *
-     * @param key A pathToNode string.
-     * @return The long value.
-     * @throws RuntimeException if the pathToNode is not found or if the value cannot be converted to a long.
-     */
-    public long getLong(String key) {
-        Object object = this.get(key);
-        try {
-            return object instanceof Number ? ((Number) object).longValue() : Long
-                    .parseLong((String) object);
-        } catch (Exception e) {
-            return 0;
         }
     }
 
@@ -462,7 +270,6 @@ public class Node {
      * @param key A pathToNode string.
      * @return true if the pathToNode exists in the MapDbBackedNode.
      */
-
     public boolean has(String key) {
         return !Strings.isNullOrEmpty(key) && (
                 this.attributes.containsKey(key) ||
@@ -499,73 +306,6 @@ public class Node {
 
     public int length() {
         return this.nodes.size() + this.attributes.size();
-    }
-
-    /**
-     * Put a pathToNode/boolean pair in the MapDbBackedNode.
-     *
-     * @param key   A pathToNode string.
-     * @param value A boolean which is the value.
-     * @return this.
-     * @throws RuntimeException If the pathToNode is null.
-     */
-    Node put(String key, boolean value) {
-        if (Strings.isNullOrEmpty(key)) {
-            return this;
-        }
-        this.put(key, value ? Boolean.TRUE : Boolean.FALSE);
-        return this;
-    }
-
-    /**
-     * Put a pathToNode/double pair in the MapDbBackedNode.
-     *
-     * @param key   A pathToNode string.
-     * @param value A double which is the value.
-     * @return this.
-     * @throws RuntimeException If the pathToNode is null or if the number is invalid.
-     */
-
-    Node put(String key, double value) {
-        if (Strings.isNullOrEmpty(key)) {
-            return this;
-        }
-        this.put(key, new Double(value));
-        return this;
-    }
-
-    /**
-     * Put a pathToNode/int pair in the MapDbBackedNode.
-     *
-     * @param key   A pathToNode string.
-     * @param value An int which is the value.
-     * @return this.
-     * @throws RuntimeException If the pathToNode is null.
-     */
-
-    Node put(String key, int value) {
-        if (Strings.isNullOrEmpty(key)) {
-            return this;
-        }
-        this.put(key, new Integer(value));
-        return this;
-    }
-
-    /**
-     * Put a pathToNode/long pair in the MapDbBackedNode.
-     *
-     * @param key   A pathToNode string.
-     * @param value A long which is the value.
-     * @return this.
-     * @throws RuntimeException If the pathToNode is null.
-     */
-
-    Node put(String key, long value) {
-        if (Strings.isNullOrEmpty(key)) {
-            return this;
-        }
-        this.put(key, new Long(value));
-        return this;
     }
 
     /**
@@ -735,12 +475,12 @@ public class Node {
     }
 
     public Object getObjectForPath(Path path) {
-        Node parent = getNodeForPath(ChangeLog.of(new JsonArray()), path.parent());
+        Node parent = getNodeForPath(path.parent());
         return parent.get(path.lastElement());
     }
 
 
-    public Node getNodeForPath(ChangeLog log, Path path) {
+    public Node getNodeForPath(Path path) {
         Path fullPath = pathToNode.append(path);
         Node lastNode = null;
         for (int i = 0; i < fullPath.toArray().length; i++) {
@@ -831,7 +571,7 @@ public class Node {
     }
 
     public static boolean exists(Path path) {
-        return NodeFactory.get().getDb().exists(path.toString() + "Attributes");
+        return MapDbService.get().getDb().exists(path.toString() + "Attributes");
     }
 
     public Path getPathToNode() {

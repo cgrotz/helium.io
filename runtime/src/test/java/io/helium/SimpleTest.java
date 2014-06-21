@@ -4,7 +4,7 @@ import com.google.common.io.Files;
 import io.helium.authorization.Authorizator;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistence;
-import io.helium.persistence.mapdb.NodeFactory;
+import io.helium.persistence.mapdb.MapDbService;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class SimpleTest extends TestVerticle {
                     vertx.setPeriodic(1000, new Handler<Long>() {
                         @Override
                         public void handle(Long event) {
-                            DB db = NodeFactory.get().getDb();
+                            DB db = MapDbService.get().getDb();
                             if( db != null)
                                 db.commit();
                         }
@@ -71,7 +71,7 @@ public class SimpleTest extends TestVerticle {
                     vertx.setPeriodic(1000, new Handler<Long>() {
                         @Override
                         public void handle(Long event) {
-                            DB db = NodeFactory.get().getDb();
+                            DB db = MapDbService.get().getDb();
                             if( db != null)
                                 db.commit();
                         }

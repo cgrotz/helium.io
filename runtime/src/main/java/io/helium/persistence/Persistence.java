@@ -16,19 +16,8 @@
 
 package io.helium.persistence;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-import io.helium.common.Path;
 import io.helium.persistence.actions.*;
-import io.helium.persistence.mapdb.Node;
-import io.helium.persistence.mapdb.NodeFactory;
-import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Future;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonObject;
-
-import java.io.File;
-import java.net.URL;
 
 public class Persistence extends CommonPersistenceVerticle {
 

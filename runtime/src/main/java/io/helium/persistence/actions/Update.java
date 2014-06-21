@@ -18,15 +18,13 @@ package io.helium.persistence.actions;
 
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
-import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.mapdb.Node;
-import io.helium.persistence.mapdb.NodeFactory;
-import org.vertx.java.core.Future;
+import io.helium.persistence.mapdb.MapDbService;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
@@ -53,7 +51,7 @@ public class Update extends CommonPersistenceVerticle {
             });
         } else {
             delete(event.getAuth(), path, changeLog -> {
-                msg.reply( changeLog );
+                msg.reply(changeLog);
                 container.logger().info("Update Action took: "+(System.currentTimeMillis()-start)+"ms");
             });
         }
@@ -103,7 +101,7 @@ public class Update extends CommonPersistenceVerticle {
                                 path.parent().parent().parent(), parent, false, 0);
 
                     }
-                    NodeFactory.get().getDb().commit();
+                    MapDbService.get().getDb().commit();
                     handler.handle(log);
                 }
             }
