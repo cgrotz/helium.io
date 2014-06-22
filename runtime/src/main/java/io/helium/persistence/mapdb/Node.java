@@ -545,6 +545,11 @@ public class Node {
         }
     }
 
+    public void clear() {
+        this.attributes.clear();
+        this.nodes.clear();
+    }
+
     public static long childCount(Object node) {
         return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
     }

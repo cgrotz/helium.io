@@ -54,6 +54,9 @@ public class ChangeLogBuilder {
         log.addChildDeletedLogEntry(path, name, value);
     }
 
+    public ChangeLog getLog() {
+        return log;
+    }
 
     private long childCount(Object node) {
         return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;

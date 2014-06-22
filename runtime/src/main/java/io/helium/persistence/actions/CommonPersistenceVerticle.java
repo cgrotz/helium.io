@@ -1,5 +1,6 @@
 package io.helium.persistence.actions;
 
+import com.google.common.collect.Collections2;
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
 import io.helium.common.Path;
@@ -13,6 +14,7 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
+import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -77,39 +79,47 @@ public abstract class CommonPersistenceVerticle extends Verticle {
 
 
     protected void populate(ChangeLogBuilder logBuilder, Path path, Optional<JsonObject> auth, Node node, JsonObject payload) {
-        for (String key : payload.getFieldNames()) {
-            Object value = payload.getField(key);
-            if (value instanceof JsonObject) {
-                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
-                    if (event.body()) {
-                        Node childNode = MapDbService.get().of(path.append(key));
-                        if (node.has(key)) {
-                            logBuilder.addNew(key, childNode);
-                        } else {
-                            logBuilder.addChangedNode(key, childNode);
+        if(payload.getFieldNames().isEmpty()) {
+            node.keys().forEach( key -> {
+                logBuilder.addDeleted(key, node.get(key));
+            });
+            node.clear();
+        }
+        else {
+            for (String key : payload.getFieldNames()) {
+                Object value = payload.getField(key);
+                if (value instanceof JsonObject) {
+                    vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
+                        if (event.body()) {
+                            Node childNode = MapDbService.get().of(path.append(key));
+                            if (node.has(key)) {
+                                logBuilder.addNew(key, childNode);
+                            } else {
+                                logBuilder.addChangedNode(key, childNode);
+                            }
+                            populate(logBuilder.getChildLogBuilder(key), path.append(key), auth, childNode,
+                                    (JsonObject) value);
                         }
-                        populate(logBuilder.getChildLogBuilder(key), path.append(key), auth, childNode,
-                                (JsonObject) value);
-                    }
-                });
-            } else {
-                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
-                    if (event.body()) {
-                        vertx.eventBus().send(Authorizator.VALIDATE,
-                            Authorizator.validate(auth, path.append(key), value),
-                                (Message<Object> event1) -> {
-                                    if (node.has(key)) {
-                                        logBuilder.addChange(key, event1.body());
-                                    } else {
-                                        logBuilder.addNew(key, event1.body());
+                    });
+                } else {
+                    vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
+                        if (event.body()) {
+                            vertx.eventBus().send(Authorizator.VALIDATE,
+                                    Authorizator.validate(auth, path.append(key), value),
+                                    (Message<Object> event1) -> {
+                                        if (node.has(key)) {
+                                            logBuilder.addChange(key, event1.body());
+                                        } else {
+                                            logBuilder.addNew(key, event1.body());
+                                        }
+                                        if (event1.body() == null) {
+                                            logBuilder.addDeleted(key, node.get(key));
+                                        }
                                     }
-                                    if (event1.body() == null) {
-                                        logBuilder.addDeleted(key, node.get(key));
-                                    }
-                                }
-                        );
-                    }
-                });
+                            );
+                        }
+                    });
+                }
             }
         }
     }
@@ -127,7 +137,7 @@ public abstract class CommonPersistenceVerticle extends Verticle {
         Object payload = getObjectForPath(path);
         if(payload instanceof Node) {
             log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                    .parent(), ((Node)payload).toJsonObject(), Node.hasChildren(payload), Node.childCount(payload));
+                    .parent(), ((Node) payload).toJsonObject(), Node.hasChildren(payload), Node.childCount(payload));
 
             log.addValueChangedLogEntry(path.lastElement(), path.parent(), path.parent()
                     .parent(), ((Node)payload).toJsonObject());
