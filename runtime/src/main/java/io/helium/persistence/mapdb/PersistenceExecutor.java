@@ -49,7 +49,7 @@ public class PersistenceExecutor extends Verticle {
                 loadJsonObject(path.append(key), (JsonObject)value);
             }
             else {
-                Node node = Node.of(path);
+                Node node = MapDbService.get().of(path);
                 node.put(key, value);
             }
         }
@@ -90,24 +90,24 @@ public class PersistenceExecutor extends Verticle {
 
     private void childAdded(ChildAdded logEvent) {
         Object value = logEvent.value();
-        Node parent = Node.of(logEvent.path());
+        Node parent = MapDbService.get().of(logEvent.path());
         parent.put(logEvent.name(), value);
     }
 
     private void childChanged(ChildChanged logEvent) {
         Object value = logEvent.value();
-        Node parent = Node.of(logEvent.path());
+        Node parent = MapDbService.get().of(logEvent.path());
         parent.put(logEvent.name(), value);
     }
 
     private void childDeleted(ChildDeleted logEvent) {
-        Node parent = Node.of(logEvent.path().parent());
+        Node parent = MapDbService.get().of(logEvent.path().parent());
         parent.delete(logEvent.path().lastElement());
         MapDbService.get().getDb().commit();
     }
 
     private void valueChanged(ValueChanged logEvent) {
-        Node parent = Node.of(logEvent.path().parent());
+        Node parent = MapDbService.get().of(logEvent.path().parent());
         Object value = logEvent.value();
         parent.put(logEvent.name(), value);
     }

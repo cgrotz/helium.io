@@ -2,6 +2,7 @@ package io.helium.persistence.actions;
 
 import io.helium.common.Path;
 import io.helium.persistence.Persistence;
+import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.Node;
 import org.vertx.java.core.Future;
 import org.vertx.java.core.eventbus.Message;
@@ -19,8 +20,8 @@ public class Get extends CommonPersistenceVerticle{
 
     public void handle(Message<JsonObject> event) {
         long start = System.currentTimeMillis();
-        if (Node.exists(Path.of(event.body().getString("path")))) {
-            event.reply(Node.of(Path.of(event.body().getString("path"))).toJsonObject());
+        if (MapDbService.get().exists(Path.of(event.body().getString("path")))) {
+            event.reply(MapDbService.get().of(Path.of(event.body().getString("path"))).toJsonObject());
             container.logger().info("Get Action took: "+(System.currentTimeMillis()-start)+"ms");
         } else {
             Object value = get(Path.of(event.body().getString("path")));

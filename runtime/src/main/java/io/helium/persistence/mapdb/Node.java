@@ -4,7 +4,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import io.helium.common.Path;
-import io.helium.persistence.visitor.NodeVisitor;
+import io.helium.persistence.mapdb.visitor.NodeVisitor;
 import org.mapdb.BTreeMap;
 import org.vertx.java.core.json.JsonObject;
 
@@ -27,7 +27,7 @@ public class Node {
     private BTreeMap<String, Node> nodes;
     private Path pathToNode;
 
-    private Node() {
+    Node() {
         pathToNode = Path.of("/");
         attributes = MapDbService.get().getDb().getTreeMap("rootAttributes");
         nodes = MapDbService.get().getDb().createTreeMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
@@ -237,7 +237,7 @@ public class Node {
      */
     public Node getNode(String key) {
         if (pathToNode.append(key).root()) {
-            return root();
+            return MapDbService.get().root();
         } else if (has(key)) {
             Object value = get(key);
             return (Node) get(key);
@@ -349,7 +349,7 @@ public class Node {
             } else if (value instanceof JsonObject) {
                 JsonObject node = (JsonObject) value;
                 node.getFieldNames().forEach(valueKey -> {
-                    Node nodeToFill = Node.of(pathToNode.append(key));
+                    Node nodeToFill = MapDbService.get().of(pathToNode.append(key));
                     nodeToFill.put(valueKey, node.getValue(valueKey));
                 });
             } else {
@@ -485,14 +485,14 @@ public class Node {
         Node lastNode = null;
         for (int i = 0; i < fullPath.toArray().length; i++) {
             Path nodePath = fullPath.prefix(0);
-            Node node = Node.of(nodePath);
+            Node node = MapDbService.get().of(nodePath);
             if (lastNode == null) {
                 lastNode = node;
             } else {
                 lastNode.put(nodePath.lastElement(), node);
             }
         }
-        return Node.of(fullPath);
+        return MapDbService.get().of(fullPath);
     }
 
     public Collection<Node> getChildren() {
@@ -545,19 +545,6 @@ public class Node {
         }
     }
 
-    public static Node of(Path path) {
-        if (path.root()) {
-            return root();
-        }
-        Node node = root();
-        Path currentPath = Path.copy(path);
-        for (int i = 0; i < path.toArray().length; i++) {
-            node = node.getNode(currentPath.firstElement());
-            currentPath = currentPath.subpath(1);
-        }
-        return node;
-    }
-
     public static long childCount(Object node) {
         return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
     }
@@ -570,15 +557,7 @@ public class Node {
         return new JsonObject(toString());
     }
 
-    public static boolean exists(Path path) {
-        return MapDbService.get().getDb().exists(path.toString() + "Attributes");
-    }
-
     public Path getPathToNode() {
         return pathToNode;
-    }
-
-    public static Node root() {
-        return new Node();
     }
 }

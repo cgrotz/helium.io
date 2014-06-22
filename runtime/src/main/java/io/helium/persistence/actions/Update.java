@@ -69,16 +69,16 @@ public class Update extends CommonPersistenceVerticle {
                     }
                     Node parent;
                     if (exists(path.parent())) {
-                        parent = Node.of(path.parent());
+                        parent = MapDbService.get().of(path.parent());
                     } else {
-                        parent = Node.of(path.parent().parent());
+                        parent = MapDbService.get().of(path.parent().parent());
                     }
                     ChangeLog log = new ChangeLog(new JsonArray());
                     if (payload instanceof Node) {
                         if (parent.has(path.lastElement())) {
                             node = parent.getNode(path.lastElement());
                         } else {
-                            node = Node.of(path.append(path.lastElement()));
+                            node = MapDbService.get().of(path.append(path.lastElement()));
                         }
                         populateNode(node, new ChangeLogBuilder(log, path, path.parent(), node), (Node) payload);
                         if (created) {
@@ -112,7 +112,7 @@ public class Update extends CommonPersistenceVerticle {
         for (String key : payload.keys()) {
             Object value = payload.get(key);
             if (value instanceof Node) {
-                Node childNode = Node.of(node.getPathToNode().append(key));
+                Node childNode = MapDbService.get().of(node.getPathToNode().append(key));
                 populateNode(childNode, logBuilder.getChildLogBuilder(key), (Node) value);
                 if (node.has(key)) {
                     logBuilder.addNew(key, childNode);

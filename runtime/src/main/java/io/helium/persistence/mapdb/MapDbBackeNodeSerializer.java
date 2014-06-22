@@ -22,7 +22,7 @@ public class MapDbBackeNodeSerializer implements Serializer<Node>, Serializable 
         try {
             Path path = Path.of(pathToNode);
             if (path.root()) {
-                return Node.root();
+                return MapDbService.get().root();
             } else {
                 return new Node(path);
             }

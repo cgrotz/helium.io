@@ -4,8 +4,9 @@ import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
 import io.helium.common.Path;
 import io.helium.event.changelog.*;
+import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.Node;
-import io.helium.persistence.visitor.ChildDeletedSubTreeVisitor;
+import io.helium.persistence.mapdb.visitor.ChildDeletedSubTreeVisitor;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
@@ -21,11 +22,11 @@ public abstract class CommonPersistenceVerticle extends Verticle {
 
     protected Object get(Path path) {
         if (path.root()) {
-            return Node.root();
+            return MapDbService.get().root();
         } else if ( path.isEmtpy()) {
-            return Node.of(path);
+            return MapDbService.get().of(path);
         } else {
-            return Node.of(path.parent()).getObjectForPath(path);
+            return MapDbService.get().of(path.parent()).getObjectForPath(path);
         }
     }
 
@@ -41,13 +42,13 @@ public abstract class CommonPersistenceVerticle extends Verticle {
 
                         Node parent;
                         if (exists(path.parent())) {
-                            parent = Node.of(path.parent());
+                            parent = MapDbService.get().of(path.parent());
                         } else {
-                            parent = Node.of(path.parent().parent());
+                            parent = MapDbService.get().of(path.parent().parent());
                         }
 
                         if (payload instanceof JsonObject) {
-                            Node node = Node.of(path);
+                            Node node = MapDbService.get().of(path);
                             populate(new ChangeLogBuilder(changeLog, path, path.parent(), node),
                                     path, auth, node,
                                     (JsonObject) payload);
@@ -81,7 +82,7 @@ public abstract class CommonPersistenceVerticle extends Verticle {
             if (value instanceof JsonObject) {
                 vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
                     if (event.body()) {
-                        Node childNode = Node.of(path.append(key));
+                        Node childNode = MapDbService.get().of(path.append(key));
                         if (node.has(key)) {
                             logBuilder.addNew(key, childNode);
                         } else {
@@ -114,7 +115,7 @@ public abstract class CommonPersistenceVerticle extends Verticle {
     }
 
     private Object getObjectForPath(Path path) {
-        Node node = Node.of(path.parent());
+        Node node = MapDbService.get().of(path.parent());
         if (node.has(path.lastElement())) {
             return node.get(path.lastElement());
         } else {
@@ -135,12 +136,12 @@ public abstract class CommonPersistenceVerticle extends Verticle {
     }
 
     protected boolean exists(Path path) {
-        return Node.exists(path);
+        return MapDbService.get().exists(path);
     }
 
 
     protected void delete(Optional<JsonObject> auth, Path path, Handler<ChangeLog> handler) {
-        Node parent = Node.of(path.parent());
+        Node parent = MapDbService.get().of(path.parent());
         Object value = parent.get(path.lastElement());
 
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path, value), (Message<Boolean> event) -> {

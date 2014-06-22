@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.common.SandBoxedScriptingEnvironment;
+import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.Node;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
@@ -64,7 +65,7 @@ public class Authorizator extends Verticle {
         Object value = message.body().getValue("payload");
         JsonObject localAuth = auth.orElse(ANONYMOUS);
         try {
-            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
+            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbService.get().of(Path.of("/rules")));
             if (localAuth.containsField("rules")) {
                 RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
                 message.reply(evaluateRules(operation, path, value, localAuth, userRules));
@@ -90,7 +91,7 @@ public class Authorizator extends Verticle {
         Object value = message.body().getValue("payload");
         JsonObject localAuth = auth.orElse(ANONYMOUS);
         try {
-            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
+            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbService.get().of(Path.of("/rules")));
             if (localAuth.containsField("rules")) {
                 RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
                 message.reply(evaluateValidation(operation, path, value, localAuth, userRules));
@@ -174,7 +175,7 @@ public class Authorizator extends Verticle {
                 Operation operation = Operation.READ;
                 JsonObject localAuth = auth.orElse(ANONYMOUS);
 
-                RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
+                RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbService.get().of(Path.of("/rules")));
                 if (localAuth.containsField("rules")) {
                     RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
                     if (evaluateRules(operation, path, value, localAuth, userRules)) {
@@ -189,7 +190,7 @@ public class Authorizator extends Verticle {
             Operation operation = Operation.READ;
             JsonObject localAuth = auth.orElse(ANONYMOUS);
 
-            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(Node.of(Path.of("/rules")));
+            RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbService.get().of(Path.of("/rules")));
             if (localAuth.containsField("rules")) {
                 RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
                 if (evaluateRules(operation, path, content, localAuth, userRules)) {

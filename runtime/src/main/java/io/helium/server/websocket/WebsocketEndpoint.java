@@ -31,6 +31,7 @@ import io.helium.event.changelog.*;
 import io.helium.persistence.EventSource;
 import io.helium.persistence.Persistence;
 import io.helium.persistence.actions.Get;
+import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.helium.persistence.queries.QueryEvaluator;
@@ -361,15 +362,15 @@ public class WebsocketEndpoint {
 
     private void processQuery(ChangeLogEvent event) {
         Path nodePath = event.path();
-        if (Node.exists(nodePath)) {
+        if (MapDbService.get().exists(nodePath)) {
             nodePath = nodePath.parent();
         }
 
         if (hasQuery(nodePath.parent())) {
             for (Entry<String, String> queryEntry : queryEvaluator.getQueries()) {
                 if (event.value() != null) {
-                    JsonObject value = Node.of(nodePath).toJsonObject();
-                    JsonObject parent = Node.of(nodePath.parent()).toJsonObject();
+                    JsonObject value = MapDbService.get().of(nodePath).toJsonObject();
+                    JsonObject parent = MapDbService.get().of(nodePath.parent()).toJsonObject();
                     boolean matches = queryEvaluator.evaluateQueryOnValue(value, queryEntry.getValue());
                     boolean containsNode = queryEvaluator.queryContainsNode(new Path(queryEntry.getKey()),
                             queryEntry.getValue(), nodePath);
@@ -634,10 +635,10 @@ public class WebsocketEndpoint {
 
     public void syncPath(ChangeLog log, Path path) {
         Node node;
-        if (Node.exists(path)) {
-            node = Node.of(path);
+        if (MapDbService.get().exists(path)) {
+            node = MapDbService.get().of(path);
         } else {
-            node = Node.of(path.parent());
+            node = MapDbService.get().of(path.parent());
         }
 
         for (String childNodeKey : node.keys()) {
@@ -657,10 +658,10 @@ public class WebsocketEndpoint {
     public void syncPathWithQuery(ChangeLog log, Path path, WebsocketEndpoint handler,
                                   QueryEvaluator queryEvaluator, String query) {
         Node node;
-        if (Node.exists(path)) {
-            node = Node.of(path);
+        if (MapDbService.get().exists(path)) {
+            node = MapDbService.get().of(path);
         } else {
-            node = Node.of(path.parent());
+            node = MapDbService.get().of(path.parent());
         }
 
         for (String childNodeKey : node.keys()) {
@@ -674,7 +675,7 @@ public class WebsocketEndpoint {
     }
 
     public void syncPropertyValue(ChangeLog log, Path path) {
-        Node node = Node.of(path.parent());
+        Node node = MapDbService.get().of(path.parent());
         String childNodeKey = path.lastElement();
         if (node.has(path.lastElement())) {
             Object object = node.get(path.lastElement());

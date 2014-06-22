@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.helium.persistence.visitor;
+package io.helium.persistence.mapdb.visitor;
 
 import io.helium.common.Path;
 import io.helium.persistence.mapdb.Node;
