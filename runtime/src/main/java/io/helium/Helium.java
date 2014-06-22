@@ -39,19 +39,20 @@ public class Helium extends Verticle {
     @Override
     public void start(Future<Void> startedResult) {
         try {
+            System.out.println("Helium available processors: "+Runtime.getRuntime().availableProcessors());
             new File("helium").mkdirs();
             MapDbService.get();
             // Workers
             container.deployWorkerVerticle(Authorizator.class.getName(),
-                    container.config().getObject("authorizator", defaultAuthorizatorConfig()));
+                    container.config().getObject("authorizator", defaultAuthorizatorConfig()), 1, true);
             container.deployWorkerVerticle(EventSource.class.getName(),
-                    container.config().getObject("journal", defaultJournalConfig()));
+                    container.config().getObject("journal", defaultJournalConfig()), 1, true);
 
-            container.deployWorkerVerticle(Get.class.getName(), container.config());
-            container.deployWorkerVerticle(Post.class.getName(), container.config());
-            container.deployWorkerVerticle(Put.class.getName(), container.config());
-            container.deployWorkerVerticle(Delete.class.getName(), container.config());
-            container.deployWorkerVerticle(Update.class.getName(), container.config());
+            container.deployWorkerVerticle(Get.class.getName(), container.config(), 1, true);
+            container.deployWorkerVerticle(Post.class.getName(), container.config(), 1, true);
+            container.deployWorkerVerticle(Put.class.getName(), container.config(), 1, true);
+            container.deployWorkerVerticle(Delete.class.getName(), container.config(), 1, true);
+            container.deployWorkerVerticle(Update.class.getName(), container.config(), 1, true);
 
             container.deployWorkerVerticle(PersistenceExecutor.class.getName(),
                     container.config().getObject("mapdb", createPersistenceDefaultConfig()));

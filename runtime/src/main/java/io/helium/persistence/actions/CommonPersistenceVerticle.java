@@ -125,11 +125,20 @@ public abstract class CommonPersistenceVerticle extends Verticle {
 
     private void addChangeEvent(ChangeLog log, Path path) {
         Object payload = getObjectForPath(path);
-        log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                .parent(), payload, Node.hasChildren(payload), Node.childCount(payload));
+        if(payload instanceof Node) {
+            log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
+                    .parent(), ((Node)payload).toJsonObject(), Node.hasChildren(payload), Node.childCount(payload));
 
-        log.addValueChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                .parent(), payload);
+            log.addValueChangedLogEntry(path.lastElement(), path.parent(), path.parent()
+                    .parent(), ((Node)payload).toJsonObject());
+        }
+        else {
+            log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
+                    .parent(), payload, Node.hasChildren(payload), Node.childCount(payload));
+
+            log.addValueChangedLogEntry(path.lastElement(), path.parent(), path.parent()
+                    .parent(), payload);
+        }
         if (!path.isEmtpy()) {
             addChangeEvent(log, path.parent());
         }

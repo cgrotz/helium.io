@@ -64,15 +64,12 @@ public class EventSource extends Verticle {
     public void onReceive(Message<JsonObject> message) {
         try {
             HeliumEvent event = HeliumEvent.of(message.body());
-
-            long startTime = System.currentTimeMillis();
             if (!event.isFromHistory() || event.isNoAuth()) {
-                container.logger().info("storing event: " + event);
                 Location write = journal.write(event.toString().getBytes(), WriteType.SYNC);
                 journal.sync();
                 currentLocation = Optional.of(write);
             }
-            container.logger().info("onEvent " + (System.currentTimeMillis() - startTime) + "ms; event processing time " + (System.currentTimeMillis() - event.getLong("creationDate")) + "ms");
+            message.reply();
         } catch (Exception exp) {
             container.logger().error("Failed storing event", exp);
         }

@@ -147,6 +147,7 @@
 <div>
     <canvas id="drawing-canvas" width="480" height="420"></canvas>
     <a href="#" id="login">Login</a>
+    <a href="#" id="clear">Clear</a>
 </div>
 <div id="colorholder"></div>
 <script>
@@ -159,6 +160,9 @@
 
     $('#login').click(function(){
       pixelDataRef.authenticate('admin','admin');
+    });
+    $('#clear').click(function(){
+      pixelDataRef.set({});
     });
 
     // Set up our canvas

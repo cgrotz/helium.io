@@ -190,15 +190,20 @@ public class WebsocketEndpoint {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 container.logger().info("Security Check took: "+(System.currentTimeMillis()-start)+"ms");
-                vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send( Put.SET, event, (Message<JsonArray> changeLogMsg) -> {
-                    if(changeLogMsg.body().size() > 0) {
-                        container.logger().info("Calculating of Changelog took: "+(System.currentTimeMillis()-start)+"ms");
-                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body(), new Handler<Message<Object>>() {
-                            @Override
-                            public void handle(Message<Object> event) {
-                                container.logger().info("Persisting of Changelog took: "+(System.currentTimeMillis()-start)+"ms");
-                                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                vertx.eventBus().send(EventSource.PERSIST_EVENT, event, new Handler<Message<Object>>() {
+                    @Override
+                    public void handle(Message<Object> journalReply) {
+                        container.logger().info("Storing to Journal took: "+(System.currentTimeMillis()-start)+"ms");
+                        vertx.eventBus().send( Put.SET, event, (Message<JsonArray> changeLogMsg) -> {
+                            if(changeLogMsg.body().size() > 0) {
+                                container.logger().info("Calculating of Changelog took: "+(System.currentTimeMillis()-start)+"ms");
+                                vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body(), new Handler<Message<Object>>() {
+                                    @Override
+                                    public void handle(Message<Object> event) {
+                                        container.logger().info("Persisting of Changelog took: "+(System.currentTimeMillis()-start)+"ms");
+                                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                                    }
+                                });
                             }
                         });
                     }
