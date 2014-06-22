@@ -59,10 +59,8 @@ public class Update extends CommonPersistenceVerticle {
     }
 
     public void updateValue(Optional<JsonObject> auth, Path path, Object payload, Handler<ChangeLog> handler) {
-        vertx.eventBus().send(Authorizator.CHECK,
-            Authorizator.check(Operation.WRITE, auth, path, payload),
-            (Message<Boolean> event) -> {
-                if (event.body()) {
+        Authorizator.get().check(Operation.WRITE, auth, path, payload, (Boolean event) -> {
+                if (event) {
                     Node node;
                     boolean created = false;
                     if (!exists(path)) {

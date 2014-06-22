@@ -16,6 +16,8 @@
 
 package io.helium.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.platform.Container;
 
 import javax.script.*;
@@ -29,13 +31,12 @@ import java.security.cert.Certificate;
  * @author Christoph Grotz
  */
 public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
-    private final Container container;
+    private static final Logger logger = LoggerFactory.getLogger(SandBoxedScriptingEnvironment.class);
     private ScriptEngineManager mgr = new ScriptEngineManager();
     private ScriptEngine engine = mgr.getEngineByName("JavaScript");
     private AccessControlContext accessControlContext;
 
-    public SandBoxedScriptingEnvironment(Container container) {
-        this.container = container;
+    public SandBoxedScriptingEnvironment() {
         Permissions perms = new Permissions();
         perms.add(new RuntimePermission("accessDeclaredMembers"));
         // Cast to Certificate[] required because of ambiguity:
@@ -53,7 +54,7 @@ public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
                 try {
                     return engine.eval(script, context);
                 } catch (ScriptException e) {
-                    container.logger().error(e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }
                 return null;
             }
@@ -68,7 +69,7 @@ public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
                 try {
                     return engine.eval(reader, context);
                 } catch (ScriptException e) {
-                    container.logger().error(e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }
                 return null;
             }
@@ -84,7 +85,7 @@ public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
                 try {
                     return engine.eval(code);
                 } catch (ScriptException e) {
-                    container.logger().error(e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }
                 return null;
             }
@@ -100,7 +101,7 @@ public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
                 try {
                     return engine.eval(reader);
                 } catch (ScriptException e) {
-                    container.logger().error(e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }
                 return null;
             }
@@ -116,7 +117,7 @@ public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
                 try {
                     return engine.eval(script, bindings);
                 } catch (ScriptException e) {
-                    container.logger().error(e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }
                 return null;
             }
@@ -132,7 +133,7 @@ public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
                 try {
                     return engine.eval(reader, bindings);
                 } catch (ScriptException e) {
-                    container.logger().error(e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }
                 return null;
             }
@@ -148,9 +149,9 @@ public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
                 try {
                     return ((Invocable) engine).invokeMethod(thiz, name, args);
                 } catch (ScriptException e) {
-                    container.logger().error(e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 } catch (NoSuchMethodException e) {
-                    container.logger().error(e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }
                 return null;
             }
@@ -166,7 +167,7 @@ public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
                 try {
                     return ((Invocable) engine).invokeFunction(code, args);
                 } catch (ScriptException | NoSuchMethodException e) {
-                    container.logger().error(e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }
                 return null;
             }

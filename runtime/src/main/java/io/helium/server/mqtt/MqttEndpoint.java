@@ -108,22 +108,19 @@ public class MqttEndpoint implements Handler<Buffer> {
 
     public void fireChildAdded(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
         try {
-            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value),
-                    new Handler<Message<Boolean>>() {
+            Authorizator.get().check(Operation.READ, auth, path, value, new Handler<Boolean>() {
                         @Override
-                        public void handle(Message<Boolean> event) {
-                            if (event.body()) {
-                                vertx.eventBus().send(Authorizator.FILTER,
-                                        Authorizator.filter(auth, path, value),
-                                        new Handler<Message<Object>>() {
+                        public void handle(Boolean event) {
+                            if (event) {
+                                Authorizator.get().filter(auth, path, value, new Handler<Object>() {
                                             @Override
-                                            public void handle(Message<Object> event) {
-                                                if (event.body() != null) {
+                                            public void handle(Object event) {
+                                                if (event != null) {
                                                     try {
                                                         ByteBuf buffer = Unpooled.buffer(1);
                                                         encoder.encodePublish(
                                                                 buffer,
-                                                                (int) System.currentTimeMillis(), path.append(name).toString(), event.body().toString());
+                                                                (int) System.currentTimeMillis(), path.append(name).toString(), event.toString());
                                                         socket.write(new Buffer(buffer));
                                                     } catch (Exception e) {
                                                         e.printStackTrace();
@@ -143,21 +140,18 @@ public class MqttEndpoint implements Handler<Buffer> {
 
     public void fireValue(String name, Path path, Path parent, Object value) {
         try {
-            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, value),
-                    new Handler<Message<Boolean>>() {
+            Authorizator.get().check(Operation.READ, auth, path, value,new Handler<Boolean>() {
                         @Override
-                        public void handle(Message<Boolean> event) {
-                            if (event.body()) {
-                                vertx.eventBus().send(Authorizator.FILTER,
-                                        Authorizator.filter(auth, path, value),
-                                        new Handler<Message<Object>>() {
+                        public void handle(Boolean event) {
+                            if (event) {
+                                Authorizator.get().filter(auth, path, value, new Handler<Object>() {
                                             @Override
-                                            public void handle(Message<Object> event) {
-                                                if (event.body() != null) {
+                                            public void handle(Object event) {
+                                                if (event != null) {
                                                     try {
                                                         ByteBuf buffer = Unpooled.buffer();
                                                         encoder.encodePublish(buffer,
-                                                                (int) System.currentTimeMillis(), path.append(name).toString(), event.body().toString());
+                                                                (int) System.currentTimeMillis(), path.append(name).toString(), event.toString());
                                                         socket.write(new Buffer(buffer));
                                                     } catch (Exception e) {
                                                         e.printStackTrace();
@@ -183,11 +177,10 @@ public class MqttEndpoint implements Handler<Buffer> {
     public void distributeEvent(Path path, JsonObject payload) {
         if (matchesSubscribedTopics(path)) {
             try {
-                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, payload),
-                        new Handler<Message<Boolean>>() {
+                Authorizator.get().check(Operation.READ, auth, path, payload, new Handler<Boolean>() {
                             @Override
-                            public void handle(Message<Boolean> event) {
-                                if (event.body()) {
+                            public void handle(Boolean event) {
+                                if (event) {
                                     try {
                                         ByteBuf buffer = Unpooled.buffer(1);
                                         encoder.encodePublish(
@@ -292,8 +285,8 @@ public class MqttEndpoint implements Handler<Buffer> {
                             if (auth.isPresent())
                                 heliumEvent.setAuth(auth.get());
 
-                            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
-                                if (event1.body()) {
+                            Authorizator.get().check(Operation.WRITE, auth, nodePath, data, check -> {
+                                if (check) {
                                     vertx.eventBus().send(EventSource.PERSIST_EVENT, heliumEvent);
                                     vertx.eventBus().send(heliumEvent.getType().eventBus, heliumEvent, (Message<JsonArray> changeLogMsg) -> {
                                         if(changeLogMsg.body().size() > 0) {

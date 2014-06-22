@@ -20,6 +20,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import io.helium.common.Path;
 import io.helium.common.SandBoxedScriptingEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Container;
 
@@ -33,16 +35,15 @@ import java.util.Map.Entry;
  * @author Christoph Grotz
  */
 public class QueryEvaluator {
+    private static final Logger logger = LoggerFactory.getLogger(QueryEvaluator.class);
 
-    private final Container container;
     private Multimap<String, String> attached_queries = HashMultimap.create();
     private Multimap<String, String> nodesForQuery = HashMultimap.create();
 
     private SandBoxedScriptingEnvironment scriptingEnvironment;
 
-    public QueryEvaluator(Container container) {
-        this.container = container;
-        this.scriptingEnvironment = new SandBoxedScriptingEnvironment(container);
+    public QueryEvaluator() {
+        this.scriptingEnvironment = new SandBoxedScriptingEnvironment();
     }
 
 
@@ -67,7 +68,7 @@ public class QueryEvaluator {
             Boolean result = (Boolean) scriptingEnvironment.invokeFunction("query", parsedValue);
             return result.booleanValue();
         } catch (Exception e) {
-            container.logger().error("Error (" + e.getMessage() + ") on Query (" + queryStr + ")", e);
+            logger.error("Error (" + e.getMessage() + ") on Query (" + queryStr + ")", e);
         }
         return false;
     }

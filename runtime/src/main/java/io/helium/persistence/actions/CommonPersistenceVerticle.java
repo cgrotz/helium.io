@@ -36,10 +36,8 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                                  Path path,
                                  Object payload,
                                  Handler<ChangeLog> handler ) {
-        vertx.eventBus().send(Authorizator.CHECK,
-                Authorizator.check(Operation.WRITE, auth, path, payload),
-                (Message<Boolean> event) -> {
-                    if (event.body()) {
+        Authorizator.get().check(Operation.WRITE, auth, path, payload, check -> {
+                if (check) {
                         ChangeLog changeLog = new ChangeLog(new JsonArray());
 
                         Node parent;
@@ -89,8 +87,8 @@ public abstract class CommonPersistenceVerticle extends Verticle {
             for (String key : payload.getFieldNames()) {
                 Object value = payload.getField(key);
                 if (value instanceof JsonObject) {
-                    vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
-                        if (event.body()) {
+                    Authorizator.get().check(Operation.WRITE, auth, path.append(key), value, check -> {
+                        if (check) {
                             Node childNode = MapDbService.get().of(path.append(key));
                             if (node.has(key)) {
                                 logBuilder.addNew(key, childNode);
@@ -102,17 +100,15 @@ public abstract class CommonPersistenceVerticle extends Verticle {
                         }
                     });
                 } else {
-                    vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path.append(key), value), (Message<Boolean> event) -> {
-                        if (event.body()) {
-                            vertx.eventBus().send(Authorizator.VALIDATE,
-                                    Authorizator.validate(auth, path.append(key), value),
-                                    (Message<Object> event1) -> {
+                    Authorizator.get().check(Operation.WRITE, auth, path.append(key), value, check -> {
+                        if (check) {
+                            Authorizator.get().validate(auth, path.append(key), value, validatedValue -> {
                                         if (node.has(key)) {
-                                            logBuilder.addChange(key, event1.body());
+                                            logBuilder.addChange(key, validatedValue);
                                         } else {
-                                            logBuilder.addNew(key, event1.body());
+                                            logBuilder.addNew(key, validatedValue);
                                         }
-                                        if (event1.body() == null) {
+                                        if (validatedValue == null) {
                                             logBuilder.addDeleted(key, node.get(key));
                                         }
                                     }
@@ -162,9 +158,8 @@ public abstract class CommonPersistenceVerticle extends Verticle {
     protected void delete(Optional<JsonObject> auth, Path path, Handler<ChangeLog> handler) {
         Node parent = MapDbService.get().of(path.parent());
         Object value = parent.get(path.lastElement());
-
-        vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, path, value), (Message<Boolean> event) -> {
-            if (event.body()) {
+        Authorizator.get().check(Operation.WRITE, auth, path, value, check -> {
+            if (check) {
                 ChangeLog changeLog = new ChangeLog(new JsonArray());
                 if (value instanceof Node) {
                     ((Node) value).accept(path, new ChildDeletedSubTreeVisitor(changeLog));

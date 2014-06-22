@@ -73,8 +73,8 @@ public class RestHandler implements Handler<HttpServerRequest> {
             if (auth.isPresent())
                 event.setAuth(auth.get());
 
-            vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, null), (Message<Boolean> event1) -> {
-                if (event1.body()) {
+            Authorizator.get().check(Operation.WRITE, auth, nodePath, null, (Boolean event1) -> {
+                if (event1) {
                     vertx.eventBus().send(Delete.DELETE, event, new Handler<Message>() {
                         @Override
                         public void handle(Message event) {
@@ -99,8 +99,8 @@ public class RestHandler implements Handler<HttpServerRequest> {
                 if (auth.isPresent())
                     event.setAuth(auth.get());
 
-                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
-                    if (event1.body()) {
+                Authorizator.get().check(Operation.WRITE, auth, nodePath, data, (Boolean event1) -> {
+                    if (event1) {
                         vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
                         vertx.eventBus().send(event.getType().eventBus, event, (Message<JsonArray> changeLogMsg) -> {
                             if(changeLogMsg.body().size() > 0) {
@@ -134,8 +134,8 @@ public class RestHandler implements Handler<HttpServerRequest> {
                     if (auth.isPresent())
                         event.setAuth(auth.get());
 
-                    vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, data), (Message<Boolean> event1) -> {
-                        if (event1.body()) {
+                    Authorizator.get().check(Operation.WRITE, auth, nodePath, data, (Boolean event1) -> {
+                        if (event1) {
                             vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
                             vertx.eventBus().send(event.getType().eventBus, event, (Message<JsonArray> changeLogMsg) -> {
                                 if(changeLogMsg.body().size() > 0) {
@@ -156,17 +156,16 @@ public class RestHandler implements Handler<HttpServerRequest> {
     private void get(HttpServerRequest req, Path path) {
         extractAuthentication(req, auth -> {
             vertx.eventBus().send(Get.GET, Get.request(path), (Message<Object> msg) -> {
-                vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, msg.body()), new Handler<Message<Boolean>>() {
+                Authorizator.get().check(Operation.READ, auth, path, msg.body(), new Handler<Boolean>() {
                     @Override
-                    public void handle(Message<Boolean> event) {
-                        if (event.body()) {
-                            vertx.eventBus().send(Authorizator.FILTER,
-                                    Authorizator.filter(auth, path, msg.body()),
-                                    new Handler<Message<Object>>() {
+                    public void handle(Boolean event) {
+                        if (event) {
+                            Authorizator.get().filter(auth, path, msg.body(),
+                                    new Handler<Object>() {
                                         @Override
-                                        public void handle(Message<Object> event) {
-                                            if (event.body() != null) {
-                                                req.response().end(event.body().toString());
+                                        public void handle(Object event) {
+                                            if (event != null) {
+                                                req.response().end(event.toString());
                                             } else {
                                                 req.response().setStatusCode(404).end();
                                             }

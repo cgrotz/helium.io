@@ -22,6 +22,8 @@ import io.helium.event.HeliumEvent;
 import io.helium.common.SandBoxedScriptingEnvironment;
 import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
@@ -34,90 +36,59 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public class Authorizator extends Verticle {
+public class Authorizator {
+    private static final Logger logger = LoggerFactory.getLogger(SandBoxedScriptingEnvironment.class);
     private final static JsonObject ANONYMOUS = new JsonObject().putBoolean("isAnonymous", true);
 
-    public static final String FILTER = "io.helium.authorizator.filter";
-    public static final String CHECK = "io.helium.authorizator.check";
-    public static final String VALIDATE = "io.helium.authorizator.validate";
-
-    private SandBoxedScriptingEnvironment scriptingEnvironment;
+    private SandBoxedScriptingEnvironment scriptingEnvironment = new SandBoxedScriptingEnvironment();
     private Map<String, String> functions = Maps.newHashMap();
 
-    @Override
-    public void start() {
-        this.scriptingEnvironment = new SandBoxedScriptingEnvironment(container);
-        vertx.eventBus().registerHandler(FILTER, this::filter );
-        vertx.eventBus().registerHandler(VALIDATE, this::validate);
-        vertx.eventBus().registerHandler(CHECK, this::check);
+    private static final Authorizator instance = new Authorizator();
+
+    private Authorizator() {
     }
 
-    private void check(Message<JsonObject> message) {
-        Operation operation = Operation.get(message.body().getString("operation"));
-        Optional<JsonObject> auth;
-        if (message.body().containsField("auth")) {
-            auth = Optional.of(message.body().getObject("auth"));
-        } else {
-            auth = Optional.empty();
-        }
+    public static Authorizator get() {
+        return instance;
+    }
 
-        Path path = Path.of(message.body().getString("path"));
-        Object value = message.body().getValue("payload");
+    public void check(Operation operation, Optional<JsonObject> auth, Path path, Object value, Handler<Boolean> handler) {
         JsonObject localAuth = auth.orElse(ANONYMOUS);
         try {
             RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbService.get().of(Path.of("/rules")));
             if (localAuth.containsField("rules")) {
                 RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
-                message.reply(evaluateRules(operation, path, value, localAuth, userRules));
+                handler.handle(evaluateRules(operation, path, value, localAuth, userRules));
             }
             else {
-                message.reply(evaluateRules(operation, path, value, localAuth, globalRules));
+                handler.handle(evaluateRules(operation, path, value, localAuth, globalRules));
             }
         } catch (NoSuchMethodException | ScriptException e) {
-            message.reply(Boolean.FALSE);
+            handler.handle(Boolean.FALSE);
         }
     }
 
-    private void validate(Message<JsonObject> message) {
-        Operation operation = Operation.get(message.body().getString("operation"));
-        Optional<JsonObject> auth;
-        if (message.body().containsField("auth")) {
-            auth = Optional.of(message.body().getObject("auth"));
-        } else {
-            auth = Optional.empty();
-        }
-
-        Path path = Path.of(message.body().getString("path"));
-        Object value = message.body().getValue("payload");
+    public void validate(Optional<JsonObject> auth, Path path, Object value, Handler<Object> handler) {
         JsonObject localAuth = auth.orElse(ANONYMOUS);
         try {
             RuleBasedAuthorizator globalRules = new RuleBasedAuthorizator(MapDbService.get().of(Path.of("/rules")));
             if (localAuth.containsField("rules")) {
                 RuleBasedAuthorizator userRules = new RuleBasedAuthorizator(localAuth.getObject("rules"));
-                message.reply(evaluateValidation(operation, path, value, localAuth, userRules));
+                handler.handle(evaluateValidation(Operation.VALIDATE, path, value, localAuth, userRules));
             }
             else {
-                message.reply(evaluateValidation(operation, path, value, localAuth, globalRules));
+                handler.handle(evaluateValidation(Operation.VALIDATE, path, value, localAuth, globalRules));
             }
         } catch (NoSuchMethodException | ScriptException e) {
-            message.reply(value);
+            handler.handle(value);
         }
     }
 
-    private void filter(Message<JsonObject> message) {
-        Optional<JsonObject> auth;
-        if (message.body().containsField("auth")) {
-            auth = Optional.of(message.body().getObject("auth"));
-        } else {
-            auth = Optional.empty();
-        }
-
-        Path path = Path.of(message.body().getString("path"));
-        Object payload = message.body().getValue("payload");
+    public void filter(Optional<JsonObject> auth, Path path, Object payload, Handler<Object> handler) {
         try {
-            message.reply(filterContent(auth, path, payload));
+            handler.handle(filterContent(auth, path, payload));
         } catch (NoSuchMethodException | ScriptException e) {
-            container.logger().error("failed filtering", e);
+            logger.error("failed filtering", e);
         }
     }
 
@@ -209,56 +180,5 @@ public class Authorizator extends Verticle {
         String password = decodedAuthorizationToken.substring(decodedAuthorizationToken.indexOf(":") + 1);
 
         return new JsonObject().putString("username", username).putString("password", password);
-    }
-
-    public static JsonObject filter(Optional<JsonObject> auth, Path nodePath, Object value) {
-        JsonObject jsonObject = new JsonObject()
-                .putString("path", nodePath.toString());
-
-        if (value instanceof Node) {
-            jsonObject.putValue("payload", ((Node) value).toJsonObject());
-        } else if (value instanceof DataSnapshot) {
-            jsonObject.putValue("payload", ((DataSnapshot) value).val());
-        } else {
-            jsonObject.putValue("payload", value);
-        }
-
-
-        if (auth.isPresent()) {
-            jsonObject.putObject("auth", new JsonObject(auth.get().toString()));
-        }
-        return jsonObject;
-    }
-
-    public static JsonObject check(Operation operation, Optional<JsonObject> auth, Path path, Object value) {
-        JsonObject event = new JsonObject().putString("operation", operation.getOp());
-        if (auth.isPresent()) {
-            event.putObject("auth", auth.get());
-        }
-        event.putString("path", path.toString());
-        if (value instanceof Node) {
-            event.putValue("payload", ((Node) value).toJsonObject());
-        } else if (value instanceof DataSnapshot) {
-            event.putValue("payload", ((DataSnapshot) value).val());
-        } else {
-            event.putValue("payload", value);
-        }
-        return event;
-    }
-
-    public static JsonObject validate(Optional<JsonObject> auth, Path path, Object value) {
-        JsonObject event = new JsonObject().putString("operation", Operation.VALIDATE.getOp());
-        if (auth.isPresent()) {
-            event.putObject("auth", auth.get());
-        }
-        event.putString("path", path.toString());
-        if (value instanceof Node) {
-            event.putValue("payload", ((Node) value).toJsonObject());
-        } else if (value instanceof DataSnapshot) {
-            event.putValue("payload", ((DataSnapshot) value).val());
-        } else {
-            event.putValue("payload", value);
-        }
-        return event;
     }
 }

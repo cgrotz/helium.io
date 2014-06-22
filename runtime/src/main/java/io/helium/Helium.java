@@ -43,8 +43,6 @@ public class Helium extends Verticle {
             new File("helium").mkdirs();
             MapDbService.get();
             // Workers
-            container.deployWorkerVerticle(Authorizator.class.getName(),
-                    container.config().getObject("authorizator", defaultAuthorizatorConfig()), 1, true);
             container.deployWorkerVerticle(EventSource.class.getName(),
                     container.config().getObject("journal", defaultJournalConfig()), 1, true);
 
