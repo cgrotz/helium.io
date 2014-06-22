@@ -20,11 +20,8 @@ import java.util.concurrent.Executors;
 public class PersistenceExecutor extends Verticle {
     public static final String PERSIST_CHANGE_LOG = "io.helium.changelog.persist";
 
-    private ExecutorService executor = Executors.newCachedThreadPool();
-    private int count = 0;
     @Override
     public void start() {
-        MapDbService.get().dir(new File(container.config().getString("directory")));
         vertx.eventBus().registerHandler(PERSIST_CHANGE_LOG, this::applyChangeLog );
 
         try {
@@ -56,36 +53,37 @@ public class PersistenceExecutor extends Verticle {
     }
 
     /**
-     * TODO - make Persistence a 3 Step process:
      * 1. Compile Changelog
      * 2. Distribute Changelog
      * 3. Adapt changes from Changelog
      */
     private void applyChangeLog(Message<JsonArray> message) {
-        container.logger().info("Persisting changelog: "+message.body());
-        ChangeLog changeLog = ChangeLog.of(message.body());
-        changeLog.forEach(obj -> {
-            JsonObject logEvent = (JsonObject) obj;
-            if (logEvent.getString("type").equals(ChildAdded.class.getSimpleName())) {
-                childAdded(ChildAdded.of(logEvent));
-            }
-            if (logEvent.getString("type").equals(ChildChanged.class.getSimpleName())) {
-                childChanged(ChildChanged.of(logEvent));
-            }
-            if (logEvent.getString("type").equals(ValueChanged.class.getSimpleName())) {
-                valueChanged(ValueChanged.of(logEvent));
-            }
-            if (logEvent.getString("type").equals(ChildDeleted.class.getSimpleName())) {
-                childDeleted(ChildDeleted.of(logEvent));
-            }
-        });
-        if(count > 5) {
+        try {
+            container.logger().info("Persisting changelog: " + message.body());
+            ChangeLog changeLog = ChangeLog.of(message.body());
+            changeLog.forEach(obj -> {
+                JsonObject logEvent = (JsonObject) obj;
+                if (logEvent.getString("type").equals(ChildAdded.class.getSimpleName())) {
+                    childAdded(ChildAdded.of(logEvent));
+                }
+                if (logEvent.getString("type").equals(ChildChanged.class.getSimpleName())) {
+                    childChanged(ChildChanged.of(logEvent));
+                }
+                if (logEvent.getString("type").equals(ValueChanged.class.getSimpleName())) {
+                    valueChanged(ValueChanged.of(logEvent));
+                }
+                if (logEvent.getString("type").equals(ChildDeleted.class.getSimpleName())) {
+                    childDeleted(ChildDeleted.of(logEvent));
+                }
+            });
             long start = System.currentTimeMillis();
-            MapDbService.get().getDb().commit();
-            container.logger().info("Commiting took: " + (System.currentTimeMillis() - start) + "ms");
-            count = 0;
+            MapDbService.get().commit();
+            container.logger().info("Committing took: "+(System.currentTimeMillis()-start)+"ms");
+            message.reply();
         }
-        count++;
+        catch(Exception e) {
+            message.fail(500,e.getMessage());
+        }
     }
 
     private void childAdded(ChildAdded logEvent) {
@@ -103,7 +101,6 @@ public class PersistenceExecutor extends Verticle {
     private void childDeleted(ChildDeleted logEvent) {
         Node parent = MapDbService.get().of(logEvent.path().parent());
         parent.delete(logEvent.path().lastElement());
-        MapDbService.get().getDb().commit();
     }
 
     private void valueChanged(ValueChanged logEvent) {

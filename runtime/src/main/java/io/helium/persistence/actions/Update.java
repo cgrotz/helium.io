@@ -22,7 +22,6 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
-import io.helium.persistence.Persistence;
 import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.mapdb.MapDbService;
 import org.vertx.java.core.Handler;
@@ -34,9 +33,11 @@ import java.util.Optional;
 
 public class Update extends CommonPersistenceVerticle {
 
+    public static final String UPDATE = "io.helium.persistor.update";
+
     @Override
     public void start() {
-        vertx.eventBus().registerHandler( Persistence.UPDATE, this::handle );
+        vertx.eventBus().registerHandler( UPDATE, this::handle );
     }
 
     public void handle(Message<JsonObject> msg) {
@@ -101,7 +102,6 @@ public class Update extends CommonPersistenceVerticle {
                                 path.parent().parent().parent(), parent, false, 0);
 
                     }
-                    MapDbService.get().getDb().commit();
                     handler.handle(log);
                 }
             }

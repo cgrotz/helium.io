@@ -3,13 +3,10 @@ package io.helium;
 import com.google.common.io.Files;
 import io.helium.authorization.Authorizator;
 import io.helium.persistence.EventSource;
-import io.helium.persistence.Persistence;
-import io.helium.persistence.mapdb.MapDbService;
+import io.helium.persistence.actions.*;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
 import org.junit.Test;
-import org.mapdb.DB;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.testtools.TestVerticle;
 import org.vertx.testtools.VertxAssert;
@@ -31,19 +28,12 @@ public class SimpleTest extends TestVerticle {
         container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
         container.deployWorkerVerticle(EventSource.class.getName(),
                 container.config().getObject("journal", new JsonObject().putString("directory",(new File(directory,"journal").getAbsolutePath()))));
-        container.deployWorkerVerticle(Persistence.class.getName(),
-                container.config().getObject("mapdb", new JsonObject().putString("directory",(new File(directory,"nodes").getAbsolutePath()))),
-                1, true,
-                event -> {
-                    vertx.setPeriodic(1000, new Handler<Long>() {
-                        @Override
-                        public void handle(Long event) {
-                            DB db = MapDbService.get().getDb();
-                            if( db != null)
-                                db.commit();
-                        }
-                    });
-                });
+
+        container.deployVerticle(Get.class.getName(), container.config());
+        container.deployVerticle(Post.class.getName(), container.config());
+        container.deployVerticle(Put.class.getName(), container.config());
+        container.deployVerticle(Delete.class.getName(), container.config());
+        container.deployVerticle(Update.class.getName(), container.config());
 
         // Channels
         container.deployVerticle(HttpServer.class.getName(), container.config());
@@ -64,19 +54,12 @@ public class SimpleTest extends TestVerticle {
         container.deployWorkerVerticle(Authorizator.class.getName(), container.config());
         container.deployWorkerVerticle(EventSource.class.getName(),
                 container.config().getObject("journal", new JsonObject().putString("directory",(new File(directory,"journal").getAbsolutePath()))));
-        container.deployWorkerVerticle(Persistence.class.getName(),
-                container.config().getObject("mapdb", new JsonObject().putString("directory",(new File(directory,"nodes").getAbsolutePath()))),
-                1, true,
-                event -> {
-                    vertx.setPeriodic(1000, new Handler<Long>() {
-                        @Override
-                        public void handle(Long event) {
-                            DB db = MapDbService.get().getDb();
-                            if( db != null)
-                                db.commit();
-                        }
-                    });
-                });
+
+        container.deployVerticle(Get.class.getName(), container.config());
+        container.deployVerticle(Post.class.getName(), container.config());
+        container.deployVerticle(Put.class.getName(), container.config());
+        container.deployVerticle(Delete.class.getName(), container.config());
+        container.deployVerticle(Update.class.getName(), container.config());
 
         // Channels
         container.deployVerticle(HttpServer.class.getName(), container.config());

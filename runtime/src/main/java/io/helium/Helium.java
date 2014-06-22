@@ -19,13 +19,16 @@ package io.helium;
 import io.helium.authorization.Authorizator;
 import io.helium.management.ManagementConsole;
 import io.helium.persistence.EventSource;
-import io.helium.persistence.Persistence;
+import io.helium.persistence.actions.*;
+import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
 import org.vertx.java.core.Future;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
+
+import java.io.File;
 
 /**
  * Main entry point for Helium
@@ -36,20 +39,28 @@ public class Helium extends Verticle {
     @Override
     public void start(Future<Void> startedResult) {
         try {
+            new File("helium").mkdirs();
+            MapDbService.get();
             // Workers
             container.deployWorkerVerticle(Authorizator.class.getName(),
                     container.config().getObject("authorizator", defaultAuthorizatorConfig()));
             container.deployWorkerVerticle(EventSource.class.getName(),
                     container.config().getObject("journal", defaultJournalConfig()));
-            container.deployWorkerVerticle(Persistence.class.getName(), container.config());
+
+            container.deployWorkerVerticle(Get.class.getName(), container.config());
+            container.deployWorkerVerticle(Post.class.getName(), container.config());
+            container.deployWorkerVerticle(Put.class.getName(), container.config());
+            container.deployWorkerVerticle(Delete.class.getName(), container.config());
+            container.deployWorkerVerticle(Update.class.getName(), container.config());
+
             container.deployWorkerVerticle(PersistenceExecutor.class.getName(),
                     container.config().getObject("mapdb", createPersistenceDefaultConfig()));
 
             // Channels
             container.deployVerticle(HttpServer.class.getName(), container.config().getObject("http", defaultHttpConfig() ));
             container.deployVerticle(MqttServer.class.getName(), container.config().getObject("mqtt", defaultMqttConfig()));
-
             container.deployVerticle(ManagementConsole.class.getName(), container.config().getObject("management", new JsonObject()));
+
             startedResult.complete();
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);

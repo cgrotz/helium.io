@@ -29,14 +29,14 @@ public class Node {
 
     Node() {
         pathToNode = Path.of("/");
-        attributes = MapDbService.get().getDb().getTreeMap("rootAttributes");
-        nodes = MapDbService.get().getDb().createTreeMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
+        attributes = MapDbService.get().getTreeMap("rootAttributes");
+        nodes = MapDbService.get().createTreeMap("rootNodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
     }
 
     protected Node(Path pathToNode) {
         this.pathToNode = pathToNode;
-        attributes = MapDbService.get().getDb().getTreeMap(pathToNode + "Attributes");
-        nodes = MapDbService.get().getDb().createTreeMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
+        attributes = MapDbService.get().getTreeMap(pathToNode + "Attributes");
+        nodes = MapDbService.get().createTreeMap(pathToNode + "Nodes").valueSerializer(new MapDbBackeNodeSerializer()).makeOrGet();
     }
 
     /**

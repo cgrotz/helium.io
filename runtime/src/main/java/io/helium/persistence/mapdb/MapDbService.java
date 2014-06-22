@@ -1,6 +1,7 @@
 package io.helium.persistence.mapdb;
 
 import io.helium.common.Path;
+import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
@@ -19,41 +20,37 @@ public class MapDbService {
         return instance.get();
     }
 
-    private Optional<DB> db = Optional.empty();
+    private DB db;
 
     private MapDbService() {
+        this.db = createDb();
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-            try {
-                System.out.println("Shutdown MapDB Data Store");
-                if(!db.isPresent()) {
-                    if(!db.get().isClosed()) {
-                        db.get().commit();
-                        db.get().compact();
-                        db.get().close();
+                try {
+                    System.out.println("Shutdown MapDB Data Store");
+                    if(!db.isClosed()) {
+                        db.commit();
+                        db.compact();
+                        db.close();
                     }
                 }
-            }
-            catch( Exception e) {
-            }
+                catch( Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
 
-    public DB getDb() {
-        if(directory.isPresent()) {
-            db = db.of(db.orElseGet(() -> DBMaker.newFileDB(directory.get())
-                    .closeOnJvmShutdown()
-                    .make()));
-            return db.get();
-        }
-        return null;
+    private DB createDb() {
+        return DBMaker.newFileDB(new File("helium/nodes"))
+                .closeOnJvmShutdown()
+                .make();
     }
 
 
     public boolean exists(Path path) {
-        return db.get().exists(path.toString() + "Attributes");
+        return db.exists(path.toString() + "Attributes");
     }
 
     public Node root() {
@@ -73,9 +70,15 @@ public class MapDbService {
         return node;
     }
 
-    private Optional<File> directory = Optional.empty();
-    public void dir(File directory) {
-        directory.getParentFile().mkdirs();
-        this.directory = Optional.of(directory);
+    public BTreeMap<String, Object> getTreeMap(String key) {
+        return db.getTreeMap(key);
+    }
+
+    public DB.BTreeMapMaker createTreeMap(String key) {
+        return db.createTreeMap(key);
+    }
+
+    public void commit() {
+        db.commit();
     }
 }

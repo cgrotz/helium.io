@@ -19,18 +19,15 @@ package io.helium.persistence.actions;
 import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.event.changelog.ChangeLog;
-import io.helium.persistence.Persistence;
-import org.vertx.java.core.Future;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
 public class Delete extends CommonPersistenceVerticle{
+    public static final String DELETE = "io.helium.persistor.delete";
 
     @Override
     public void start() {
-        vertx.eventBus().registerHandler( Persistence.DELETE, this::handle );
+        vertx.eventBus().registerHandler( DELETE, this::handle );
     }
 
     public void handle(Message<JsonObject> msg) {

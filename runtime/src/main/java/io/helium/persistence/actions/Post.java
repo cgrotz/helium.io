@@ -19,20 +19,17 @@ package io.helium.persistence.actions;
 import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.event.changelog.ChangeLog;
-import io.helium.persistence.Persistence;
-import org.vertx.java.core.Future;
-import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.UUID;
 
 public class Post extends CommonPersistenceVerticle {
+    public static final String PUSH = "io.helium.persistor.push";
 
     @Override
     public void start() {
-        vertx.eventBus().registerHandler( Persistence.PUSH, this::handle );
+        vertx.eventBus().registerHandler( PUSH, this::handle );
     }
 
     public void handle(Message<JsonObject> msg) {

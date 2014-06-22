@@ -29,8 +29,10 @@ import io.helium.event.HeliumEventType;
 import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.event.changelog.*;
 import io.helium.persistence.EventSource;
-import io.helium.persistence.Persistence;
 import io.helium.persistence.actions.Get;
+import io.helium.persistence.actions.Post;
+import io.helium.persistence.actions.Put;
+import io.helium.persistence.actions.Update;
 import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.mapdb.PersistenceExecutor;
@@ -164,7 +166,7 @@ public class WebsocketEndpoint {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistence.PUSH, event, (Message<JsonArray> changeLogMsg) -> {
+                vertx.eventBus().send(Post.PUSH, event, (Message<JsonArray> changeLogMsg) -> {
                     if(changeLogMsg.body().size() > 0) {
                         vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                         vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
@@ -179,6 +181,7 @@ public class WebsocketEndpoint {
 
     @Rpc.Method
     public void set(@Rpc.Param("path") String path, @Rpc.Param("data") Object data) {
+        long start = System.currentTimeMillis();
         container.logger().trace("set");
         HeliumEvent event = new HeliumEvent(HeliumEventType.SET, path, data);
         if (auth.isPresent())
@@ -186,11 +189,18 @@ public class WebsocketEndpoint {
 
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), data), (Message<Boolean> event1) -> {
             if (event1.body()) {
+                container.logger().info("Security Check took: "+(System.currentTimeMillis()-start)+"ms");
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistence.SET, event, (Message<JsonArray> changeLogMsg) -> {
+                vertx.eventBus().send( Put.SET, event, (Message<JsonArray> changeLogMsg) -> {
                     if(changeLogMsg.body().size() > 0) {
-                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
-                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                        container.logger().info("Calculating of Changelog took: "+(System.currentTimeMillis()-start)+"ms");
+                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body(), new Handler<Message<Object>>() {
+                            @Override
+                            public void handle(Message<Object> event) {
+                                container.logger().info("Persisting of Changelog took: "+(System.currentTimeMillis()-start)+"ms");
+                                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                            }
+                        });
                     }
                 });
                 container.logger().trace("authorized: " + event);
@@ -210,7 +220,7 @@ public class WebsocketEndpoint {
         vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, Path.of(path), null), (Message<Boolean> event1) -> {
             if (event1.body()) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Persistence.UPDATE, event, (Message<JsonArray> changeLogMsg) -> {
+                vertx.eventBus().send(Update.UPDATE, event, (Message<JsonArray> changeLogMsg) -> {
                     if(changeLogMsg.body().size() > 0) {
                         vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                         vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
@@ -285,7 +295,7 @@ public class WebsocketEndpoint {
     }
 
     private void extractAuthentication(String username, String password, Handler<Optional<JsonObject>> handler) {
-        vertx.eventBus().send(Persistence.GET, Get.request(Path.of("/users")), new Handler<Message<JsonObject>>() {
+        vertx.eventBus().send(Get.GET, Get.request(Path.of("/users")), new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
                 JsonObject users = event.body();

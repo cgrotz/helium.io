@@ -10,8 +10,8 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.persistence.EventSource;
-import io.helium.persistence.Persistence;
 import io.helium.common.DataTypeConverter;
+import io.helium.persistence.actions.Delete;
 import io.helium.persistence.actions.Get;
 import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -75,7 +75,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
 
             vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.WRITE, auth, nodePath, null), (Message<Boolean> event1) -> {
                 if (event1.body()) {
-                    vertx.eventBus().send(Persistence.DELETE, event, new Handler<Message>() {
+                    vertx.eventBus().send(Delete.DELETE, event, new Handler<Message>() {
                         @Override
                         public void handle(Message event) {
                             req.response().end();
@@ -155,7 +155,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
 
     private void get(HttpServerRequest req, Path path) {
         extractAuthentication(req, auth -> {
-            vertx.eventBus().send(Persistence.GET, Get.request(path), (Message<Object> msg) -> {
+            vertx.eventBus().send(Get.GET, Get.request(path), (Message<Object> msg) -> {
                 vertx.eventBus().send(Authorizator.CHECK, Authorizator.check(Operation.READ, auth, path, msg.body()), new Handler<Message<Boolean>>() {
                     @Override
                     public void handle(Message<Boolean> event) {
@@ -206,7 +206,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
             String username = authentication.getString("username");
             String password = authentication.getString("password");
 
-            vertx.eventBus().send(Persistence.GET,
+            vertx.eventBus().send(Get.GET,
                     Get.request(Path.of("/users")),
                     new Handler<Message<JsonObject>>() {
                 @Override

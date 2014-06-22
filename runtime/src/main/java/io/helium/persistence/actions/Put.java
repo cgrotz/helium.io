@@ -19,15 +19,15 @@ package io.helium.persistence.actions;
 import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
-import io.helium.persistence.Persistence;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
 public class Put extends CommonPersistenceVerticle {
+    public static final String SET = "io.helium.persistor.set";
 
     @Override
     public void start() {
-        vertx.eventBus().registerHandler( Persistence.SET, this::handle );
+        vertx.eventBus().registerHandler( SET, this::handle );
     }
 
     public void handle(Message<JsonObject> msg) {
