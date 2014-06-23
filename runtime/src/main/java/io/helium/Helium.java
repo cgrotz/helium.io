@@ -16,10 +16,7 @@
 
 package io.helium;
 
-import io.helium.authorization.Authorizator;
-import io.helium.management.ManagementConsole;
 import io.helium.persistence.Persistence;
-import io.helium.persistence.actions.*;
 import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.helium.server.http.HttpServer;
@@ -50,7 +47,6 @@ public class Helium extends Verticle {
             // Channels
             container.deployVerticle(HttpServer.class.getName(), container.config().getObject("http", defaultHttpConfig() ));
             container.deployVerticle(MqttServer.class.getName(), container.config().getObject("mqtt", defaultMqttConfig()));
-            container.deployVerticle(ManagementConsole.class.getName(), container.config().getObject("management", new JsonObject()));
 
             startedResult.complete();
         } catch (Exception e) {
