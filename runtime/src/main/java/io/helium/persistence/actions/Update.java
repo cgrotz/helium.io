@@ -24,6 +24,8 @@ import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.mapdb.MapDbService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
@@ -32,13 +34,7 @@ import org.vertx.java.core.json.JsonObject;
 import java.util.Optional;
 
 public class Update extends CommonPersistenceVerticle {
-
-    public static final String UPDATE = "io.helium.persistor.update";
-
-    @Override
-    public void start() {
-        vertx.eventBus().registerHandler( UPDATE, this::handle );
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(Update.class);
 
     public void handle(Message<JsonObject> msg) {
         long start = System.currentTimeMillis();
@@ -47,13 +43,13 @@ public class Update extends CommonPersistenceVerticle {
         if (event.containsField(HeliumEvent.PAYLOAD)) {
             Object obj = event.getValue(HeliumEvent.PAYLOAD);
             updateValue(event.getAuth(), path, obj, changeLog -> {
-                msg.reply( changeLog );
-                container.logger().info("Update Action took: "+(System.currentTimeMillis()-start)+"ms");
+                msg.reply(changeLog);
+                LOGGER.info("Update Action took: " + (System.currentTimeMillis() - start) + "ms");
             });
         } else {
             delete(event.getAuth(), path, changeLog -> {
                 msg.reply(changeLog);
-                container.logger().info("Update Action took: "+(System.currentTimeMillis()-start)+"ms");
+                LOGGER.info("Update Action took: " + (System.currentTimeMillis() - start) + "ms");
             });
         }
     }

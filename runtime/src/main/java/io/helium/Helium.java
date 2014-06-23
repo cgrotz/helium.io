@@ -18,7 +18,7 @@ package io.helium;
 
 import io.helium.authorization.Authorizator;
 import io.helium.management.ManagementConsole;
-import io.helium.persistence.EventSource;
+import io.helium.persistence.Persistence;
 import io.helium.persistence.actions.*;
 import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.PersistenceExecutor;
@@ -42,14 +42,7 @@ public class Helium extends Verticle {
             new File("helium").mkdirs();
             MapDbService.get();
             // Workers
-            container.deployWorkerVerticle(EventSource.class.getName(),
-                    container.config().getObject("journal", defaultJournalConfig()), 1, true);
-
-            container.deployWorkerVerticle(Get.class.getName(), container.config(), 1, true);
-            container.deployWorkerVerticle(Post.class.getName(), container.config(), 1, true);
-            container.deployWorkerVerticle(Put.class.getName(), container.config(), 1, true);
-            container.deployWorkerVerticle(Delete.class.getName(), container.config(), 1, true);
-            container.deployWorkerVerticle(Update.class.getName(), container.config(), 1, true);
+            container.deployWorkerVerticle(Persistence.class.getName(), container.config(), 1, true);
 
             container.deployWorkerVerticle(PersistenceExecutor.class.getName(),
                     container.config().getObject("mapdb", createPersistenceDefaultConfig()));
@@ -75,15 +68,7 @@ public class Helium extends Verticle {
                 .putString("basepath", "http://localhost:8080/");
     }
 
-    private JsonObject defaultAuthorizatorConfig() {
-        return container.config();
-    }
-
     private JsonObject createPersistenceDefaultConfig() {
         return new JsonObject().putString("directory", "helium/nodes");
-    }
-
-    private JsonObject defaultJournalConfig() {
-        return new JsonObject().putString("directory", "helium/journal");
     }
 }

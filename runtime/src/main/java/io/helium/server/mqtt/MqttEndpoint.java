@@ -10,9 +10,9 @@ import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChildAdded;
 import io.helium.event.changelog.ValueChanged;
-import io.helium.persistence.EventSource;
 import io.helium.common.DataTypeConverter;
 import io.helium.common.EndpointConstants;
+import io.helium.persistence.Persistence;
 import io.helium.persistence.actions.Get;
 import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.helium.server.mqtt.decoder.MqttDecoder;
@@ -287,9 +287,8 @@ public class MqttEndpoint implements Handler<Buffer> {
 
                             Authorizator.get().check(Operation.WRITE, auth, nodePath, data, check -> {
                                 if (check) {
-                                    vertx.eventBus().send(EventSource.PERSIST_EVENT, heliumEvent);
                                     vertx.eventBus().send(heliumEvent.getType().eventBus, heliumEvent, (Message<JsonArray> changeLogMsg) -> {
-                                        if(changeLogMsg.body().size() > 0) {
+                                        if (changeLogMsg.body().size() > 0) {
                                             vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                                             vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
                                         }
@@ -353,7 +352,7 @@ public class MqttEndpoint implements Handler<Buffer> {
         Optional<String> username = connect.getUsername();
         Optional<String> password = connect.getPassword();
         if (username.isPresent() && password.isPresent()) {
-            vertx.eventBus().send(Get.GET, Get.request(Path.of("/users")), new Handler<Message<JsonObject>>() {
+            vertx.eventBus().send(Persistence.GET, Get.request(Path.of("/users")), new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> event) {
                     JsonObject users = event.body();
@@ -371,7 +370,7 @@ public class MqttEndpoint implements Handler<Buffer> {
                 }
             });
         } else if (clientId != null) {
-            vertx.eventBus().send(Get.GET, Get.request(Path.of("/users/" + clientId)), new Handler<Message<JsonObject>>() {
+            vertx.eventBus().send(Persistence.GET, Get.request(Path.of("/users/" + clientId)), new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> event) {
                     JsonObject user = event.body();

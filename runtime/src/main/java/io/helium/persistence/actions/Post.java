@@ -19,18 +19,15 @@ package io.helium.persistence.actions;
 import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.UUID;
 
 public class Post extends CommonPersistenceVerticle {
-    public static final String PUSH = "io.helium.persistor.push";
-
-    @Override
-    public void start() {
-        vertx.eventBus().registerHandler( PUSH, this::handle );
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(Post.class);
 
     public void handle(Message<JsonObject> msg) {
         long start = System.currentTimeMillis();
@@ -51,13 +48,13 @@ public class Post extends CommonPersistenceVerticle {
         }
         if (path.isEmtpy()) {
             applyNewValue(event.getAuth(), new Path(nodeName), payload, changeLog -> {
-                msg.reply( changeLog );
-                container.logger().info("Post Action took: "+(System.currentTimeMillis()-start)+"ms");
+                msg.reply(changeLog);
+                LOGGER.info("Post Action took: " + (System.currentTimeMillis() - start) + "ms");
             });
         } else {
             applyNewValue(event.getAuth(), path, payload, changeLog -> {
-                msg.reply( changeLog );
-                container.logger().info("Post Action took: "+(System.currentTimeMillis()-start)+"ms");
+                msg.reply(changeLog);
+                LOGGER.info("Post Action took: " + (System.currentTimeMillis() - start) + "ms");
             });
         }
     }

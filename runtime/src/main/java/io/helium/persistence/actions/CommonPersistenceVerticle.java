@@ -20,7 +20,7 @@ import java.util.Optional;
 /**
  * Created by Christoph Grotz on 15.06.14.
  */
-public abstract class CommonPersistenceVerticle extends Verticle {
+public abstract class CommonPersistenceVerticle implements Handler<Message<JsonObject>> {
 
     protected Object get(Path path) {
         if (path.root()) {

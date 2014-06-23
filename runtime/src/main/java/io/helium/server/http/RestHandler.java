@@ -9,8 +9,9 @@ import io.helium.common.PasswordHelper;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.builder.HeliumEventBuilder;
-import io.helium.persistence.EventSource;
 import io.helium.common.DataTypeConverter;
+import io.helium.event.changelog.ChangeLog;
+import io.helium.persistence.Persistence;
 import io.helium.persistence.actions.Delete;
 import io.helium.persistence.actions.Get;
 import io.helium.persistence.mapdb.PersistenceExecutor;
@@ -75,14 +76,12 @@ public class RestHandler implements Handler<HttpServerRequest> {
 
             Authorizator.get().check(Operation.WRITE, auth, nodePath, null, (Boolean event1) -> {
                 if (event1) {
-                    vertx.eventBus().send(Delete.DELETE, event, new Handler<Message>() {
+                    vertx.eventBus().send(Persistence.DELETE, event, new Handler<Message<JsonArray>>() {
                         @Override
-                        public void handle(Message event) {
+                        public void handle(Message<JsonArray> event) {
+                            vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, ChangeLog.of(event.body()));
                             req.response().end();
                         }
-                    });
-                    vertx.eventBus().send(EventSource.PERSIST_EVENT, event, (Message<JsonArray> changeLogMsg) -> {
-                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
                     });
                 }
             });
@@ -101,7 +100,6 @@ public class RestHandler implements Handler<HttpServerRequest> {
 
                 Authorizator.get().check(Operation.WRITE, auth, nodePath, data, (Boolean event1) -> {
                     if (event1) {
-                        vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
                         vertx.eventBus().send(event.getType().eventBus, event, (Message<JsonArray> changeLogMsg) -> {
                             if(changeLogMsg.body().size() > 0) {
                                 vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
@@ -136,7 +134,6 @@ public class RestHandler implements Handler<HttpServerRequest> {
 
                     Authorizator.get().check(Operation.WRITE, auth, nodePath, data, (Boolean event1) -> {
                         if (event1) {
-                            vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
                             vertx.eventBus().send(event.getType().eventBus, event, (Message<JsonArray> changeLogMsg) -> {
                                 if(changeLogMsg.body().size() > 0) {
                                     vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
@@ -155,7 +152,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
 
     private void get(HttpServerRequest req, Path path) {
         extractAuthentication(req, auth -> {
-            vertx.eventBus().send(Get.GET, Get.request(path), (Message<Object> msg) -> {
+            vertx.eventBus().send(Persistence.GET, Get.request(path), (Message<Object> msg) -> {
                 Authorizator.get().check(Operation.READ, auth, path, msg.body(), new Handler<Boolean>() {
                     @Override
                     public void handle(Boolean event) {
@@ -205,7 +202,7 @@ public class RestHandler implements Handler<HttpServerRequest> {
             String username = authentication.getString("username");
             String password = authentication.getString("password");
 
-            vertx.eventBus().send(Get.GET,
+            vertx.eventBus().send(Persistence.GET,
                     Get.request(Path.of("/users")),
                     new Handler<Message<JsonObject>>() {
                 @Override

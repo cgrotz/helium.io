@@ -28,7 +28,7 @@ import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.event.changelog.*;
-import io.helium.persistence.EventSource;
+import io.helium.persistence.Persistence;
 import io.helium.persistence.actions.Get;
 import io.helium.persistence.actions.Post;
 import io.helium.persistence.actions.Put;
@@ -165,8 +165,7 @@ public class WebsocketEndpoint {
 
         Authorizator.get().check(Operation.WRITE, auth, Path.of(path), data, (Boolean event1) -> {
             if (event1) {
-                vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Post.PUSH, event, (Message<JsonArray> changeLogMsg) -> {
+                vertx.eventBus().send(Persistence.PUSH, event, (Message<JsonArray> changeLogMsg) -> {
                     if (changeLogMsg.body().size() > 0) {
                         vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                         vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
@@ -190,20 +189,14 @@ public class WebsocketEndpoint {
         Authorizator.get().check(Operation.WRITE, auth, Path.of(path), data, (Boolean event1) -> {
             if (event1) {
                 container.logger().info("Security Check took: "+(System.currentTimeMillis()-start)+"ms");
-                vertx.eventBus().send(EventSource.PERSIST_EVENT, event, new Handler<Message<Object>>() {
-                    @Override
-                    public void handle(Message<Object> journalReply) {
-                        container.logger().info("Storing to Journal took: " + (System.currentTimeMillis() - start) + "ms");
-                        vertx.eventBus().send(Put.SET, event, (Message<JsonArray> changeLogMsg) -> {
-                            if (changeLogMsg.body().size() > 0) {
-                                container.logger().info("Calculating of Changelog took: " + (System.currentTimeMillis() - start) + "ms");
-                                vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body(), new Handler<Message<Object>>() {
-                                    @Override
-                                    public void handle(Message<Object> event) {
-                                        container.logger().info("Persisting of Changelog took: " + (System.currentTimeMillis() - start) + "ms");
-                                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
-                                    }
-                                });
+                vertx.eventBus().send(Persistence.SET, event, (Message<JsonArray> changeLogMsg) -> {
+                    if (changeLogMsg.body().size() > 0) {
+                        container.logger().info("Calculating of Changelog took: " + (System.currentTimeMillis() - start) + "ms");
+                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body(), new Handler<Message<Object>>() {
+                            @Override
+                            public void handle(Message<Object> event) {
+                                container.logger().info("Persisting of Changelog took: " + (System.currentTimeMillis() - start) + "ms");
+                                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
                             }
                         });
                     }
@@ -224,8 +217,7 @@ public class WebsocketEndpoint {
 
         Authorizator.get().check(Operation.WRITE, auth, Path.of(path), null, (Boolean event1) -> {
             if (event1) {
-                vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
-                vertx.eventBus().send(Update.UPDATE, event, (Message<JsonArray> changeLogMsg) -> {
+                vertx.eventBus().send(Persistence.UPDATE, event, (Message<JsonArray> changeLogMsg) -> {
                     if (changeLogMsg.body().size() > 0) {
                         vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                         vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
@@ -300,7 +292,7 @@ public class WebsocketEndpoint {
     }
 
     private void extractAuthentication(String username, String password, Handler<Optional<JsonObject>> handler) {
-        vertx.eventBus().send(Get.GET, Get.request(Path.of("/users")), new Handler<Message<JsonObject>>() {
+        vertx.eventBus().send(Persistence.GET, Get.request(Path.of("/users")), new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> event) {
                 JsonObject users = event.body();
@@ -626,7 +618,6 @@ public class WebsocketEndpoint {
         for (HeliumEvent event : disconnectEvents) {
             Authorizator.get().check(Operation.WRITE, auth, Path.of(event.getPath()), event.getPayload(), (Boolean event1) -> {
                 if (event1) {
-                    vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
                     vertx.eventBus().send(event.getType().eventBus, event);
                     container.logger().trace("authorized: " + event);
                 } else {

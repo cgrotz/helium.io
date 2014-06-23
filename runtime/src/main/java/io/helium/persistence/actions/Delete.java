@@ -19,16 +19,13 @@ package io.helium.persistence.actions;
 import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
 public class Delete extends CommonPersistenceVerticle{
-    public static final String DELETE = "io.helium.persistor.delete";
-
-    @Override
-    public void start() {
-        vertx.eventBus().registerHandler( DELETE, this::handle );
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(Delete.class);
 
     public void handle(Message<JsonObject> msg) {
         long start = System.currentTimeMillis();
@@ -36,8 +33,8 @@ public class Delete extends CommonPersistenceVerticle{
         Path path = event.extractNodePath();
 
         delete( event.getAuth(), path, changeLog -> {
-            msg.reply( changeLog );
-            container.logger().info("Delete Action took: "+(System.currentTimeMillis()-start)+"ms");
+            msg.reply(changeLog);
+            LOGGER.info("Delete Action took: " + (System.currentTimeMillis() - start) + "ms");
         });
     }
 }

@@ -18,8 +18,9 @@ package io.helium.persistence;
 
 import io.helium.persistence.actions.*;
 import org.vertx.java.core.Future;
+import org.vertx.java.platform.Verticle;
 
-public class Persistence {
+public class Persistence extends Verticle {
 
     public static final String PUSH = "io.helium.persistor.push";
     public static final String SET = "io.helium.persistor.set";
@@ -27,4 +28,13 @@ public class Persistence {
     public static final String UPDATE = "io.helium.persistor.update";
     public static final String GET = "io.helium.persistor.get";
 
+    @Override
+    public void start() {
+        vertx.eventBus().registerHandler( PUSH, new Post() );
+        vertx.eventBus().registerHandler( SET, new Put() );
+        vertx.eventBus().registerHandler( DELETE, new Delete() );
+        vertx.eventBus().registerHandler( UPDATE, new Update() );
+        vertx.eventBus().registerHandler( GET, new Get() );
+
+    }
 }

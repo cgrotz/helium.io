@@ -19,16 +19,13 @@ package io.helium.persistence.actions;
 import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
 public class Put extends CommonPersistenceVerticle {
-    public static final String SET = "io.helium.persistor.set";
-
-    @Override
-    public void start() {
-        vertx.eventBus().registerHandler( SET, this::handle );
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(Put.class);
 
     public void handle(Message<JsonObject> msg) {
         long start = System.currentTimeMillis();
@@ -39,18 +36,18 @@ public class Put extends CommonPersistenceVerticle {
             if (payload == null) {
                 delete( event.getAuth(), path, changeLog -> {
                     msg.reply(changeLog);
-                    container.logger().info("Put Action took: "+(System.currentTimeMillis()-start)+"ms");
+                    LOGGER.info("Put Action took: " + (System.currentTimeMillis() - start) + "ms");
                 });
             } else {
                 applyNewValue(event.getAuth(), path, payload, changeLog -> {
                     msg.reply(changeLog);
-                    container.logger().info("Put Action took: "+(System.currentTimeMillis()-start)+"ms");
+                    LOGGER.info("Put Action took: " + (System.currentTimeMillis() - start) + "ms");
                 });
             }
         } else {
             delete( event.getAuth(), path, changeLog -> {
                 msg.reply(changeLog);
-                container.logger().info("Put Action took: "+(System.currentTimeMillis()-start)+"ms");
+                LOGGER.info("Put Action took: " + (System.currentTimeMillis() - start) + "ms");
             });
         }
     }
