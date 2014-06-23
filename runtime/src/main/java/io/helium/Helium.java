@@ -39,7 +39,6 @@ public class Helium extends Verticle {
     @Override
     public void start(Future<Void> startedResult) {
         try {
-            System.out.println("Helium available processors: "+Runtime.getRuntime().availableProcessors());
             new File("helium").mkdirs();
             MapDbService.get();
             // Workers
