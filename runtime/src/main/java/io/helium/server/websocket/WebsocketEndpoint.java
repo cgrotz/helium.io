@@ -167,7 +167,7 @@ public class WebsocketEndpoint {
             if (event1) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
                 vertx.eventBus().send(Post.PUSH, event, (Message<JsonArray> changeLogMsg) -> {
-                    if(changeLogMsg.body().size() > 0) {
+                    if (changeLogMsg.body().size() > 0) {
                         vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                         vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
                     }
@@ -193,14 +193,14 @@ public class WebsocketEndpoint {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event, new Handler<Message<Object>>() {
                     @Override
                     public void handle(Message<Object> journalReply) {
-                        container.logger().info("Storing to Journal took: "+(System.currentTimeMillis()-start)+"ms");
-                        vertx.eventBus().send( Put.SET, event, (Message<JsonArray> changeLogMsg) -> {
-                            if(changeLogMsg.body().size() > 0) {
-                                container.logger().info("Calculating of Changelog took: "+(System.currentTimeMillis()-start)+"ms");
+                        container.logger().info("Storing to Journal took: " + (System.currentTimeMillis() - start) + "ms");
+                        vertx.eventBus().send(Put.SET, event, (Message<JsonArray> changeLogMsg) -> {
+                            if (changeLogMsg.body().size() > 0) {
+                                container.logger().info("Calculating of Changelog took: " + (System.currentTimeMillis() - start) + "ms");
                                 vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body(), new Handler<Message<Object>>() {
                                     @Override
                                     public void handle(Message<Object> event) {
-                                        container.logger().info("Persisting of Changelog took: "+(System.currentTimeMillis()-start)+"ms");
+                                        container.logger().info("Persisting of Changelog took: " + (System.currentTimeMillis() - start) + "ms");
                                         vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
                                     }
                                 });
@@ -226,7 +226,7 @@ public class WebsocketEndpoint {
             if (event1) {
                 vertx.eventBus().send(EventSource.PERSIST_EVENT, event);
                 vertx.eventBus().send(Update.UPDATE, event, (Message<JsonArray> changeLogMsg) -> {
-                    if(changeLogMsg.body().size() > 0) {
+                    if (changeLogMsg.body().size() > 0) {
                         vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                         vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
                     }
@@ -304,7 +304,7 @@ public class WebsocketEndpoint {
             @Override
             public void handle(Message<JsonObject> event) {
                 JsonObject users = event.body();
-                if(users != null) {
+                if (users != null) {
                     for (String key : users.getFieldNames()) {
                         Object value = users.getObject(key);
                         if (value instanceof JsonObject) {
