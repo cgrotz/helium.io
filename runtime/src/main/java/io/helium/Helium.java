@@ -39,10 +39,10 @@ public class Helium extends Verticle {
             new File("helium").mkdirs();
             MapDbService.get();
             // Workers
-            container.deployWorkerVerticle(Persistence.class.getName(), container.config(), 1, true);
+            container.deployVerticle(Persistence.class.getName(), container.config(), 10);
 
-            container.deployWorkerVerticle(PersistenceExecutor.class.getName(),
-                    container.config().getObject("mapdb", createPersistenceDefaultConfig()));
+            container.deployVerticle(PersistenceExecutor.class.getName(),
+                    container.config().getObject("mapdb", createPersistenceDefaultConfig()), 10);
 
             // Channels
             container.deployVerticle(HttpServer.class.getName(), container.config().getObject("http", defaultHttpConfig() ));
