@@ -25,7 +25,7 @@ public class MqttServerHandler implements Handler<NetSocket> {
     public MqttServerHandler(Vertx vertx, Container container) {
         this.vertx = vertx;
         this.container = container;
-        File file = new File(container.config().getString("directory"));
+        File file = new File(container.config().getString("directory","helium/mqtt"));
         file.getParentFile().mkdirs();
         this.db = DBMaker.newFileDB(file)
                 .closeOnJvmShutdown()

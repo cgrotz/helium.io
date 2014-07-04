@@ -39,32 +39,16 @@ public class Helium extends Verticle {
             new File("helium").mkdirs();
             MapDbService.get();
             // Workers
-            container.deployVerticle(Persistence.class.getName(), container.config(), 10);
-
-            container.deployVerticle(PersistenceExecutor.class.getName(),
-                    container.config().getObject("mapdb", createPersistenceDefaultConfig()), 10);
+            container.deployVerticle(Persistence.class.getName());
+            container.deployVerticle(PersistenceExecutor.class.getName());
 
             // Channels
-            container.deployVerticle(HttpServer.class.getName(), container.config().getObject("http", defaultHttpConfig() ));
-            container.deployVerticle(MqttServer.class.getName(), container.config().getObject("mqtt", defaultMqttConfig()));
-
+            container.deployVerticle(HttpServer.class.getName());
+            //container.deployVerticle(MqttServer.class.getName());
             startedResult.complete();
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
             startedResult.setFailure(e);
         }
-    }
-
-    private JsonObject defaultMqttConfig() {
-        return new JsonObject().putNumber("port", 1883).putString("directory", "helium/mqtt");
-    }
-
-    private JsonObject defaultHttpConfig() {
-        return new JsonObject().putNumber("port", 8080)
-                .putString("basepath", "http://localhost:8080/");
-    }
-
-    private JsonObject createPersistenceDefaultConfig() {
-        return new JsonObject().putString("directory", "helium/nodes");
     }
 }

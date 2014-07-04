@@ -59,6 +59,7 @@ public class PersistenceExecutor extends Verticle {
      */
     private void applyChangeLog(Message<JsonArray> message) {
         try {
+            long start = System.currentTimeMillis();
             container.logger().info("Persisting changelog: " + message.body());
             ChangeLog changeLog = ChangeLog.of(message.body());
             changeLog.forEach(obj -> {
@@ -76,7 +77,6 @@ public class PersistenceExecutor extends Verticle {
                     childDeleted(ChildDeleted.of(logEvent));
                 }
             });
-            long start = System.currentTimeMillis();
             MapDbService.get().commit();
             container.logger().info("Committing took: "+(System.currentTimeMillis()-start)+"ms");
             message.reply();

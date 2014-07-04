@@ -167,8 +167,8 @@ public class WebsocketEndpoint {
             if (event1) {
                 vertx.eventBus().send(Persistence.PUSH, event, (Message<JsonArray> changeLogMsg) -> {
                     if (changeLogMsg.body().size() > 0) {
-                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                         vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                     }
                 });
                 container.logger().trace("authorized: " + event);
@@ -192,13 +192,8 @@ public class WebsocketEndpoint {
                 vertx.eventBus().send(Persistence.SET, event, (Message<JsonArray> changeLogMsg) -> {
                     if (changeLogMsg.body().size() > 0) {
                         container.logger().info("Calculating of Changelog took: " + (System.currentTimeMillis() - start) + "ms");
-                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body(), new Handler<Message<Object>>() {
-                            @Override
-                            public void handle(Message<Object> event) {
-                                container.logger().info("Persisting of Changelog took: " + (System.currentTimeMillis() - start) + "ms");
-                                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
-                            }
-                        });
+                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                     }
                 });
                 container.logger().trace("authorized: " + event);
@@ -219,8 +214,8 @@ public class WebsocketEndpoint {
             if (event1) {
                 vertx.eventBus().send(Persistence.UPDATE, event, (Message<JsonArray> changeLogMsg) -> {
                     if (changeLogMsg.body().size() > 0) {
-                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                         vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                     }
                 });
                 container.logger().trace("authorized: " + event);
