@@ -186,8 +186,8 @@ public class WebsocketEndpoint {
         if (auth.isPresent())
             event.setAuth(auth.get());
 
-        Authorizator.get().check(Operation.WRITE, auth, Path.of(path), data, (Boolean event1) -> {
-            if (event1) {
+        Authorizator.get().check(Operation.WRITE, auth, Path.of(path), data, securityCheckResult -> {
+            if (securityCheckResult) {
                 container.logger().info("Security Check took: "+(System.currentTimeMillis()-start)+"ms");
                 vertx.eventBus().send(Persistence.SET, event, (Message<JsonArray> changeLogMsg) -> {
                     if (changeLogMsg.body().size() > 0) {
