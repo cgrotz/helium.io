@@ -66,8 +66,8 @@ public abstract class CommonPersistenceVerticle implements Handler<Message<JsonO
                             if(!payload.equals(parent.get(path.lastElement()))) {
                                 changeLog.addValueChangedLogEntry(currentPath.lastElement(), currentPath,
                                         currentPath.parent(), getObjectForPath(currentPath));
-                                currentPath = currentPath.parent();
                             }
+                            currentPath = currentPath.parent();
                         }
                         handler.handle(changeLog);
                     }
