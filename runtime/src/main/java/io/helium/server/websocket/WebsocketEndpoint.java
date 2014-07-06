@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
+import io.helium.common.ExceptionWrapper;
 import io.helium.common.PasswordHelper;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
@@ -187,15 +188,19 @@ public class WebsocketEndpoint {
             event.setAuth(auth.get());
 
         Authorizator.get().check(Operation.WRITE, auth, Path.of(path), data, securityCheckResult -> {
+            container.logger().info("Security Check took: "+(System.currentTimeMillis()-start)+"ms");
             if (securityCheckResult) {
-                container.logger().info("Security Check took: "+(System.currentTimeMillis()-start)+"ms");
-                vertx.eventBus().send(Persistence.SET, event, (Message<JsonArray> changeLogMsg) -> {
-                    if (changeLogMsg.body().size() > 0) {
+                vertx.eventBus().send(Persistence.SET, event, ExceptionWrapper.wrap(new Handler<Message<JsonArray>>() {
+                    @Override
+                    public void handle(Message<JsonArray> changeLogMsg) {
                         container.logger().info("Calculating of Changelog took: " + (System.currentTimeMillis() - start) + "ms");
-                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
-                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
+                        if (changeLogMsg.body().size() > 0) {
+                            vertx.eventBus().send(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                            vertx.eventBus().publish(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
+                        }
+                        changeLogMsg.reply();
                     }
-                });
+                }));
                 container.logger().trace("authorized: " + event);
             } else {
                 container.logger().warn("not authorized: " + event);
@@ -215,7 +220,7 @@ public class WebsocketEndpoint {
                 vertx.eventBus().send(Persistence.UPDATE, event, (Message<JsonArray> changeLogMsg) -> {
                     if (changeLogMsg.body().size() > 0) {
                         vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
-                        vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
+                        vertx.eventBus().publish(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
                     }
                 });
                 container.logger().trace("authorized: " + event);
@@ -498,7 +503,12 @@ public class WebsocketEndpoint {
                         broadcast.putValue("name", name);
                         broadcast.putValue(HeliumEvent.PATH, createPath(path));
                         broadcast.putValue("parent", createPath(parent));
-                        broadcast.putValue(HeliumEvent.PAYLOAD, event);
+                        if(event instanceof  Node) {
+                            broadcast.putValue(HeliumEvent.PAYLOAD, ((Node)event).toJsonObject());
+                        }
+                        else {
+                            broadcast.putValue(HeliumEvent.PAYLOAD, event);
+                        }
                         broadcast.putValue("hasChildren", hasChildren);
                         broadcast.putValue("numChildren", numChildren);
                         sendViaWebsocket(broadcast);

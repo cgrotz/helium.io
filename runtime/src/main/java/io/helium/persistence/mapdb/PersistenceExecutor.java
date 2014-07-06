@@ -4,6 +4,8 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import io.helium.common.Path;
 import io.helium.event.changelog.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -18,6 +20,8 @@ import java.util.concurrent.Executors;
  * Created by Christoph Grotz on 20.06.14.
  */
 public class PersistenceExecutor extends Verticle {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PersistenceExecutor.class);
+
     public static final String PERSIST_CHANGE_LOG = "io.helium.changelog.persist";
 
     @Override
@@ -60,7 +64,6 @@ public class PersistenceExecutor extends Verticle {
     private void applyChangeLog(Message<JsonArray> message) {
         try {
             long start = System.currentTimeMillis();
-            container.logger().info("Persisting changelog: " + message.body());
             ChangeLog changeLog = ChangeLog.of(message.body());
             changeLog.forEach(obj -> {
                 JsonObject logEvent = (JsonObject) obj;
@@ -78,7 +81,8 @@ public class PersistenceExecutor extends Verticle {
                 }
             });
             MapDbService.get().commit();
-            container.logger().info("Committing took: "+(System.currentTimeMillis()-start)+"ms");
+
+            LOGGER.info("Persisting changelog {} took {}ms", message.body(), (System.currentTimeMillis() - start));
             message.reply();
         }
         catch(Exception e) {

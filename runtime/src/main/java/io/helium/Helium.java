@@ -39,8 +39,8 @@ public class Helium extends Verticle {
             new File("helium").mkdirs();
             MapDbService.get();
             // Workers
-            container.deployVerticle(Persistence.class.getName());
-            container.deployVerticle(PersistenceExecutor.class.getName());
+            container.deployWorkerVerticle(Persistence.class.getName());
+            container.deployWorkerVerticle(PersistenceExecutor.class.getName());
 
             // Channels
             container.deployVerticle(HttpServer.class.getName());

@@ -16,6 +16,7 @@
 
 package io.helium.persistence;
 
+import io.helium.common.ExceptionWrapper;
 import io.helium.persistence.actions.*;
 import org.vertx.java.core.Future;
 import org.vertx.java.platform.Verticle;
@@ -30,11 +31,11 @@ public class Persistence extends Verticle {
 
     @Override
     public void start() {
-        vertx.eventBus().registerHandler( PUSH, new Post() );
-        vertx.eventBus().registerHandler( SET, new Put() );
-        vertx.eventBus().registerHandler( DELETE, new Delete() );
-        vertx.eventBus().registerHandler( UPDATE, new Update() );
-        vertx.eventBus().registerHandler( GET, new Get() );
+        vertx.eventBus().registerHandler( PUSH, ExceptionWrapper.wrap(new Post()) );
+        vertx.eventBus().registerHandler( SET, ExceptionWrapper.wrap(new Put()) );
+        vertx.eventBus().registerHandler( DELETE, ExceptionWrapper.wrap(new Delete()) );
+        vertx.eventBus().registerHandler( UPDATE, ExceptionWrapper.wrap(new Update()) );
+        vertx.eventBus().registerHandler( GET, ExceptionWrapper.wrap(new Get()) );
 
     }
 }

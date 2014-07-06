@@ -19,6 +19,7 @@ package io.helium.persistence.actions;
 import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.eventbus.Message;
@@ -37,19 +38,23 @@ public class Put extends CommonPersistenceVerticle {
                 delete( event.getAuth(), path, changeLog -> {
                     msg.reply(changeLog);
                     LOGGER.info("Put Action took: " + (System.currentTimeMillis() - start) + "ms");
+                    return;
                 });
             } else {
                 applyNewValue(event.getAuth(), path, payload, changeLog -> {
                     msg.reply(changeLog);
                     LOGGER.info("Put Action took: " + (System.currentTimeMillis() - start) + "ms");
+                    return;
                 });
             }
         } else {
             delete( event.getAuth(), path, changeLog -> {
                 msg.reply(changeLog);
                 LOGGER.info("Put Action took: " + (System.currentTimeMillis() - start) + "ms");
+                return;
             });
         }
+        msg.fail(HttpResponseStatus.INTERNAL_SERVER_ERROR.code(), "Don't know what todo");
     }
 
 }

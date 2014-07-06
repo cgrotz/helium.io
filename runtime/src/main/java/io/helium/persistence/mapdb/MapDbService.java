@@ -43,6 +43,7 @@ public class MapDbService {
     }
 
     private DB createDb() {
+        //return DBMaker.newMemoryDB().make();
         return DBMaker.newFileDB(new File("helium/nodes"))
                 .closeOnJvmShutdown()
                 .make();
