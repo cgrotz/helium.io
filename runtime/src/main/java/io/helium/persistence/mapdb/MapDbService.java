@@ -4,19 +4,19 @@ import io.helium.common.Path;
 import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Optional;
 
-/**
- * Created by Christoph Grotz on 15.06.14.
- */
 public class MapDbService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapDbService.class);
 
     private static Optional<MapDbService> instance = Optional.empty();
 
     public static MapDbService get() {
-        instance = instance.of(instance.orElseGet(() -> new MapDbService()));
+        instance = Optional.of(instance.orElseGet(MapDbService::new));
         return instance.get();
     }
 
@@ -36,7 +36,7 @@ public class MapDbService {
                     }
                 }
                 catch( Exception e) {
-                    e.printStackTrace();
+                    LOGGER.error("Failed to close DB", e);
                 }
             }
         });
@@ -75,7 +75,7 @@ public class MapDbService {
         Path currentPath = Path.copy(path);
         for (int i = 0; i < path.toArray().length; i++) {
             node = node.getNode(currentPath.firstElement());
-            currentPath = currentPath.subpath(1);
+            currentPath = currentPath.sub(1);
         }
         return node;
     }

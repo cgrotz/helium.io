@@ -33,10 +33,6 @@ public class QueryEntry {
         return new Path(path);
     }
 
-    public String getQuery() {
-        return query;
-    }
-
     @Override
     public int hashCode() {
         return Objects.hashCode(path, query);

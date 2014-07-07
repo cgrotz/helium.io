@@ -25,19 +25,11 @@ public class ChangeLog extends JsonArray{
         super(body.toArray());
     }
 
-    public ChangeLog() {
-
-    }
-
-    public void addLog(ChangeLogEvent event) {
-        add(event);
-    }
-
-    public void addChildAddedLogEntry(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
+    public void addChildAddedLogEntry(String name, Path path, Path parent, Object value, long numChildren) {
         add(new ChildAdded(name, path, parent, value, numChildren));
     }
 
-    public void addChildChangedLogEntry(String name, Path path, Path parent, Object value, boolean hasChildren, long numChildren) {
+    public void addChildChangedLogEntry(String name, Path path, Path parent, Object value, long numChildren) {
         if (name != null) {
             add(new ChildChanged(name, path, parent, value, numChildren));
         }

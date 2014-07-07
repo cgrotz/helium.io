@@ -17,12 +17,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
+ *
+ * Persistence abstraction for MapDB
+ *
  * Created by Christoph Grotz on 02.06.14.
  */
 public class Node {
-
-    private static final long serialVersionUID = 1L;
-
     private BTreeMap<String, Object> attributes;
     private BTreeMap<String, Node> nodes;
     private Path pathToNode;
@@ -150,7 +150,7 @@ public class Node {
      * @param o The object to test.
      * @throws RuntimeException If o is a non-finite number.
      */
-    public static void testValidity(Object o) {
+    public static void testValidity(Object o) throws RuntimeException {
         if (o != null) {
             if (o instanceof Double) {
                 if (((Double) o).isInfinite() || ((Double) o).isNaN()) {
@@ -164,9 +164,9 @@ public class Node {
         }
     }
 
-    static final Writer writeValue(Writer writer, Object value, int indentFactor, int indent)
+    static Writer writeValue(Writer writer, Object value, int indentFactor, int indent)
             throws RuntimeException, IOException {
-        if (value == null || value.equals(null)) {
+        if (value == null) {
             writer.write("null");
         } else if (value instanceof Node) {
             ((Node) value).write(writer, indentFactor, indent);
@@ -180,7 +180,7 @@ public class Node {
         return writer;
     }
 
-    static final void indent(Writer writer, int indent) throws IOException {
+    static void indent(Writer writer, int indent) throws IOException {
         for (int i = 0; i < indent; i += 1) {
             writer.write(' ');
         }
@@ -239,7 +239,6 @@ public class Node {
         if (pathToNode.append(key).root()) {
             return MapDbService.get().root();
         } else if (has(key)) {
-            Object value = get(key);
             return (Node) get(key);
         } else {
             Node node = new Node(pathToNode.append(key));
@@ -290,7 +289,6 @@ public class Node {
      *
      * @return A keySet.
      */
-
     public List<String> keys() {
         List keys = Lists.newArrayList();
         keys.addAll(this.attributes.keySet());
@@ -521,10 +519,10 @@ public class Node {
                     return this;
                 }
             } else {
-                return getNode(path.firstElement()).getLastLeafNode(path.subpath(1));
+                return getNode(path.firstElement()).getLastLeafNode(path.sub(1));
             }
         } else if( has("+") && !path.isSimple()) {
-            return getNode("+").getLastLeafNode(path.subpath(1));
+            return getNode("+").getLastLeafNode(path.sub(1));
         } else if( has("*") && !path.isSimple()) {
             return getNode("*");
         } else {

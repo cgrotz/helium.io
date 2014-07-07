@@ -18,19 +18,14 @@ package io.helium.authorization;
 
 import com.google.common.collect.Maps;
 import io.helium.common.Path;
-import io.helium.event.HeliumEvent;
 import io.helium.common.SandBoxedScriptingEnvironment;
 import io.helium.persistence.mapdb.MapDbService;
-import io.helium.persistence.mapdb.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.platform.Verticle;
 
 import javax.script.ScriptException;
-import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
@@ -105,7 +100,7 @@ public class Authorizator {
             if (result == null) {
                 return false;
             }
-            return result.booleanValue();
+            return result;
         }
     }
 

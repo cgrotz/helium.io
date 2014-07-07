@@ -40,16 +40,11 @@ public class ChildAdded extends ChangeLogEvent {
         return new ChildAdded(logE.toMap());
     }
 
-    private ChildAdded() {
-
-    }
-
     public String name() {
         return getString("name");
     }
 
     public Path path() {
-        //return Path.of(getString("path")).append(getString("name"));
         return Path.of(getString("path"));
     }
 

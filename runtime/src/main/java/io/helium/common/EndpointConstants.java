@@ -1,11 +1,8 @@
 package io.helium.common;
 
-import io.helium.common.Path;
-import io.helium.event.HeliumEvent;
-import io.helium.event.changelog.ChangeLog;
-import org.vertx.java.core.json.JsonObject;
-
 /**
+ * Holder for different eventbus Addresses
+ *
  * Created by Christoph Grotz on 26.05.14.
  */
 public class EndpointConstants {

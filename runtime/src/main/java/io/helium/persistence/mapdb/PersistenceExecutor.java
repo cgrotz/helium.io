@@ -6,17 +6,18 @@ import io.helium.common.Path;
 import io.helium.event.changelog.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vertx.java.core.Future;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
-import java.io.File;
 import java.net.URL;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
+ *
+ * Simple persistence Executor (persists change log)
+ *
  * Created by Christoph Grotz on 20.06.14.
  */
 public class PersistenceExecutor extends Verticle {
@@ -25,7 +26,7 @@ public class PersistenceExecutor extends Verticle {
     public static final String PERSIST_CHANGE_LOG = "io.helium.changelog.persist";
 
     @Override
-    public void start() {
+    public void start(Future<Void> startedResult) {
         vertx.eventBus().registerHandler(PERSIST_CHANGE_LOG, this::applyChangeLog );
 
         try {
@@ -38,8 +39,11 @@ public class PersistenceExecutor extends Verticle {
             else {
                 throw new IllegalStateException("demo.json not found");
             }
+            startedResult.complete();
         }
         catch(Exception e){
+            LOGGER.error("Error starting PersistenceExecutor",e);
+            startedResult.failed();
         }
     }
 

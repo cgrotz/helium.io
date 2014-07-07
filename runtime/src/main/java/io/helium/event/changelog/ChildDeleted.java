@@ -38,10 +38,6 @@ public class ChildDeleted extends ChangeLogEvent {
         return new ChildDeleted(logE.toMap());
     }
 
-    private ChildDeleted() {
-
-    }
-
     public Object value() {
         return getValue("value");
     }

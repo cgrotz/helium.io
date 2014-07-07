@@ -22,8 +22,6 @@ import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
 import org.vertx.java.core.Future;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
 import java.io.File;
@@ -38,8 +36,8 @@ public class Helium extends Verticle {
     public void start(Future<Void> startedResult) {
         try {
             // Init data store
-            new File("helium").mkdirs();
-            MapDbService.get();
+            if(new File("helium").mkdirs())
+                MapDbService.get();
 
             // Workers
             container.deployWorkerVerticle(Persistence.class.getName());

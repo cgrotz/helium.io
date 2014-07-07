@@ -16,7 +16,6 @@
 
 package io.helium.persistence.actions;
 
-import io.helium.common.EndpointConstants;
 import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import org.slf4j.Logger;

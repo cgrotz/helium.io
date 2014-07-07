@@ -76,10 +76,10 @@ public final class Path {
      * <p>
      * Subpath from offset 2: /element3/element4
      *
-     * @param offset
-     * @return returns the subpath at the offset
+     * @param offset retrieves offset paths
+     * @return returns the sub at the offset
      */
-    public Path subpath(int offset) {
+    public Path sub(int offset) {
         String output = "";
         for (int i = offset; i < elements.length; i++) {
             output += "/" + elements[i];
@@ -92,8 +92,8 @@ public final class Path {
      * <p>
      * Subpath from offset 2: /element1/element2
      *
-     * @param offset
-     * @return returns the subpath at the offset
+     * @param offset retrieves offset paths
+     * @return returns the sub at the offset
      */
     public Path prefix(int offset) {
         String output = "";

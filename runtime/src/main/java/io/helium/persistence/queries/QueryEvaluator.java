@@ -23,7 +23,6 @@ import io.helium.common.SandBoxedScriptingEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.platform.Container;
 
 import java.util.Collection;
 import java.util.Map.Entry;
@@ -47,13 +46,6 @@ public class QueryEvaluator {
     }
 
 
-    public boolean appliesToQuery(Path path, Object value) {
-        for (String queryStr : attached_queries.get(path.toString())) {
-            return evaluateQueryOnValue(value, queryStr);
-        }
-        return false;
-    }
-
     public boolean evaluateQueryOnValue(Object value, String queryStr) {
         try {
 
@@ -65,8 +57,7 @@ public class QueryEvaluator {
                 parsedValue = value;
             }
             scriptingEnvironment.eval("var query = " + queryStr + ";");
-            Boolean result = (Boolean) scriptingEnvironment.invokeFunction("query", parsedValue);
-            return result.booleanValue();
+            return (Boolean) scriptingEnvironment.invokeFunction("query", parsedValue);
         } catch (Exception e) {
             logger.error("Error (" + e.getMessage() + ") on Query (" + queryStr + ")", e);
         }

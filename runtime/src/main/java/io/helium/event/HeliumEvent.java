@@ -17,7 +17,6 @@
 package io.helium.event;
 
 import io.helium.common.Path;
-import io.helium.event.builder.HeliumEventBuilder;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Optional;
@@ -28,8 +27,6 @@ import java.util.Optional;
  * @author Christoph Grotz
  */
 public class HeliumEvent extends JsonObject {
-
-    public static final String NO_AUTH = "noAuth";
     /**
      * Payload of the event
      */
@@ -51,11 +48,6 @@ public class HeliumEvent extends JsonObject {
     public static final String PATH = "path";
 
     /**
-     * Was this event read from the history
-     */
-    public static final String FROM_HISTORY = "fromHistory";
-
-    /**
      * Authentication associated with the event
      */
     public static final String AUTH = "auth";
@@ -65,19 +57,8 @@ public class HeliumEvent extends JsonObject {
      */
     public static final String NAME = "name";
 
-    private HeliumEventBuilder builder;
-
     public HeliumEvent(JsonObject body) {
         this.map = body.toMap();
-    }
-
-    public HeliumEventBuilder complete() {
-        return this.builder;
-    }
-
-    public HeliumEvent(HeliumEventBuilder heliumEventBuilder) {
-        this();
-        this.builder = heliumEventBuilder;
     }
 
     /**
@@ -101,26 +82,6 @@ public class HeliumEvent extends JsonObject {
         putString(HeliumEvent.TYPE, type.toString());
         putString(HeliumEvent.PATH, path);
         putValue(HeliumEvent.PAYLOAD, payload);
-        putNumber(HeliumEvent.CREATION_DATE, System.currentTimeMillis());
-    }
-
-    /**
-     * @param type    of the event {@link HeliumEventType}
-     * @param path    of the event
-     * @param payload Optional playload of the event
-     */
-    public HeliumEvent(HeliumEventType type, String path, Optional<?> payload) {
-        putString(HeliumEvent.TYPE, type.toString());
-        putString(HeliumEvent.PATH, path);
-        if (payload.isPresent()) {
-            putValue(HeliumEvent.PAYLOAD, payload.get());
-        }
-        putNumber(HeliumEvent.CREATION_DATE, System.currentTimeMillis());
-    }
-
-    public HeliumEvent(HeliumEventType type, String path) {
-        putString(HeliumEvent.TYPE, type.toString());
-        putString(HeliumEvent.PATH, path);
         putNumber(HeliumEvent.CREATION_DATE, System.currentTimeMillis());
     }
 
@@ -158,43 +119,8 @@ public class HeliumEvent extends JsonObject {
         return new Path(extractPath(requestPath));
     }
 
-    public String extractParentPath() {
-        if (!containsField(HeliumEvent.PATH)) {
-            return null;
-        }
-        String parentPath;
-        String requestPath = getString(HeliumEvent.PATH);
-        if (containsField(HeliumEvent.NAME)) {
-            parentPath = extractPath(requestPath) + "/" + getString(HeliumEvent.NAME);
-        } else {
-            parentPath = extractPath(requestPath);
-        }
-        return parentPath.substring(0, parentPath.lastIndexOf("/"));
-
-    }
-
     public HeliumEventType getType() {
         return HeliumEventType.valueOf((getString(HeliumEvent.TYPE)).toUpperCase());
-    }
-
-    public boolean isFromHistory() {
-        if (containsField(HeliumEvent.FROM_HISTORY)) {
-            return getBoolean(HeliumEvent.FROM_HISTORY);
-        } else {
-            return false;
-        }
-    }
-
-    public void setFromHistory(boolean fromHistory) {
-        putBoolean(HeliumEvent.FROM_HISTORY, fromHistory);
-    }
-
-    public long getCreationDate() {
-        return getLong(HeliumEvent.CREATION_DATE);
-    }
-
-    public void setCreationDate(long creationDate) {
-        putNumber(HeliumEvent.CREATION_DATE, creationDate);
     }
 
     public Object getPayload() {
@@ -218,10 +144,6 @@ public class HeliumEvent extends JsonObject {
 
     public HeliumEvent copy() {
         return new HeliumEvent(toString());
-    }
-
-    public boolean isNoAuth() {
-        return getBoolean(NO_AUTH, false);
     }
 
     public static HeliumEvent of(JsonObject body) {

@@ -22,8 +22,8 @@ import io.helium.common.Path;
 import io.helium.event.HeliumEvent;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.event.changelog.ChangeLogBuilder;
-import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.mapdb.MapDbService;
+import io.helium.persistence.mapdb.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
@@ -78,22 +78,22 @@ public class Update extends CommonPersistenceVerticle {
                         populateNode(node, new ChangeLogBuilder(log, path, path.parent(), node), (Node) payload);
                         if (created) {
                             log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                    .parent(), payload, false, 0);
+                                    .parent(), payload, 0);
                         } else {
                             log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                    .parent(), payload, false, 0);
+                                    .parent(), payload, 0);
                         }
                     } else {
                         if (created) {
                             log.addChildAddedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                    .parent(), payload, false, 0);
+                                    .parent(), payload, 0);
                         } else {
                             log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                                    .parent(), payload, false, 0);
+                                    .parent(), payload, 0);
                             log.addValueChangedLogEntry(path.lastElement(), path, path.parent(), payload);
                         }
                         log.addChildChangedLogEntry(path.parent().lastElement(), path.parent().parent(),
-                                path.parent().parent().parent(), parent, false, 0);
+                                path.parent().parent().parent(), parent, 0);
 
                     }
                     handler.handle(log);

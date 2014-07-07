@@ -18,7 +18,6 @@ package io.helium.persistence;
 
 import io.helium.common.ExceptionWrapper;
 import io.helium.persistence.actions.*;
-import org.vertx.java.core.Future;
 import org.vertx.java.platform.Verticle;
 
 public class Persistence extends Verticle {

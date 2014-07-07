@@ -1,10 +1,10 @@
 package io.helium.persistence.actions;
 
-import com.google.common.collect.Collections2;
 import io.helium.authorization.Authorizator;
 import io.helium.authorization.Operation;
 import io.helium.common.Path;
-import io.helium.event.changelog.*;
+import io.helium.event.changelog.ChangeLog;
+import io.helium.event.changelog.ChangeLogBuilder;
 import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.Node;
 import io.helium.persistence.mapdb.visitor.ChildDeletedSubTreeVisitor;
@@ -12,12 +12,13 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.platform.Verticle;
 
-import java.util.Collections;
 import java.util.Optional;
 
 /**
+ *
+ * Common methods for persistent
+ *
  * Created by Christoph Grotz on 15.06.14.
  */
 public abstract class CommonPersistenceVerticle implements Handler<Message<JsonObject>> {
@@ -56,7 +57,7 @@ public abstract class CommonPersistenceVerticle implements Handler<Message<JsonO
 
                         if (!exists(path)) {
                             changeLog.addChildAddedLogEntry(path.lastElement(),
-                                    path.parent(), path.parent().parent(), payload, false, 0);
+                                    path.parent(), path.parent().parent(), payload, 0);
                         } else if(!payload.equals(parent.get(path.lastElement()))) {
                             addChangeEvent(changeLog, path);
                         }
@@ -78,9 +79,7 @@ public abstract class CommonPersistenceVerticle implements Handler<Message<JsonO
 
     protected void populate(ChangeLogBuilder logBuilder, Path path, Optional<JsonObject> auth, Node node, JsonObject payload) {
         if(payload.getFieldNames().isEmpty()) {
-            node.keys().forEach( key -> {
-                logBuilder.addDeleted(key, node.get(key));
-            });
+            node.keys().forEach( key -> logBuilder.addDeleted(key, node.get(key)));
             node.clear();
         }
         else {
@@ -133,14 +132,14 @@ public abstract class CommonPersistenceVerticle implements Handler<Message<JsonO
         Object payload = getObjectForPath(path);
         if(payload instanceof Node) {
             log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                    .parent(), ((Node) payload).toJsonObject(), Node.hasChildren(payload), Node.childCount(payload));
+                    .parent(), ((Node) payload).toJsonObject(), Node.childCount(payload));
 
             log.addValueChangedLogEntry(path.lastElement(), path.parent(), path.parent()
                     .parent(), ((Node)payload).toJsonObject());
         }
         else {
             log.addChildChangedLogEntry(path.lastElement(), path.parent(), path.parent()
-                    .parent(), payload, Node.hasChildren(payload), Node.childCount(payload));
+                    .parent(), payload, Node.childCount(payload));
 
             log.addValueChangedLogEntry(path.lastElement(), path.parent(), path.parent()
                     .parent(), payload);

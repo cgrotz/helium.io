@@ -38,31 +38,24 @@ public class ChangeLogBuilder {
     }
 
     public void addChange(String name, Object value) {
-        log.addChildChangedLogEntry(name, path, parentPath, value, hasChildren(value), childCount(value));
+        log.addChildChangedLogEntry(name, path, parentPath, value, childCount(value));
         log.addValueChangedLogEntry(name, path.append(name), path, value);
     }
 
     public void addNew(String name, Object value) {
-        log.addChildAddedLogEntry(name, path, parentPath, value, hasChildren(value), childCount(value));
+        log.addChildAddedLogEntry(name, path, parentPath, value, childCount(value));
     }
 
     public void addChangedNode(String name, Node value) {
-        log.addChildChangedLogEntry(name, path, parentPath, value, hasChildren(value), childCount(value));
+        log.addChildChangedLogEntry(name, path, parentPath, value, childCount(value));
     }
 
     public void addDeleted(String name, Object value) {
         log.addChildDeletedLogEntry(path, name, value);
     }
 
-    public ChangeLog getLog() {
-        return log;
-    }
-
     private long childCount(Object node) {
         return (node instanceof Node) ? ((Node) node).getChildren().size() : 0;
     }
 
-    private boolean hasChildren(Object node) {
-        return (node instanceof Node) && ((Node) node).hasChildren();
-    }
 }

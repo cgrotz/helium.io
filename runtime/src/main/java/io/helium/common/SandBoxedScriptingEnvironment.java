@@ -18,7 +18,6 @@ package io.helium.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.platform.Container;
 
 import javax.script.*;
 import java.io.Reader;
@@ -48,129 +47,103 @@ public class SandBoxedScriptingEnvironment implements Invocable, ScriptEngine {
 
     @Override
     public Object eval(String script, ScriptContext context) throws ScriptException {
-        return AccessController.doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-                try {
-                    return engine.eval(script, context);
-                } catch (ScriptException e) {
-                    logger.error(e.getMessage(), e);
-                }
-                return null;
+        return AccessController.doPrivileged((PrivilegedAction) () -> {
+            try {
+                return engine.eval(script, context);
+            } catch (ScriptException e) {
+                logger.error(e.getMessage(), e);
             }
+            return null;
         }, accessControlContext);
     }
 
     @Override
     public Object eval(Reader reader, ScriptContext context) throws ScriptException {
-        return AccessController.doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-                try {
-                    return engine.eval(reader, context);
-                } catch (ScriptException e) {
-                    logger.error(e.getMessage(), e);
-                }
-                return null;
+        return AccessController.doPrivileged((PrivilegedAction) () -> {
+            try {
+                return engine.eval(reader, context);
+            } catch (ScriptException e) {
+                logger.error(e.getMessage(), e);
             }
+            return null;
         }, accessControlContext);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object eval(final String code) {
-        return AccessController.doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-                try {
-                    return engine.eval(code);
-                } catch (ScriptException e) {
-                    logger.error(e.getMessage(), e);
-                }
-                return null;
+        return AccessController.doPrivileged((PrivilegedAction) () -> {
+            try {
+                return engine.eval(code);
+            } catch (ScriptException e) {
+                logger.error(e.getMessage(), e);
             }
+            return null;
         }, accessControlContext);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object eval(Reader reader) throws ScriptException {
-        return AccessController.doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-                try {
-                    return engine.eval(reader);
-                } catch (ScriptException e) {
-                    logger.error(e.getMessage(), e);
-                }
-                return null;
+        return AccessController.doPrivileged((PrivilegedAction) () -> {
+            try {
+                return engine.eval(reader);
+            } catch (ScriptException e) {
+                logger.error(e.getMessage(), e);
             }
+            return null;
         }, accessControlContext);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object eval(String script, Bindings bindings) throws ScriptException {
-        return AccessController.doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-                try {
-                    return engine.eval(script, bindings);
-                } catch (ScriptException e) {
-                    logger.error(e.getMessage(), e);
-                }
-                return null;
+        return AccessController.doPrivileged((PrivilegedAction) () -> {
+            try {
+                return engine.eval(script, bindings);
+            } catch (ScriptException e) {
+                logger.error(e.getMessage(), e);
             }
+            return null;
         }, accessControlContext);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object eval(Reader reader, Bindings bindings) throws ScriptException {
-        return AccessController.doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-                try {
-                    return engine.eval(reader, bindings);
-                } catch (ScriptException e) {
-                    logger.error(e.getMessage(), e);
-                }
-                return null;
+        return AccessController.doPrivileged((PrivilegedAction) () -> {
+            try {
+                return engine.eval(reader, bindings);
+            } catch (ScriptException e) {
+                logger.error(e.getMessage(), e);
             }
+            return null;
         }, accessControlContext);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object invokeMethod(Object thiz, String name, Object... args) throws ScriptException, NoSuchMethodException {
-        return AccessController.doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-                try {
-                    return ((Invocable) engine).invokeMethod(thiz, name, args);
-                } catch (ScriptException e) {
-                    logger.error(e.getMessage(), e);
-                } catch (NoSuchMethodException e) {
-                    logger.error(e.getMessage(), e);
-                }
-                return null;
+        return AccessController.doPrivileged((PrivilegedAction) () -> {
+            try {
+                return ((Invocable) engine).invokeMethod(thiz, name, args);
+            } catch (ScriptException | NoSuchMethodException e) {
+                logger.error(e.getMessage(), e);
             }
+            return null;
         }, accessControlContext);
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object invokeFunction(final String code, final Object... args) {
-        return AccessController.doPrivileged(new PrivilegedAction() {
-            @Override
-            public Object run() {
-                try {
-                    return ((Invocable) engine).invokeFunction(code, args);
-                } catch (ScriptException | NoSuchMethodException e) {
-                    logger.error(e.getMessage(), e);
-                }
-                return null;
+        return AccessController.doPrivileged((PrivilegedAction) () -> {
+            try {
+                return ((Invocable) engine).invokeFunction(code, args);
+            } catch (ScriptException | NoSuchMethodException e) {
+                logger.error(e.getMessage(), e);
             }
+            return null;
         }, accessControlContext);
     }
 

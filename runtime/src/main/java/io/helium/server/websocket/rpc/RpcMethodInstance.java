@@ -2,12 +2,16 @@ package io.helium.server.websocket.rpc;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
 
 class RpcMethodInstance {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RpcMethodInstance.class);
+
     private Object instance;
     private java.lang.reflect.Method method;
     private ObjectConverter objectConverter = new ObjectConverter();
@@ -41,7 +45,7 @@ class RpcMethodInstance {
             Object[] argArray = createArray(method, args);
             return method.invoke(instance, argArray);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("Couldn't execute method",e);
         }
         return null;
     }

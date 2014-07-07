@@ -45,10 +45,6 @@ public class ValueChanged extends ChangeLogEvent {
         return new ValueChanged(logE.toMap());
     }
 
-    private ValueChanged() {
-
-    }
-
     public String name() {
         return getString("name");
     }

@@ -81,7 +81,7 @@ public class RuleBasedAuthorizator {
                     return node;
                 }
             } else {
-                return getLastLeafNode(node.getValue(path.firstElement()), path.subpath(1));
+                return getLastLeafNode(node.getValue(path.firstElement()), path.sub(1));
             }
         } else {
             return node;

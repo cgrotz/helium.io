@@ -28,8 +28,7 @@ public enum HeliumEventType {
     SET(Persistence.SET),
     DELETE(Persistence.DELETE),
     UPDATE(Persistence.UPDATE),
-    GET(Persistence.GET),
-    EVENT(null);
+    GET(Persistence.GET);
 
     public final String eventBus;
 

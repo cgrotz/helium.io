@@ -70,6 +70,7 @@ public class DataSnapshot {
      * location has no data, an empty RulesDataSnapshot is returned.
      * </p>
      */
+    @SuppressWarnings({"unused"})
     public DataSnapshot child(String childPath) {
         return new DataSnapshot(node.getValue(childPath));
     }
@@ -77,24 +78,9 @@ public class DataSnapshot {
     /**
      * Return true if the specified child exists.
      */
+    @SuppressWarnings({"unused"})
     public boolean hasChild(String childPath) {
         return node.containsField(childPath);
-    }
-
-    /**
-     * Checks for the existence of children. If no arguments are provided, it
-     * will return true if the RulesDataSnapshot has any children. If an array
-     * of child names is provided, it will return true only if all of the
-     * specifid children exist in the RulesDataSnapshot.
-     */
-    public boolean hasChildren(String... childPaths) {
-        boolean hasChildren = true;
-        for (String childPath : childPaths) {
-            if (!hasChild(childPath)) {
-                hasChildren = false;
-            }
-        }
-        return hasChildren;
     }
 
     /**
@@ -102,6 +88,7 @@ public class DataSnapshot {
      * data. It is purely a convenience function since "data.exists()" is
      * equivalent to "data.val() != null".
      */
+    @SuppressWarnings({"unused"})
     public boolean exists() {
         return (val != null);
     }
@@ -109,6 +96,7 @@ public class DataSnapshot {
     /**
      * @return true if this RulesDataSnapshot contains a numeric value.
      */
+    @SuppressWarnings({"unused"})
     public boolean isNumber() {
         return val instanceof Integer || val instanceof Float || val instanceof Double;
     }

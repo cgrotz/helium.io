@@ -21,7 +21,6 @@ import io.helium.event.HeliumEvent;
 import io.helium.event.HeliumEventType;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.Date;
 import java.util.Optional;
 
 public class HeliumEventBuilder {

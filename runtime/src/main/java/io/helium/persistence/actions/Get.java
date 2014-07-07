@@ -5,11 +5,12 @@ import io.helium.persistence.mapdb.MapDbService;
 import io.helium.persistence.mapdb.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.core.Future;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
 
 /**
+ * Abstraction for Getting Data from the Persistence Layer
+ *
  * Created by Christoph Grotz on 15.06.14.
  */
 public class Get extends CommonPersistenceVerticle{
