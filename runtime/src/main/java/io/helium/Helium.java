@@ -37,22 +37,19 @@ public class Helium extends Verticle {
     @Override
     public void start(Future<Void> startedResult) {
         try {
+            // Init data store
             new File("helium").mkdirs();
             MapDbService.get();
+
             // Workers
             container.deployWorkerVerticle(Persistence.class.getName());
             container.deployWorkerVerticle(PersistenceExecutor.class.getName());
 
             // Channels
             container.deployVerticle(HttpServer.class.getName());
-            //container.deployVerticle(MqttServer.class.getName());
+            container.deployVerticle(MqttServer.class.getName());
             startedResult.complete();
-            vertx.setPeriodic(1000, new Handler<Long>() {
-                @Override
-                public void handle(Long event) {
-                    MapDbService.get().commitAndCompact();
-                }
-            });
+            vertx.setPeriodic(1000, event -> MapDbService.get().commitAndCompact());
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
             startedResult.setFailure(e);
