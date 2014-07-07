@@ -17,25 +17,19 @@
 package io.helium.server.http;
 
 import io.helium.server.websocket.WebsocketEndpoint;
-import org.vertx.java.core.AsyncResult;
-import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Future;
-import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
 public class HttpServer extends Verticle {
 
-    private int port;
-    private String basePath;
-
     @Override
     public void start(Future<Void> startedResult) {
         try {
-            this.port = container.config().getInteger("port", 8080);
-            this.basePath = container.config().getString("basepath", "http://localhost:8080/");
+            int port = container.config().getInteger("port", 8080);
+            String basePath = container.config().getString("basepath", "http://localhost:8080/");
 
             vertx.createHttpServer()
-                    .requestHandler(new RestHandler(vertx, basePath))
+                    .requestHandler(new RestHandler(vertx))
                     .websocketHandler(socket -> new WebsocketEndpoint(basePath, socket, vertx, container))
                     .listen(port, event -> startedResult.complete());
         }

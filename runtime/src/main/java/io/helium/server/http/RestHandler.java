@@ -12,7 +12,6 @@ import io.helium.event.builder.HeliumEventBuilder;
 import io.helium.common.DataTypeConverter;
 import io.helium.event.changelog.ChangeLog;
 import io.helium.persistence.Persistence;
-import io.helium.persistence.actions.Delete;
 import io.helium.persistence.actions.Get;
 import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -20,7 +19,6 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
-import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
@@ -34,14 +32,14 @@ import java.util.UUID;
 import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 
 /**
+ * Rest Endpoint for Helium
+ *
  * Created by Christoph Grotz on 29.05.14.
  */
 public class RestHandler implements Handler<HttpServerRequest> {
     private final Vertx vertx;
-    private final String basePath;
 
-    public RestHandler(Vertx vertx, String basePath) {
-        this.basePath = basePath;
+    public RestHandler(Vertx vertx) {
         this.vertx = vertx;
     }
 
@@ -70,18 +68,15 @@ public class RestHandler implements Handler<HttpServerRequest> {
     private void delete(HttpServerRequest req) {
         Path nodePath = Path.of(req.uri());
         extractAuthentication(req, auth -> {
-            HeliumEvent event = HeliumEventBuilder.delete(nodePath).withAuth(auth).build();
+            HeliumEvent heliumEvent = HeliumEventBuilder.delete(nodePath).withAuth(auth).build();
             if (auth.isPresent())
-                event.setAuth(auth.get());
+                heliumEvent.setAuth(auth.get());
 
-            Authorizator.get().check(Operation.WRITE, auth, nodePath, null, (Boolean event1) -> {
-                if (event1) {
-                    vertx.eventBus().send(Persistence.DELETE, event, new Handler<Message<JsonArray>>() {
-                        @Override
-                        public void handle(Message<JsonArray> event) {
-                            vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, ChangeLog.of(event.body()));
-                            req.response().end();
-                        }
+            Authorizator.get().check(Operation.WRITE, auth, nodePath, null, securityCheck -> {
+                if (securityCheck) {
+                    vertx.eventBus().send(Persistence.DELETE, heliumEvent, (Message<JsonArray> msgJsonArray) -> {
+                        vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, ChangeLog.of(msgJsonArray.body()));
+                        req.response().end();
                     });
                 }
             });
@@ -115,67 +110,58 @@ public class RestHandler implements Handler<HttpServerRequest> {
     }
 
     private void post(HttpServerRequest req) {
-        req.bodyHandler(new Handler<Buffer>() {
-            @Override
-            public void handle(final Buffer buffer) {
-                String uri;
-                String uuid = UUID.randomUUID().toString().replaceAll("-", "");
-                if (req.uri().endsWith("/")) {
-                    uri = req.uri() + uuid;
-                } else {
-                    uri = req.uri() + "/" + uuid;
-                }
-                Path nodePath = Path.of(uri);
-                extractAuthentication(req, auth -> {
-                    Object data = DataTypeConverter.convert(buffer);
-                    HeliumEvent event = HeliumEventBuilder.set(nodePath, data).withAuth(auth).build();
-                    if (auth.isPresent())
-                        event.setAuth(auth.get());
-
-                    Authorizator.get().check(Operation.WRITE, auth, nodePath, data, (Boolean event1) -> {
-                        if (event1) {
-                            vertx.eventBus().send(event.getType().eventBus, event, (Message<JsonArray> changeLogMsg) -> {
-                                if(changeLogMsg.body().size() > 0) {
-                                    vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
-                                    vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
-                                }
-                            });
-
-                        }
-                    });
-                });
-                req.response().end();
+        req.bodyHandler(buffer -> {
+            String uri;
+            String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+            if (req.uri().endsWith("/")) {
+                uri = req.uri() + uuid;
+            } else {
+                uri = req.uri() + "/" + uuid;
             }
+            Path nodePath = Path.of(uri);
+            extractAuthentication(req, auth -> {
+                Object data = DataTypeConverter.convert(buffer);
+                HeliumEvent event = HeliumEventBuilder.set(nodePath, data).withAuth(auth).build();
+                if (auth.isPresent())
+                    event.setAuth(auth.get());
+
+                Authorizator.get().check(Operation.WRITE, auth, nodePath, data, securityCheck -> {
+                    if (securityCheck) {
+                        vertx.eventBus().send(event.getType().eventBus, event, (Message<JsonArray> changeLogMsg) -> {
+                            if(changeLogMsg.body().size() > 0) {
+                                vertx.eventBus().send(PersistenceExecutor.PERSIST_CHANGE_LOG, changeLogMsg.body());
+                                vertx.eventBus().publish(EndpointConstants.DISTRIBUTE_CHANGE_LOG, changeLogMsg.body());
+                            }
+                        });
+
+                    }
+                });
+            });
+            req.response().end();
         });
         req.resume();
     }
 
     private void get(HttpServerRequest req, Path path) {
-        extractAuthentication(req, auth -> {
-            vertx.eventBus().send(Persistence.GET, Get.request(path), (Message<Object> msg) -> {
-                Authorizator.get().check(Operation.READ, auth, path, msg.body(), new Handler<Boolean>() {
-                    @Override
-                    public void handle(Boolean event) {
-                        if (event) {
-                            Authorizator.get().filter(auth, path, msg.body(),
-                                    new Handler<Object>() {
-                                        @Override
-                                        public void handle(Object event) {
-                                            if (event != null) {
-                                                req.response().end(event.toString());
-                                            } else {
-                                                req.response().setStatusCode(404).end();
-                                            }
-                                        }
-                                    }
-                            );
-                        } else {
-                            req.response().setStatusCode(UNAUTHORIZED.code()).end();
-                        }
+        extractAuthentication(req, auth ->
+            vertx.eventBus().send(Persistence.GET, Get.request(path), (Message<Object> msg) ->
+                Authorizator.get().check(Operation.READ, auth, path, msg.body(), securityCheck -> {
+                    if (securityCheck) {
+                        Authorizator.get().filter(auth, path, msg.body(),
+                            event -> {
+                                if (event != null) {
+                                    req.response().end(event.toString());
+                                } else {
+                                    req.response().setStatusCode(404).end();
+                                }
+                            }
+                        );
+                    } else {
+                        req.response().setStatusCode(UNAUTHORIZED.code()).end();
                     }
-                });
-            });
-        });
+                })
+            )
+        );
         req.resume();
     }
 
@@ -185,6 +171,11 @@ public class RestHandler implements Handler<HttpServerRequest> {
         URL rpc = cl.getResource("js/rpc.js");
         URL reconnectingWebSocket = cl.getResource("js/reconnecting-websocket.min.js");
         URL helium = cl.getResource("js/helium.js");
+
+        if( uuid == null || rpc == null || reconnectingWebSocket == null || helium == null) {
+            return null;
+        }
+
         String uuidContent = Resources.toString(uuid, Charsets.UTF_8);
         String reconnectingWebSocketContent = Resources.toString(reconnectingWebSocket, Charsets.UTF_8);
         String rpcContent = Resources.toString(rpc, Charsets.UTF_8);
@@ -204,28 +195,26 @@ public class RestHandler implements Handler<HttpServerRequest> {
 
             vertx.eventBus().send(Persistence.GET,
                     Get.request(Path.of("/users")),
-                    new Handler<Message<JsonObject>>() {
-                @Override
-                public void handle(Message<JsonObject> event) {
-                    JsonObject users = event.body();
-                    for (String key : users.getFieldNames()) {
-                        Object value = users.getObject(key);
-                        if (value instanceof JsonObject) {
-                            JsonObject node = (JsonObject) value;
-                            if (node.containsField("username") && node.containsField("password")) {
-                                String localUsername = node.getString("username");
-                                String localPassword = node.getString("password");
-                                if (username.equals(localUsername) &&
-                                        PasswordHelper.get().comparePassword(localPassword,password)) {
-                                    handler.handle(Optional.of(node));
-                                    return;
+                    (Message<JsonObject> event) -> {
+                        JsonObject users = event.body();
+                        for (String key : users.getFieldNames()) {
+                            Object value = users.getObject(key);
+                            if (value != null) {
+                                JsonObject node = (JsonObject) value;
+                                if (node.containsField("username") && node.containsField("password")) {
+                                    String localUsername = node.getString("username");
+                                    String localPassword = node.getString("password");
+                                    if (username.equals(localUsername) &&
+                                            PasswordHelper.get().comparePassword(localPassword,password)) {
+                                        handler.handle(Optional.of(node));
+                                        return;
+                                    }
                                 }
                             }
                         }
+                        handler.handle(auth);
                     }
-                    handler.handle(auth);
-                }
-            });
+            );
         } else {
             handler.handle(auth);
         }
