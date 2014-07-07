@@ -43,12 +43,21 @@ public class MapDbService {
     }
 
     private DB createDb() {
-        //return DBMaker.newMemoryDB().make();
         return DBMaker.newFileDB(new File("helium/nodes"))
                 .closeOnJvmShutdown()
+                .cacheSize(10)
+                .mmapFileEnableIfSupported()
                 .make();
     }
 
+    public void commit() {
+        //db.commit();
+    }
+
+    public void commitAndCompact() {
+        db.commit();
+        db.compact();
+    }
 
     public boolean exists(Path path) {
         return db.exists(path.toString() + "Attributes");
@@ -72,14 +81,10 @@ public class MapDbService {
     }
 
     public BTreeMap<String, Object> getTreeMap(String key) {
-        return db.getTreeMap(key);
+        return db.createTreeMap(key).nodeSize(6).valuesOutsideNodesEnable().makeOrGet();
     }
 
     public DB.BTreeMapMaker createTreeMap(String key) {
-        return db.createTreeMap(key);
-    }
-
-    public void commit() {
-        db.commit();
+        return db.createTreeMap(key).nodeSize(6).valuesOutsideNodesEnable();
     }
 }

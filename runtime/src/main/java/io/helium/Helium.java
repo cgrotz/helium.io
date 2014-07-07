@@ -22,6 +22,7 @@ import io.helium.persistence.mapdb.PersistenceExecutor;
 import io.helium.server.http.HttpServer;
 import io.helium.server.mqtt.MqttServer;
 import org.vertx.java.core.Future;
+import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
@@ -46,6 +47,12 @@ public class Helium extends Verticle {
             container.deployVerticle(HttpServer.class.getName());
             //container.deployVerticle(MqttServer.class.getName());
             startedResult.complete();
+            vertx.setPeriodic(1000, new Handler<Long>() {
+                @Override
+                public void handle(Long event) {
+                    MapDbService.get().commitAndCompact();
+                }
+            });
         } catch (Exception e) {
             container.logger().error("Failed starting Helium", e);
             startedResult.setFailure(e);
